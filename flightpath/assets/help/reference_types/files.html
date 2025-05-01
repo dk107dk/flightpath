@@ -1,0 +1,86 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Reference type: files
+</h2>
+<p>
+    The <i>files</i> reference type points to named-files. It is used to create run references.
+</p>
+<p>
+    The files type references allow you to pick out data files within the named-files name with great specificity. In the usualcase the named-file name points to the most recent data arrived. Using a files reference you can point to:
+    <ul>
+        <li> Any version of any file
+        <li> Any file name ever registered as the named-file
+        <li> A dynamic combination of:<ul>
+                <li> name</li>
+                <li> path</li>
+                <li> arrival time</li>
+                <li> version index or version time</li>
+                <li> globally unique version fingerprint</li>
+                </ul>
+        </li>
+    </ul>
+    Technically, a fingerprint is an SHA256 hash value created from the bytes of the file.
+</p>
+<p>
+    A file reference can point to multiple files. Because it can work on a partial path, that means you can use a reference to run a named-paths group against many files; whereas, typically we run one named-paths group against one named-file.
+</p>
+<p>
+    Named-file references can have the following dynamic forms:
+    <ul>
+        <li> $name.files.fingerprint
+        <li> $name.files.partial/or/full/path/to/file
+        <li> $name.files.:index <i>(where index is an arrival order int)</i>
+        <li> $name.files.partial/or/full/path/to/file:index
+        <li> $name.files.YYYY-MM-DD_MM-HH-SS <i>(arrival time)</i>
+        <li> $name.files.partial/or/full/path/to/file.YYYY-MM-DD_MM-HH-SS <i>(version arrival time)</i>
+    </ul>
+    A named-file reference can append the following tokens to the (up to) two segments following the word <i>files</i>, with the exception of references that use fingerprints:
+    <ul>
+         <li>:all
+         <li>:first
+         <li>:before
+         <li>:after
+         <li>:last
+         <li>:index <i>(where index is a 0-n integer)</i>
+    </ul>
+</p>
+<p>
+    As with all references, named-file references are powerful and best used only when needed for rewind, replay, or disambiguation.
+</p>
+<hr>
+<h3 style="font-weight:bold;">
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+                This reference points to the first instance of a file registered under the named-file <i>vacations</i> that had a file name starting with <i>flights</i>.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+                    $vacations.files.modes/overseas/flights:first
+            </code>
+        </td>
+    </tr>
+</table>
+
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+                This reference points to the same named-file <i>vacations</i> first file registered after March 1, 2025. Technically <i>:all</i> is the default, so <i>:first</i> is important.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+                    $vacations.files.2025-03-01_:first
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>

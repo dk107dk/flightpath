@@ -1,0 +1,277 @@
+import os
+import json
+import sys
+
+from pathlib import Path
+from PySide6.QtCore import Qt, QModelIndex
+from PySide6.QtWidgets import (
+    QWidget,
+    QLabel,
+    QVBoxLayout,
+    QHBoxLayout,
+    QStackedLayout,
+    QApplication,
+    QMessageBox,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QListWidget,
+    QListWidgetItem,
+    QFormLayout
+)
+
+from flightpath.widgets.forms.blank_form import BlankForm
+from flightpath.widgets.forms.cache_form import CacheForm
+from flightpath.widgets.forms.config_form import ConfigForm
+from flightpath.widgets.forms.extensions_form import ExtensionsForm
+from flightpath.widgets.forms.errors_form import ErrorsForm
+from flightpath.widgets.forms.inputs_form import InputsForm
+from flightpath.widgets.forms.listeners_form import ListenersForm
+from flightpath.widgets.forms.logging_form import LoggingForm
+from flightpath.widgets.forms.results_form import ResultsForm
+from flightpath.util.style_utils import StyleUtility as stut
+
+from csvpath.util.config import Config
+
+
+class ConfigPanel(QWidget):
+
+    TREE_STYLE = """
+            QTreeWidget {
+                border: 1px solid #d0d0d0;
+                margin: 0px 0px 0px 0px;
+                padding-left: 1px;
+            }
+
+            QTreeWidget::item:hover {
+              color: #FFF;
+              background: black;
+            }
+
+            QTreeWidget::item:selected {
+              color: #FFF;
+              background: gray;
+            }
+            """
+
+    def __init__(self, main, filepath=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        #
+        # we need the section names from config so we need a config.
+        # this will need to be pointed at a config dir that is not
+        # the processes starting cwd. we don't want people working
+        # in the app's dir and we do want them creating as many separate
+        # dev directories as needed.
+        #
+        # for now we'll just stick with local config/config.ini and
+        # figure the rest out later.
+        #
+        self.config = main.csvpath_config
+        self.main = main
+        #
+        # state is a json file called ./.state. it is just a ui state
+        # persistence tool with some configuration. not sure if it's a
+        # keeper but needed today
+        #
+        self._sections = None
+        self._configurables = None
+        #
+        # style stuff
+        #
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        stut.set_common_style(self)
+        #
+        # Sidebar menu
+        self._tree = None
+        #
+        # set up the forms
+        #
+        self.forms_layout = QStackedLayout()
+        self.forms = None
+        self.setup_forms()
+
+        self.h_layout = QHBoxLayout()
+        self.layout = QVBoxLayout()
+        self.h_layout.addWidget(self.tree)
+        self.h_layout.addLayout(self.forms_layout)
+        self.layout.addLayout(self.h_layout)
+        self.setLayout(self.layout)
+        self.title = QLabel("Configuration Settings")
+        self.title.setStyleSheet("font-weight: bold;")
+
+    def setup_forms(self) -> None:
+        if self.forms and len(self.forms):
+            #
+            # clear the forms. this happens when the working dir changes.
+            #
+            for form in self.forms:
+                self.forms_layout.removeWidget(form)
+                form.deleteLater()
+
+        self.forms = [
+            BlankForm(main=self.main),
+            CacheForm(main=self.main),
+            ConfigForm(main=self.main),
+            ErrorsForm(main=self.main),
+            ExtensionsForm(main=self.main),
+            InputsForm(main=self.main),
+            ListenersForm(main=self.main),
+            LoggingForm(main=self.main),
+            ResultsForm(main=self.main)
+        ]
+        for form in self.forms:
+            self.forms_layout.addWidget(form)
+            form.config = self.config
+            form.populate()
+
+    def populate_all_forms(self) -> None:
+        for form in self.forms:
+            form.populate()
+
+    def switch_form(self, index:QModelIndex):
+        form = index.data()
+        parent = None
+        if index.parent():
+            parent = index.parent().data()
+        if form == "cache" or parent == "cache":
+            self.main.config.show_help_for_form("cache", fallback="about")
+            self.forms_layout.setCurrentIndex(1)
+            self.title.setText("Cache")
+        if form == "config" or parent == "config":
+            self.main.config.show_help_for_form("config_path", fallback="about")
+            self.forms_layout.setCurrentIndex(2)
+            self.title.setText("Config file")
+        elif form == "errors" or parent == "errors":
+            self.main.config.show_help_for_form("errors", fallback="about")
+            self.forms_layout.setCurrentIndex(3)
+            self.title.setText("Errors")
+        elif form == "extensions" or parent == "extensions":
+            self.main.config.show_help_for_form("extensions", fallback="about")
+            self.forms_layout.setCurrentIndex(4)
+            self.title.setText("Extensions")
+        elif form == "inputs" or parent == "inputs":
+            self.main.config.show_help_for_form("inputs", fallback="about")
+            self.forms_layout.setCurrentIndex(5)
+            self.title.setText("Inputs")
+        elif form == "listeners" or parent == "listeners":
+            self.main.config.show_help_for_form("listeners", fallback="about")
+            self.forms_layout.setCurrentIndex(6)
+            self.title.setText("Listeners")
+        elif form == "logging" or parent == "logging":
+            self.main.config.show_help_for_form("logging", fallback="about")
+            self.forms_layout.setCurrentIndex(7)
+            self.title.setText("logging")
+        elif form == "results" or parent == "results":
+            self.main.config.show_help_for_form("results", fallback="about")
+            self.forms_layout.setCurrentIndex(8)
+            self.title.setText("results")
+
+    @property
+    def tree(self) -> QTreeWidget:
+        if self._tree is None:
+            tree = QTreeWidget()
+            tree.setColumnCount(1)
+            tree.setHeaderHidden(True)
+            tree.setFixedWidth(180)
+            tree.setIndentation(8)
+            items = []
+            for key, values in self.configurables.items():
+                item = QTreeWidgetItem([key])
+                for value in values:
+                    child = QTreeWidgetItem([value])
+                    item.addChild(child)
+                items.append(item)
+            tree.insertTopLevelItems(0, items)
+            #tree.expandAll()
+            tree.clicked.connect(self.switch_form)
+            tree.setStyleSheet(ConfigPanel.TREE_STYLE)
+            self._tree = tree
+        return self._tree
+
+    #
+    # integrations have a panel that groups both their listener keys and
+    # their own config section, if any. we keep the list in .state.
+    #
+    def is_integration(self, section) -> bool:
+        integrations = self.main.state.data.get("integrations")
+        return integrations and section in integrations
+
+    #
+    # top sections are the sections in config.ini that are
+    # not part of integrations. The integrations will be handled
+    # differently
+    #
+    @property
+    def top_config_sections(self) -> list[str]:
+        if self._sections is None:
+            self._sections = []
+            for s in self.config._config.sections():
+                if self.is_integration(s):
+                    continue
+                #
+                # functions are not as easy to create these days. still doable
+                # but not well documented. we don't need to call it out as a useful
+                # thing for most people.
+                #
+                elif s == "functions":
+                    continue
+                if s == "csv_files" or s == "csvpath_files":
+                    if "extensions" not in self._sections:
+                        self._sections.append("extensions")
+                    continue
+                self._sections.append(s)
+            self._sections.sort()
+        return self._sections
+
+    @property
+    def configurables(self) -> dict[str,list[str]]:
+        if self._configurables is None:
+            self._configurables = {}
+            for s in self.top_config_sections:
+                items = []
+                if s == "extensions":
+                    items.append("csv_files")
+                    items.append("csvpath_files")
+                else:
+                    for pair in self.config._config.items(s):
+                        #
+                        # knock out keys that are likely to be distracting more than helpful
+                        # for most users. anyone can edit the ini directly if they want these
+                        # features.
+                        #
+                        if pair[0] == "on_unmatched_file_fingerprints":
+                            continue
+                        elif s == "listeners" and pair[0] != "groups":
+                            continue
+                        items.append(pair[0])
+                items.sort()
+                self._configurables[s] = items
+        return self._configurables
+
+    def save_all_forms(self) -> None: # , filepath: Path
+        named_files = self.config.get(section="inputs", name="files")
+        named_paths = self.config.get(section="inputs", name="csvpaths")
+        archive = self.config.get(section="results", name="archive")
+        #
+        # TODO: using reload to assure config exists. if not a default
+        # will be generated and loaded. which is fine because the forms
+        # have all their changes still. in theory. this should change
+        # in csvpath lib to better support the use case. :/
+        #
+        self.config.reload()
+        for form in self.forms:
+            form.add_to_config(self.config) #self.metadata)
+        self.config.save_config()
+        #
+        # need to refresh the inputs and results trees, but only
+        # if the paths change
+        #
+        if named_files != self.config.get(section="inputs", name="files"):
+            self.main.sidebar_rt_top.refresh()
+        if named_paths != self.config.get(section="inputs", name="csvpaths"):
+            self.main.sidebar_rt_mid.refresh()
+        if archive != self.config.get(section="results", name="archive"):
+            self.main.sidebar_rt_bottom.refresh()
+
+
+
+

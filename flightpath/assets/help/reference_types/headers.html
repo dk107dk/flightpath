@@ -1,0 +1,51 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Reference type: headers
+</h2>
+<p>
+    The <i>headers</i> reference type points to the header values for the current line of data in the currently running csvpath.
+    They are used exclusively in the <i>print()</i> function.
+</p>
+<p>
+Header names can have spaces and therefore may need to be quoted. Within <i>print()</i> statements header names can be quoted only with single quotes.
+</p>
+<hr>
+<h3 style="font-weight:bold;">
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+                This reference prints the current header value.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+                    print("This is the first name: $.headers.first_name") ]
+            </code>
+        </td>
+    </tr>
+</table>
+
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+                This csvpath prints a header that has a space in its name.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+$[*][
+last.nocontrib() ->
+    print("The value of first name is: $.headers.'first name' ")
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>

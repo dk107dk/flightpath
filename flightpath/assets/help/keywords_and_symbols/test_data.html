@@ -1,0 +1,39 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Keyword: test-data
+</h2>
+<p>
+    <i>test-data</i> is a metadata field specifically for FlightPlan. It tells FlightPlan that you always want to run a csvpath you are developing or testing against a certain file. This saves you a couple of seconds opening a file each time you run.
+</p>
+<p>
+    To use <i>test-data</i> create a metadata comment above your csvpath. In it, add the field with <i>test-data:filepath</i>, where <i>filepath</i> is the file with your data.
+</p>
+<p>
+You don't have to remember to remove the <i>test-data</i> metadata field when you push your csvpath to production. Only FlightPlan looks for the field.
+</p>
+<hr>
+<h3 style="font-weight:bold;">
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+              This csvpath will always run within FlightPlan using the identified file when you right-click and select <i>Run</i> or hit <i>ctrl-r</i>.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+~ test-data: my_csv_files/test.csv ~
+$[0][
+    print("I'm running")
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+</html>

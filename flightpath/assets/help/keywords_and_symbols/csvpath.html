@@ -1,0 +1,50 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Keyword: CSVPATH
+</h2>
+<p>
+    When you define multiple csvpaths in a single file they must be separated with: <i>---- CSVPATH ----</i>.
+    A preceding and/or trailing <i>---- CSVPATH ----</i> is permitted but not required.
+</p>
+<p>
+    Csvpaths are loaded into CsvPath Framework as a named-paths group in one of several ways:
+    <ul>
+            <li> One by one
+            <li> As the set of csvpath files in a directory
+            <li> As a JSON dict mapping named-paths group names to csvpath files
+            <li> As multiple cvspaths contained in a single file
+    </ul>
+    In each case, the csvpaths of the named-paths group are added to a single <i>group.csvpath</i> file. Within that file the csvpaths are separated by <i>---- CSVPATH ----</i>.
+
+</p>
+<p>
+    The cvspaths in the same file are run together as a named-paths group against one data file.
+</p>
+<hr>
+<h3 style="font-weight:bold;">
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+                This is three csvpaths within one file
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+$[*][ @hi = #given_name ]
+---- CSVPATH ----
+$[*][ #sign == "scorpio" -> stop_all() ]
+---- CSVPATH ----
+$[*][ print("This is your lucky day", "horiscope")
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>

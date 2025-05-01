@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "flightpath"
+version = "0.0.015"
+description = ""
+authors = ["David Kershaw <dkershaw@atestaanalytics.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">3.10,<3.14"
+pyside6 = ">=6.8.3"
+csvpath = "^0.0.538"
+pygments = "^2.19.1"
+
+[tool.poetry.scripts]
+flightpath = "flightpath.main:run"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest-qt = "^4.4.0"
+black = "^25.1.0"
+mypy = "^1.15.0"
+pyinstaller = "^6.13.0"
+pillow = "^11.2.1"
+pylint = "^3.3.6"
+pytest = "^8.3.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
