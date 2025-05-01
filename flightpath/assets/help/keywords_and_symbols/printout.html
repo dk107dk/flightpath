@@ -1,0 +1,66 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Keyword: PRINTOUT
+</h2>
+<p>
+    The print function can send printouts to any number of printers.
+    (A <i>Printer</i> is a CsvPath Framework class that collects lines of output).
+    This capability is mainly used in named-paths group runs, not one-off validations.
+</p>
+<p>
+    Every run that has any output has a printouts.txt file. The printout.txt file contains all the printed strings separated in blocks for each printer.
+    The blocks are separated by single line in the form: <i>---- PRINTOUT: name</i>. Where <i>name</i> is the name used for the printer.
+</p>
+<p>
+The <i>print()</i> and <i>error()</i> functions typically print to the <i>default</i> printer. You can pass a specific printer name to <i>print()</i> as a second argument.
+</p>
+
+<hr>
+<h3 style="font-weight:bold;">
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+            This csvpath prints to three print streams.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+$[0][
+    print("This goes to default")
+    error("This also goes to default, as well as throwing an error into errors.json")
+    print("This goes to micky-mouse operation", "micky-mouse operation")
+    print("And this message goes to popsicle stand", "popsicle stand")
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+            This is the printouts.txt resulting from the csvpath above.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+---- PRINTOUT: default
+This goes to default
+This also goes to default, as well as throwing an error into errors.json
+---- PRINTOUT: micky-mouse operation
+This goes to micky-mouse operation
+---- PRINTOUT: popsicle stand
+And this message goes to popsicle stand
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+
+</html>

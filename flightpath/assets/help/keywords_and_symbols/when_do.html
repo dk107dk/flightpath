@@ -1,0 +1,56 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Symbol: ->
+</h2>
+<p>
+    <i>-></i> is the when-do symbol. When-do is essentially CsvPath Language's if statement.
+    when the left-hand side of when-do evaluates to True, the right-hand side happens.
+</p>
+<p>
+</p>
+<hr>
+<h3 style="font-weight:bold;">
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+             When a name matches, print a message.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+                    $[*][ #name == "Fred" ->  print("Hi, Fred") ]
+            </code>
+        </td>
+    </tr>
+</table>
+
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+                When the last line is seen, print a summary.
+                <p>
+                Note the <i>nocontrib</i> qualifier that keeps <i>last()</i> from contributing to lines matching or not matching.
+                </p>
+                <p>
+                If we didn't use <i>nocontrib</i> we would only count the last line, and only then if the name was Fred.
+                </p>
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+$[*][
+   #name== "Fred" -> counter.tick()
+   last.nocontrib() -> print("Saw $.variables.tick Freds")
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>

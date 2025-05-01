@@ -1,0 +1,50 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Symbol: ==
+</h2>
+<p>
+    The equality test. <i>==</i> can be used to test a line for match or as an input to another match component.
+</p>
+<p>
+</p>
+<hr>
+<h3 style="font-weight:bold;">
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+             Equals can determine if a line matches. This example does not match any lines.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+@a = "day"
+@a == "night"
+            </code>
+        </td>
+    </tr>
+</table>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+             In assignments you must use the <i>equals()</i> or <i>eq()</i> function, not <i>==</i>.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            Rather than:
+                    <code>
+                        @a = "day" = "night"
+                    </code>
+            do:
+                    <code>
+                        @a = eq("day","night")
+                    </code>
+            In all other cases use <i>==</i>.
+        </td>
+    </tr>
+</table>
+</html>

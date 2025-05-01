@@ -1,0 +1,72 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Symbol: $
+</h2>
+<p>
+    The dollar sign is the anchor of a reference.
+    <i>$</i> is used in all four types of references:
+    <ul>
+            <li> References that point to named-files, named-paths, or results to be used in a new run
+            <li> <i>print()</i> references that display header values, runtime stats, or variables
+            <li> References that feed data into a function
+            <li> A whole csvpaths in the form <i>$file[scan-instruction][match components]</i>
+     </ul>
+</p>
+<p>
+</p>
+<hr>
+<h3 style="font-weight:bold;">
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+             A named-file reference looks like this.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+                $invoices.files.Acme/orders/202:last
+            </code>
+        </td>
+    </tr>
+</table>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+                When using references in print statements you don't need the name. <i>$.</i> is enough. The current csvpath, named or unnamed, is clear from the context.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+                <code>
+                        $[*][ @hello = "World" print("Hi $.variables.hello") ]
+                </code>
+        </td>
+    </tr>
+</table>
+
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+             A csvpath match component can look up a variable from a previous run or a previous csvpath in the same run.
+             <p>
+             In this case, the <i>$people#invites</i> part of the reference is pointing to the named-results <i>people</i> and within that, the csvpath identified as <i>invites</i>.
+             </p>
+             <p>
+
+             The most typical use of this type of reference is for a csvpath later in the run to refer to a csvpath that was earlier in the run.
+             </p>
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+                <code>
+                    $[*][ in(#first_name, $people#invites.variables.given_name ) ]
+                </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>

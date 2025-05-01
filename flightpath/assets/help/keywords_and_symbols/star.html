@@ -1,0 +1,49 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Symbol: *
+</h2>
+<p>
+    The asterisk sign is used in scan instructions. A scan instruction is in the first brackets of a csvpath. It points to lines that should be included in runs.
+</p>
+<p>
+<i>*</i> can be the whole scan instruction or the last part of a scan instruction. If it is the whole of the scan instruction it means all lines. If it is the last character of the scan instruction it means all lines after the last line number specified.
+</p>
+<p>
+</p>
+<hr>
+<h3 style="font-weight:bold;">
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+            This scan instruction scans all lines
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+                $[*][ print("hello") ]
+            </code>
+        </td>
+    </tr>
+</table>
+
+<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+            This scan instruction includes all lines after the 100th. An asterisk must follow a number.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+                $[99*][ print("hello") ]
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>
