@@ -1,0 +1,22 @@
+
+#
+# a trivial example
+#
+test.csv
+test.csvpath
+
+#
+# a trivial model validation
+#
+simple_model.csvpath
+
+#
+# a simple named-paths group definition
+#
+my_named_paths.json
+
+#
+#
+#
+README.md
+

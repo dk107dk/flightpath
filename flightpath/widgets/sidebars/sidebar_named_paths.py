@@ -125,16 +125,18 @@ class SidebarNamedPaths(QWidget):
                 to_path = self.main.sidebar.proxy_model.filePath(to_index)
             else:
                 to_path = self.main.state.cwd
+
             to_nos = Nos(to_path)
             if to_nos.isfile():
-                to_nos.path = os.path.dirname(to_path)
+                QMessageBox.warning(self, "Error", f"Cannot copy file to {to_nos.path}")
+                return
             to_path = fiut.deconflicted_path(to_path, f"{os.path.basename(from_path)}")
             to_nos.path = to_path
             if to_nos.exists():
                 #
                 # this won't realistically happen
                 #
-                print(f"ERROR: {to_nos} exists")
+                QMessageBox.warning(self, "Error", f"Cannot copy file to {to_nos.path}")
             from_nos.copy(to_nos.path)
         else:
             QMessageBox.warning(self, "Error", "Cannot copy item")
@@ -146,14 +148,12 @@ class SidebarNamedPaths(QWidget):
     def _new_run(self) -> None:
         index = self.view.currentIndex()
         path = self.model.filePath(index)
-        print(f"_new_run: path 1: {path}, index: {index}")
         named_paths = None
         if path.startswith(self._paths_root):
             named_paths = path[len(self._paths_root) + 1:]
         else:
             # shouldn't happen but what if it did?
             ...
-        print(f"_new_run: path 2: {path}")
         self.new_run_dialog = NewRunDialog(parent=self, named_paths=named_paths)
         #
         # check if there is a description.json. if there is, check if
