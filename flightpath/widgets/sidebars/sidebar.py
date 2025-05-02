@@ -257,7 +257,7 @@ class Sidebar(QWidget):
                 self.save_file_action.setVisible(False)
                 self.load_paths_action.setVisible(False)
                 self.stage_data_action.setVisible(False)
-                if ext in self.main.csvpath_config.csvpath_file_extensions:
+                if ext in self.main.csvpath_config.csvpath_file_extensions or ext.lower() == "json":
                     self.load_paths_action.setVisible(True)
                 elif ext in self.main.csvpath_config.csv_file_extensions:
                     self.stage_data_action.setVisible(True)
@@ -375,8 +375,10 @@ class Sidebar(QWidget):
             nos.rename(path)
         elif self.copied:
             name = os.path.basename(self.copied)
-            path = os.path.join(path, name)
+            path = fiut.deconflicted_path(path, name)
+            #path = os.path.join(path, name)
             nos = Nos(self.copied)
+            # disambiguate here
             nos.copy(path)
         self.cutted = None
         self.copied = None

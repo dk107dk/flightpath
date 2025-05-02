@@ -2,7 +2,10 @@ import os
 from PySide6.QtWidgets import QPlainTextEdit, QInputDialog
 from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut
 from csvpath.util.file_writers import DataFileWriter
+from csvpath.util.nos import Nos
 from csvpath.managers.paths.paths_manager import PathsManager
+
+from flightpath.util.file_utility import FileUtility as fiut
 
 class CsvPathTextEdit(QPlainTextEdit):
 
@@ -23,11 +26,13 @@ class CsvPathTextEdit(QPlainTextEdit):
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.parent.saved is True:
-            self.main._create_status_bar()
+            path = self.parent.path
+            path = os.path.dirname(path)
             i = self.main.content.tab_widget.currentIndex()
             name = self.main.content.tab_widget.tabText(i)
             name = name.replace("+", "")
             self.main.content.tab_widget.setTabText(i, f"+{name}" )
+            self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
             self.parent.saved = False
         super().keyPressEvent(event)
 
@@ -56,16 +61,54 @@ class CsvPathTextEdit(QPlainTextEdit):
         # Clean up
         del menu
 
-    def on_save_as(self) -> None:
-        ...
+    def on_save_as(self, switch_local=False) -> None:
+        #
+        # if we are in an inputs or archive we're going to want to
+        # send the copy to the left-hand side file tree.
+        #
+        # for that switch local must be True to let us know not to
+        # use self.parent.path
+        #
+        # sadly, since we catch rt-clicks direct, we have to recheck
+        # if switch_local should be true.
+        #
+        if not switch_local:
+            apath = self.parent.path
+            ap = self.main.csvpath_config.archive_path
+            ncp = self.main.csvpath_config.inputs_csvpaths_path
+            if apath.startswith(ap) or apath.startswith(ncp):
+                switch_local=True
+        thepath = None
+        if switch_local:
+            index = self.main.sidebar.last_file_index
+            if index is not None:
+                file_info = self.main.sidebar.file_model.fileInfo(source_index)
+                thepath = file_info.filePath()
+                if thepath is not None:
+                    thepath = str(thepath)
+            if thepath is None:
+                thepath = self.main.state.cwd
+            else:
+                nos = Nos(thepath)
+                if nos.isfile():
+                    thepath = os.path.dirname(thepath)
+        else:
+            thepath = self.parent.path
+            thepath = os.path.dirname(thepath)
+
         name = os.path.basename(self.parent.path)
-        name, ok = QInputDialog.getText(self, "Save As", self.tr("Enter the name of the new file:"), text=name)
+        name, ok = QInputDialog.getText(self, "Save As", "Where should the new file go? ", text=name)
         if ok and name:
             text = self.toPlainText()
-            path = os.path.join( os.path.dirname(self.parent.path), name )
+            path = fiut.deconflicted_path( thepath, name )
+            #path = os.path.join( thepath, name )
             with DataFileWriter( path=path ) as file:
                 file.write(text)
+            #
+            # does this need to change if switch_local?
+            #
             self.parent.open_file(path=path, data=None)
+            self.main.content.csvpath_source_view.reset_saved()
             #
             # what could go wrong?
             #
@@ -94,6 +137,18 @@ class CsvPathTextEdit(QPlainTextEdit):
             """
 
     def on_save(self) -> None:
+
+        #
+        # if the path is under the inputs or archive we have to save-as, not just save
+        #
+        path = self.parent.path
+        ap = self.main.csvpath_config.archive_path
+        ncp = self.main.csvpath_config.inputs_csvpaths_path
+        if path.startswith(ap) or path.startswith(ncp):
+            # save-as...
+            self.on_save_as(switch_local=True)
+            return
+
         with DataFileWriter(path=self.parent.path) as writer:
             writer.write(self.toPlainText())
         #

@@ -1,0 +1,19 @@
+~
+ name: hello world data model
+
+ description: this is a trival document model for a trivial document.
+              It specifies that the first header is a string that must
+              be present, unique. The second field is the
+              lastname header, also a unique and non-empty string.
+              And the last header is a string that may be empty and/or
+              have duplicates.
+
+ test-data: examples/test.csv
+~
+$[*][ line(
+          string.notnone(#firstname),
+          string.notnone(#lastname, 30, 2),
+          string(#say)
+      )]
+
+

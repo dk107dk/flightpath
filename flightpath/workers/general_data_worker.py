@@ -96,6 +96,7 @@ class GeneralDataWorker(QRunnable):
             except Exception as e:
                 print(f"Error: {type(e)}: {e}")
         errors = []
+        self.signals.messages.emit(QApplication.translate("DataWorker", f"  Opened {path}"))
         self.signals.finished.emit((f"Took {t} lines out of {i} seen", lines, path, data, errors))
 
 
