@@ -1,15 +1,22 @@
+
 import os
 import json
 from pathlib import Path
 
-from flightpath.util.file_utility import FileUtility as fiut
+from PySide6.QtWidgets import QMessageBox, QFileDialog
+
+from PySide6.QtCore import Qt
+
 from csvpath import CsvPaths
 from csvpath.util.config import Config as CsvPath_Config
+from csvpath.util.nos import Nos
+
+from flightpath.util.file_utility import FileUtility as fiut
+from flightpath.util.examples_marshal import ExamplesMarshal
 
 class State:
 
     def __init__(self):
-        #self._state = None
         self._state_path = None
         self._home = str(Path.home())
 
@@ -67,19 +74,56 @@ class State:
         else:
             print(f"Error: path does not exist: {self.state_path}")
 
+    def has_state(self) -> bool:
+        nos = Nos(self.state_path)
+        if not nos.exists():
+            return False
+        return True
+
+    def pick_cwd(self, main) -> None:
+        #
+        # the caller has to check our has_cwd() method again
+        # to find out if we succeeded. fine, i think.
+        #
+        from flightpath.dialogs.pick_cwd_dialog import PickCwdDialog
+        dialog = PickCwdDialog(main)
+        dialog.show_dialog()
+
+    def has_cwd(self) -> bool:
+        has = self.has_state()
+        if not has:
+            return False
+        with open(self.state_path, mode="r", encoding="utf-8") as file:
+            state = json.load(file)
+        if "cwd" in state:
+            return True
+        return False
+
     def load_state_and_cd(self, main) -> None:
         data = self.data
         cwd = data.get("cwd")
         if cwd is None:
-            print(f"Error: no cwd in state. Using home.")
             cwd = self._home
         else:
             try:
                 os.chdir(cwd)
+                #
+                # if the dir has no config it is a new project. CsvPath Framework
+                # will generate a config file. We need to add an examples folder
+                # to help people get started. CsvPath Framework does not offer
+                # examples.
+                #
+                new_project = not os.path.exists(f".{os.sep}config/config.ini")
                 main.csvpath_config = CsvPaths().config
+                if new_project:
+                    examples = os.path.join(cwd, "examples")
+                    nos = Nos(examples)
+                    if not nos.exists():
+                        nos.makedirs()
+                    em = ExamplesMarshal(main)
+                    em.add_examples(path=examples)
             except Exception as e:
                 print(f"Error setting cwd: {type(e)}: {e}")
-        #self.main.startup()
 
 
 

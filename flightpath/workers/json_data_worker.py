@@ -26,9 +26,9 @@ class JsonDataWorker(QRunnable):
         with DataFileReader(str(self.filepath)) as file:
             data = json.load(file.source)
 
-        self.signals.messages.emit(QApplication.translate("DataWorker", "Validating file..."))
+        #self.signals.messages.emit(QApplication.translate("DataWorker", "Validating file..."))
         errors = []
-        self.signals.messages.emit(QApplication.translate("DataWorker", "Read and Validation finished."))
+        self.signals.messages.emit(QApplication.translate("DataWorker", f" Opened {str(self.filepath)}"))
         self.signals.finished.emit(( str(self.filepath), data, errors))
 
 
