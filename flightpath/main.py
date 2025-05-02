@@ -33,6 +33,7 @@ from PySide6.QtCore import ( # pylint: disable=E0611
 
 from csvpath.util.config import Config as CsvPath_Config
 from csvpath.util.file_writers import DataFileWriter
+from csvpath.util.nos import Nos
 
 from flightpath.workers.csvpath_file_worker import CsvpathFileWorker
 from flightpath.workers.general_data_worker import GeneralDataWorker
@@ -59,6 +60,22 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def __init__(self):
         super().__init__()
+        #
+        # please close will be True if the user chooses not to pick a
+        # working directory on first startup. This is not expected to
+        # happen, but if it did, we need the application initalization
+        # code to not put the app into exec.
+        #
+        self.please_close = False
+        self.show()
+        self.state = State()
+        if not self.state.has_cwd():
+            self.state.pick_cwd(self)
+            has = self.state.has_cwd()
+            if not has:
+                self.please_close = True
+                return
+
         self.main = None
         self.main_top = None
         self.main_layout = None
@@ -86,8 +103,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.last_main = None
         self.progress_dialog = None # not sure we need this as a member, but it is used as one atm.
         self.state = State()
-
-
         #
         #
         #
@@ -113,11 +128,14 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # file in the app's starting dir. then, if we find a {cwd:path}
         # key in state we chdir into it.
         #
-        self.csvpath_config = CsvPath_Config()
         self.setWindowTitle("FlightPath Data • Data Preboarding Development")
         icon = QIcon(fiut.make_app_path(f"assets{os.sep}icons{os.sep}icon.png"))
         self.setWindowIcon(icon)
         self.threadpool = QThreadPool()
+
+        #
+        # this should be Path() not None?
+        #
         self.selected_file_path = Path()
         central_widget = self.takeCentralWidget()
         if central_widget:
@@ -126,6 +144,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         central_widget.setHandleWidth(3)
         central_widget.setStyleSheet("QSplitter::handle { background-color: #f3f3f3;  margin:1px; }")
         self.setCentralWidget(central_widget)
+
         self._setup_central_widget()
         #
         # tracks the most recent main_layout index so we can return
@@ -133,6 +152,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.last_main = 0
         self.config.config_panel.setup_forms()
+
+        self.show()
         self.statusBar().showMessage(f"  Working directory: {self.state.cwd}")
 
 
@@ -142,7 +163,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             and bottom help and feedback. """
         cw = self.centralWidget()
         self.main = QSplitter(Qt.Vertical)
-
         self.main_top = QWidget()
         self.main_layout = QStackedLayout()
         self.main_top.setLayout(self.main_layout)
@@ -165,6 +185,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
         self.sidebar = Sidebar(main=self)
         cw.addWidget(self.sidebar)
+        cw.addWidget(self.main)
+        #
+        # exp
+        #
         cw.addWidget(self.main)
 
         #
@@ -297,7 +321,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.sidebar.file_navigator.empty_area_click.connect(self.show_welcome_screen)
         self.sidebar.icon_label.clicked.connect(self.show_welcome_screen)
 
-
     def setup_named_files(self) -> None:
         """ adds named-files tree """
         self.sidebar_rt_top = SidebarNamedFiles(main=self, config=self.csvpath_config, role=1)
@@ -317,6 +340,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def show_welcome_screen(self):
         """ shows the main area welcome image + buttons """
         self.sidebar.file_navigator.selectionModel().clear()
+        self._show_welcome_but_do_not_deselect()
+
+    def _show_welcome_but_do_not_deselect(self) -> None:
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(0)
         self.statusBar().showMessage(self.state.cwd)
@@ -535,7 +561,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             )
             worker.signals.finished.connect(self.update_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
-
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
             self.progress_dialog.setValue(0)
@@ -546,23 +571,23 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             worker = CsvpathFileWorker(self.selected_file_path, self)
             worker.signals.finished.connect(self.update_csvpath_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
-
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(300)  # show if task takes more than 300ms
             self.threadpool.start(worker)
-
         elif info.isFile() and info.suffix() == "json":
             worker = JsonDataWorker(self.selected_file_path, self)
             worker.signals.finished.connect(self.update_json_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
-
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(300)  # show if task takes more than 300ms
             self.threadpool.start(worker)
+        #
+        # need to recognize .txt (if not in csv extensions) and .md
+        #
         else:
             self.clear_views()
 
@@ -605,12 +630,18 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 #
                 # set the view to be saved and clear any "+" in the tab name.
                 #
-                self.main.content.csvpath_source_view.reset_saved()
+                self.content.csvpath_source_view.reset_saved()
                 #
                 #
                 #
             file_info = self.sidebar.file_model.fileInfo(source_index)
             self.selected_file_path = file_info.filePath()
+            nos = Nos(self.selected_file_path)
+            if not nos.isfile():
+                # close file if there is one and
+                self._show_welcome_but_do_not_deselect()
+                self.statusBar().showMessage(f"  {self.selected_file_path}")
+                return
             self.read_validate_and_display_file()
             self.statusBar().showMessage(f"  {self.selected_file_path}")
             #
@@ -627,16 +658,28 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
 
     def on_named_file_tree_click(self, index):
-        self.selected_file_path = Path(self.sidebar_rt_top.model.filePath(index))
+        self.selected_file_path = self.sidebar_rt_top.model.filePath(index)
+        nos = Nos(self.selected_file_path)
+        if not nos.isfile():
+            self._show_welcome_but_do_not_deselect()
         self.read_validate_and_display_file()
+        self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def on_named_paths_tree_click(self, index):
-        self.selected_file_path = Path(self.sidebar_rt_mid.model.filePath(index))
+        self.selected_file_path = self.sidebar_rt_mid.model.filePath(index)
+        nos = Nos(self.selected_file_path)
+        if not nos.isfile():
+            self._show_welcome_but_do_not_deselect()
         self.read_validate_and_display_file()
+        self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def on_archive_tree_click(self, index):
-        self.selected_file_path = Path(self.sidebar_rt_bottom.model.filePath(index))
+        self.selected_file_path = self.sidebar_rt_bottom.model.filePath(index)
+        nos = Nos(self.selected_file_path)
+        if not nos.isfile():
+            self._show_welcome_but_do_not_deselect()
         self.read_validate_and_display_file()
+        self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def clear_views(self):
         self.table_model = TableModel([])
@@ -728,10 +771,21 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def closeEvent(self, event):
         if (
+            not hasattr(self, "sidebar")
+            and not hasattr(self, "main_layout")
+            and not hasattr(self, "content")
+        ):
+            event.accept()
+            return
+        #
+        # if we have just some of those attributes we'll have a problem.
+        # but not expecting that today.
+        #
+        elif (
             self.sidebar.last_file_index
             and not self.content.csvpath_source_view.saved
-            and self.main_layout.currentIndex() == 1
             and self.content.tab_widget.currentIndex() == 2
+            and self.main_layout.currentIndex() == 1
         ):
             reply = QMessageBox.question(self, 'Confirm Close',
                                      'Are you sure you want to quit without saving?',
@@ -749,12 +803,14 @@ def run():
     app.setStyle("Fusion")
 
     window = MainWindow()
+    if window.please_close:
+        return
     #
     # careful, this was throwing an error at one point, but is currently
     # commented mainly because a smaller window is easier.
     #
     #window.showMaximized()
-    window.show()
+    #window.show()
     sys.exit(app.exec())
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_collector import FileCollector
+from flightpath.widgets.simple_table_model import SimpleTableModel
 
 class CsvpathSourceViewer(QWidget):
 
@@ -389,7 +390,7 @@ lines = path.collect()
         self.text_edit.show()
         self.text_edit.setPlainText(data)
         c = "cmd" if osut.is_mac() else "ctrl"
-        self.main.statusBar().showMessage(f"{c}-s to save, {c}-r to run")
+        self.main.statusBar().showMessage(f"{c}-s to save, {c}-r to run • Opened {path}")
         self.main.content.set_csvpath_tab_name( os.path.basename(path) )
 
 

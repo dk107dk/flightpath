@@ -28,7 +28,7 @@ class CsvpathFileWorker(QRunnable):
         data = None
         with DataFileReader(self.filepath) as file:
             data = file.source.read()
-        self.signals.messages.emit(QApplication.translate("DataWorker", "Validating file..."))
+        #self.signals.messages.emit(QApplication.translate("DataWorker", "Validating file..."))
         #
         # try running a CsvPath run to see if the file is basically valid csvpath?
         #
