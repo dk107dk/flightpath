@@ -8,6 +8,7 @@ from csvpath.util.file_readers import DataFileReader
 from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
 from flightpath.widgets.panels.data_viewer import DataViewer
+from flightpath.widgets.panels.data_toolbar import DataToolbar
 
 class DataWorkerSignals(QObject):
     finished = Signal(tuple)
@@ -15,15 +16,17 @@ class DataWorkerSignals(QObject):
 
 class GeneralDataWorker(QRunnable):
 
-    def __init__(self, filepath, main, *, rows:str, sampling:str):
+    def __init__(self, filepath, main, *, rows:str, sampling:str, delimiter=None, quotechar=None):
         super().__init__()
         self.main = main
         self.filepath = filepath
         self.signals = DataWorkerSignals()
         self.sample_size:int = self._rows(rows) if rows else 50
-        self.sampling = sampling if sampling else DataViewer.FIRST_N
+        self.sampling = sampling if sampling else DataToolbar.FIRST_N
         self.line_take = 0
         self.lines_to_take:list[int] = None
+        self.delimiter = delimiter
+        self.quotechar = quotechar
 
     def _rows(self, s) -> int:
         if s == "All lines":
@@ -49,15 +52,15 @@ class GeneralDataWorker(QRunnable):
         #
         # if sampling is every line and we are collecting all lines
         #
-        if (self.sampling == DataViewer.FIRST_N):
+        if (self.sampling == DataToolbar.FIRST_N):
             self.line_take += 1
             return True
-        elif self.sampling == DataViewer.RANDOM_0:
+        elif self.sampling == DataToolbar.RANDOM_0:
             if random.randint(0,1) % 2 == 0:
                 self.line_take += 1
                 return True
             return False
-        elif self.sampling == DataViewer.RANDOM_ALL:
+        elif self.sampling == DataToolbar.RANDOM_ALL:
             if line_num == self.lines_to_take[len(self.lines_to_take)-1]:
             #if line_num in self.lines_to_take:
                 self.line_take += 1
@@ -69,21 +72,22 @@ class GeneralDataWorker(QRunnable):
     def run(self):
         self.signals.messages.emit(QApplication.translate("DataWorker", "Reading file..."))
         data = []
-        if self.sampling == DataViewer.RANDOM_ALL and self.lines_to_take is None:
+        if self.sampling == DataToolbar.RANDOM_ALL and self.lines_to_take is None:
             self.prep_sampling()
         path = str(self.filepath)
         lines:list[int] = []
+        t = 0
+        i = 0
         with DataFileReader( path ) as file:
             #
             # TODO: we don't need to handle CSV ourselves, right? shouldn't DataFileReader do it?
             #
+            #
+            # TODO: need to handle delimiters and quotechars
+            #
             try:
-                reader = csv.reader(
-                    file.source
-                )
+                reader = csv.reader(file.source, delimiter=self.delimiter, quotechar=self.quotechar)
                 max = self.sample_size
-                i = 0
-                t = 0
                 for line in reader:
                     b = self.accept_line(i, line)
                     i += 1
@@ -114,7 +118,7 @@ class GeneralDataWorker(QRunnable):
         #
         self.lines_to_take = []
         if self.sample_size >= needed -1:
-            self.main.content.data_view.rows.setCurrentIndex(4)
+            self.main.content.data_view.toolbar.rows.setCurrentIndex(4)
             self.sample_size = -1
             return
         to = min(needed-1, self.sample_size)

@@ -43,6 +43,7 @@ class SidebarArchiveRefMaker:
 
     def _repeat_run(self):
         index = self.parent.view.currentIndex()
+        print(f"doing _repeat_run: index: {index}")
         named_paths, named_file = self._get_rerun_references(index)
         self.new_run_dialog = NewRunDialog(parent=self.parent, named_paths=named_paths, named_file=named_file)
         #
@@ -168,8 +169,24 @@ class SidebarArchiveRefMaker:
         #
         return (named_paths, named_file)
 
+    def _path_is_simple_named_file_name(self, path:str) -> str|None:
+        files = self.parent.main.csvpath_config.get(section="results", name="archive")
+        if not path.startswith(files):
+            return None
+        path = path[len(files)+1:]
+        if path.find(pathu.sep(path)[0]) == -1:
+            return path
+        else:
+            return None
+
     def _named_file_reference_for_path(self, path:str) -> str:
-        print("\n")
+        #
+        # first, test for <archive>/<name>
+        # if so, just return <name>
+        #
+        n = self._path_is_simple_named_file_name(path)
+        if n is not None:
+            return n
         d = self._find_run_dir(path)
         mani = ""
         if d is None:
@@ -181,6 +198,9 @@ class SidebarArchiveRefMaker:
             mani = pathu.resep(mani)
         nos = Nos(mani)
         j = None
+        #
+        # could we have a problem with the lookup if a user deletes a recent run?
+        #
         if nos.exists():
             with DataFileReader(mani) as file:
                 j = json.load(file.source)
@@ -204,6 +224,12 @@ class SidebarArchiveRefMaker:
         #
         fingerprint = j.get("named_file_fingerprint")
         named_file = j.get("named_file_name")
+        #
+        # named_file may be from a reference. if that is the case it will come with its
+        # '$' prefix already in place. otherwise we need to prepend '$'.
+        #
+        if not named_file.startswith("$"):
+            named_file = f"${named_file}"
         return f"{named_file}.files.{fingerprint}"
 
 
