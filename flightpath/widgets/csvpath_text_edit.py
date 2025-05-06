@@ -1,6 +1,9 @@
 import os
-from PySide6.QtWidgets import QPlainTextEdit, QInputDialog
-from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut
+from PySide6.QtWidgets import QPlainTextEdit, QInputDialog, QStyle
+from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut, QPixmap, QPainter, QIcon
+from PySide6.QtCore import Qt
+from PySide6.QtSvg import QSvgRenderer
+
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 from csvpath.managers.paths.paths_manager import PathsManager
@@ -13,6 +16,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         super().__init__()
         self.main = main
         self.parent = parent
+        self.icon = None
         self.parent.saved = True
         save_shortcut_ctrl_save = QShortcut(QKeySequence("Ctrl+S"), self)
         save_shortcut_cmd_save = QShortcut(QKeySequence("Command+S"), self)
@@ -24,6 +28,22 @@ class CsvPathTextEdit(QPlainTextEdit):
         save_shortcut_ctrl_run.activated.connect(self.on_run)
         save_shortcut_cmd_run.activated.connect(self.on_run)
 
+    """
+    def _icon(self) :
+        if self.icon is None:
+            svg_renderer = QSvgRenderer(fiut.make_app_path(f"assets{os.sep}icons{os.sep}pencil.svg"))
+            if not svg_renderer.isValid():
+                print("Failed to load SVG file")
+            pixmap = QPixmap(16,16)
+            pixmap.fill(Qt.transparent)
+            painter = QPainter(pixmap)
+            svg_renderer.render(painter)
+            painter.end()
+            icon = self.style().standardIcon(pixmap)
+            self.icon = pixmap
+        return self.icon
+    """
+
     def keyPressEvent(self, event: QKeyEvent):
         if self.parent.saved is True:
             path = self.parent.path
@@ -31,7 +51,7 @@ class CsvPathTextEdit(QPlainTextEdit):
             i = self.main.content.tab_widget.currentIndex()
             name = self.main.content.tab_widget.tabText(i)
             name = name.replace("+", "")
-            self.main.content.tab_widget.setTabText(i, f"+{name}" )
+            self.main.content.tab_widget.setTabText(i, f"+ {name}" )
             self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
             self.parent.saved = False
         super().keyPressEvent(event)

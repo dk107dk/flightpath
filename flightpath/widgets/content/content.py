@@ -34,6 +34,7 @@ class Content(QWidget):
         self.tab_widget.addTab(self.source_view, "Source Data View")
         self.tab_widget.addTab(self.csvpath_source_view, "CsvPath Language")
         self.tab_widget.addTab(self.json_source_view, "JSON metadata")
+
         layout.setContentsMargins(1, 3, 1, 2)
 
         TabWidgetOverlayButton(self.tab_widget, main)

@@ -1,0 +1,3 @@
+
+$test.csv[*][ firstname == "cat" -> print("hello world") ]
+

@@ -1,0 +1,96 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Keyword: test-quotechar
+</h2>
+<p>
+    <i>test-quotechar</i> is a metadata field specifically for FlightPlan. It tells FlightPlan that the file or files you will be running the current csvpath on have a certain quotechar.
+</p>
+<p>
+    To use <i>test-quotechar</i> create a metadata comment above your csvpath. In it, add the field with <i>test-quotechar:quotechar-word</i>, where <i>quotechar-word</i> is one of the words in the left-hand column, mapping the character on the right:
+
+    <style>
+        table { margin:5px 0 0 10px; border-bottom:1px solid #494949; }
+        table td {border-top:1px solid #494949; border-top:1px solid #494949; border-right:1px solid #494949;}
+        table td.left {background-color:#494949; color:#fff}
+        table td.right {background-color:#fff; color:#000}
+    </style>
+    <table cellspacing="0" cellpadding="5" >
+        <tr>
+            <td class='left'>
+                    quotes</td>
+            <td class='right'>
+                    "</td>
+        </tr>
+        <tr>
+            <td class='left'>
+                    quote</td>
+            <td class='right'>
+                    "</td>
+        </tr>
+        <tr>
+            <td class='left'>
+                    single-quotes</td>
+            <td class='right'>
+                    '</td>
+        </tr>
+        <tr>
+            <td class='left'>
+                    singlequotes</td>
+            <td class='right'>
+                    '</td>
+        </tr>
+        <tr>
+            <td class='left'>
+                    single-quote</td>
+            <td class='right'>
+                    '</td>
+        </tr>
+        <tr>
+            <td class='left'>
+                    singlequote</td>
+            <td class='right'>
+                    '</td>
+        </tr>
+        <tr>
+            <td class='left'>
+                    tick</td>
+            <td class='right'>
+                    `</td>
+        </tr>
+        <tr>
+            <td class='left'>
+                    int</td>
+            <td class='right'>
+                    <i>any positive char code integer</i></td>
+        </tr>
+    </table>
+</p>
+<p>
+    The <i>int</i> code allows you to use any Unicode character. In most cases, single or double quotes are enough. Quotes is the default. There is no need to specify that the quotechar to use is a quote character.
+</p>
+<hr>
+<h3 style="font-weight:bold;">
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="5" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+              This csvpath will always run within FlightPlan using the identified file when you right-click and select <i>Run</i> or hit <i>ctrl-r</i>.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+~ test-quotechar: singlequotes
+$[0][
+    yes()
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+</html>

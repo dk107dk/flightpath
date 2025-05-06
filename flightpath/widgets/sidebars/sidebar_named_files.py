@@ -101,7 +101,7 @@ class SidebarNamedFiles(QWidget):
         self.new_run_action.triggered.connect(self._new_run)
 
         self.delete_action = QAction()
-        self.delete_action.setText(self.tr("Permanent delete"))
+        self.delete_action.setText("Permanent delete")
         self.delete_action.triggered.connect(self._delete_view_item)
 
         self.copy_action = QAction()
@@ -174,11 +174,12 @@ class SidebarNamedFiles(QWidget):
     def _delete_view_item(self):
         index = self.view.currentIndex()
         if index.isValid():
-            nos = Nos(self.model.filePath(index))
+            path = self.model.filePath(index)
+            nos = Nos(path)
             confirm = QMessageBox.question(
                 self,
                 self.tr("Delete"),
-                self.tr("Permanently delete?"),
+                self.tr(f"Permanently delete {path}?"),
                 QMessageBox.Yes | QMessageBox.No,
             )
             if confirm == QMessageBox.Yes:
@@ -193,7 +194,7 @@ class SidebarNamedFiles(QWidget):
                     #
                     #if is_selected:
                     #    self.window().show_welcome_screen()
-                    self.window().statusBar().showMessage(self.tr("Item deleted successfuly."))
+                    self.window().statusBar().showMessage("{path} deleted")
                     #
                     # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
                     # but for now it should work. refreshing named_files is probably fair, but that's
@@ -201,7 +202,9 @@ class SidebarNamedFiles(QWidget):
                     # and if we did that the refresh might slow down potentially a lot. so long-term,
                     # seems like we should capture what is registered and manually add it. no fun. :/
                     #
-                    self.main._setup_central_widget()
+                    #self.main._setup_central_widget()
+                    self.main.renew_sidebar_named_files()
+
 
 
 
