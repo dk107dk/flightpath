@@ -266,6 +266,21 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         d = self.sidebar_rt_bottom
         self.sidebar_rt_bottom = SidebarArchive(main=self, config=self.csvpath_config, role=3)
         self.rt_col.replaceWidget(2, self.sidebar_rt_bottom)
+        self.sidebar_rt_bottom.view.clicked.connect(self.on_archive_tree_click)
+        d.deleteLater()
+
+    def renew_sidebar_named_files(self) -> None:
+        d = self.sidebar_rt_top
+        self.sidebar_rt_top = SidebarNamedFiles(main=self, config=self.csvpath_config, role=3)
+        self.rt_col.replaceWidget(0, self.sidebar_rt_top)
+        self.sidebar_rt_top.view.clicked.connect(self.on_named_file_tree_click)
+        d.deleteLater()
+
+    def renew_sidebar_named_paths(self) -> None:
+        d = self.sidebar_rt_mid
+        self.sidebar_rt_mid = SidebarNamedPaths(main=self, config=self.csvpath_config, role=3)
+        self.rt_col.replaceWidget(1, self.sidebar_rt_mid)
+        self.sidebar_rt_mid.view.clicked.connect(self.on_named_paths_tree_click)
         d.deleteLater()
 
     def hide_rt_tabs(self) -> None:
@@ -296,9 +311,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # data_view's sampling toolbar
         #
-        self.content.data_view.sampling.activated.connect(self.on_reload_data)
-        self.content.data_view.rows.activated.connect(self.on_data_rows_changed)
-        self.content.data_view.save_sample.clicked.connect(self.on_save_sample)
+        self.content.data_view.toolbar.sampling.activated.connect(self.on_reload_data)
+        self.content.data_view.toolbar.rows.activated.connect(self.on_data_rows_changed)
+        self.content.data_view.toolbar.save_sample.clicked.connect(self.on_save_sample)
+        self.content.data_view.toolbar.delimiter.activated.connect(self.on_set_delimiter)
+        self.content.data_view.toolbar.quotechar.activated.connect(self.on_set_quotechar)
         #
         #
         #
@@ -521,22 +538,22 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self._rt_tabs_hide()
 
     def on_data_rows_changed(self) -> None:
-        t = self.content.data_view.rows.currentText()
+        t = self.content.data_view.toolbar.rows.currentText()
         if t == "All lines":
             #
             # set the sampling options to first-n and remove or disable others
             #
-            self.content.data_view.sampling.setCurrentIndex(0)
-            self.content.data_view.sampling.model().item(0).setEnabled(False)
-            self.content.data_view.sampling.model().item(1).setEnabled(False)
-            self.content.data_view.sampling.model().item(2).setEnabled(False)
+            self.content.data_view.toolbar.sampling.setCurrentIndex(0)
+            self.content.data_view.toolbar.sampling.model().item(0).setEnabled(False)
+            self.content.data_view.toolbar.sampling.model().item(1).setEnabled(False)
+            self.content.data_view.toolbar.sampling.model().item(2).setEnabled(False)
             #
             # select first-n
             #
         else:
-            self.content.data_view.sampling.model().item(0).setEnabled(True)
-            self.content.data_view.sampling.model().item(1).setEnabled(True)
-            self.content.data_view.sampling.model().item(2).setEnabled(True)
+            self.content.data_view.toolbar.sampling.model().item(0).setEnabled(True)
+            self.content.data_view.toolbar.sampling.model().item(1).setEnabled(True)
+            self.content.data_view.toolbar.sampling.model().item(2).setEnabled(True)
             #
             # add/enable all sampling options
             #
@@ -556,8 +573,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             worker = GeneralDataWorker(
                 self.selected_file_path,
                 self,
-                rows=self.content.data_view.rows.currentText(),
-                sampling=self.content.data_view.sampling.currentText()
+                rows=self.content.data_view.toolbar.rows.currentText(),
+                sampling=self.content.data_view.toolbar.sampling.currentText(),
+                delimiter=self.content.data_view.toolbar.delimiter_char(),
+                quotechar=self.content.data_view.toolbar.quotechar_char()
             )
             worker.signals.finished.connect(self.update_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
@@ -674,6 +693,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def on_archive_tree_click(self, index):
+        print(f"main.on_archive_tree_click: clicked")
         self.selected_file_path = self.sidebar_rt_bottom.model.filePath(index)
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
@@ -702,6 +722,16 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.statusBar().showMessage(f"  Working directory changed to: {self.state.cwd}")
 
     def on_reload_data(self) -> None:
+        self.read_validate_and_display_file()
+
+    def on_set_delimiter(self) -> None:
+        #d = self.content.data_view.toolbar.delimiter.currentText()
+        #q = self.content.data_view.toolbar.quotechar.currentText()
+        self.read_validate_and_display_file()
+
+    def on_set_quotechar(self) -> None:
+        #d = self.content.data_view.toolbar.delimiter.currentText()
+        #q = self.content.data_view.toolbar.quotechar.currentText()
         self.read_validate_and_display_file()
 
     def on_save_sample(self) -> None:

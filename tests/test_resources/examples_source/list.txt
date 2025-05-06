@@ -1,0 +1,4 @@
+# these are the most basic examples. they are similar to the files used in many csvpath.org and git repo pages
+test.csv
+test.csvpath
+

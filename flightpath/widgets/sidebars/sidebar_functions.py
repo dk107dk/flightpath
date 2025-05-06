@@ -62,8 +62,9 @@ class SidebarFunctions(QWidget):
             names["NAME/name"] = "NAME"
             names["PRINTOUT"] = "PRINTOUT"
             names["test-data"] = "test_data"
+            names["test-delimiter"] = "test_delimiter"
+            names["test-quotechar"] = "test_quotechar"
 
-        #self.setMaximumWidth(450)
         self.setMinimumWidth(300)
         self.context_menu = None
         self.view = None
@@ -148,23 +149,7 @@ class SidebarFunctions(QWidget):
                 "results",
                 "variables"
             ],
-            SidebarFunctions.KEYWORDS:[
-                "->",
-                "==",
-                "~",
-                "$",
-                "+",
-                "*",
-                "\"",
-                ".",
-                "'",
-                "#",
-                "CSVPATH",
-                "ID/id",
-                "NAME/name",
-                "PRINTOUT",
-                "test-data"
-            ],
+            SidebarFunctions.KEYWORDS: SidebarFunctions.KEYWORD_NAMES,
             SidebarFunctions.RUNTIME: [
                 "count_lines",
                 "count_scans",

@@ -1,6 +1,7 @@
 import sys
 import json
 import os
+import traceback
 
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPlainTextEdit, QLabel, QMessageBox, QFileDialog, QTableView
 from PySide6.QtGui import QFont
@@ -11,6 +12,7 @@ from csvpath.util.metadata_parser import MetadataParser
 from csvpath import CsvPath
 from csvpath.util.printer import Printer
 from csvpath.managers.errors.error_comms import ErrorCommunications
+from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.syntax_highlighter import CsvpathHighlighter
@@ -21,10 +23,35 @@ from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_collector import FileCollector
 from flightpath.widgets.simple_table_model import SimpleTableModel
+from flightpath.widgets.panels.table_model import TableModel
 
 class CsvpathSourceViewer(QWidget):
+    CHAR_NAMES = {
+        "pipe": "|",
+        "bar": "|",
+        "semi-colon": ";",
+        "semicolon": ";",
+        "comma": ",",
+        "colon": ":",
+        "hash":"#",
+        "percent":"%",
+        "star":"*",
+        "asterisk":"*",
+        "at":"@",
+        "~":"tilde",
+        "int": None,
+        "quotes":'"',
+        "quote": '"',
+        "single-quotes":"'",
+        "singlequotes":"'",
+        "singlequote":"'",
+        "single-quote":"'",
+        "tick":"`"
+        "tab":None
+    }
 
     def __init__(self, main):
+
         super().__init__()
         self.main = main
         stut.set_common_style(self)
@@ -75,7 +102,6 @@ class CsvpathSourceViewer(QWidget):
         filepath = mdata.get("test-data")
         if filepath is None:
             return None
-
         filepath = filepath.strip()
         if not filepath.startswith("/"):
             #
@@ -92,19 +118,53 @@ class CsvpathSourceViewer(QWidget):
         mdata = self._get_metadata(comment)
         if mdata:
             c = mdata.get("test-quotechar")
+            if c:
+                c = self._get_char(c, '"')
+        return c
+
+    def _get_char(self, c:str, default:str) -> str:
+        #
+        # CsvPath does not support special characters in metadata. they are
+        # allowed, but not preserved. that means we cannot assume test-delimiter
+        # will just hold the actual delimiter char. we need to parse a char
+        # name and use that to find the right delimiter char.
+        #
+        # we could do this a few ways. one approach would be to use the HTML
+        # char codes (e.g. &nbsp;) but that feels hard for everyone. better to
+        # just use "bar", "pipe", "semi-colon", "quotes", etc.
+        #
+        print(f"CsvpathSourceViewer: _get_char: c 1: {c}, default: {default}")
+        if c == "int":
+            try:
+                c = chr(exut.to_int(c))
+            except Exception:
+                ...
+        elif c == "tab":
+            c = "\t"
+        else:
+            print(f"not int!")
+            try:
+                c = CsvpathSourceViewer.CHAR_NAMES.get(c)
+            except Exception as e:
+                print(f"e: {type(e)}: {e}")
+                ...
+        print(f"CsvpathSourceViewer: _get_char: c 2: {c}")
         if c is None:
-            c = '"'
+            c = default
         c = c.strip()
+        print(f"CsvpathSourceViewer: _get_char: c 3: {c}")
         return c
 
     def _get_delimiter(self, comment:str=None) -> str:
         c = None
         mdata = self._get_metadata(comment)
+        print(f"CsvpathSourceViewer: _get_delimiter: mdata: {mdata}")
         if mdata:
             c = mdata.get("test-delimiter")
-        if c is None:
-            c = ','
-        c = c.strip()
+            print(f"_get_delimiter: c 1: >>{c}<<")
+            if c:
+                c = self._get_char(c, ",")
+            print(f"_get_delimiter: c 2: {c}")
         return c
 
     def run_one_csvpath(self, csvpath:str, filepath:str=None) -> None:
@@ -158,6 +218,7 @@ class CsvpathSourceViewer(QWidget):
         #
         #
         #
+        print(f"csvpath-source-view: run_one: quotechar: {quotechar}, delimiter: {delimiter}")
         path = CsvPath(quotechar=quotechar, delimiter=delimiter)
         lines = []
         capture = None
@@ -173,7 +234,6 @@ class CsvpathSourceViewer(QWidget):
             path.set_printers([capture])
             lines = path.collect()
         except Exception as e:
-            import traceback
             estr = traceback.format_exc()
             self._display_stacktrace(estr)
             return
@@ -295,7 +355,8 @@ class CsvpathSourceViewer(QWidget):
         layout = QVBoxLayout()
         matches.setLayout(layout)
         matches_view = QTableView()
-        model = SimpleTableModel(lines)
+        model = TableModel(lines)
+        #model = SimpleTableModel(lines)
         matches_view.setModel(model)
         layout.addWidget(matches_view)
         layout.setContentsMargins(0, 0, 0, 0)
