@@ -187,18 +187,19 @@ class SidebarArchive(QWidget):
     def _delete_file_navitagor_item(self):
         index = self.view.currentIndex()
         if index.isValid():
-            nos = Nos(self.model.filePath(index))
+            path = self.model.filePath(index)
+            nos = Nos(path)
             confirm = QMessageBox.question(
                 self,
                 self.tr("Delete"),
-                self.tr("Permanently delete?"),
+                self.tr(f"Permanently delete {path}?"),
                 QMessageBox.Yes | QMessageBox.No,
             )
             if confirm == QMessageBox.Yes:
                 try:
                     nos.remove()
                 except OSError as e:
-                    QMessageBox.warning(self, self.tr("Error"), str(e))
+                    QMessageBox.warning(self, "Error", str(e))
                 else:
                     #
                     # TODO: this will have to change because we don't want to dismiss
@@ -206,7 +207,7 @@ class SidebarArchive(QWidget):
                     #
                     #if is_selected:
                     #    self.window().show_welcome_screen()
-                    self.window().statusBar().showMessage(self.tr("Item deleted successfuly."))
+                    self.window().statusBar().showMessage("{path} deleted")
                     #
                     # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
                     # but for now it should work. refreshing named_files is probably fair, but that's
@@ -214,7 +215,15 @@ class SidebarArchive(QWidget):
                     # and if we did that the refresh might slow down potentially a lot. so long-term,
                     # seems like we should capture what is registered and manually add it. no fun. :/
                     #
-                    self.main._setup_central_widget()
-
+                    #self.main._setup_central_widget()
+                    self.main.renew_sidebar_archive()
+                    #
+                    # do we reset the connects for on click?
+                    #
+                    # _connects -> on_archive_tree_click -> read_validate_and_display_file
+                    #
+                    #   self.sidebar_rt_bottom.view.clicked.connect(self.on_archive_tree_click)
+                    #
+                    #
 
 

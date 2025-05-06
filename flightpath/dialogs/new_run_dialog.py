@@ -7,6 +7,8 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QLineEdit,
         QFormLayout,
         QComboBox,
+        QWidget,
+        QPlainTextEdit,
         QMessageBox
 )
 from PySide6.QtCore import Qt # pylint: disable=E0611
@@ -15,6 +17,7 @@ from csvpath import CsvPaths
 
 from flightpath.widgets.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
+from flightpath.util.log_utility import LogUtility as lout
 
 class NewRunDialog(QDialog):
     COLLECT_SERIAL = "collect serially"
@@ -228,7 +231,14 @@ class NewRunDialog(QDialog):
             msg_box.setStandardButtons(QMessageBox.Ok)
             msg_box.exec()
             return
+        self._do_run(paths=paths, template=template)
 
+
+    def _do_run(self, *, paths:CsvPaths, template:str) -> None:
+        #
+        # clear any existing logs to .bak
+        #
+        lout.rotate_log(self.sidebar.main.state.cwd, self.sidebar.main.csvpath_config)
         #
         # do run on paths
         #
@@ -246,8 +256,43 @@ class NewRunDialog(QDialog):
         # and if we did that the refresh might slow down potentially a lot. so long-term,
         # seems like we should capture what is registered and manually add it.
         #
-        # this works, but only slightly better.  :(
+        # this works, but only slightly better because tree still closed.  :(
         #
         self.sidebar.main.renew_sidebar_archive()
-
         self.close()
+        #
+        # display log
+        #
+        self._display_log(paths)
+
+    def _display_log(self, paths:CsvPaths) -> None:
+        log = QWidget()
+        log.setObjectName("Log")
+        self.sidebar.main.help_and_feedback.addTab(log, "Log")
+        #
+        # the logs tab should be the first showing, at least unless/until
+        # we add more run results tabs.
+        #
+        i = self.sidebar.main.help_and_feedback.count()
+        self.sidebar.main.help_and_feedback.setCurrentIndex(i-1)
+
+        layout = QVBoxLayout()
+        log.setLayout(layout)
+        view = QPlainTextEdit()
+        log_lines = lout.get_log_content(self.sidebar.main.csvpath_config)
+        view.setPlainText(log_lines)
+        view.setReadOnly(True)
+        layout.addWidget(view)
+        layout.setContentsMargins(0, 0, 0, 0)
+        #
+        # clear the logging; basically remove the handler and recreate in csvpath.
+        #
+        lout.clear_logging(paths)
+        #
+        # show log. do this even if nothing much to show
+        #
+        if not self.sidebar.main.is_showing_help():
+            self.sidebar.main.on_click_help()
+
+
+

@@ -8,12 +8,11 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">3.10,<3.14"
 pyside6 = ">=6.8.3"
-csvpath = "^0.0.538"
 pygments = "^2.19.1"
+csvpath = { path = "../csvpath/dist/csvpath-0.0.539.tar.gz" }
 
 [tool.poetry.scripts]
 flightpath = "flightpath.main:run"
-
 
 [tool.poetry.group.dev.dependencies]
 pytest-qt = "^4.4.0"
@@ -23,6 +22,13 @@ pyinstaller = "^6.13.0"
 pillow = "^11.2.1"
 pylint = "^3.3.6"
 pytest = "^8.3.5"
+
+
+[[tool.poetry.source]]
+name = "csvpath"
+url = "file:///Users/davidkershaw/dev/csvpath/dist"
+priority = "explicit"
+
 
 [build-system]
 requires = ["poetry-core"]

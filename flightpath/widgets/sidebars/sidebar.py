@@ -479,8 +479,8 @@ class Sidebar(QWidget):
         #
         # TODO: add delete later?
         #
-        self.stage_dialog = None
         self.stage_dialog.deleteLater()
+        self.stage_dialog = None
 
     def _rename_file_navigator_item(self):
         index = self.file_navigator.currentIndex()
@@ -617,7 +617,7 @@ class Sidebar(QWidget):
             confirm = QMessageBox.question(
                 self,
                 self.tr("Delete"),
-                self.tr("Are you sure you want to delete this?"),
+                self.tr(f"Are you sure you want to delete {path}?"),
                 QMessageBox.Yes | QMessageBox.No,
             )
             if confirm == QMessageBox.Yes:
@@ -628,7 +628,7 @@ class Sidebar(QWidget):
                 else:
                     if is_selected:
                         self.window().show_welcome_screen()
-                    self.window().statusBar().showMessage(self.tr("Item deleted successfuly."))
+                    self.window().statusBar().showMessage(f"{path} deleted successfuly.")
 
     def _show_only_name_column_in_file_navigator(self, file_model, file_navigator):
         for column in range(file_model.columnCount()):

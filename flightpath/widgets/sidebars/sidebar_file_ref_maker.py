@@ -34,7 +34,9 @@ class SidebarFileRefMaker:
             return name
         print(f"SidebarFileRefMaker: _named_file_ref: not a named-file name: {name}")
         ref = self._ref_path_for_path(path)
-        print(f"SidebarFileRefMaker: _named_file_ref: ref: {ref}")
+        print(f"SidebarFileRefMaker: _named_file_ref: ref 1: {ref}")
+        ref = ref.replace(".", "_")
+        print(f"SidebarFileRefMaker: _named_file_ref: ref 2: {ref}")
         ref = f"${name}.files.{ref}:last"
         return ref
 
