@@ -8,7 +8,7 @@ from csvpath.util.file_readers import DataFileReader
 from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
 from flightpath.widgets.panels.data_viewer import DataViewer
-from flightpath.widgets.panels.data_toolbar import DataToolbar
+from flightpath.widgets.toolbars.data_toolbar import DataToolbar
 
 class DataWorkerSignals(QObject):
     finished = Signal(tuple)

@@ -27,7 +27,7 @@ from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.dialogs.new_run_dialog import NewRunDialog
 from .sidebar_file_ref_maker import SidebarFileRefMaker
 from flightpath.util.help_finder import HelpFinder
-from flightpath.widgets.plus_help import HelpIconPackager, HelpHeaderView
+from flightpath.widgets.help.plus_help import HelpIconPackager, HelpHeaderView
 from flightpath.util.file_utility import FileUtility as fiut
 
 
@@ -75,7 +75,7 @@ class SidebarNamedFiles(QWidget):
             #
             #
             #
-            self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.on_click_named_files_help))
+            self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_named_files_help))
             self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
             self.view.header().setFixedHeight(24)
             self.view.header().setStyleSheet("QHeaderView {font-size:13px}")

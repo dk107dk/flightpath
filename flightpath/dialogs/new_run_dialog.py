@@ -15,7 +15,7 @@ from PySide6.QtCore import Qt # pylint: disable=E0611
 
 from csvpath import CsvPaths
 
-from flightpath.widgets.plus_help import HelpIconPackager
+from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.log_utility import LogUtility as lout
 
@@ -135,38 +135,38 @@ class NewRunDialog(QDialog):
     def on_help_template(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("run/template.md")
         if md is None:
-            self.sidebar.main.close_help()
+            self.sidebar.main.helper.close_help()
             return
-        self.sidebar.main.get_help_tab().setMarkdown(md)
-        if not self.sidebar.main.is_showing_help():
-            self.sidebar.main.on_click_help()
+        self.sidebar.main.helper.get_help_tab().setMarkdown(md)
+        if not self.sidebar.main.helper.is_showing_help():
+            self.sidebar.main.helper.on_click_help()
 
     def on_help_named_paths(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("run/named_paths.md")
         if md is None:
-            self.sidebar.main.close_help()
+            self.sidebar.main.helper.close_help()
             return
-        self.sidebar.main.get_help_tab().setMarkdown(md)
-        if not self.sidebar.main.is_showing_help():
-            self.sidebar.main.on_click_help()
+        self.sidebar.main.helper.get_help_tab().setMarkdown(md)
+        if not self.sidebar.main.helper.is_showing_help():
+            self.sidebar.main.helper.on_click_help()
 
     def on_help_named_files(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("run/named_files.md")
         if md is None:
             self.sidebar.main.close_open()
             return
-        self.sidebar.main.get_help_tab().setMarkdown(md)
-        if not self.sidebar.main.is_showing_help():
-            self.sidebar.main.on_click_help()
+        self.sidebar.main.helper.get_help_tab().setMarkdown(md)
+        if not self.sidebar.main.helper.is_showing_help():
+            self.sidebar.main.helper.on_click_help()
 
     def on_help_run_method(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("run/run_method.md")
         if md is None:
-            self.sidebar.main.close_help()
+            self.sidebar.main.helper.close_help()
             return
-        self.sidebar.main.get_help_tab().setMarkdown(md)
-        if not self.sidebar.main.is_showing_help():
-            self.sidebar.main.on_click_help()
+        self.sidebar.main.helper.get_help_tab().setMarkdown(md)
+        if not self.sidebar.main.helper.is_showing_help():
+            self.sidebar.main.helper.on_click_help()
 
     def on_named_file_name_change(self) -> None:
         t = self.named_file_name_ctl.text()
@@ -268,13 +268,13 @@ class NewRunDialog(QDialog):
     def _display_log(self, paths:CsvPaths) -> None:
         log = QWidget()
         log.setObjectName("Log")
-        self.sidebar.main.help_and_feedback.addTab(log, "Log")
+        self.sidebar.main.helper.help_and_feedback.addTab(log, "Log")
         #
         # the logs tab should be the first showing, at least unless/until
         # we add more run results tabs.
         #
-        i = self.sidebar.main.help_and_feedback.count()
-        self.sidebar.main.help_and_feedback.setCurrentIndex(i-1)
+        i = self.sidebar.main.helper.help_and_feedback.count()
+        self.sidebar.main.helper.help_and_feedback.setCurrentIndex(i-1)
 
         layout = QVBoxLayout()
         log.setLayout(layout)
@@ -291,8 +291,8 @@ class NewRunDialog(QDialog):
         #
         # show log. do this even if nothing much to show
         #
-        if not self.sidebar.main.is_showing_help():
-            self.sidebar.main.on_click_help()
+        if not self.sidebar.main.helper.is_showing_help():
+            self.sidebar.main.helper.on_click_help()
 
 
 

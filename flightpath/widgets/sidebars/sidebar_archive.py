@@ -23,7 +23,7 @@ from csvpath.util.config import Config
 
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
-from flightpath.widgets.plus_help import HelpHeaderView
+from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.file_utility import FileUtility as fiut
 from .sidebar_archive_ref_maker import SidebarArchiveRefMaker
 
@@ -73,7 +73,7 @@ class SidebarArchive(QWidget):
             #
             #
             #
-            self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.on_click_archive_help))
+            self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_archive_help))
             self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
             self.view.header().setFixedHeight(24)
             self.view.header().setStyleSheet("QHeaderView {font-size:13px}")

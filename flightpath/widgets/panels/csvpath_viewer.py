@@ -3,7 +3,7 @@ import json
 import os
 import traceback
 
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPlainTextEdit, QLabel, QMessageBox, QFileDialog, QTableView
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QLabel, QMessageBox, QTableView
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt, QFileInfo
 
@@ -14,18 +14,19 @@ from csvpath.util.printer import Printer
 from csvpath.managers.errors.error_comms import ErrorCommunications
 from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
-from flightpath.util.style_utils import StyleUtility as stut
-from flightpath.util.syntax_highlighter import CsvpathHighlighter
 from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit
+from flightpath.widgets.panels.table_model import TableModel
 from flightpath.util.printer import CapturePrinter
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_collector import FileCollector
-from flightpath.widgets.simple_table_model import SimpleTableModel
-from flightpath.widgets.panels.table_model import TableModel
+from flightpath.util.style_utils import StyleUtility as stut
+from flightpath.util.highlighters import MultiHighlighter, CommentHighlighter
+from flightpath.util.syntax_highlighter import CsvpathHighlighter
 
-class CsvpathSourceViewer(QWidget):
+
+class CsvpathViewer(QWidget):
     CHAR_NAMES = {
         "pipe": "|",
         "bar": "|",
@@ -46,12 +47,11 @@ class CsvpathSourceViewer(QWidget):
         "singlequotes":"'",
         "singlequote":"'",
         "single-quote":"'",
-        "tick":"`"
+        "tick":"`",
         "tab":None
     }
 
     def __init__(self, main):
-
         super().__init__()
         self.main = main
         stut.set_common_style(self)
@@ -60,11 +60,11 @@ class CsvpathSourceViewer(QWidget):
         self.saved = True
         self.mdata = None
         self._comment = None
+        self.path = None
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         self.text_edit = CsvPathTextEdit(main=main, parent=self)
-        self.path = None
         self.text_edit.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.text_edit.setReadOnly(False)
         self.text_edit.setFont(QFont("Courier, monospace"))
@@ -82,7 +82,6 @@ class CsvpathSourceViewer(QWidget):
 
     def _get_metadata(self, comment:str) -> None:
         if comment and self._comment != comment:
-            print(f"comment not = comment")
             self._comment = None
             self.mdata = None
         if self.mdata is None and comment is not None:
@@ -113,6 +112,15 @@ class CsvpathSourceViewer(QWidget):
                 return f"/{filepath}"
         return filepath
 
+    def _get_delimiter(self, comment:str=None) -> str:
+        c = None
+        mdata = self._get_metadata(comment)
+        if mdata:
+            c = mdata.get("test-delimiter")
+            if c:
+                c = self._get_char(c, ",")
+        return c
+
     def _get_quotechar(self, comment:str=None) -> str:
         c = None
         mdata = self._get_metadata(comment)
@@ -133,7 +141,6 @@ class CsvpathSourceViewer(QWidget):
         # char codes (e.g. &nbsp;) but that feels hard for everyone. better to
         # just use "bar", "pipe", "semi-colon", "quotes", etc.
         #
-        print(f"CsvpathSourceViewer: _get_char: c 1: {c}, default: {default}")
         if c == "int":
             try:
                 c = chr(exut.to_int(c))
@@ -142,29 +149,14 @@ class CsvpathSourceViewer(QWidget):
         elif c == "tab":
             c = "\t"
         else:
-            print(f"not int!")
             try:
                 c = CsvpathSourceViewer.CHAR_NAMES.get(c)
             except Exception as e:
                 print(f"e: {type(e)}: {e}")
                 ...
-        print(f"CsvpathSourceViewer: _get_char: c 2: {c}")
         if c is None:
             c = default
         c = c.strip()
-        print(f"CsvpathSourceViewer: _get_char: c 3: {c}")
-        return c
-
-    def _get_delimiter(self, comment:str=None) -> str:
-        c = None
-        mdata = self._get_metadata(comment)
-        print(f"CsvpathSourceViewer: _get_delimiter: mdata: {mdata}")
-        if mdata:
-            c = mdata.get("test-delimiter")
-            print(f"_get_delimiter: c 1: >>{c}<<")
-            if c:
-                c = self._get_char(c, ",")
-            print(f"_get_delimiter: c 2: {c}")
         return c
 
     def run_one_csvpath(self, csvpath:str, filepath:str=None) -> None:
@@ -218,7 +210,6 @@ class CsvpathSourceViewer(QWidget):
         #
         #
         #
-        print(f"csvpath-source-view: run_one: quotechar: {quotechar}, delimiter: {delimiter}")
         path = CsvPath(quotechar=quotechar, delimiter=delimiter)
         lines = []
         capture = None
@@ -254,7 +245,7 @@ class CsvpathSourceViewer(QWidget):
         self._clear_feedback()
         es = QWidget()
         es.setObjectName("Error")
-        self.main.help_and_feedback.addTab(es, "Error")
+        self.main.helper.help_and_feedback.addTab(es, "Error")
         layout = QVBoxLayout()
         es.setLayout(layout)
         ev = QPlainTextEdit()
@@ -262,15 +253,15 @@ class CsvpathSourceViewer(QWidget):
         ev.setReadOnly(True)
         layout.addWidget(ev)
         layout.setContentsMargins(0, 0, 0, 0)
-        self.main.help_and_feedback.setCurrentWidget(es)
-        self.main.help_and_feedback.show()
+        self.main.helper.help_and_feedback.setCurrentWidget(es)
+        self.main.helper.help_and_feedback.show()
         if not self.main.is_showing_help():
-            self.main.on_click_help()
+            self.main.helper.on_click_help()
 
     def _clear_feedback(self) -> None:
-        while self.main.help_and_feedback.count() > 0:
-            t = self.main.help_and_feedback.widget(0)
-            self.main.help_and_feedback.removeTab(0)
+        while self.main.helper.help_and_feedback.count() > 0:
+            t = self.main.helper.help_and_feedback.widget(0)
+            self.main.helper.help_and_feedback.removeTab(0)
             t.deleteLater()
 
     def _run_feedback(self, *, csvpath_str, path:CsvPath, lines:list, printer:Printer) -> None:
@@ -291,7 +282,7 @@ class CsvpathSourceViewer(QWidget):
             default = QWidget()
             printer_name = f"Printouts - {name}"
             default.setObjectName(printer_name)
-            self.main.help_and_feedback.addTab(default, printer_name)
+            self.main.helper.help_and_feedback.addTab(default, printer_name)
 
             print_layout = QVBoxLayout()
             default.setLayout(print_layout)
@@ -304,23 +295,23 @@ class CsvpathSourceViewer(QWidget):
 
         log = QWidget()
         log.setObjectName("Log")
-        self.main.help_and_feedback.addTab(log, "Log")
+        self.main.helper.help_and_feedback.addTab(log, "Log")
 
         errors = QWidget()
         errors.setObjectName("Errors")
-        self.main.help_and_feedback.addTab(errors, "Errors")
+        self.main.helper.help_and_feedback.addTab(errors, "Errors")
 
         matches = QWidget()
         matches.setObjectName("Matches")
-        self.main.help_and_feedback.addTab(matches, "Matches")
+        self.main.helper.help_and_feedback.addTab(matches, "Matches")
 
         variables = QWidget()
         variables.setObjectName("Variables")
-        self.main.help_and_feedback.addTab(variables, "Variables")
+        self.main.helper.help_and_feedback.addTab(variables, "Variables")
 
         code = QWidget()
         code.setObjectName("Code")
-        self.main.help_and_feedback.addTab(code, "Automation code")
+        self.main.helper.help_and_feedback.addTab(code, "Automation code")
         #
         # get the log
         #
@@ -336,11 +327,11 @@ class CsvpathSourceViewer(QWidget):
         #
         # this name obviously isn't general enough, but it pops open the bottom panel.
         #
-        if not self.main.is_showing_help():
-            self.main.on_click_help()
-        t = self.main.help_and_feedback.findChild(QWidget, printouts_label)
-        self.main.help_and_feedback.setCurrentWidget(t)
-        self.main.help_and_feedback.show()
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
+        t = self.main.helper.help_and_feedback.findChild(QWidget, printouts_label)
+        self.main.helper.help_and_feedback.setCurrentWidget(t)
+        self.main.helper.help_and_feedback.show()
 
     def _display_log(self, log:QWidget, log_lines:str) -> None:
         layout = QVBoxLayout()
@@ -356,7 +347,6 @@ class CsvpathSourceViewer(QWidget):
         matches.setLayout(layout)
         matches_view = QTableView()
         model = TableModel(lines)
-        #model = SimpleTableModel(lines)
         matches_view.setModel(model)
         layout.addWidget(matches_view)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -440,9 +430,7 @@ lines = path.collect()
                 data = file.source.read()
 
         self.label.hide()
-        #highlighter = CsvpathHighlighter(self.text_edit.document())
 
-        from flightpath.util.highlighters import MultiHighlighter, CommentHighlighter
         multi = MultiHighlighter(self.text_edit.document())
         highlighter = CsvpathHighlighter(None, parent=multi)
         highlighters = [highlighter, CommentHighlighter(None, parent=multi) ]
@@ -452,7 +440,7 @@ lines = path.collect()
         self.text_edit.setPlainText(data)
         c = "cmd" if osut.is_mac() else "ctrl"
         self.main.statusBar().showMessage(f"{c}-s to save, {c}-r to run • Opened {path}")
-        self.main.content.set_csvpath_tab_name( os.path.basename(path) )
+        #self.main.content.set_csvpath_tab_name( os.path.basename(path) )
 
 
     def clear(self):
