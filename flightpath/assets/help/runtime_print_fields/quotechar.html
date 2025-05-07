@@ -1,0 +1,36 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Print field: quotechar
+</h2>
+<p>
+    <i>quotechar</i> is the CSV quotechar used to wrap values that may have breaking characters.
+    Typically it is the double-quotes character.
+    Quotechar is not used with Excel and other non-CSV formats. The quotechar will never change during a run.
+</p>
+
+<hr>
+<h3 >
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="5" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+              Use this field like this.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+$[0][
+    print("$.csvpath.quotechar")
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>

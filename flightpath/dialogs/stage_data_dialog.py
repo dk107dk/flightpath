@@ -17,7 +17,7 @@ from csvpath.util.nos import Nos
 from csvpath.util.path_util import PathUtility as pathu
 
 from flightpath.widgets.clickable_label import ClickableLabel
-from flightpath.widgets.plus_help import HelpIconPackager
+from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 
 
@@ -103,20 +103,20 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
     def on_help_named_file(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("stage_data/named_file.md")
         if md is None:
-            self.sidebar.main.close_help()
+            self.sidebar.main.helper.close_help()
             return
-        self.sidebar.main.get_help_tab().setMarkdown(md)
-        if not self.sidebar.main.is_showing_help():
-            self.sidebar.main.on_click_help()
+        self.sidebar.main.helper.get_help_tab().setMarkdown(md)
+        if not self.sidebar.main.helper.is_showing_help():
+            self.sidebar.main.helper.on_click_help()
 
     def on_help_template(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("stage_data/template.md")
         if md is None:
-            self.sidebar.main.close_help()
+            self.sidebar.main.helper.close_help()
             return
-        self.sidebar.main.get_help_tab().setMarkdown(md)
-        if not self.sidebar.main.is_showing_help():
-            self.sidebar.main.on_click_help()
+        self.sidebar.main.helper.get_help_tab().setMarkdown(md)
+        if not self.sidebar.main.helper.is_showing_help():
+            self.sidebar.main.helper.on_click_help()
 
     def _setup_t_gen_area(self) -> None:
         self.t_gen_area = QScrollArea()

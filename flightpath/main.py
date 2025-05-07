@@ -38,25 +38,33 @@ from csvpath.util.nos import Nos
 from flightpath.workers.csvpath_file_worker import CsvpathFileWorker
 from flightpath.workers.general_data_worker import GeneralDataWorker
 from flightpath.workers.json_data_worker import JsonDataWorker
+from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
+from flightpath.widgets.panels.data_viewer import DataViewer
+from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.table_model import TableModel
+
 from flightpath.widgets.sidebars.sidebar import Sidebar
 from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.sidebars.sidebar_named_paths import SidebarNamedPaths
 from flightpath.widgets.sidebars.sidebar_archive import SidebarArchive
 from flightpath.widgets.sidebars.sidebar_functions import SidebarFunctions
 from flightpath.widgets.sidebars.sidebar_docs import SidebarDocs
+
 from flightpath.widgets.welcome.welcome import Welcome
 from flightpath.widgets.content.content import Content
 from flightpath.widgets.config.config import Config
-from flightpath.widgets.tabs_closing import ClosingTabs
+
+from flightpath.widgets.help.helper import Helper
+
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.help_finder import HelpFinder
+from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.state import State
 
 
 class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     """ Main GUI component. Does much of the MVC controller lifting. """
 
+    TITLE = "FlightPath Data • Data Preboarding Development"
 
     def __init__(self):
         super().__init__()
@@ -95,8 +103,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.rt_col_helpers = None
         self.rt_col = None
         self._help = None
-        self.help_and_feedback = None
-        self.help_and_feedback_layout = None
+        self._helper = None
         self.csvpath_config = None
         self.threadpool = None
         self.selected_file_path = None
@@ -115,10 +122,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def startup(self) -> None:
         """ (re)loads UI """
-        if self.help_and_feedback:
-            self.help_and_feedback.deleteLater()
-            self.help_and_feedback = None
-        self.help_and_feedback = ClosingTabs(main=self)
+        self._helper = None
+        self.helper
         #
         # state is a json file called ./.state. it is just a ui state
         # persistence tool with some configuration. not sure if it's a
@@ -128,7 +133,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # file in the app's starting dir. then, if we find a {cwd:path}
         # key in state we chdir into it.
         #
-        self.setWindowTitle("FlightPath Data • Data Preboarding Development")
+        self.setWindowTitle(MainWindow.TITLE)
         icon = QIcon(fiut.make_app_path(f"assets{os.sep}icons{os.sep}icon.png"))
         self.setWindowIcon(icon)
         self.threadpool = QThreadPool()
@@ -174,14 +179,14 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.main_layout.addWidget(self.content)
         self.main_layout.addWidget(self.config)
 
-        self.help_and_feedback_layout = QVBoxLayout()
-        self.help_and_feedback.setLayout(self.help_and_feedback_layout)
-        self.help_and_feedback_layout.setContentsMargins(0, 0, 0, 0)
+        self.helper.help_and_feedback_layout = QVBoxLayout()
+        self.helper.help_and_feedback.setLayout(self.helper.help_and_feedback_layout)
+        self.helper.help_and_feedback_layout.setContentsMargins(0, 0, 0, 0)
 
         self.main.addWidget(self.main_top)
-        self.main.addWidget(self.help_and_feedback)
+        self.main.addWidget(self.helper.help_and_feedback)
         self.main.setSizes( [1, 0] )
-        self.assure_help_tab()
+        self.helper.assure_help_tab()
 
         self.sidebar = Sidebar(main=self)
         cw.addWidget(self.sidebar)
@@ -289,33 +294,32 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.rt_tab_widget.tabBar().hide()
 
     @property
-    def help(self) -> QTextEdit:
-        return self._help
-
-    @help.setter
-    def help(self, t:QTextEdit) -> None:
-        self._help = t
+    def helper(self) -> QTextEdit:
+        if self._helper is None:
+            self._helper = Helper(self)
+        return self._helper
 
     def _on_data_toolbar_show(self) -> None:
-        self.content.data_view.toolbar.show()
+        self.content.toolbar.show()
 
     def _on_data_toolbar_hide(self) -> None:
-        self.content.data_view.toolbar.hide()
+        self.content.toolbar.hide()
 
     def _connects(self) -> None:
         """ some of the connects. may want to consolidate here
             and/or move consolidated to a helper connect class """
+
         self.rt_tab_widget.currentChanged.connect(self._on_rt_tab_changed)
         self.main_layout.currentChanged.connect(self._on_stack_change)
         self.welcome.clicked.connect(self.welcome.on_click)
         #
         # data_view's sampling toolbar
         #
-        self.content.data_view.toolbar.sampling.activated.connect(self.on_reload_data)
-        self.content.data_view.toolbar.rows.activated.connect(self.on_data_rows_changed)
-        self.content.data_view.toolbar.save_sample.clicked.connect(self.on_save_sample)
-        self.content.data_view.toolbar.delimiter.activated.connect(self.on_set_delimiter)
-        self.content.data_view.toolbar.quotechar.activated.connect(self.on_set_quotechar)
+        self.content.toolbar.sampling.activated.connect(self.on_reload_data)
+        self.content.toolbar.rows.activated.connect(self.on_data_rows_changed)
+        self.content.toolbar.save_sample.clicked.connect(self.on_save_sample)
+        self.content.toolbar.delimiter.activated.connect(self.on_set_delimiter)
+        self.content.toolbar.quotechar.activated.connect(self.on_set_quotechar)
         #
         #
         #
@@ -374,80 +378,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def _rt_tabs_show(self) -> None:
         self.rt_tab_widget.tabBar().show()
 
-    #
-    # -------------------------------
-    # help stuff
-    #
-
-    def assure_help_tab(self) -> None:
-        if self.help is None:
-            self.help = QTextEdit()
-            self.help.setObjectName("Help Content")
-        t = self.help_and_feedback.findChild(QWidget, "Help Content")
-        if t is None:
-            self.help_and_feedback.addTab(self.help, "Help Content")
-        self.help_and_feedback.setCurrentWidget(t)
-        self.help_and_feedback.show()
-
-    def get_help_tab_if(self) -> QWidget:
-        t = self.help_and_feedback.findChild(QWidget, "Help Content")
-        return t
-
-    def get_help_tab_index_if(self) -> int:
-        for i in range(self.help_and_feedback.count()):
-            if self.help_and_feedback.tabText(i) == "Help Content":
-                return i
-        return -1
-
-    def get_help_tab(self) -> QWidget:
-        i = self.get_help_tab_index_if()
-        if i == -1:
-            h = QTextEdit()
-            h.setObjectName("Help Content")
-            self.help_and_feedback.addTab(h, "Help Content")
-            return h
-        return self.help_and_feedback.widget(i)
-
-    def on_click_help(self) -> None:
-        if self.is_showing_help():
-            self.close_help()
-        else:
-            self.open_help()
-
-    def open_help(self) -> None:
-        self.main.setSizes([1, 1])
-
-    def close_help(self) -> None:
-        self.main.setSizes([1, 0])
-
-    def is_showing_help(self) -> bool:
-        ss = self.main.sizes()
-        if ss is None:
-            return False
-        if len(ss) <= 1:
-            return False
-        return ss[1] > 0
-
-    def on_click_named_files_help(self) -> None:
-        md = HelpFinder(main=self).help("named_files/about.md")
-        self.get_help_tab().setMarkdown(md)
-        #self.help.setMarkdown(md)
-        if not self.is_showing_help():
-            self.on_click_help()
-
-    def on_click_named_paths_help(self) -> None:
-        md = HelpFinder(main=self).help("named_paths/about.md")
-        #self.help.setMarkdown(md)
-        self.get_help_tab().setMarkdown(md)
-        if not self.is_showing_help():
-            self.on_click_help()
-
-    def on_click_archive_help(self) -> None:
-        md = HelpFinder(main=self).help("archive/about.md")
-        self.get_help_tab().setMarkdown(md)
-        if not self.is_showing_help():
-            self.on_click_help()
-
     def _on_stack_change(self) ->None:
         i = self.main_layout.currentIndex()
         if i in [0, 2]:
@@ -465,12 +395,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 self.sidebar_docs = SidebarDocs(main=self, functions=self.sidebar_functs.functions)
                 self.rt_col_helpers.addWidget(self.sidebar_docs)
 
-
     @Slot(tuple)
     def update_json_views(self, worker_data):
-        """ loads a json file, updates main view + tabs """
         filepath, data, errors = worker_data   # pylint: disable=W0612
-        self.content.json_source_view.open_file(path=filepath, data=data)
         self.progress_dialog.close()
         self.last_main = self.main_layout.currentIndex()
         #
@@ -480,17 +407,20 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # hide grid, source tabs
         #
-        self.content.tab_widget.setTabVisible(0, False)
-        self.content.tab_widget.setTabVisible(1, False)
-        self.content.tab_widget.setTabVisible(2, False)
-        self.content.tab_widget.setTabVisible(3, True)
-        self._on_data_toolbar_hide()
+        json_view = taut.find_tab(self.content.tab_widget, filepath)
+        if json_view is None:
+            json_view = JsonViewer(self)
+            json_view.open_file(path=filepath, data=data)
+            json_view.setObjectName(filepath)
+            self.content.tab_widget.addTab(json_view, os.path.basename(filepath) )
+        else:
+            json_view = json_view[1]
+        taut.select_tab(self.content.tab_widget, json_view)
         self._rt_tabs_hide()
 
     @Slot(tuple)
     def update_csvpath_views(self, worker_data):
         filepath, data, errors = worker_data # pylint: disable=W0612
-        self.content.csvpath_source_view.open_file(path=filepath, data=data)
         self.progress_dialog.close()
         self.last_main = self.main_layout.currentIndex()
         #
@@ -499,15 +429,19 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.main_layout.setCurrentIndex(1)
         #
         # hide grid, source tabs
-        #
-        self.content.tab_widget.setTabVisible(0, False)
-        self.content.tab_widget.setTabVisible(1, False)
-        self.content.tab_widget.setTabVisible(2, True)
-        self.content.tab_widget.setTabVisible(3, False)
-        #
         # when csvpath source_view is visible we hide the sample tool bar
         #
-        self.content.data_view.toolbar.hide()
+        self.content.toolbar.disable()
+        #
+        csvpath_view = taut.find_tab(self.content.tab_widget, filepath)
+        if csvpath_view is None:
+            csvpath_view = CsvpathViewer(main=self)
+            csvpath_view.setObjectName(filepath)
+            csvpath_view.open_file(path=filepath, data=data)
+            self.content.tab_widget.addTab(csvpath_view, os.path.basename(filepath) )
+        else:
+            csvpath_view = csvpath_view[1]
+        taut.select_tab(self.content.tab_widget, csvpath_view)
         #
         # we show the right tabs in order to show the functions and docs
         #
@@ -517,43 +451,63 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def update_views(self, worker_data):
         msg, lines, filepath, data, errors = worker_data # pylint: disable=W0612
         self.table_model = TableModel(data)
-        self.content.data_view.display_data(self.table_model)
-        self.content.source_view.open_file(filepath, lines)
+        #
+        # we're going to put a button on the toolbar to switch to a raw source
+        # display, rather than have another tab for the same doc. for now, just
+        # disable
+        #
+        # self.content.source_view.open_file(filepath, lines)
+        #
         self.progress_dialog.close()
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(1)
-        self.content.tab_widget.setTabVisible(0, True)
-        self.content.tab_widget.setTabVisible(1, True)
-        self.content.tab_widget.setTabVisible(2, False)
-        self.content.tab_widget.setTabVisible(3, False)
-        self.content.tab_widget.setCurrentIndex(0)
+        #
+        # need to add a tab
+        #   need to check if a tab already exists?
+        #
+        obj_name = filepath
+        data_view = taut.find_tab(self.content.tab_widget, filepath)
+        if data_view is None:
+            data_view = DataViewer(parent=self.content)
+            data_view.setObjectName(obj_name)
+            name = os.path.basename(filepath)
+            self.content.tab_widget.addTab(data_view, name)
+        else:
+            #
+            # find_tab -> (index, widget)
+            #
+            data_view = data_view[1]
+        data_view.display_data(self.table_model)
         #
         # when  data _view is visible we show the sample tool bar
         #
-        self.content.data_view.toolbar.show()
+        self.content.toolbar.enable()
+        self.content.toolbar.show()
         #
         # hide right tabs because we don't need csvpath helpers when looking
         # at data
         #
-        self._rt_tabs_hide()
+        #self._rt_tabs_hide()
+        taut.select_tab(self.content.tab_widget, data_view)
+
 
     def on_data_rows_changed(self) -> None:
-        t = self.content.data_view.toolbar.rows.currentText()
+        t = self.content.toolbar.rows.currentText()
         if t == "All lines":
             #
             # set the sampling options to first-n and remove or disable others
             #
-            self.content.data_view.toolbar.sampling.setCurrentIndex(0)
-            self.content.data_view.toolbar.sampling.model().item(0).setEnabled(False)
-            self.content.data_view.toolbar.sampling.model().item(1).setEnabled(False)
-            self.content.data_view.toolbar.sampling.model().item(2).setEnabled(False)
+            self.content.toolbar.sampling.setCurrentIndex(0)
+            self.content.toolbar.sampling.model().item(0).setEnabled(False)
+            self.content.toolbar.sampling.model().item(1).setEnabled(False)
+            self.content.toolbar.sampling.model().item(2).setEnabled(False)
             #
             # select first-n
             #
         else:
-            self.content.data_view.toolbar.sampling.model().item(0).setEnabled(True)
-            self.content.data_view.toolbar.sampling.model().item(1).setEnabled(True)
-            self.content.data_view.toolbar.sampling.model().item(2).setEnabled(True)
+            self.content.toolbar.sampling.model().item(0).setEnabled(True)
+            self.content.toolbar.sampling.model().item(1).setEnabled(True)
+            self.content.toolbar.sampling.model().item(2).setEnabled(True)
             #
             # add/enable all sampling options
             #
@@ -573,17 +527,17 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             worker = GeneralDataWorker(
                 self.selected_file_path,
                 self,
-                rows=self.content.data_view.toolbar.rows.currentText(),
-                sampling=self.content.data_view.toolbar.sampling.currentText(),
-                delimiter=self.content.data_view.toolbar.delimiter_char(),
-                quotechar=self.content.data_view.toolbar.quotechar_char()
+                rows=self.content.toolbar.rows.currentText(),
+                sampling=self.content.toolbar.sampling.currentText(),
+                delimiter=self.content.toolbar.delimiter_char(),
+                quotechar=self.content.toolbar.quotechar_char()
             )
             worker.signals.finished.connect(self.update_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
             self.progress_dialog.setValue(0)
-            self.progress_dialog.setMinimumDuration(300)  # show if task takes more than 300ms
+            self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         # pylint thinks csvpath_file_extensions doesn't support membership tests but it is list[str]. :/
         elif info.isFile() and info.suffix() in self.csvpath_config.csvpath_file_extensions: # pylint: disable=E1135
@@ -593,7 +547,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
             self.progress_dialog.setValue(0)
-            self.progress_dialog.setMinimumDuration(300)  # show if task takes more than 300ms
+            self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         elif info.isFile() and info.suffix() == "json":
             worker = JsonDataWorker(self.selected_file_path, self)
@@ -602,7 +556,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
             self.progress_dialog.setValue(0)
-            self.progress_dialog.setMinimumDuration(300)  # show if task takes more than 300ms
+            self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         #
         # need to recognize .txt (if not in csv extensions) and .md
@@ -610,71 +564,27 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         else:
             self.clear_views()
 
+
+
     @Slot(QModelIndex)
     def on_tree_click(self, index):
         if not index.isValid():
             return
-        try:
-            source_index = self.sidebar.proxy_model.mapToSource(index)
-            if not source_index.isValid():
-                return
-            #
-            # do we need to verify that we're looking at a csvpath file?
-            #
-            if self.sidebar.last_file_index and not self.content.csvpath_source_view.saved:
-                #
-                # double check dialog. if accepted, clear with: saved = True
-                #
-                path = self.content.csvpath_source_view.path
-                if path.startswith(self.state.cwd):
-                    path = path[len(self.state.cwd) + 1:]
-                confirm = QMessageBox.question(
-                    self,
-                    "Close file",
-                    f"Close {path} without saving?",
-                    QMessageBox.Yes | QMessageBox.No,
-                )
-                if confirm == QMessageBox.No:
-                    #
-                    # set the file tree selected back to the orig
-                    # TODO: this works within one parent node, but doesn't work in another parent dir.
-                    # leaving it for now because it's not a huge bug and it can get done after higher
-                    # priorities.
-                    #
-                    self.sidebar.file_navigator.clearSelection()
-                    selection_model = self.sidebar.file_navigator.selectionModel()
-                    selection_model.select(self.sidebar.last_file_index,
-                            QItemSelectionModel.Select | QItemSelectionModel.Rows)
-                    return
-                #
-                # set the view to be saved and clear any "+" in the tab name.
-                #
-                self.content.csvpath_source_view.reset_saved()
-                #
-                #
-                #
-            file_info = self.sidebar.file_model.fileInfo(source_index)
-            self.selected_file_path = file_info.filePath()
-            nos = Nos(self.selected_file_path)
-            if not nos.isfile():
-                # close file if there is one and
-                self._show_welcome_but_do_not_deselect()
-                self.statusBar().showMessage(f"  {self.selected_file_path}")
-                return
-            self.read_validate_and_display_file()
-            self.statusBar().showMessage(f"  {self.selected_file_path}")
-            #
-            # store the index for use in the case the user clicks off the current file
-            # but then responds no to a confirm box.
-            #
-            self.sidebar.last_file_index = index
-        except Exception as e: # pylint: disable=W0718
-            #
-            # not clear what exception might be caught here. we have had memory faults
-            # but those were fixed.
-            #
-            print(f"Error handling click: {e}")
-
+        source_index = self.sidebar.proxy_model.mapToSource(index)
+        if not source_index.isValid():
+            return
+        file_info = self.sidebar.file_model.fileInfo(source_index)
+        self.selected_file_path = file_info.filePath()
+        nos = Nos(self.selected_file_path)
+        if not nos.isfile():
+            return
+        self.read_validate_and_display_file()
+        self.statusBar().showMessage(f"  {self.selected_file_path}")
+        #
+        # store the index for use in the case the user clicks off the current file
+        # but then responds no to a confirm box.
+        #
+        self.sidebar.last_file_index = index
 
     def on_named_file_tree_click(self, index):
         self.selected_file_path = self.sidebar_rt_top.model.filePath(index)
@@ -693,7 +603,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def on_archive_tree_click(self, index):
-        print(f"main.on_archive_tree_click: clicked")
         self.selected_file_path = self.sidebar_rt_bottom.model.filePath(index)
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
@@ -725,13 +634,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.read_validate_and_display_file()
 
     def on_set_delimiter(self) -> None:
-        #d = self.content.data_view.toolbar.delimiter.currentText()
-        #q = self.content.data_view.toolbar.quotechar.currentText()
         self.read_validate_and_display_file()
 
     def on_set_quotechar(self) -> None:
-        #d = self.content.data_view.toolbar.delimiter.currentText()
-        #q = self.content.data_view.toolbar.quotechar.currentText()
         self.read_validate_and_display_file()
 
     def on_save_sample(self) -> None:
@@ -807,29 +712,16 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         ):
             event.accept()
             return
-        #
-        # if we have just some of those attributes we'll have a problem.
-        # but not expecting that today.
-        #
         elif (
             self.sidebar.last_file_index
-            and not self.content.csvpath_source_view.saved
-            and self.content.tab_widget.currentIndex() == 2
-            and self.main_layout.currentIndex() == 1
+            and not self.content.csvpath_files_are_saved()
         ):
-            reply = QMessageBox.question(self, 'Confirm Close',
-                                     'Are you sure you want to quit without saving?',
-                                     QMessageBox.Yes | QMessageBox.No,
-                                     QMessageBox.No)
-
-            if reply == QMessageBox.Yes:
-                event.accept()
-            else:
+            if not self.content.close_all_tabs():
                 event.ignore()
 
 def run():
     app = QApplication(sys.argv)
-    app.setApplicationName("FlightPath Data Automation Development")
+    app.setApplicationName(MainWindow.TITLE)
     app.setStyle("Fusion")
 
     window = MainWindow()
@@ -837,7 +729,7 @@ def run():
         return
     #
     # careful, this was throwing an error at one point, but is currently
-    # commented mainly because a smaller window is easier.
+    # commented mainly because a smaller window is easier for dev.
     #
     #window.showMaximized()
     #window.show()

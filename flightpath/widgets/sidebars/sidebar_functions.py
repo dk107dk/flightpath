@@ -182,33 +182,23 @@ class SidebarFunctions(QWidget):
 
     def on_functions_tree_click(self, index) -> None:
         self.function_name = self.model.data(index, Qt.ItemDataRole.DisplayRole)
-        print(f"\nSidebarFunctions: on_functions_tree_click: index: {index}, fun name: {self.function_name}")
         if self.function_name is not None:
             i = self.model.parent(index)
             if i is None:
-                print(f"SidebarFunctions: on_functions_tree_click: index {index} found i: {i}. returning")
                 return
-
-            print(f"SidebarFunctions: on_functions_tree_click: i: {i}")
             self.bucket_name = self.model.data(i, Qt.ItemDataRole.DisplayRole)
-            print(f"SidebarFunctions: on_functions_tree_click: self.bucket_name: {self.bucket_name}")
             if self.bucket_name is None:
                 return
             if self.is_function(self.bucket_name, self.function_name):
-                print(f"SidebarFunctions: on_functions_tree_click: doing is_function with bucket_name: {self.bucket_name}")
                 self.docs.display_function_for_name(self.bucket_name, self.function_name)
             else:
-                print(f"SidebarFunctions: on_functions_tree_click: doing display_info with bucket_name: {self.bucket_name}")
                 self.docs.display_info(self.bucket_name, self.function_name)
 
     def is_function(self, bucket:str, name:str) -> bool:
-        print(f"SidebarFunctions: is_function: {bucket}, name: {name}, BUCKETS: {SidebarFunctions.BUCKETS}")
         ret = bucket not in SidebarFunctions.BUCKETS
-        print(f"SidebarFunctions: is_function: ret: {ret}")
         return ret
 
     def refresh(self) -> None:
-        print(f"refreshing sidebardufnctions")
         if self.view:
             layout = self.layout()
             layout.removeWidget(self.view)

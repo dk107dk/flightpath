@@ -26,7 +26,7 @@ from flightpath.dialogs.stage_data_dialog import StageDataDialog
 from flightpath.dialogs.load_paths_dialog import LoadPathsDialog
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.widgets.plus_help import HelpIconPackager
+from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 
 from flightpath.widgets.sidebars.sidebar_named_paths import SidebarNamedPaths
@@ -99,15 +99,15 @@ class Sidebar(QWidget):
 
     def on_click_cwd_help(self) -> None:
         md = HelpFinder(main=self.main).help("sidebar/cwd.md")
-        self.main.get_help_tab().setMarkdown(md)
-        if not self.main.is_showing_help():
-            self.main.on_click_help()
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
     def on_click_open_config_help(self) -> None:
         md = HelpFinder(main=self.main).help("sidebar/open_config.md")
-        self.main.get_help_tab().setMarkdown(md)
-        if not self.main.is_showing_help():
-            self.main.on_click_help()
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
     def _setup_tree(self) -> None:
         self.file_navigator = CustomTreeView()

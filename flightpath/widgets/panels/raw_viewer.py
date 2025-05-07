@@ -10,7 +10,7 @@ from csvpath.util.nos import Nos
 from flightpath.util.style_utils import StyleUtility as stut
 
 
-class SourceViewer(QWidget):
+class RawSourceViewer(QWidget):
 
     def __init__(self, main):
         super().__init__()
@@ -25,7 +25,6 @@ class SourceViewer(QWidget):
         self.text_edit = QPlainTextEdit(self)
         self.text_edit.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.text_edit.setReadOnly(True)
-        #self.text_edit.setFont(QFont("Courier, monospace"))
         layout.addWidget(self.label)
         layout.addWidget(self.text_edit)
 
