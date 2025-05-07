@@ -77,7 +77,6 @@ class SidebarDocs(QWidget):
         functions = self.functions_collector.functions
         bucket = functions.get(bucket_name)
         function = bucket.get(function_name)
-        print(f"sidebar docs: display_function_for_name: bucket: {bucket}, function: {function}")
         if function:
             self.display_function(function)
 
@@ -99,7 +98,6 @@ class SidebarDocs(QWidget):
         name = name.lower()
         bucket_name = bucket_name.lower()
         path = fiut.make_app_path(f"assets{os.sep}help{os.sep}{bucket_name}{os.sep}{name}.html")
-        print(f"sidebar docs: display_info: path: {path}")
         nos = Nos(path)
         if nos.exists():
             with DataFileReader(path) as file:
@@ -125,10 +123,7 @@ class SidebarDocs(QWidget):
                             html = f"{html}<div class='code'>{a}</div>{b}"
                     else:
                         html = f"{html}{a}"
-                print(f"\nhtml:\n{html}")
                 self.description.setText( html )
-        else:
-            print(f"sidebar docs: display_info: nos does not exist")
 
     def refresh(self) -> None:
         if self.view:

@@ -13,7 +13,7 @@ from PySide6.QtCore import Qt # pylint: disable=E0611
 
 from csvpath.util.nos import Nos
 
-from flightpath.widgets.plus_help import HelpIconPackager
+from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 
 class LoadPathsDialog(QDialog):
@@ -100,20 +100,20 @@ class LoadPathsDialog(QDialog):
     def on_help_name(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("load_paths/name.md")
         if md is None:
-            self.sidebar.main.close_help()
+            self.sidebar.main.helper.close_help()
             return
-        self.sidebar.main.get_help_tab().setMarkdown(md)
-        if not self.sidebar.main.is_showing_help():
-            self.sidebar.main.on_click_help()
+        self.sidebar.main.helper.get_help_tab().setMarkdown(md)
+        if not self.sidebar.main.helper.is_showing_help():
+            self.sidebar.main.helper.on_click_help()
 
     def on_help_template(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("load_paths/template.md")
         if md is None:
-            self.sidebar.main.close_help()
+            self.sidebar.main.helper.close_help()
             return
-        self.sidebar.main.get_help_tab().setMarkdown(md)
-        if not self.sidebar.main.is_showing_help():
-            self.sidebar.main.on_click_help()
+        self.sidebar.main.helper.get_help_tab().setMarkdown(md)
+        if not self.sidebar.main.helper.is_showing_help():
+            self.sidebar.main.helper.on_click_help()
 
     def show_dialog(self) -> None:
         self.exec()

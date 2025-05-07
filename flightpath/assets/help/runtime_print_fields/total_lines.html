@@ -1,0 +1,33 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Print field: total_lines
+</h2>
+<p>
+    <i>total_lines</i> is the 0-based total number of lines in the file. It will not change during a run.
+</p>
+<hr>
+<h3 >
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="5" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+              Use this field like this.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+$[0][
+    print("$.csvpath.total_lines")
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>

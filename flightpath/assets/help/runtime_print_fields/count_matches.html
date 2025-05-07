@@ -1,0 +1,46 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Print field: count_matches
+</h2>
+<p>
+    <i>count_matches</i> is the number of lines that matched your csvpath's match components.
+       Match components are the logic and functions in the last bracketed part of a csvpath.
+</p>
+<p>
+    The CsvPath Framework does not consider matching to be valid or invalid. Every csvpath
+    makes that determination for itself.
+</p>
+<p>
+    Keep in mind that there are many helpful options. Matches can be collected or dropped.
+    The matches or the lines that did not match can be collected as a set.
+    Match components can be ANDed or ORed. The <i>when-do</i> symbol (<i>-></i>) can
+    be used to act on a line without the line being considered to have matched or not matched.
+    And the <i>fail()</i> function can be used to declare whole data files valid or invalid.
+</p>
+
+<hr>
+<h3 >
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="5" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+              Use this field like this.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+$[0][
+    print("$.csvpath.count_matches")
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>

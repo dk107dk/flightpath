@@ -1,0 +1,39 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Print field: headers
+</h2>
+<p>
+    <i>headers</i> prints the headers currently in-effect as a delimited string.
+</p>
+<p>
+    Headers can change in the middle of tabular data. Csvpath writers can reset the headers at any
+    point. This value will always be the headers of the moment.
+</p>
+
+
+<hr>
+<h3 >
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="5" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+              Use this field like this.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+$[0][
+    print("$.csvpath.headers")
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>
