@@ -1,0 +1,34 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Print field: line_number
+</h2>
+<p>
+    <i>line_number</i> gives the line of the data file being processed. It includes blanks and unscanned
+    lines. The line number is 0-based, in keeping with how you would programmatically address the lines of the file.
+</p>
+<hr>
+<h3 >
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="5" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+              Use this field like this.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+$[0][
+    print("$.csvpath.line_number")
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>

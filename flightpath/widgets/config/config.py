@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 )
 
 from flightpath.widgets.panels.config_panel import ConfigPanel
-from flightpath.widgets.toolbar_config import ConfigToolbar
+from flightpath.widgets.toolbars.config_toolbar import ConfigToolbar
 from flightpath.util.help_finder import HelpFinder
 
 class Config(QWidget):
@@ -31,7 +31,6 @@ class Config(QWidget):
         layout.addWidget(self.panels)
         self.setLayout(layout)
 
-        #self.main.assure_help_tab()
         self.show_help_for_form("about")
 
     def show_help_for_form(self, name:str, fallback=None) -> None:
@@ -39,20 +38,15 @@ class Config(QWidget):
         if md is None:
             self.close_help()
             return
-        """
-        self.main.assure_help_tab()
-        self.main.help.setMarkdown(md)
-        """
-        self.main.get_help_tab().setMarkdown(md)
+        self.main.helper.get_help_tab().setMarkdown(md)
         self.show_help()
 
-
     def show_help(self) -> None:
-        if not self.main.is_showing_help():
-            self.main.on_click_help()
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
     def close_help(self) -> None:
-        if self.main.is_showing_help():
-            self.main.on_click_help()
+        if self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
 

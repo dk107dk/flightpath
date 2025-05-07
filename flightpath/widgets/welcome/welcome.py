@@ -21,7 +21,7 @@ from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
 
 from flightpath.widgets.clickable_label import ClickableLabel
-from flightpath.widgets.plus_help import HelpIconPackager
+from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.file_collector import FileCollector
@@ -123,39 +123,21 @@ class Welcome(QWidget):
 
     def on_click_copy_in_help(self) -> None:
         md = HelpFinder(main=self.main).help("welcome/copy_in.md")
-        #self.main.help.setMarkdown(md)
-        self.main.get_help_tab().setMarkdown(md)
-        if not self.main.is_showing_help():
-            self.main.on_click_help()
-
-
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
     def on_click_run_help(self) -> None:
         md = HelpFinder(main=self.main).help("welcome/run.md")
-        #self.main.help.setMarkdown(md)
-        self.main.get_help_tab().setMarkdown(md)
-        if not self.main.is_showing_help():
-            self.main.on_click_help()
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
     def on_click_validate_help(self) -> None:
         md = HelpFinder(main=self.main).help("welcome/validate.md")
-        self.main.get_help_tab().setMarkdown(md)
-        """
-        if self.main.help:
-            for i in range(self.main.help_and_feedback.count()):
-                if self.main.help_and_feedback.tabText(i) == "Help Content":
-                    self.main.help_and_feedback.removeTab(i)
-                return -1
-            self.main.help.deleteLater()
-            self.main.help = None
-            self.main.self.assure_help_tab()
-        print(f"on_click_validate_help: main: {self.main}")
-        print(f"on_click_validate_help: help: {self.main.help}")
-        print(f"on_click_validate_help: md: {md}")
-        self.main.help.setMarkdown(md)
-        """
-        if not self.main.is_showing_help():
-            self.main.on_click_help()
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
     def _copy_in_button(self, *, on_click, on_help) -> QWidget:
         self.button_copy_in = QPushButton()

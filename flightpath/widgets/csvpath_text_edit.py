@@ -22,27 +22,10 @@ class CsvPathTextEdit(QPlainTextEdit):
         save_shortcut_cmd_save = QShortcut(QKeySequence("Command+S"), self)
         save_shortcut_ctrl_save.activated.connect(self.on_save)
         save_shortcut_cmd_save.activated.connect(self.on_save)
-
         save_shortcut_ctrl_run = QShortcut(QKeySequence("Ctrl+R"), self)
         save_shortcut_cmd_run = QShortcut(QKeySequence("Command+R"), self)
         save_shortcut_ctrl_run.activated.connect(self.on_run)
         save_shortcut_cmd_run.activated.connect(self.on_run)
-
-    """
-    def _icon(self) :
-        if self.icon is None:
-            svg_renderer = QSvgRenderer(fiut.make_app_path(f"assets{os.sep}icons{os.sep}pencil.svg"))
-            if not svg_renderer.isValid():
-                print("Failed to load SVG file")
-            pixmap = QPixmap(16,16)
-            pixmap.fill(Qt.transparent)
-            painter = QPainter(pixmap)
-            svg_renderer.render(painter)
-            painter.end()
-            icon = self.style().standardIcon(pixmap)
-            self.icon = pixmap
-        return self.icon
-    """
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.parent.saved is True:
@@ -58,8 +41,9 @@ class CsvPathTextEdit(QPlainTextEdit):
 
     def contextMenuEvent(self, event):
         menu = self.createStandardContextMenu()
-
+        #
         # separator and save options
+        #
         menu.addSeparator()
         save_action = QAction("Save", self)
         save_action.triggered.connect(self.on_save)
@@ -68,17 +52,20 @@ class CsvPathTextEdit(QPlainTextEdit):
         save_as_action = QAction("Save As", self)
         save_as_action.triggered.connect(self.on_save_as)
         menu.addAction(save_as_action)
-
+        #
         # separator and run
+        #
         menu.addSeparator()
         run_action = QAction("Run", self)
         run_action.triggered.connect(self.on_run)
         menu.addAction(run_action)
-
+        #
         # Show the menu
+        #
         menu.exec(event.globalPos())
-
+        #
         # Clean up
+        #
         del menu
 
     def on_save_as(self, switch_local=False) -> None:
@@ -121,43 +108,15 @@ class CsvPathTextEdit(QPlainTextEdit):
         if ok and name:
             text = self.toPlainText()
             path = fiut.deconflicted_path( thepath, name )
-            #path = os.path.join( thepath, name )
             with DataFileWriter( path=path ) as file:
                 file.write(text)
             #
             # does this need to change if switch_local?
             #
             self.parent.open_file(path=path, data=None)
-            self.main.content.csvpath_source_view.reset_saved()
-            #
-            # what could go wrong?
-            #
-
-            #
-            # what (non)visual do we need to reload / rename?
-            #
-
-            """
-            try:
-                file.rename(new_name)
-            except IsADirectoryError:
-                QMessageBox.warning(
-                    self, self.tr("Error"), self.tr("Source is a file but destination a directory.")
-                )
-            except NotADirectoryError:
-                QMessageBox.warning(
-                    self, self.tr("Error"), self.tr("Source is a directory but destination a file.")
-                )
-            except PermissionError:
-                QMessageBox.warning(self, self.tr("Error"), self.tr("Operation not permitted."))
-            except OSError:
-                QMessageBox.warning(self, self.tr("Error"), self.tr("File with this name already exists."))
-            else:
-                self.window().statusBar().showMessage(self.tr("Item renamed successfuly."))
-            """
+            self.parent.reset_saved()
 
     def on_save(self) -> None:
-
         #
         # if the path is under the inputs or archive we have to save-as, not just save
         #
@@ -165,7 +124,6 @@ class CsvPathTextEdit(QPlainTextEdit):
         ap = self.main.csvpath_config.archive_path
         ncp = self.main.csvpath_config.inputs_csvpaths_path
         if path.startswith(ap) or path.startswith(ncp):
-            # save-as...
             self.on_save_as(switch_local=True)
             return
 
@@ -174,8 +132,8 @@ class CsvPathTextEdit(QPlainTextEdit):
         #
         # set the status bar
         #
-        self.main.statusBar().showMessage(self.tr(f"  Saved to: {self.parent.path}"))
-        self.main.content.csvpath_source_view.reset_saved()
+        self.main.statusBar().showMessage(f"  Saved to: {self.parent.path}")
+        self.parent.reset_saved()
 
     def on_run(self) -> None:
         cursor = self.textCursor()
@@ -184,7 +142,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         text = self.find_csvpath_at_position( position, text )
         self.parent.run_one_csvpath(text)
 
-    def find_csvpath_at_position( self, position:int, text:str ) -> str:
+    def find_csvpath_at_position(self, position:int, text:str) -> str:
         #
         # split the text at the cursor into top and bottom
         # start = rfind marker in top or text[0]

@@ -44,15 +44,16 @@ class DataToolbar(QToolBar):
 
     def __init__(self, parent):
         super().__init__()
-
         self.parent = parent
         self.sampling = None
         self.rows = None
         self.save_sample = None
+        self.delimiter = None
+        self.quotechar = None
         self._setup()
 
     def _setup(self):
-        self.parent.main.addToolBar(self)
+        self.parent.addToolBar(self)
         self.save_sample = QPushButton("Save sample as")
         #
         # number of rows to show. we'll default to 50. should we find a way to save
@@ -85,7 +86,7 @@ class DataToolbar(QToolBar):
         #
         #self.toolbar_help = HelpLabel(main=self.parent.main, on_help=self.on_help_sample_toolbar)
         #self.toolbar.addWidget(self.toolbar_help)
-
+        #
         self.help = ClickableLabel()
         self.help.setStyleSheet("ClickableLabel { margin-left:5px;font-weight:100;color:#eeaa55;margin-right:20px; }")
         svg_renderer = QSvgRenderer(fiut.make_app_path(f"assets{os.sep}icons{os.sep}help.svg"))
@@ -115,11 +116,6 @@ class DataToolbar(QToolBar):
         self.quotechar.addItem(self.QUOTES)
         self.quotechar.addItem(self.SINGLE_QUOTES)
         self.addWidget(self.quotechar)
-
-
-
-
-
         #
         # let it move
         #
@@ -153,10 +149,33 @@ class DataToolbar(QToolBar):
     def on_help_sample_toolbar(self) -> None:
         md = HelpFinder(main=self.parent.main).help(f"data_view/samples.md")
         if md is None:
-            self.parent.main.close_help()
+            self.parent.helper.close_help()
             return
-        self.parent.main.get_help_tab().setMarkdown(md)
-        if not self.parent.main.is_showing_help():
-            self.parent.main.on_click_help()
+        self.parent.helper.get_help_tab().setMarkdown(md)
+        if not self.parent.helper.is_showing_help():
+            self.parent.helper.on_click_help()
 
+    def disable(self) -> None:
+        if self.sampling:
+            self.sampling.setEnabled(False)
+        if self.rows:
+            self.rows.setEnabled(False)
+        if self.save_sample:
+            self.save_sample.setEnabled(False)
+        if self.delimiter:
+            self.delimiter.setEnabled(False)
+        if self.quotechar:
+            self.quotechar.setEnabled(False)
+
+    def enable(self) -> None:
+        if self.sampling:
+            self.sampling.setEnabled(True)
+        if self.rows:
+            self.rows.setEnabled(True)
+        if self.save_sample:
+            self.save_sample.setEnabled(True)
+        if self.delimiter:
+            self.delimiter.setEnabled(True)
+        if self.quotechar:
+            self.quotechar.setEnabled(True)
 

@@ -1,0 +1,36 @@
+<html style='background-color:#c8d5df;'>
+<style>
+    div.code {
+       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
+    }
+</style>
+<h2>
+        Print field: match_part
+</h2>
+<p>
+    <i>match_part</i> is the match components part of a csvpath. The match components are in the
+    second (and last) bracketed part of a csvpath. This field prints out just the components, without
+    scanning instructions or the file root.
+</p>
+
+<hr>
+<h3 >
+Usage
+</h3>
+<table  width="100%" cellspacing="0" cellpadding="5" style="margin-top:20px" >
+    <tr>
+        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+              Use this field like this.
+        </td>
+        <td style='border:1px solid #494949; background-color:#fff;'>
+            <code>
+$[0][
+    print("$.csvpath.match_part")
+]
+            </code>
+        </td>
+    </tr>
+</table>
+
+
+</html>
