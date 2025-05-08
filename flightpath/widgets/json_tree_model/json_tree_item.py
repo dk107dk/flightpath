@@ -17,20 +17,28 @@ class TreeItem:
         self._value_type = None
         self._children = []
 
+    def __str__(self) -> str:
+        return f"""
+{type(self)}:
+  key: {self.key},
+  value: {self.value},
+  value_type: {self.value_type},
+  children: {len(self.children)},
+  parent{self.parent}"""
+
+
     def appendChild(self, item: "TreeItem"):
-        """Add item as a child"""
         self._children.append(item)
 
     def child(self, row: int) -> "TreeItem":
         """Return the child of the current item from the given row"""
         return self._children[row]
 
+    @property
     def parent(self) -> "TreeItem":
-        """Return the parent of the current item"""
         return self._parent
 
     def childCount(self) -> int:
-        """Return the number of children of the current item"""
         return len(self._children)
 
     def row(self) -> int:
@@ -38,33 +46,31 @@ class TreeItem:
         return self._parent._children.index(self) if self._parent else 0
 
     @property
+    def children(self) -> str:
+        return self._children
+
+    @property
     def key(self) -> str:
-        """Return the key name"""
         return self._key
 
     @key.setter
     def key(self, key: str):
-        """Set key name of the current item"""
         self._key = key
 
     @property
     def value(self) -> str:
-        """Return the value name of the current item"""
         return self._value
 
     @value.setter
     def value(self, value: str):
-        """Set value name of the current item"""
         self._value = value
 
     @property
     def value_type(self):
-        """Return the python type of the item's value."""
         return self._value_type
 
     @value_type.setter
     def value_type(self, value):
-        """Set the python type of the item's value."""
         self._value_type = value
 
     @classmethod

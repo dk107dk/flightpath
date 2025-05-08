@@ -5,15 +5,18 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
         QWidget,
         QVBoxLayout,
+        QHBoxLayout,
         QTableView,
         QLabel,
         QAbstractItemView,
         QToolBar,
         QPushButton,
-        QComboBox
+        QComboBox,
+        QFrame
 )
 
 from PySide6.QtGui import QPixmap, QPainter
+from PySide6.QtGui import QColor, QPalette
 from PySide6.QtSvg import QSvgRenderer
 
 from flightpath.widgets.clickable_label import ClickableLabel
@@ -117,6 +120,23 @@ class DataToolbar(QToolBar):
         self.quotechar.addItem(self.SINGLE_QUOTES)
         self.addWidget(self.quotechar)
         #
+        # switch to raw source view
+        #
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.VLine)
+        separator.setFrameShadow(QFrame.Shadow.Plain)
+        separator.setLineWidth(0)
+        w = QWidget()
+        l = QHBoxLayout()
+        l.setContentsMargins(3, 1, 3, 1)
+        l.addWidget(separator)
+        w.setLayout(l)
+        # Add the separator to the toolbar
+        self.addWidget(w)
+        #self.addWidget(separator)
+        self.raw_source = QPushButton("Toggle raw source")
+        self.addWidget(self.raw_source)
+        #
         # let it move
         #
         self.setFloatable(True)
@@ -166,6 +186,8 @@ class DataToolbar(QToolBar):
             self.delimiter.setEnabled(False)
         if self.quotechar:
             self.quotechar.setEnabled(False)
+        if self.raw_source:
+            self.raw_source.setEnabled(False)
 
     def enable(self) -> None:
         if self.sampling:
@@ -178,4 +200,6 @@ class DataToolbar(QToolBar):
             self.delimiter.setEnabled(True)
         if self.quotechar:
             self.quotechar.setEnabled(True)
+        if self.raw_source:
+            self.raw_source.setEnabled(True)
 

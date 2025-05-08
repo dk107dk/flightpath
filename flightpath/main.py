@@ -11,7 +11,6 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
     QWidget,
     QVBoxLayout,
     QStackedLayout,
-    QMessageBox,
     QInputDialog,
     QProgressDialog,
     QFileDialog,
@@ -320,6 +319,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.content.toolbar.save_sample.clicked.connect(self.on_save_sample)
         self.content.toolbar.delimiter.activated.connect(self.on_set_delimiter)
         self.content.toolbar.quotechar.activated.connect(self.on_set_quotechar)
+        self.content.toolbar.raw_source.clicked.connect(self.on_raw_source)
         #
         #
         #
@@ -397,7 +397,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     @Slot(tuple)
     def update_json_views(self, worker_data):
-        filepath, data, errors = worker_data   # pylint: disable=W0612
+        filepath, data, editable = worker_data   # pylint: disable=W0612
         self.progress_dialog.close()
         self.last_main = self.main_layout.currentIndex()
         #
@@ -409,7 +409,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         json_view = taut.find_tab(self.content.tab_widget, filepath)
         if json_view is None:
-            json_view = JsonViewer(self)
+            json_view = JsonViewer(self, editable)
             json_view.open_file(path=filepath, data=data)
             json_view.setObjectName(filepath)
             self.content.tab_widget.addTab(json_view, os.path.basename(filepath) )
@@ -420,7 +420,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     @Slot(tuple)
     def update_csvpath_views(self, worker_data):
-        filepath, data, errors = worker_data # pylint: disable=W0612
+        filepath, data, editable = worker_data # pylint: disable=W0612
         self.progress_dialog.close()
         self.last_main = self.main_layout.currentIndex()
         #
@@ -433,14 +433,18 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.content.toolbar.disable()
         #
+        #
+        #
         csvpath_view = taut.find_tab(self.content.tab_widget, filepath)
         if csvpath_view is None:
-            csvpath_view = CsvpathViewer(main=self)
+            editable = editable if editable is not None else True
+            csvpath_view = CsvpathViewer(main=self, editable=editable)
             csvpath_view.setObjectName(filepath)
             csvpath_view.open_file(path=filepath, data=data)
             self.content.tab_widget.addTab(csvpath_view, os.path.basename(filepath) )
         else:
             csvpath_view = csvpath_view[1]
+        csvpath_view.editable = editable if editable else True
         taut.select_tab(self.content.tab_widget, csvpath_view)
         #
         # we show the right tabs in order to show the functions and docs
@@ -449,7 +453,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     @Slot(tuple)
     def update_views(self, worker_data):
-        msg, lines, filepath, data, errors = worker_data # pylint: disable=W0612
+        msg, lines, filepath, data, lines_to_take = worker_data # pylint: disable=W0612
         self.table_model = TableModel(data)
         #
         # we're going to put a button on the toolbar to switch to a raw source
@@ -470,6 +474,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if data_view is None:
             data_view = DataViewer(parent=self.content)
             data_view.setObjectName(obj_name)
+            #
+            # make sure we have the lines so the raw_viewer can take the same
+            #
+            data_view.lines_to_take = lines_to_take
             name = os.path.basename(filepath)
             self.content.tab_widget.addTab(data_view, name)
         else:
@@ -517,7 +525,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.read_validate_and_display_file()
 
-    def read_validate_and_display_file(self):
+    def read_validate_and_display_file(self, editable=True):
         info = QFileInfo(self.selected_file_path)
         #
         # TODO: consolidate below
@@ -541,7 +549,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.threadpool.start(worker)
         # pylint thinks csvpath_file_extensions doesn't support membership tests but it is list[str]. :/
         elif info.isFile() and info.suffix() in self.csvpath_config.csvpath_file_extensions: # pylint: disable=E1135
-            worker = CsvpathFileWorker(self.selected_file_path, self)
+            worker = CsvpathFileWorker(self.selected_file_path, self, editable=editable)
             worker.signals.finished.connect(self.update_csvpath_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
@@ -550,7 +558,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         elif info.isFile() and info.suffix() == "json":
-            worker = JsonDataWorker(self.selected_file_path, self)
+            worker = JsonDataWorker(self.selected_file_path, self, editable=editable)
             worker.signals.finished.connect(self.update_json_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
@@ -578,7 +586,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
             return
-        self.read_validate_and_display_file()
+        info = QFileInfo(self.selected_file_path)
+        editable = info.suffix() in self.csvpath_config.csvpath_file_extensions
+        editable = editable or info.suffix() in ["json", "md", "txt"]
+        self.read_validate_and_display_file(editable=editable)
         self.statusBar().showMessage(f"  {self.selected_file_path}")
         #
         # store the index for use in the case the user clicks off the current file
@@ -591,7 +602,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
             self._show_welcome_but_do_not_deselect()
-        self.read_validate_and_display_file()
+        self.read_validate_and_display_file(editable=False)
         self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def on_named_paths_tree_click(self, index):
@@ -599,7 +610,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
             self._show_welcome_but_do_not_deselect()
-        self.read_validate_and_display_file()
+        self.read_validate_and_display_file(editable=False)
         self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def on_archive_tree_click(self, index):
@@ -607,13 +618,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
             self._show_welcome_but_do_not_deselect()
-        self.read_validate_and_display_file()
+        self.read_validate_and_display_file(editable=False)
         self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def clear_views(self):
-        self.table_model = TableModel([])
-        self.content.data_view.clear(self.table_model)
-        self.content.source_view.clear()
+        self.content.close_all_tabs()
 
     def on_help_click(self) -> None:
         ss = self.main.sizes()
@@ -638,6 +647,18 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def on_set_quotechar(self) -> None:
         self.read_validate_and_display_file()
+
+    def on_raw_source(self) -> None:
+        #self.content.raw_viewer.open_file(filepath)
+        #self.last_main = self.main_layout.currentIndex()
+        #self.main_layout.setCurrentIndex(1)
+        #
+        # no need to add a tab. we already have one because the grid is default.
+        #
+        obj_name = self.selected_file_path
+        data_view = taut.find_tab(self.content.tab_widget, obj_name)
+        data_view[1].toggle_grid_raw()
+
 
     def on_save_sample(self) -> None:
         if not self.table_model:
@@ -713,8 +734,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             event.accept()
             return
         elif (
-            self.sidebar.last_file_index
-            and not self.content.csvpath_files_are_saved()
+            self.sidebar.last_file_index or
+            not self.content.all_files_are_saved()
         ):
             if not self.content.close_all_tabs():
                 event.ignore()

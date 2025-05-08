@@ -3,10 +3,6 @@ import os
 import json
 from pathlib import Path
 
-from PySide6.QtWidgets import QMessageBox, QFileDialog
-
-from PySide6.QtCore import Qt
-
 from csvpath import CsvPaths
 from csvpath.util.config import Config as CsvPath_Config
 from csvpath.util.nos import Nos
