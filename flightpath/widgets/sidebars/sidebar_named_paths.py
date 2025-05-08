@@ -78,11 +78,9 @@ class SidebarNamedPaths(QWidget):
             #
             #
             #
-
             self.view.setContextMenuPolicy(Qt.CustomContextMenu)
             self.view.customContextMenuRequested.connect(self._show_context_menu)
             self._setup_view_context_menu()
-
         self.setLayout(layout)
 
     def refresh(self) -> None:

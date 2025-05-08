@@ -51,9 +51,10 @@ class CsvpathViewer(QWidget):
         "tab":None
     }
 
-    def __init__(self, main):
+    def __init__(self, *, main, editable=True):
         super().__init__()
         self.main = main
+        self.editable = editable
         stut.set_common_style(self)
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -63,10 +64,9 @@ class CsvpathViewer(QWidget):
         self.path = None
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-
-        self.text_edit = CsvPathTextEdit(main=main, parent=self)
+        self.text_edit = CsvPathTextEdit(main=main, parent=self, editable=self.editable)
         self.text_edit.setLineWrapMode(QPlainTextEdit.NoWrap)
-        self.text_edit.setReadOnly(False)
+        self.text_edit.setReadOnly(not self.editable)
         self.text_edit.setFont(QFont("Courier, monospace"))
 
         layout.addWidget(self.label)
@@ -150,9 +150,8 @@ class CsvpathViewer(QWidget):
             c = "\t"
         else:
             try:
-                c = CsvpathSourceViewer.CHAR_NAMES.get(c)
+                c = CsvpathViewer.CHAR_NAMES.get(c)
             except Exception as e:
-                print(f"e: {type(e)}: {e}")
                 ...
         if c is None:
             c = default
@@ -192,7 +191,7 @@ class CsvpathViewer(QWidget):
                 parent=self,
                 cwd=self.main.state.cwd,
                 title="Select Data File",
-                filter=FileCollector.csvs_filter(self.main.csvpath_config)
+                file_type_filter=FileCollector.csvs_filter(self.main.csvpath_config)
             )
             #
             # or, error message here.
@@ -211,6 +210,8 @@ class CsvpathViewer(QWidget):
         #
         #
         path = CsvPath(quotechar=quotechar, delimiter=delimiter)
+        p = path.config.get(section='cache', name='path')
+        uc = path.config.get(section='cache', name='use_cache')
         lines = []
         capture = None
         try:
@@ -255,7 +256,7 @@ class CsvpathViewer(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.main.helper.help_and_feedback.setCurrentWidget(es)
         self.main.helper.help_and_feedback.show()
-        if not self.main.is_showing_help():
+        if not self.main.helper.is_showing_help():
             self.main.helper.on_click_help()
 
     def _clear_feedback(self) -> None:
@@ -395,7 +396,6 @@ lines = path.collect()
         # this approach predated just deleting all the tabs and
         # recreating.
         #
-        #
         layout = tab.layout()
         if layout:
             while layout.count():
@@ -440,11 +440,9 @@ lines = path.collect()
         self.text_edit.setPlainText(data)
         c = "cmd" if osut.is_mac() else "ctrl"
         self.main.statusBar().showMessage(f"{c}-s to save, {c}-r to run • Opened {path}")
-        #self.main.content.set_csvpath_tab_name( os.path.basename(path) )
 
 
     def clear(self):
-        #self.label.show()
         self.text_edit.hide()
         self.path = None
 

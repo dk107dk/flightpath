@@ -12,12 +12,12 @@ class DataWorkerSignals(QObject):
 
 class JsonDataWorker(QRunnable):
 
-    def __init__(self, filepath, main):
+    def __init__(self, filepath, main, editable=True):
         super().__init__()
         self.main = main
         self.filepath = filepath
+        self.editable = editable
         self.signals = DataWorkerSignals()
-        self.sample_size = 5
 
     @Slot()
     def run(self):
@@ -27,7 +27,7 @@ class JsonDataWorker(QRunnable):
             data = json.load(file.source)
         errors = []
         self.signals.messages.emit(QApplication.translate("DataWorker", f" Opened {str(self.filepath)}"))
-        self.signals.finished.emit(( str(self.filepath), data, errors))
+        self.signals.finished.emit(( str(self.filepath), data, self.editable))
 
 
 

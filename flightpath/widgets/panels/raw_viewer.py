@@ -10,13 +10,15 @@ from csvpath.util.nos import Nos
 from flightpath.util.style_utils import StyleUtility as stut
 
 
-class RawSourceViewer(QWidget):
+class RawViewer(QWidget):
 
     def __init__(self, main):
         super().__init__()
         stut.set_common_style(self)
         self.main = main
+        self.path = main.selected_file_path
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
         self.label = QLabel()
@@ -27,31 +29,31 @@ class RawSourceViewer(QWidget):
         self.text_edit.setReadOnly(True)
         layout.addWidget(self.label)
         layout.addWidget(self.text_edit)
+        self.loaded = False
 
-    def open_file(self, filepath, lines):
-        if lines is None:
-            lines = []
+    def open_file(self, filepath, lines_to_take=None):
         if not Nos(filepath).isfile():
             return
         content = ""
-
         with DataFileReader(filepath) as file:
             try:
                 i = 0
                 ls = file.source.readlines()
                 for line in ls:
-                    if i in lines:
+                    if lines_to_take is None or i in lines_to_take:
                         content = f"{content}{line}"
-                        lines.remove(i)
-                    if len(lines) == 0:
+                        if lines_to_take:
+                            lines_to_take.remove(i)
+                    if lines_to_take and len(lines_to_take) == 0:
                         break
                     i += 1
-            except:
-                self.label.setText("Error opening file")
+            except Exception as e:
+                self.label.setText(f"Error opening file: {type(e)}: {e}")
                 return
         self.label.hide()
         self.text_edit.show()
         self.text_edit.setPlainText(content)
+        self.loaded = True
 
     def clear(self):
         self.label.show()
