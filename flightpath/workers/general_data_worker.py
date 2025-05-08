@@ -37,7 +37,6 @@ class GeneralDataWorker(QRunnable):
         return i
 
     def accept_line(self, line_num:int, line:list[str]) -> bool:
-        #self.sample_size = self.sample_size if self.sample_size else -1
         #
         # -1 means "All lines"
         # None means stop here
@@ -76,6 +75,7 @@ class GeneralDataWorker(QRunnable):
             self.prep_sampling()
         path = str(self.filepath)
         lines:list[int] = []
+        lines_to_take = self.lines_to_take[:] if self.lines_to_take else None
         t = 0
         i = 0
         with DataFileReader( path ) as file:
@@ -101,7 +101,7 @@ class GeneralDataWorker(QRunnable):
                 print(f"Error: {type(e)}: {e}")
         errors = []
         self.signals.messages.emit(QApplication.translate("DataWorker", f"  Opened {path}"))
-        self.signals.finished.emit((f"Took {t} lines out of {i} seen", lines, path, data, errors))
+        self.signals.finished.emit((f"Took {t} lines out of {i} seen", lines, path, data, lines_to_take))
 
 
     def prep_sampling(self) -> None:

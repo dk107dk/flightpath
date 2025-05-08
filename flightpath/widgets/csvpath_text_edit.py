@@ -12,10 +12,11 @@ from flightpath.util.file_utility import FileUtility as fiut
 
 class CsvPathTextEdit(QPlainTextEdit):
 
-    def __init__(self, *, main, parent) -> None:
+    def __init__(self, *, main, parent, editable=True) -> None:
         super().__init__()
         self.main = main
         self.parent = parent
+        self.editable = editable
         self.icon = None
         self.parent.saved = True
         save_shortcut_ctrl_save = QShortcut(QKeySequence("Ctrl+S"), self)
@@ -28,6 +29,8 @@ class CsvPathTextEdit(QPlainTextEdit):
         save_shortcut_cmd_run.activated.connect(self.on_run)
 
     def keyPressEvent(self, event: QKeyEvent):
+        if self.editable is False:
+            return
         if self.parent.saved is True:
             path = self.parent.path
             path = os.path.dirname(path)
@@ -40,6 +43,8 @@ class CsvPathTextEdit(QPlainTextEdit):
         super().keyPressEvent(event)
 
     def contextMenuEvent(self, event):
+        if self.editable is not True:
+            return
         menu = self.createStandardContextMenu()
         #
         # separator and save options
@@ -70,6 +75,13 @@ class CsvPathTextEdit(QPlainTextEdit):
 
     def on_save_as(self, switch_local=False) -> None:
         #
+        # in principle we could allow save-as for immutable files, but
+        # atm keeping it simple. to save as you first have to copy back
+        # to the working directory.
+        #
+        if self.editable is False:
+            return
+        #
         # if we are in an inputs or archive we're going to want to
         # send the copy to the left-hand side file tree.
         #
@@ -89,7 +101,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         if switch_local:
             index = self.main.sidebar.last_file_index
             if index is not None:
-                file_info = self.main.sidebar.file_model.fileInfo(source_index)
+                file_info = self.main.sidebar.file_model.fileInfo(index)
                 thepath = file_info.filePath()
                 if thepath is not None:
                     thepath = str(thepath)
@@ -120,6 +132,11 @@ class CsvPathTextEdit(QPlainTextEdit):
         #
         # if the path is under the inputs or archive we have to save-as, not just save
         #
+        # if the parent isn't editable we shouldn't get here, but if we did we need to
+        # be sure to not save.
+        #
+        if self.editable is False:
+            return
         path = self.parent.path
         ap = self.main.csvpath_config.archive_path
         ncp = self.main.csvpath_config.inputs_csvpaths_path
@@ -136,6 +153,8 @@ class CsvPathTextEdit(QPlainTextEdit):
         self.parent.reset_saved()
 
     def on_run(self) -> None:
+        if self.editable is False:
+            return
         cursor = self.textCursor()
         position = cursor.position()
         text = self.toPlainText()

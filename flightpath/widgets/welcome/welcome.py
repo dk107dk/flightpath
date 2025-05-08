@@ -10,10 +10,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QSizePolicy,
-    QTextBrowser,
     QSpacerItem,
-    QFileDialog,
-    QInputDialog,
     QMessageBox
 )
 
@@ -25,6 +22,7 @@ from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.file_collector import FileCollector
+from flightpath.dialogs.new_run_dialog import NewRunDialog
 
 class Welcome(QWidget):
 
@@ -88,14 +86,25 @@ class Welcome(QWidget):
         print(f"welcome: on_click_copy_in: path: {path}")
 
     def on_click_run(self) -> None:
-        self.main.sidebar_rt_top._new_run()
+        #self.main.sidebar_rt_top._new_run()
+        self._new_run()
+
+    def _new_run(self) -> None:
+        self.new_run_dialog = NewRunDialog(parent=self)
+        self.new_run_dialog.show()
+
+
+
+
+
+
 
     def on_click_validate(self) -> None:
         csvpath = FileCollector.select_file(
             parent=self,
             cwd=self.main.state.cwd,
             title="Select CsvPath Language File",
-            filter=FileCollector.csvpaths_filter(self.main.csvpath_config)
+            file_type_filter=FileCollector.csvpaths_filter(self.main.csvpath_config)
         )
         print(f"welcome: on_click_validate: csvpath path: {csvpath}")
         if csvpath is None:

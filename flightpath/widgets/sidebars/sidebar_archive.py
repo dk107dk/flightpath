@@ -14,9 +14,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout
 )
 
-from PySide6.QtGui import QPixmap, QIcon, QAction
+from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt, QSize, QModelIndex
-from PySide6.QtWidgets import QFileSystemModel, QTreeView, QAbstractItemView, QSizePolicy, QHeaderView
+from PySide6.QtWidgets import QTreeView, QAbstractItemView, QSizePolicy, QHeaderView
 
 from csvpath.util.nos import Nos
 from csvpath.util.config import Config
