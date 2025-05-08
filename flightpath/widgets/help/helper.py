@@ -79,19 +79,19 @@ class Helper:
         return ss[1] > 0
 
     def on_click_named_files_help(self) -> None:
-        md = HelpFinder(main=main).help("named_files/about.md")
+        md = HelpFinder(main=self.main).help("named_files/about.md")
         self.get_help_tab().setMarkdown(md)
         if not self.is_showing_help():
             self.on_click_help()
 
     def on_click_named_paths_help(self) -> None:
-        md = HelpFinder(main=main).help("named_paths/about.md")
+        md = HelpFinder(main=self.main).help("named_paths/about.md")
         self.get_help_tab().setMarkdown(md)
         if not self.is_showing_help():
             self.on_click_help()
 
     def on_click_archive_help(self) -> None:
-        md = HelpFinder(main=main).help("archive/about.md")
+        md = HelpFinder(main=self.main).help("archive/about.md")
         self.get_help_tab().setMarkdown(md)
         if not self.is_showing_help():
             self.on_click_help()

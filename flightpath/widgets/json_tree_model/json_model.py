@@ -18,6 +18,30 @@ class JsonModel(QAbstractItemModel):
         self._headers = ("key", "value")
 
     @property
+    def root(self) -> TreeItem:
+        return self._rootItem
+
+    def remove(self, index) -> None:
+        item = index.internalPointer()
+        rc = self.rowCount(parent=index)
+        cc = self.columnCount(parent=index)
+        print(f"jsonmodel.relmove: item.key: {item.key}, rc: {rc}, cc: {cc}")
+        self.beginRemoveRows(QModelIndex(), rc, cc)
+        item.parent.children.remove(item)
+        self.endRemoveRows()
+
+    def item_path(self, item) -> list[str]:
+        print(f"jsonmodel: itempath: starting with item: {item.key}")
+        path = []
+        while item.key != "root":
+            print(f"jsonmodel: itempath: item: {item.key}")
+            path.append(item.key)
+            item = item.parent
+        path.append("root")
+        path.reverse()
+        return path
+
+    @property
     def headers(self) -> tuple[str]:
         return self._headers
 
@@ -54,6 +78,8 @@ class JsonModel(QAbstractItemModel):
             if index.column() == 1:
                 return item.value
         elif role == Qt.ItemDataRole.EditRole:
+            if index.column() == 0:
+                ... # do we need to return something here if the value is empty -- i.e. it was just added?
             if index.column() == 1:
                 return item.value
 
@@ -92,7 +118,7 @@ class JsonModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
         childItem = index.internalPointer()
-        parentItem = childItem.parent()
+        parentItem = childItem.parent
         if parentItem == self._rootItem:
             return QModelIndex()
         return self.createIndex(parentItem.row(), 0, parentItem)

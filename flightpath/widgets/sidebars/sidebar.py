@@ -291,7 +291,7 @@ class Sidebar(QWidget):
                 #
                 if ext in self.main.csvpath_config.csvpath_file_extensions:
                     i = self.main.content.tab_widget.currentIndex()
-                    if i == 2 and not self.main.content.csvpath_source_view.saved:
+                    if i == 2 and not self.main.content.csvpath_view.saved:
                         self.save_file_action.setVisible(True)
 
             else:

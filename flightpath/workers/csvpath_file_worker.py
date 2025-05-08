@@ -12,10 +12,11 @@ class CsvpathFileWorkerSignals(QObject):
 
 class CsvpathFileWorker(QRunnable):
 
-    def __init__(self, filepath, main):
+    def __init__(self, filepath, main, editable=True):
         super().__init__()
         self.main = main
         self.filepath = str(filepath)
+        self.editable = editable
         self.signals = CsvpathFileWorkerSignals()
 
     @Slot()
@@ -28,15 +29,14 @@ class CsvpathFileWorker(QRunnable):
         data = None
         with DataFileReader(self.filepath) as file:
             data = file.source.read()
-        #self.signals.messages.emit(QApplication.translate("DataWorker", "Validating file..."))
         #
-        # try running a CsvPath run to see if the file is basically valid csvpath?
+        # try running/parsing w/a CsvPath to chk file is basically valid CsvPath Language?
         #
         self.signals.messages.emit(QApplication.translate("DataWorker", f"Opened: {self.filepath}" ))
         #
-        # provide the errors?
+        # provide editable indicator
         #
-        self.signals.finished.emit((self.filepath, data, []))
+        self.signals.finished.emit((self.filepath, data, self.editable))
 
 
 

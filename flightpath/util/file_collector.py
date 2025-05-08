@@ -33,15 +33,15 @@ class FileCollector:
         return f"Data files ({ext_str})"
 
     @classmethod
-    def select_file(cls, *, parent:QWidget, cwd:str, title:str, filter:str) -> str:
+    def select_file(cls, *, parent:QWidget, cwd:str, title:str, file_type_filter:str) -> str:
         #
         # selects a single file. if the file is not in the project's folder tree it will be copied in.
         #
         d = QFileDialog()
         d.setOptions(QFileDialog.Option.DontUseNativeDialog)
         d.setFileMode(QFileDialog.FileMode.ExistingFile)
-        if filter:
-            d.setNameFilter(filter)
+        if file_type_filter:
+            d.setNameFilter(file_type_filter)
         if title:
             d.setWindowTitle(title)
         the_path = None
