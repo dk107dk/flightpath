@@ -157,7 +157,6 @@ class ListenersForm(BlankForm):
 
     @Slot(str)
     def _listener_name_click(self, text:str) -> None:
-        print(f"_listener_name_click: text: {text}")
         t = self.groups.text()
         if t is None:
             t = text

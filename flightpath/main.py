@@ -158,7 +158,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # from config or wherever.
         #
         self.last_main = 0
-        self.config.config_panel.setup_forms()
+        #self.config.config_panel.setup_forms()
 
         self.show()
         self.statusBar().showMessage(f"  Working directory: {self.state.cwd}")
@@ -345,7 +345,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.config.toolbar.button_close.clicked.connect(self.close_config)
         self.config.toolbar.button_cancel_changes.clicked.connect(self.cancel_config_changes)
-        self.config.toolbar.button_save.clicked.connect(self.save_config_changes)
+        self.config.toolbar._button_save.clicked.connect(self.save_config_changes)
         #
         #
         #
@@ -399,7 +399,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             if (
                 self.config and
                 self.config.ready is True and
-                not self.config.toolbar.button_close.isEnabled()
+                self.config.toolbar._button_save.isEnabled()
             ):
                 save = QMessageBox.question(
                     self,
@@ -764,7 +764,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if hasattr(self, "config") and self.config:
             self.config.toolbar.button_close.setEnabled(False)
             self.config.toolbar.button_cancel_changes.setEnabled(True)
-            self.config.toolbar.button_save.setEnabled(True)
+            self.config.toolbar.enable_save()
 
     def closeEvent(self, event):
         if (
