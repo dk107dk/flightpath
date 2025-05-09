@@ -84,7 +84,7 @@ class Content(QWidget):
         # if we're in a csvpath file that has changes we need to confirm we're discarding the changes
         #
         while self.tab_widget.count() > 0:
-            if not self.tab_widget.close_tab(0):
+            if not self.tab_widget.close_tab_at(0):
                 print(f"content: cannot close tab @ 0!")
                 return False
         #

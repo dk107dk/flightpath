@@ -17,8 +17,11 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
     QSplitter,
     QTabWidget,
     QSizePolicy,
+    QMessageBox,
     QTextEdit
 )
+
+
 
 from PySide6.QtGui import QIcon # pylint: disable=E0611
 from PySide6.QtCore import ( # pylint: disable=E0611
@@ -174,6 +177,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.welcome = Welcome(main=self)
         self.content = Content(main=self)
         self.config = Config(main=self)
+        #
+        # we need to get the buttons in the right states. they
+        # potentially change during setup, so this is a good place
+        # to true-up.
+        #
+        #self.reset_config_toolbar()
+
         self.main_layout.addWidget(self.welcome)
         self.main_layout.addWidget(self.content)
         self.main_layout.addWidget(self.config)
@@ -380,6 +390,27 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def _on_stack_change(self) ->None:
         i = self.main_layout.currentIndex()
+        #
+        # if i == 2 (Config) we have to check if the config has changed. if it has
+        # and we switch away work could be lost. we need to confirm w/user that is
+        # ok.
+        #
+        if i != 2:
+            if (
+                self.config and
+                self.config.ready is True and
+                not self.config.toolbar.button_close.isEnabled()
+            ):
+                save = QMessageBox.question(
+                    self,
+                    "Config changed",
+                    "Save config changes?",
+                    QMessageBox.Yes | QMessageBox.No,
+                )
+                if save == QMessageBox.Yes:
+                    self.save_config_changes()
+                self.reset_config_toolbar()
+
         if i in [0, 2]:
             self._rt_tabs_hide()
         else:
@@ -701,6 +732,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def open_config(self):
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(2)
+        self.cancel_config_changes()
         self.config.show_help()
 
     #
@@ -713,17 +745,20 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.last_main = i
         self.config.close_help()
 
+    def reset_config_toolbar(self):
+        if hasattr(self, "config") and self.config:
+            self.config.reset_config_toolbar()
+
     def cancel_config_changes(self):
         self.config.config_panel.populate_all_forms()
-        self.config.toolbar.button_close.setEnabled(True)
-        self.config.toolbar.button_cancel_changes.setEnabled(False)
-        self.config.toolbar.button_save.setEnabled(False)
+        self.reset_config_toolbar()
 
     def save_config_changes(self):
+        print(f"save_config_changes: starting")
         self.config.config_panel.save_all_forms()
-        self.config.toolbar.button_close.setEnabled(True)
-        self.config.toolbar.button_cancel_changes.setEnabled(False)
-        self.config.toolbar.button_save.setEnabled(False)
+        print(f"save_config_changes: resetting")
+        self.reset_config_toolbar()
+        print(f"save_config_changes: done")
 
     def on_config_changed(self):
         if hasattr(self, "config") and self.config:
