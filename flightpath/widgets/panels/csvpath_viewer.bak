@@ -3,7 +3,7 @@ import json
 import os
 import traceback
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QPlainTextEdit, QTextEdit, QLabel, QMessageBox, QTableView
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QPlainTextEdit, QLabel, QMessageBox, QTableView
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt, QFileInfo
 
@@ -24,8 +24,7 @@ from flightpath.util.file_collector import FileCollector
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.highlighters import MultiHighlighter, CommentHighlighter
 from flightpath.util.syntax_highlighter import CsvpathHighlighter
-from flightpath.util.run_info import RunInfo
-from flightpath.util.html_generator import HtmlGenerator
+
 
 class CsvpathViewer(QWidget):
     CHAR_NAMES = {
@@ -271,7 +270,7 @@ class CsvpathViewer(QWidget):
         # remove all tabs (not incl. help)
         #
         self._clear_feedback()
-        printouts_label = "Printouts [default]"
+        printouts_label = "Printouts - default"
         helptab = None
         #
         # create new tabs
@@ -282,7 +281,7 @@ class CsvpathViewer(QWidget):
         for name in printer.names:
             printout = printer.to_string(name)
             default = QWidget()
-            printer_name = f"Printouts [{name}]"
+            printer_name = f"Printouts - {name}"
             default.setObjectName(printer_name)
             self.main.helper.help_and_feedback.addTab(default, printer_name)
 
@@ -360,9 +359,7 @@ class CsvpathViewer(QWidget):
 
     def _display_code(self, code:QWidget, csvpath_str:str) -> None:
         pseudo = f"""
-#
-# for a one-off validation
-#
+~ for a one-off validation ~
 from csvpath import CsvPath
 path = CsvPath(
              '''{csvpath_str}''')
@@ -408,16 +405,41 @@ lines = path.collect()
         layout.setContentsMargins(0, 0, 0, 0)
 
     def _display_why(self, why:QWidget, path:CsvPath) -> None:
-        layout = QVBoxLayout()
+        layout = QFormLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         why.setLayout(layout)
-        te = QTextEdit()
-        layout.addWidget(te)
+        #
+        # left: setting, right: impact
+        #
+        layout.addRow( "Csvpath identified as", QLabel(f"{path.identity}") )
+        layout.addRow( "Run against", QLabel(f"{path.scanner.filename}") )
+        layout.addRow( "Lines scanned",  QLabel(f"{path.scan_count}") )
+        layout.addRow( "Matched lines",  QLabel(f"{path.match_count}") )
+        layout.addRow( "Blank lines skipped", QLabel(f"{path.skip_blank_lines}") )
+        layout.addRow( "Delimiter", QLabel(f"{path.delimiter}") )
+        layout.addRow( "Quotechar", QLabel(f"{path.quotechar}") )
+        layout.addRow( "Run configured to collect lines", QLabel(f"{path.collecting}") ) # if fast-forwarding this would be False. we can call it out even though its virtually never informative since you know what method you ran
 
-        runinfo = RunInfo(path)
-        t = fiut.make_app_path(f"assets{os.sep}help{os.sep}templates{os.sep}why.html")
-        html = HtmlGenerator.load_and_transform(t, runinfo.info)
-        te.setText(html)
+        layout.addRow( "Log level in config", QLabel(f"{path.config.csvpath_log_level}") )
+        layout.addRow( "Error policy in config", QLabel(f"{path.config.csvpath_errors_policy}") )
+
+        layout.addRow( "Stop on errors",  QLabel(f"{path.stop_on_validation_errors}") )
+        layout.addRow( "Fail on errors",  QLabel(f"{path.fail_on_validation_errors}") )
+        layout.addRow( "Print errors",  QLabel(f"{path.print_validation_errors}") )
+        layout.addRow( "Log errors",  QLabel(f"{path.log_validation_errors}") )
+        layout.addRow( "Raise exception on error",  QLabel(f"{path.raise_validation_errors}") )
+        layout.addRow( "Match on error",  QLabel(f"{path.match_validation_errors}") )
+        layout.addRow( "Collect error objects",  QLabel(f"{path.collect_validation_errors}") )
+        layout.addRow( "Match reasoning written to the log",  QLabel(f"{path.explain}") )
+        layout.addRow( "Matches or unmatched lines returned",  QLabel(f"{path.collect_when_not_matched}")  ) # does next() return matches or non-matches?
+        layout.addRow( "Run stopped early", QLabel(f"{path.stopped}") )
+        layout.addRow( "Run marked invalid", QLabel(f"{path.is_valid}") )
+        layout.addRow( "Logic mode", QLabel(f"{path.logic_mode}") )
+        layout.addRow( "Print mode", QLabel(f"{path.print_mode}") )
+        layout.addRow( "Printers available", QLabel(f"{path.printers}") )
+        layout.addRow( "Run mode", QLabel(f"{path.will_run}") )
+        layout.addRow( "Unmatched lines retained", QLabel(f"{path.unmatched_mode}") ) # do we keep the unmatched lines in unmatched.csv for later use?
+        layout.addRow( "Source mode", QLabel(f"{path.data_from_preceding}") ) # this will never be a factor, but we can call it out anyway in case confusion
 
     def _clear_tab(self, tab) -> None:
         #
