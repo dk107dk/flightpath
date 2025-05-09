@@ -66,8 +66,8 @@ class ErrorsForm(BlankForm):
         self._setup()
 
     def add_to_config(self, config) -> None:
-        config.add_to_config("inputs", "pattern", self.pattern.text() )
-        config.add_to_config("inputs", "use_format", self.use_format.currentText() )
+        config.add_to_config("errors", "pattern", self.pattern.text() )
+        config.add_to_config("errors", "use_format", self.use_format.currentText() )
 
         csvpath_policy = []
         if self.csvpath_raise.isChecked():
