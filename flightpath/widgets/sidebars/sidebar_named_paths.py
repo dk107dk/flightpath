@@ -102,7 +102,7 @@ class SidebarNamedPaths(QWidget):
 
         self.new_run_action.triggered.connect(self._new_run)
         self.copy_action.triggered.connect(self._copy_paths_back_to_cwd)
-        self.delete_action.triggered.connect(self._delete_file_navitagor_item)
+        self.delete_action.triggered.connect(self._delete_file_navigator_item)
 
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.copy_action)
@@ -187,7 +187,7 @@ class SidebarNamedPaths(QWidget):
         else:
             self.context_menu.exec(global_pos)
 
-    def _delete_file_navitagor_item(self):
+    def _delete_file_navigator_item(self):
         index = self.view.currentIndex()
         if index.isValid():
             path = self.model.filePath(index)
