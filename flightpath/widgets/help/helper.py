@@ -18,7 +18,7 @@ class Helper:
         if self.help_and_feedback:
             self.help_and_feedback.deleteLater()
             self.help_and_feedback = None
-        self.help_and_feedback = ClosingTabs(main=self.main)
+        self.help_and_feedback = ClosingTabs(main=self.main, parent=self)
 
     @property
     def help(self) -> QTextEdit:
@@ -27,7 +27,6 @@ class Helper:
     @help.setter
     def help(self, t:QTextEdit) -> None:
         self._help = t
-
 
     def assure_help_tab(self) -> None:
         if self.help is None:
