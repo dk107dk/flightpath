@@ -405,7 +405,8 @@ class Sidebar(QWidget):
         name = "" if not name else name.strip()
         if name.endswith(".json"):
             self.do_load_json()
-        elif Nos(name).is_file():
+        elif Nos(name).isfile():
+            print(f"sidebar: loading a np file. overwrite is {overwrite}")
             self.do_load_file(overwrite=overwrite)
         else:
             self.do_load_dir(overwrite=overwrite)
@@ -440,7 +441,13 @@ class Sidebar(QWidget):
                 # testing and a local release so we can use it. till then, this will
                 # break
                 #
-                paths.paths_manager.add_named_paths_from_file(name=named_paths_name, file_path=name, template=template, append=(not overwrite))
+                paths.paths_manager.add_named_paths_from_file(
+                    #name=None,
+                    name=named_paths_name,
+                    file_path=name,
+                    template=template,
+                    append=(not overwrite)
+                )
             else:
                 raise ValueError(f"Unknown file type: {name}")
         self._renew_sidebars()
