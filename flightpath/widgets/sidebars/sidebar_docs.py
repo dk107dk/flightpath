@@ -35,9 +35,9 @@ class SidebarDocs(QWidget):
         self.setMinimumWidth(300)
         self.context_menu = None
         self._function_collector = functions if functions is not None else FunctionCollector()
-        self.setup()
         self.setStyleSheet("font-size: 13px; padding: 5px;")
-        self.description
+        self.description = None
+        self.setup()
 
     @property
     def functions_collector(self) -> FunctionCollector:

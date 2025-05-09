@@ -20,18 +20,17 @@ from PySide6.QtWidgets import QFileSystemModel
 from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
-from flightpath.widgets.clickable_label import ClickableLabel
-from flightpath.widgets.custom_tree_view import CustomTreeView
 from flightpath.dialogs.stage_data_dialog import StageDataDialog
 from flightpath.dialogs.load_paths_dialog import LoadPathsDialog
-from flightpath.util.os_utility import OsUtility as osut
-from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.widgets.help.plus_help import HelpIconPackager
-from flightpath.util.help_finder import HelpFinder
-
+from flightpath.widgets.clickable_label import ClickableLabel
+from flightpath.widgets.custom_tree_view import CustomTreeView
 from flightpath.widgets.sidebars.sidebar_named_paths import SidebarNamedPaths
 from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.file_tree_model.directory_filter_proxy_model import DirectoryFilterProxyModel
+from flightpath.util.os_utility import OsUtility as osut
+from flightpath.util.file_utility import FileUtility as fiut
+from flightpath.util.help_finder import HelpFinder
 
 class Sidebar(QWidget):
 
@@ -208,7 +207,7 @@ class Sidebar(QWidget):
 
         self.rename_action.triggered.connect(self._rename_file_navigator_item)
         self.open_location_action.triggered.connect(self._open_file_navigator_location)
-        self.delete_action.triggered.connect(self._delete_file_navitagor_item)
+        self.delete_action.triggered.connect(self._delete_file_navigator_item)
         self.new_file_action.triggered.connect(self._new_file_navigator_item)
         self.save_file_action.triggered.connect(self._save_file_navigator_item)
         self.new_folder_action.triggered.connect(self._new_folder_navigator_item)
@@ -395,7 +394,13 @@ class Sidebar(QWidget):
     def _run_paths(self) -> None:
         ...
 
-    def do_load(self) -> None:
+    def do_append_named_paths_load(self) ->None:
+        self.do_load(overwrite=False)
+
+    def do_overwrite_named_paths_load(self) ->None:
+        self.do_load(overwrite=True)
+
+    def do_load(self, *, overwrite=True) -> None:
         template = self.load_dialog.template_ctl.text()
         if template and template.strip() == "":
             template = None
@@ -407,10 +412,15 @@ class Sidebar(QWidget):
         # if the named-paths name exists, warn the user that they are adding a named-path to the group
         #
         if paths.paths_manager.has_named_paths(named_paths_name):
+            msg = (
+                    "Are you sure you want to overwrite an existing named-paths group?"
+                    if overwrite else
+                    "Are you sure you want to append to an existing named-paths group?"
+            )
             confirm = QMessageBox.question(
                 self,
-                self.tr("Add Paths"),
-                self.tr("Are you sure you want to add these csvpaths to an existing named-paths group?"),
+                "Load Paths",
+                msg,
                 QMessageBox.Yes | QMessageBox.No,
             )
             if confirm == QMessageBox.No:
@@ -418,7 +428,14 @@ class Sidebar(QWidget):
         if nos.isfile():
             ext = name[name.rfind(".")+1:]
             if ext in self.main.csvpath_config.csvpath_file_extensions:
-                paths.paths_manager.add_named_paths_from_file(name=named_paths_name, file_path=name, template=template)
+                #
+                # added append=(not overwrite) to do an append when the form requires.
+                # however, atm, the append is only available on add_named_files(). the
+                # change to add append to add_named_paths_from_file() is done, but needs
+                # testing and a local release so we can use it. till then, this will
+                # break
+                #
+                paths.paths_manager.add_named_paths_from_file(name=named_paths_name, file_path=name, template=template, append=(not overwrite))
             elif name.endswith(".json"):
                 paths.paths_manager.add_named_paths_from_json(file_path=name)
             else:
@@ -608,7 +625,7 @@ class Sidebar(QWidget):
         o = osut.file_system_open_cmd()
         os.system(f'{o} "{folder}"')
 
-    def _delete_file_navitagor_item(self):
+    def _delete_file_navigator_item(self):
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
