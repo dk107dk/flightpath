@@ -116,7 +116,7 @@ class SidebarArchive(QWidget):
 
         self.delete_action = QAction()
         self.delete_action.setText(self.tr("Permanent delete"))
-        self.delete_action.triggered.connect(self._delete_file_navitagor_item)
+        self.delete_action.triggered.connect(self._delete_file_navigator_item)
 
         self.context_menu.addAction(self.repeat_run_action)
         self.context_menu.addAction(self.new_run_action)
@@ -184,7 +184,7 @@ class SidebarArchive(QWidget):
         maker = SidebarArchiveRefMaker(main=self.main, parent=self)
         maker._repeat_run()
 
-    def _delete_file_navitagor_item(self):
+    def _delete_file_navigator_item(self):
         index = self.view.currentIndex()
         if index.isValid():
             path = self.model.filePath(index)

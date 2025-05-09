@@ -601,25 +601,31 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.selected_file_path = self.sidebar_rt_top.model.filePath(index)
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
-            self._show_welcome_but_do_not_deselect()
-        self.read_validate_and_display_file(editable=False)
-        self.statusBar().showMessage(f"  {self.selected_file_path}")
+            ...
+            #self._show_welcome_but_do_not_deselect()
+        else:
+            self.read_validate_and_display_file(editable=False)
+            self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def on_named_paths_tree_click(self, index):
         self.selected_file_path = self.sidebar_rt_mid.model.filePath(index)
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
-            self._show_welcome_but_do_not_deselect()
-        self.read_validate_and_display_file(editable=False)
-        self.statusBar().showMessage(f"  {self.selected_file_path}")
+            ...
+            #self._show_welcome_but_do_not_deselect()
+        else:
+            self.read_validate_and_display_file(editable=False)
+            self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def on_archive_tree_click(self, index):
         self.selected_file_path = self.sidebar_rt_bottom.model.filePath(index)
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
-            self._show_welcome_but_do_not_deselect()
-        self.read_validate_and_display_file(editable=False)
-        self.statusBar().showMessage(f"  {self.selected_file_path}")
+            ...
+            #self._show_welcome_but_do_not_deselect()
+        else:
+            self.read_validate_and_display_file(editable=False)
+            self.statusBar().showMessage(f"  {self.selected_file_path}")
 
     def clear_views(self):
         self.content.close_all_tabs()

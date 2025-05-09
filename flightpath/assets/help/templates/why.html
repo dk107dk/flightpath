@@ -1,0 +1,484 @@
+<html>
+   <style>
+        td.left {
+            width:80px; white-space: wrap; background-color:#494949; border:1px solid #494949;color:#fff;
+        }
+        td.center {
+            width:80px; white-space: wrap; text-align:center; border-left:1px solid #494949; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#fff;
+        }
+        td.right {
+            white-space: wrap; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#fff;
+        }
+        td.bottom {
+            border-bottom:1px solid #494949;
+        }
+
+   </style>
+<h2>
+        Why Am I Seeing These Results?
+</h2>
+<p>
+    The results of your run are determined by the settings and values below. The middle column applies to this run. These settings will help you better understand why you see what you see.
+            </p>
+            <p>
+    If you are seeing mainly exceptions or logging from a one-off run try setting the error policy to include <i>print</i> and not <i>raise</i>. You can do this in the <i>config/config.ini</i> using the Config Panel. See the button at the bottom left-hand of the window.
+            </p>
+            <p>
+    If you still do not understand your results, look to the function and qualifiers definitions in the documentation window at the top left to check your match components. CsvPath Language is functions-based and the qualifiers have a major impact on how the functions evaluate.
+            </p>
+
+
+<h3 style="margin-top:25px;">
+Basic Info
+</h3>
+<table cellspacing="0" cellpadding="2" >
+    <tr>
+        <td class='left' width="120">
+            Identity
+        </td>
+        <td class='center' width="120">
+                 {{data.identity}}
+        </td>
+        <td class='right'>
+            The identity of a csvpath is shown in validation errors and other places where it may help you understand your runs. You can set the identity with a metadata field in an external comment. See the Keywords and Symbols section in the documentation window on the right for more details.
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+           Data file
+        </td>
+        <td class='center '>
+                {{data.filename}}
+        </td>
+        <td class='right '>
+            This is the source of the data your run processed.
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+           Scanned lines
+        </td>
+        <td class='center '>
+                {{data.scan_count}}
+        </td>
+        <td class='right '>
+            Your scanning instructions in the first bracketed part of your csvpath resulted in this many lines being considered.
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+           Matched lines
+        </td>
+        <td class='center '>
+                {{data.match_count}}
+        </td>
+        <td class='right '>
+            This is the number of lines that matched your match components in the second bracketed part of your csvpath. There are many reasons why you may not see the number of matches you expected. In general, either the configurations on this page or your match components -- or both -- are the reason.
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+           Blank lines skipped
+        </td>
+        <td class='center '>
+                {{data.skip_blank_lines}}
+        </td>
+        <td class='right '>
+            The CsvPath Framework skips blank lines by default. This is a programmatically settable parameter. At this time FlightPath does not offer a configuration allowing you to set this behavior within the UI.
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+           Delimiter
+        </td>
+        <td class='center '>
+                {{data.delimiter}}
+        </td>
+        <td class='right '>
+            Your delimiter is the character that separates data fields. For one-off runs in FlightPath you can set the delimiter using the <i>test-delimiter</i> metadata field. You can learn how to do that in the documentation window to the right under Keywords and Symbols. The default is the comma.
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+           Quotechar
+        </td>
+        <td class='center '>
+                {{data.quotechar}}
+        </td>
+        <td class='right '>
+            The quotechar is the character that wraps data fields containing controlled characters. For one-off runs in FlightPath you can set the quotechar using the <i>test-quotechar</i> metadata field. Learn how to set that in the documentation window to the right under Keywords and Symbols. The default is the double-quotes.
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+           Configured to collect lines
+        </td>
+        <td class='center '>
+                {{data.collecting}}
+        </td>
+        <td class='right '>
+            One-off runs in FlightPath are always configured to collect lines. This is because they are run using the <i>collect()</i> method on the <i>CsvPath</i> class. If you ran a named-paths group using one of the fast-forward methods your run would not be configured to collect lines because the fast-forward methods drop matched and unmatched lines, resulting in metadata, variables, and errors only.
+        </td>
+
+
+
+    </tr>
+
+
+
+    <tr>
+        <td class='left bottom'>
+           Error format
+        </td>
+        <td class='center bottom'>
+                {{data.error_format}}
+        </td>
+        <td class='right bottom'>
+           <p>
+           Validation errors are given in a format you control in <i>config/config.ini</i>. You can change the format in the Config Panel. See the <i>Open config</i> button at the bottom left.
+
+            </p>
+            <p>
+An error that looks like:
+                <div style="padding:8px;background-color:#eee;margin-left: 30px; width:300px; font-style:italic">
+       2025-05-09 13h37m53s-073334:test.csv:2::hello world data model:add[1]:  could not convert string to float: 'fix me'
+                </div>
+            </p>
+            <p>
+            Comes from this format:
+                <div style="padding:8px;background-color:#eee;margin-left: 30px; width:300px; font-style:italic">
+                    {time}:{file}:{line}:{paths}:{instance}:{chain}:  {message}
+                </div>
+            </p>
+            <p>
+            It gives you:
+            <ul>
+                    <li/>- The timestamp of the error
+                    <li/>- The data file
+                    <li/>- The line number where the error occurred
+                    <li/>- The named-paths group name
+                    <li/>- The csvpath's identity
+                    <li/>- A 0-based hierarchical "chain" pointing to the source match component
+                    <li/>- An explanatory message
+            </ul>
+            </p>
+            <p>
+                You can configure a simpler format if you don't need all of this information, as is often the case during development.
+            </p>
+        </td>
+
+
+
+    </tr>
+
+
+    </table>
+
+<h3 style="margin-top:30px;">
+Detailed Run Configuration
+</h3>
+<table cellspacing="0" cellpadding="2" >
+    <tr>
+        <td class='left ' width="120">
+            Logging level
+        </td>
+        <td class='center ' width="120">
+                {{data.csvpath_log_level}}
+        </td>
+        <td class='right '>
+                The log level is set in <i>config/config.ini</i>. It must be one of <i>ERROR</i>, <i>WARN</i>, <i>INFO</i>, or <i>DEBUG</i>. You can set the log level in the FlightPath Config Panel. See the button at the lower left to open the panel.
+        </td>
+    </tr>
+
+
+
+    <tr>
+        <td class='left '>
+            Errors policy
+        </td>
+        <td class='center '>
+                {{data.csvpath_errors_policy}}
+        </td>
+        <td class='right '>
+             <p>
+                The errors policy determines how CsvPath Framework behaves when it sees an error. You change the settings in the FlightPath Config Panel. See the button at the lower left to open the panel.
+            </p>
+            <p>
+            The errors policy can have a huge effect on what you see. If your run has an error and your policy is to raise exceptions on errors, your run will fail and you will only see the log trail. Likewise, if your policy is to stop the run on errors your run will terminate at the first error. For development you probably want to print errors rather than raise exceptions to them.
+            </p>
+            <p>
+            There are two ways to set the error policy. First, the config file. But overriding that, there is a mode that allows you to set the behavior on a csvpath-by-csvpath, run-by-run basis. The mode is <i>validation-mode</i>. See the documentation window on the left-hand side for more on the modes, including <i>validation-mode</i>.
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+            Stop on validation errors
+        </td>
+        <td class='center '>
+                {{data.stop_on_validation_errors}}
+        </td>
+        <td class='right '>
+                <p>
+            If you configure to stop on validation error, your run terminates at the first error.
+            </p>
+            <p>
+            You can set this policy in two ways. First, using the main config file at <i>config/config.ini</i>. Second, and overriding the config file, you can set <i>validation-mode</i> to include <i>stop</i> or <i>no-stop</i>. See the documentation window on the left-hand side for more on the modes.
+            </p>
+        </td>
+    </tr>
+
+
+    <tr>
+        <td class='left '>
+           Fail on validation errors
+        </td>
+        <td class='center '>
+                {{data.fail_on_validation_errors}}
+        </td>
+        <td class='right '>
+            <p>
+                CsvPath Framework can set a run to invalid if it sees an error. You can also do this in your match component rules using <i>fail()</i>. Failing a run is just a way to signal to yourself or a data consumer that the data coming from a run is considered no good.
+            </p>
+            <p>
+ You can set this policy in two ways. First, using the main config file at <i>config/config.ini</i>. Second, and overriding the config file, you can set <i>validation-mode</i> to include <i>fail</i> or <i>no-fail</i>. See the documentation window on the left-hand side for more on the modes.
+            </p>
+        </td>
+    </tr>
+
+    <tr>
+        <td class='left '>
+                Print validation errors
+        </td>
+        <td class='center '>
+                {{data.print_validation_errors}}
+        </td>
+        <td class='right '>
+             <p>
+                Printing validation errors is the best way to see them and take action.
+            </p>
+            <p>
+ You can set this policy in two ways. First, using the main config file at <i>config/config.ini</i>. Second, and overriding the config file, you can set <i>validation-mode</i> to include <i>print</i> or <i>no-print</i>. See the documentation window on the left-hand side for more on the modes.
+            </p>
+        </td>
+    </tr>
+
+    <tr>
+        <td class='left '>
+                Log errors
+        </td>
+        <td class='center '>
+                {{data.log_validation_errors}}
+        </td>
+        <td class='right '>
+            CsvPath Framework logs errors by default.
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+               Raise exception on error
+        </td>
+        <td class='center '>
+                {{data.raise_validation_errors}}
+        </td>
+        <td class='right '>
+            Raising validation errors is valuable for some purposes, especially in development. However, it tends to minimize the information you receive from a run. It is generally better print errors when you are working in development.
+        </td>
+    </tr>
+
+    <tr>
+        <td class='left '>
+            Match on error
+        </td>
+        <td class='center '>
+                {{data.match_validation_errors}}
+        </td>
+        <td class='right '>
+            You can choose to match lines with errors, rather than matching lines without errors, the default. This means that calling <i>collect()</i> or <i>next()</i> will return only the bad lines. Match on error is a mode called <i>match-mode</i>. You can learn more about the modes in the top right-hand documentation window.
+        </td>
+    </tr>
+
+    <tr>
+        <td class='left '>
+                Collect validation errors
+        </td>
+        <td class='center '>
+                {{data.collect_validation_errors}}
+        </td>
+        <td class='right '>
+             <p>
+                You can choose to not capture errors. If you do not, you will not see any data in the Errors tab. Generally, it is better to collect errors.
+            </p>
+            <p>
+ You can set this policy in two ways. First, using the main config file at <i>config/config.ini</i>. Second, and overriding the config file, you can set <i>validation-mode</i> to include <i>collect</i> or <i>no-collect</i>. See the documentation window on the left-hand side for more on the modes.
+            </p>
+        </td>
+    </tr>
+
+    <tr>
+        <td class='left '>
+                Explain mode
+        </td>
+        <td class='center '>
+                {{data.explain}}
+        </td>
+        <td class='right '>
+            When you set Explain Mode CsvPath Framework writes out a line-by-line, match-component-by-match-component explanation for why a line matched or did not match. You can learn more about the modes in the documentation window at the top-right.
+        </td>
+    </tr>
+
+    <tr>
+        <td class='left '>
+                Collect when not matched
+        </td>
+        <td class='center '>
+                {{data.collect_when_not_matched}}
+        </td>
+        <td class='right '>
+                This setting determines if <i>collect()</i> results in a set of unmatched lines. It is not used in one-off runs in FlightPath. When you run a named-paths group any csvpath that uses this mode results in an <i>unmatched.csv</i> file with the other run results files. You can learn more about the modes in the documentation window at the top-right.
+        </td>
+    </tr>
+
+    <tr>
+        <td class='left '>
+                Stopped
+        </td>
+        <td class='center '>
+                {{data.stopped}}
+        </td>
+        <td class='right '>
+                The <i>stopped</i> property of the run tells if the run completed or was stopped in the middle. A run can be stopped by an error or by the csvpath writer using <i>stop()</i>
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+            Failed
+        </td>
+        <td class='center '>
+                {{data.is_valid}}
+        </td>
+        <td class='right '>
+                The <i>is_valid</i> property of the run tells if the run was failed in the middle. A run can be failed by an error or by the csvpath writer using <i>fail()</i>
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+                Logic Mode
+        </td>
+        <td class='center '>
+                {{data.logic_mode}}
+        </td>
+        <td class='right '>
+              <p>
+               This mode determines if the CsvPath Framework uses AND or OR logic in the evaluation of match components. This means that you can write expressions where if any one match component evaluates to True the line is matched. By default, all match components must evaluate to True for a line to be matched.
+            </p>
+            <p>
+               With Logic Mode there are three ways to handle match components in lines:
+               <ul>
+                       <li/>- All participating match components must match
+                       <li/>- Any one participating match component must match
+                       <li/>- Match components not participating in the evaluation may match or not in order to trigger side-effects
+               </ul>
+            </p>
+            <p>
+                The top two options are mutually exclusive. AND or OR logic can be mixed, though with less conciseness, using boolean functions.
+            </p>
+            <p>
+             You can learn more about the modes in the documentation window at the top-right.
+            </p>
+        </td>
+    </tr>
+
+    <tr>
+        <td class='left '>
+                Print Mode
+        </td>
+        <td class='center '>
+                {{data.print_mode}}
+        </td>
+        <td class='right '>
+                <p>
+                This mode determines if printout lines go to the default printer or not. If the default printer is not used, and no other printer is available, you will not see printouts. This mode is generally not useful in one-off runs during FlightPath csvpath development. It is mainly useful for named-paths group runs, triggered in FlightPath or by automation.
+            </p>
+            <p>
+             You can learn more about the modes in the documentation window at the top-right.
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+                Printers
+        </td>
+        <td class='center '>
+                {{data.printers}}
+        </td>
+        <td class='right '>
+            CsvPath Framework can use any number of <i>Printer</i> objects. In practice, usually all print streams go through one default printer. That one printer object can take any number of print streams so that you can separate different kinds of output.
+
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+                Run Mode
+        </td>
+        <td class='center '>
+                {{data.will_run}}
+        </td>
+        <td class='right '>
+            <p>
+            Run Mode is used to temporarily disable a csvpath. It is mainly relevant to named-paths groups, where can be helpful to run the group without certain csvpaths participating in a particular run. In a one-off run during development in FlightPath it is less useful.
+            </p>
+            <p>
+             You can learn more about the modes in the documentation window at the top-right.
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td class='left '>
+                Unmatched Mode
+        </td>
+        <td class='center '>
+                {{data.unmatched_mode}}
+        </td>
+        <td class='right '>
+            <p>
+            This mode determines if unmatched lines are retained or dropped. Within a named-paths group run, if unmatched lines are retained they are captured to an unmatched.csv file.
+            </p>
+            <p>
+            Unmatched Mode is not used in one-off runs during FlightPath development. FlightPath does not capture lines, matched or unmatched, to a file. However, using FlightPath you can do an ad hoc named-paths group run, and in that case you would see the unmatched lines file.
+            </p>
+            <p>
+             You can learn more about the modes in the documentation window at the top-right.
+            </p>
+        </td>
+    </tr>
+
+    <tr>
+        <td class='left bottom'>
+                Source Mode
+        </td>
+        <td class='center bottom '>
+                {{data.data_from_preceding}}
+        </td>
+        <td class='right bottom '>
+            <p>
+             Source Mode is how you can pull results data from one named-paths group member to the next in the same run. When Source Mode is set to preceding the first csvpath in the group uses the source data provided for the run. Every subsequent csvpath that has Source Mode <i>preceding</i> takes the preceding csvpath's data.csv output as its input.
+            </p>
+            <p>
+                Note that Source Mode is only relevant for named-paths group runs using the <i>collect_paths</i>, <i>fast_forward_paths</i>, or <i>next_paths</i> methods. The analogous breadth-first methods, <i>collect_by_line</i>, <i>fast_forward_by_line</i>, and <i>next_by_line</i> by their nature feed the output of one csvpath into the next csvpath in the group.
+            </p>
+            <p>
+             You can learn more about the modes in the documentation window at the top-right.
+            </p>
+        </td>
+    </tr>
+
+
+
+</table>
+
+
+
+
+</table>
+</html>
