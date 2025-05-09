@@ -401,31 +401,36 @@ class Sidebar(QWidget):
         self.do_load(overwrite=True)
 
     def do_load(self, *, overwrite=True) -> None:
-        template = self.load_dialog.template_ctl.text()
+        name = self.load_dialog.path
+        name = "" if not name else name.strip()
+        if name.endswith(".json"):
+            self.do_load_json()
+        elif Nos(name).is_file():
+            self.do_load_file(overwrite=overwrite)
+        else:
+            self.do_load_dir(overwrite=overwrite)
+
+    def do_load_file(self, *, overwrite=True) -> None:
+        template = None
+        if self.load_dialog.template_ctl:
+            template = self.load_dialog.template_ctl.text()
         if template and template.strip() == "":
             template = None
-        named_paths_name = self.load_dialog.named_paths_name_ctl.text()
-        name = self.load_dialog.path
-        nos = Nos(name)
+        named_paths_name = None
+        if self.load_dialog.named_paths_name_ctl:
+            named_paths_name = self.load_dialog.named_paths_name_ctl.text()
+        if named_paths_name and named_paths_name.strip() == "":
+            named_paths_name = None
         paths = CsvPaths()
         #
         # if the named-paths name exists, warn the user that they are adding a named-path to the group
         #
         if paths.paths_manager.has_named_paths(named_paths_name):
-            msg = (
-                    "Are you sure you want to overwrite an existing named-paths group?"
-                    if overwrite else
-                    "Are you sure you want to append to an existing named-paths group?"
-            )
-            confirm = QMessageBox.question(
-                self,
-                "Load Paths",
-                msg,
-                QMessageBox.Yes | QMessageBox.No,
-            )
-            if confirm == QMessageBox.No:
+            if not self._check_ok_to_proceed(overwrite):
                 return
-        if nos.isfile():
+        name = self.load_dialog.path
+        name = "" if not name else name.strip()
+        if Nos(name).isfile():
             ext = name[name.rfind(".")+1:]
             if ext in self.main.csvpath_config.csvpath_file_extensions:
                 #
@@ -436,12 +441,70 @@ class Sidebar(QWidget):
                 # break
                 #
                 paths.paths_manager.add_named_paths_from_file(name=named_paths_name, file_path=name, template=template, append=(not overwrite))
-            elif name.endswith(".json"):
-                paths.paths_manager.add_named_paths_from_json(file_path=name)
             else:
                 raise ValueError(f"Unknown file type: {name}")
-        else:
-            paths.paths_manager.add_named_paths_from_dir(name=named_paths_name, directory=name, template=template)
+        self._renew_sidebars()
+        self._delete_load_dialog()
+
+    def do_load_json(self) -> None:
+        paths = CsvPaths()
+        #
+        # warn the user that they are overwriting any existing named-path to the group
+        #
+        msg = "Ok to overwrite any existing named-paths groups referenced in your JSON?"
+        confirm = QMessageBox.question( self, "Load Paths", msg, QMessageBox.Yes | QMessageBox.No)
+        if confirm == QMessageBox.No:
+            return
+        name = self.load_dialog.path
+        name = "" if not name else name.strip()
+        paths.paths_manager.add_named_paths_from_json(file_path=name)
+        self._renew_sidebars()
+        self._delete_load_dialog()
+
+    def do_load_dir(self, *, overwrite=True) -> None:
+        template = None
+        if self.load_dialog.template_ctl:
+            template = self.load_dialog.template_ctl.text()
+        if template and template.strip() == "":
+            template = None
+        named_paths_name = None
+        if self.load_dialog.named_paths_name_ctl:
+            named_paths_name = self.load_dialog.named_paths_name_ctl.text()
+        if named_paths_name and named_paths_name.strip() == "":
+            named_paths_name = None
+        name = self.load_dialog.path
+        paths = CsvPaths()
+        #
+        # if the named-paths name exists, warn the user that they are adding a named-path to the group
+        #
+        if paths.paths_manager.has_named_paths(named_paths_name):
+            if not self._check_ok_to_proceed(overwrite):
+                return
+        paths.paths_manager.add_named_paths_from_dir(name=named_paths_name, directory=name, template=template)
+        self._renew_sidebars()
+        self._delete_load_dialog()
+
+    def _check_ok_to_proceed(self, overwrite:bool) -> bool:
+        msg = (
+                "Are you sure you want to overwrite an existing named-paths group?"
+                if overwrite else
+                "Are you sure you want to append to an existing named-paths group?"
+        )
+        confirm = QMessageBox.question(
+            self,
+            "Load Paths",
+            msg,
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        confirm == QMessageBox.Yes
+        return confirm
+
+    def _delete_load_dialog(self):
+        self.load_dialog.close()
+        self.load_dialog.deleteLater()
+        self.load_dialog = None
+
+    def _renew_sidebars(self) -> None:
         #
         # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
         # but for now it should work. refreshing named_files is probably fair, but that's
@@ -452,12 +515,7 @@ class Sidebar(QWidget):
         self.main.sidebar_rt_mid = SidebarNamedPaths(main=self.main, config=self.main.csvpath_config, role=2)
         self.main.rt_col.replaceWidget(1, self.main.sidebar_rt_mid)
         self.main.sidebar_rt_mid.view.clicked.connect(self.main.on_named_paths_tree_click)
-        #
-        # TODO: add delete later?
-        #
-        self.load_dialog.close()
-        self.load_dialog.deleteLater()
-        self.load_dialog = None
+
 
     def do_stage(self) -> None:
         template = self.stage_dialog.template_ctl.text()
@@ -557,10 +615,20 @@ class Sidebar(QWidget):
         self.main.content.csvpath_source_view.text_edit.on_save()
 
     def _new_file_navigator_item(self):
-        new_name, ok = QInputDialog.getText(self, self.tr("New file"), self.tr("Enter the new file name: "), text="")
+        new_name, ok = QInputDialog.getText(self, "New file", "Enter the new file name: ", text="")
         if ok and new_name:
             b, msg = self._valid_new_file(new_name)
             if b is True:
+                #
+                # if we're creating a JSON file we need to populate with a {} or []
+                #
+                content = ""
+                if new_name.endswith(".json"):
+                    items = ["{}", "[]"]
+                    item, ok = QInputDialog.getItem(self, "Data structure", "Start with", items, 0, False)
+                    if ok and item:
+                        content = item
+
                 try:
                     if not new_name.startswith(self.main.state.cwd):
                         if self._last_path is None:
@@ -569,7 +637,7 @@ class Sidebar(QWidget):
                             n = os.path.join(self.main.state.cwd, self._last_path)
                             new_name = os.path.join(n, new_name)
                     with open(new_name, "w", encoding="utf-8") as file:
-                        file.write("")
+                        file.write(content)
                 #
                 # create file
                 #

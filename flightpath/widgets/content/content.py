@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QTabBar
 )
+from PySide6.QtCore import Slot
 
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.json_viewer import JsonViewer
@@ -21,14 +22,14 @@ class Content(QWidget):
         self.main = main
         layout = QVBoxLayout()
         layout.setSpacing(0)
+        # we reset the margins below. is there a reason to do it here too?
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.tab_widget = ClosingTabs(main, parent=self)
+        TabWidgetOverlayButton(self.tab_widget, self, main)
+        layout.addWidget(self.tab_widget)
         layout.setContentsMargins(1, 3, 1, 2)
 
-        TabWidgetOverlayButton(self.tab_widget, self, main)
-
-        layout.addWidget(self.tab_widget)
         self.setLayout(layout)
 
         self.toolbar = DataToolbar(parent=main)
