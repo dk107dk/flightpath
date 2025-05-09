@@ -38,15 +38,13 @@ class ConfigPanel(QWidget):
     TREE_STYLE = """
             QTreeWidget {
                 border: 1px solid #d0d0d0;
-                margin: 0px 0px 0px 0px;
+                margin: 0px;
                 padding-left: 1px;
             }
-
             QTreeWidget::item:hover {
               color: #FFF;
               background: black;
             }
-
             QTreeWidget::item:selected {
               color: #FFF;
               background: gray;
@@ -257,13 +255,27 @@ class ConfigPanel(QWidget):
         # have all their changes still. in theory. this should change
         # in csvpath lib to better support the use case. :/
         #
-        self.config.reload()
+        #
+        # doing this at the initalization of the Config panel. if we have
+        # a user editing config.ini and also at the same time using the UI
+        # to edit config that's a level of unusual we can ignore.
+        #
+        # self.config.reload()
+        #
         for form in self.forms:
+            print(f"config_panel: save_all_forms: saving form {form}")
             form.add_to_config(self.config) #self.metadata)
+        print(f"config_panel: save_all_forms: done with forms")
+        print(f"config_panel: save_all_forms: saving config {self.config} ")
+        print(f"config_panel: save_all_forms: state.cwd: {self.main.state.cwd}")
+        print(f"config_panel: save_all_forms: config.configpath: {self.config.configpath}")
+        print(f"config_panel: save_all_forms: os.cwd: {os.getcwd()}")
         self.config.save_config()
         #
         # need to refresh the inputs and results trees, but only
         # if the paths change
+        #
+        # TODO: or the extensions could have changed. check that too.
         #
         if named_files != self.config.get(section="inputs", name="files"):
             self.main.sidebar_rt_top.refresh()
