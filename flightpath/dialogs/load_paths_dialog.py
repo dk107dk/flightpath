@@ -30,13 +30,14 @@ class LoadPathsDialog(QDialog):
 
         self.path = path
         info = QFileInfo(path)
+        self.template_ctl = None
+        self.named_paths_name_ctl = None
         #
         # loading named-paths(s) from a json only allows create/overwrite. there
         # is no append option and the user selects the name(s) in the json, not
         # the form. the form simplifies down to basically load or cancel.
         #
         self.json = info.suffix() == "json"
-
         self.errors = None
         self.template = None
         self.named_paths_name = None

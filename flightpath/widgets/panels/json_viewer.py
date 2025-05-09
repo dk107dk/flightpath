@@ -283,7 +283,7 @@ class JsonViewer(QWidget):
             print("Error: cannot save json to file path None")
             return
         d = self.model.to_json()
-        j = json.dumps(d)
+        j = json.dumps(d, indent=2)
         with DataFileWriter(path=self.path) as file:
             file.write(j)
         #

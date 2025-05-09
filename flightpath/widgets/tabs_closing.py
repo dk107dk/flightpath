@@ -17,23 +17,32 @@ class ClosingTabs(QTabWidget):
         # if we're the info & feedback we don't.
         #
         self.parent = None
-        self.tabCloseRequested.connect(self.close_tab)
         self.currentChanged.connect(self.on_tab_change)
 
-    @Slot(int)
-    def close_tab(self, index) -> bool:
-        current = self.currentIndex()
-        if not self.main.content.do_i_close(index):
+    @Slot(str)
+    def close_tab(self, name) -> bool:
+        t = taut.find_tab(self, name)
+        #
+        # confirm if needed
+        #
+        if not self.main.content.do_i_close(t[0]):
             return False
-        t = self.widget(index)
+        #
+        # remove and delete
+        #
+        #t = self.widget(index)
         if t:
-            i = self.indexOf(t)
-            self.removeTab(i)
-            t.deleteLater()
+            self.removeTab(t[0])
+            t[1].deleteLater()
+        #
+        # show and hides
+        #
         if not self.has_data_tabs():
             self.main._on_data_toolbar_hide()
         if not self.has_csvpath_tabs():
             self.main._rt_tabs_hide()
+        if self.count() == 0:
+            self.main.main_layout.setCurrentIndex(0)
         return True
 
     def has_csvpath_tabs(self) -> bool:
@@ -50,11 +59,11 @@ class ClosingTabs(QTabWidget):
         close_button = QPushButton()
         close_button.setIcon(QIcon(self.style().standardIcon(QStyle.SP_TitleBarCloseButton)))
         close_button.setStyleSheet("border: none;")
-        close_button.clicked.connect(lambda: self.close_tab(index))
+        close_button.clicked.connect(lambda: self.close_tab(widget.objectName()))
         self.tabBar().setTabButton(index, QTabBar.ButtonPosition.LeftSide, close_button)
 
     def on_tab_change(self):
-        i = current = self.currentIndex()
+        i = self.currentIndex()
         w = self.widget(i)
         if w:
             path = w.objectName()
