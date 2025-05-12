@@ -10,9 +10,7 @@ from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.toolbars.data_toolbar import DataToolbar
 
-class DataWorkerSignals(QObject):
-    finished = Signal(tuple)
-    messages = Signal(str)
+from .data_worker_signals import DataWorkerSignals
 
 class GeneralDataWorker(QRunnable):
 

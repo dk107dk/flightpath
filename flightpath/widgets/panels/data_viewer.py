@@ -12,6 +12,7 @@ from PySide6.QtGui import QPixmap, QPainter
 from PySide6.QtSvg import QSvgRenderer
 
 from flightpath.util.style_utils import StyleUtility as stut
+
 from .raw_viewer import RawViewer
 
 class DataViewer(QWidget):

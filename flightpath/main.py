@@ -30,6 +30,7 @@ from PySide6.QtCore import ( # pylint: disable=E0611
     QThreadPool,
     Slot,
     QItemSelectionModel,
+    QRunnable,
     QModelIndex
 )
 
@@ -556,15 +557,19 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.read_validate_and_display_file()
 
-    def read_validate_and_display_file(self, editable=True):
-        info = QFileInfo(self.selected_file_path)
+    def read_validate_and_display_file(self, editable=True) -> QRunnable:
+        return self.read_validate_and_display_file_for_path(self.selected_file_path, editable=editable)
+
+    def read_validate_and_display_file_for_path(self, path:str, editable=True) -> QRunnable:
+        info = QFileInfo(path)
         #
         # TODO: consolidate below
         #
         # pylint thinks csv_file_extensions doesn't support membership tests but it is list[str]. :/
+        worker = None
         if info.isFile() and info.suffix() in self.csvpath_config.csv_file_extensions: # pylint: disable=E1135
             worker = GeneralDataWorker(
-                self.selected_file_path,
+                path,
                 self,
                 rows=self.content.toolbar.rows.currentText(),
                 sampling=self.content.toolbar.sampling.currentText(),
@@ -580,7 +585,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.threadpool.start(worker)
         # pylint thinks csvpath_file_extensions doesn't support membership tests but it is list[str]. :/
         elif info.isFile() and info.suffix() in self.csvpath_config.csvpath_file_extensions: # pylint: disable=E1135
-            worker = CsvpathFileWorker(self.selected_file_path, self, editable=editable)
+            worker = CsvpathFileWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_csvpath_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
@@ -589,7 +594,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         elif info.isFile() and info.suffix() == "json":
-            worker = JsonDataWorker(self.selected_file_path, self, editable=editable)
+            worker = JsonDataWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_json_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
@@ -602,7 +607,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         else:
             self.clear_views()
-
+        return worker
 
 
     @Slot(QModelIndex)

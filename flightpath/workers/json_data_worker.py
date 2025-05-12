@@ -6,9 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QLabel, QApplica
 
 from csvpath.util.file_readers import DataFileReader
 
-class DataWorkerSignals(QObject):
-    finished = Signal(tuple)
-    messages = Signal(str)
+from .data_worker_signals import DataWorkerSignals
 
 class JsonDataWorker(QRunnable):
 

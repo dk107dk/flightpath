@@ -1,0 +1,99 @@
+<html>
+        <style>
+                .left {
+                    white-space: wrap; text-align:center; background-color:#494949; border:1px solid #494949; color:#fff;
+                }
+                .center {
+                    white-space: wrap; text-align:center; border-left:1px solid #494949; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#494949; color:#fff;
+                }
+                .right {
+                    white-space: wrap; text-align:center; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#494949; color:#fff;
+                }
+                .bottom {
+                    border-bottom:1px solid #494949;
+                }
+                .left.white, td.center.white, td.right.white {
+                    background-color:#fff; color:#000; text-align:left;
+                }
+                .availablity td.centered {
+                    text-align:center;
+                }
+
+
+                .examples {
+                    text-align:left;
+                    border:0px solid #494949;
+                    margin-top:10px;
+                }
+
+                .left_example {
+                    white-space: wrap; text-align:left; border:1px solid #494949; background-color:#494949; color:#fff;
+                }
+
+                .right_example {
+                    white-space: wrap; text-align:left; border:1px solid #494949; background-color:#fff; color:#000;
+                }
+        </style>
+        <h2>
+            Qualifier: nocontrib
+        </h2>
+        <p>
+            <i>nocontrib</i> prevents a match component from contributing to the match decision for each line seen.
+        </p>
+        <p>
+            <i>nocontrib</i> enables conditional side-effects. In other words, you can add <i>nocontrib</i> to
+            the left-hand side of a <i>do-when</i> expression in order to make the side-effect happen
+            without the line matching.
+        </p>
+
+        <h3 style="margin-top:25px;">
+            Availability
+        </h3>
+        <table cellspacing="0" cellpadding="2" class="availablity">
+            <tr>
+                <td class='left' width="140">
+                    Functions
+                </td>
+                <td class='center' width="140">
+                   Headers
+                </td>
+                <td class='right' width="140">
+                    Variables
+                </td>
+            </tr>
+            <tr>
+                <td class='left white bottom centered' >
+                   Yes
+                </td>
+                <td class='center white bottom centered'>
+                   Yes
+                </td>
+                <td class='right white bottom centered'>
+                   Yes
+                </td>
+            </tr>
+        </table>
+
+        <h3 style="margin-top:25px;">
+            Examples
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td class='left_example' width="300">
+                Say we have a data with 10 lines and one of the 9 data lines
+                has <i>georgia</i> as the value of the <i>firstname</i> header.
+                This csvpath says hello only to Georgia, but it matches all the
+                lines, not only Georgia.
+                </td>
+                <td class='right_example'>
+<code>
+$[1*][
+	#firstname.nocontrib == "georgia" -> print("Hi Georgia!")
+]
+</code>
+                </td>
+            </tr>
+            </tr>
+        </table>
+
+</html>
