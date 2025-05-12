@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QWidget, QTabWidget
 class TabsUtility:
 
     @classmethod
-    def find_tab(self, tabs, object_name) -> QWidget:
+    def find_tab(self, tabs, object_name) -> tuple[int,QWidget]:
         for i in range(tabs.count()):
             widget = tabs.widget(i)
             if widget.objectName() == object_name:

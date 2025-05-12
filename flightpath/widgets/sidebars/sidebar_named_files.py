@@ -5,7 +5,6 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
-    QComboBox,
     QMenu,
     QLabel,
     QMessageBox,
@@ -22,12 +21,15 @@ from PySide6.QtWidgets import QFileSystemModel, QTreeView, QAbstractItemView, QS
 from csvpath.util.nos import Nos
 from csvpath.util.config import Config
 
+
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.dialogs.new_run_dialog import NewRunDialog
+from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
+
 from .sidebar_file_ref_maker import SidebarFileRefMaker
 from flightpath.util.help_finder import HelpFinder
-from flightpath.widgets.help.plus_help import HelpIconPackager, HelpHeaderView
+from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.file_utility import FileUtility as fiut
 
 
@@ -97,8 +99,12 @@ class SidebarNamedFiles(QWidget):
         self.context_menu = QMenu(self)
         # create actions
         self.new_run_action = QAction()
-        self.new_run_action.setText(self.tr("New run"))
+        self.new_run_action.setText("New run")
         self.new_run_action.triggered.connect(self._new_run)
+
+        self.find_data_action = QAction()
+        self.find_data_action.setText("Find data")
+        self.find_data_action.triggered.connect(self._find_data)
 
         self.delete_action = QAction()
         self.delete_action.setText("Permanent delete")
@@ -111,6 +117,7 @@ class SidebarNamedFiles(QWidget):
         # setup callbacks
         # add to menu
         self.context_menu.addAction(self.new_run_action)
+        self.context_menu.addAction(self.find_data_action)
         self.context_menu.addAction(self.copy_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
@@ -127,10 +134,12 @@ class SidebarNamedFiles(QWidget):
             #
             if nos.isfile():
                 self.copy_action.setVisible(True)
+                self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(False)
                 self.new_run_action.setVisible(True)
             else:
                 self.copy_action.setVisible(False)
+                self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
         if path.endswith("manifest.json") or path.endswith(".db"):
@@ -170,6 +179,10 @@ class SidebarNamedFiles(QWidget):
         ref = maker.new_run_ref()
         self.new_run_dialog = NewRunDialog(parent=self, named_paths=None, named_file=ref)
         self.new_run_dialog.show()
+
+    def _find_data(self):
+        find = FindFileByReferenceDialog(main=self.main)
+        find.show()
 
     def _delete_view_item(self):
         index = self.view.currentIndex()
