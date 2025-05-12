@@ -5,10 +5,7 @@ from csvpath.util.file_readers import DataFileReader
 from csvpath.util.nos import Nos
 from pathlib import Path
 
-class CsvpathFileWorkerSignals(QObject):
-    finished = Signal(tuple)
-    messages = Signal(str)
-
+from .data_worker_signals import DataWorkerSignals
 
 class CsvpathFileWorker(QRunnable):
 
@@ -17,7 +14,7 @@ class CsvpathFileWorker(QRunnable):
         self.main = main
         self.filepath = str(filepath)
         self.editable = editable
-        self.signals = CsvpathFileWorkerSignals()
+        self.signals = DataWorkerSignals()
 
     @Slot()
     def run(self):
