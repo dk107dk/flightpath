@@ -107,7 +107,6 @@ class JsonModel(QAbstractItemModel):
             parentItem = self._rootItem
         else:
             parentItem = parent.internalPointer()
-
         childItem = parentItem.child(row)
         if childItem:
             return self.createIndex(row, column, childItem)
