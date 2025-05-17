@@ -40,10 +40,17 @@ class FileUtility:
         return [name[0:e], name[e+1:]]
 
     @classmethod
-    def make_app_path(cls, path) -> str:
+    def make_app_path(cls, path, *, main=None) -> str:
         ap = cls.app_path()
         t = os.path.join(ap, "flightpath")
         t = os.path.join( t, path)
+        if not Nos(t).exists():
+            t = os.path.join( ap, path)
+        if not Nos(t).exists():
+            if main:
+                main.log(f"Fiut: cannot find {path} at {t}")
+            else:
+                print(f"Fiut: cannot find {path} at {t}")
         return t
 
     @classmethod

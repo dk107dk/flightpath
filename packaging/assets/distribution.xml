@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>FlightPath Data</title>
+    <organization>com.flightpathdata</organization>
+    <domains enable_localSystem="true" enable_anywhere="false" enable_currentUserHome="false"/>
+    <options customize="never" require-scripts="false" hostArchitectures="arm64"/>
+    <installation-check script="pm_install_check();"/>
+    <script>
+    function pm_install_check() {
+      return true;
+    }
+    </script>
+    <pkg-ref id="com.flightpathdata.flightpath"/>
+    <choices-outline>
+        <line choice="default">
+            <line choice="com.flightpathdata.flightpath"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="com.flightpathdata.flightpath" visible="true" title="FlightPath Data" description="FlightPath Data Application">
+        <pkg-ref id="com.flightpathdata.flightpath"/>
+    </choice>
+    <pkg-ref id="com.flightpathdata.flightpath" version="1.0.02" onConclusion="none">component.pkg</pkg-ref>
+</installer-gui-script>

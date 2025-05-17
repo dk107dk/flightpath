@@ -10,7 +10,6 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QDialog
 )
 from PySide6.QtCore import Qt # pylint: disable=E0611
-
 from PySide6.QtGui import QPixmap, QPainter
 
 from csvpath.util.nos import Nos
@@ -25,7 +24,6 @@ class PickCwdDialog(QDialog):
         self.main = main
         self.main.hide()
         self.setWindowTitle("Please pick a project directory")
-
 
         self.errors = None
         self.template = None
