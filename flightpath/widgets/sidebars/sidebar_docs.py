@@ -98,6 +98,9 @@ class SidebarDocs(QWidget):
         name = name.lower()
         bucket_name = bucket_name.lower()
         path = fiut.make_app_path(f"assets{os.sep}help{os.sep}{bucket_name}{os.sep}{name}.html")
+
+        self.main.log(f"DocsSidebar: template path: {path}")
+
         nos = Nos(path)
         if nos.exists():
             with DataFileReader(path) as file:

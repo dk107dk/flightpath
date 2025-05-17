@@ -41,7 +41,8 @@ class IconPackager:
         if not len(icon_path) == len(on_click):
             raise ValueError("You must provide the name number of icons and callbacks")
         for i, path in enumerate(icon_path):
-            p = fiut.make_app_path(path)
+            p = fiut.make_app_path(path, main=main)
+            main.log(f"IconPackager: svg icon path: {p}")
             pixmap = cls._make_pixmap(p)
             icon = ClickableLabel(icon_path=p)
             icon.setPixmap(pixmap)

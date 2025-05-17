@@ -34,7 +34,8 @@ from PySide6.QtCore import ( # pylint: disable=E0611
     QModelIndex
 )
 
-from csvpath.util.config import Config as CsvPath_Config
+from csvpath import CsvPaths
+from csvpath.util.config import Config as CsvPathConfig
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 
@@ -61,6 +62,7 @@ from flightpath.widgets.help.helper import Helper
 
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.tabs_utility import TabsUtility as taut
+from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.state import State
 
 
@@ -107,16 +109,40 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.rt_col = None
         self._help = None
         self._helper = None
-        self.csvpath_config = None
+        self._csvpath_config = None
         self.threadpool = None
         self.selected_file_path = None
         self.last_main = None
         self.progress_dialog = None # not sure we need this as a member, but it is used as one atm.
+        #
+        # TODO: why do we create state twice?
+        #
         self.state = State()
         #
+        # get log setup. the level comes from the state. that leaves us
+        # in the dark till we obtain state, but that should be fine.
+        #
+        self.logger = None
         #
         #
+        #
+        self.log("ready to load project")
         self._load_state_and_cd()
+
+    @property
+    def csvpath_config(self) -> CsvPathConfig:
+        if self._csvpath_config is None:
+            self._csvpath_config = CsvPaths().config
+        return self._csvpath_config
+
+    def log(self, msg:str) -> None:
+        if self.logger is None:
+            if self.state.debug == "on":
+                self.logger = lout.logger(self.state)
+            else:
+                self.logger = False
+        if self.logger:
+            self.logger.debug(msg)
 
     def _load_state_and_cd(self) -> None:
         """ sets the project directory into .flightpath file, cds to project dir, and reloads UI. """
