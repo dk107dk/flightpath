@@ -1,5 +1,5 @@
 import os
-from PySide6.QtWidgets import QPlainTextEdit, QInputDialog, QStyle
+from PySide6.QtWidgets import QPlainTextEdit, QInputDialog, QStyle, QMenu
 from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut, QPixmap, QPainter, QIcon
 from PySide6.QtCore import Qt
 from PySide6.QtSvg import QSvgRenderer
@@ -8,7 +8,9 @@ from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 from csvpath.managers.paths.paths_manager import PathsManager
 
+from flightpath.util.csvpath_loader import CsvpathLoader
 from flightpath.util.file_utility import FileUtility as fiut
+from flightpath.util.span_utility import SpanUtility as sput
 
 class CsvPathTextEdit(QPlainTextEdit):
 
@@ -27,10 +29,12 @@ class CsvPathTextEdit(QPlainTextEdit):
         save_shortcut_cmd_run = QShortcut(QKeySequence("Command+R"), self)
         save_shortcut_ctrl_run.activated.connect(self.on_run)
         save_shortcut_cmd_run.activated.connect(self.on_run)
+        self.load_dialog = None
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.editable is False:
             return
+        """
         if self.parent.saved is True:
             path = self.parent.path
             path = os.path.dirname(path)
@@ -40,7 +44,23 @@ class CsvPathTextEdit(QPlainTextEdit):
             self.main.content.tab_widget.setTabText(i, f"+ {name}" )
             self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
             self.parent.saved = False
+        """
         super().keyPressEvent(event)
+        self.desaved()
+
+    def desaved(self) -> bool:
+        if self.editable is False:
+            return False
+        if self.parent.saved is True:
+            path = self.parent.path
+            path = os.path.dirname(path)
+            i = self.main.content.tab_widget.currentIndex()
+            name = self.main.content.tab_widget.tabText(i)
+            name = name.replace("+", "")
+            self.main.content.tab_widget.setTabText(i, f"+ {name}" )
+            self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
+            self.parent.saved = False
+        return True
 
     def contextMenuEvent(self, event):
         if self.editable is not True:
@@ -54,16 +74,101 @@ class CsvPathTextEdit(QPlainTextEdit):
         save_action.triggered.connect(self.on_save)
         menu.addAction(save_action)
 
-        save_as_action = QAction("Save As", self)
+        save_as_action = QAction("Save as", self)
         save_as_action.triggered.connect(self.on_save_as)
         menu.addAction(save_as_action)
         #
         # separator and run
         #
         menu.addSeparator()
+        load_action = QAction("Load to group", self)
+        load_action.triggered.connect(self.on_load)
+        menu.addAction(load_action)
+        #
+        # separator and run
+        #
+        #menu.addSeparator()
         run_action = QAction("Run", self)
         run_action.triggered.connect(self.on_run)
         menu.addAction(run_action)
+        menu.addSeparator()
+        append_action = QAction("Append a csvpath", self)
+        append_action.triggered.connect(self.on_append)
+        menu.addAction(append_action)
+        #
+        # submenus
+        #
+        submenu = QMenu("Modes", self)
+
+        test_data_action = QAction("Test data", self)
+        submenu.addAction(test_data_action)
+        test_data_action.triggered.connect(self.on_test_data)
+
+        test_delimiter_action = QAction("Test delimiter", self)
+        submenu.addAction(test_delimiter_action)
+        test_delimiter_action.triggered.connect(self.on_test_delimiter)
+
+        test_quotechar_action = QAction("Test quotechar", self)
+        submenu.addAction(test_quotechar_action)
+        test_quotechar_action.triggered.connect(self.on_test_quotechar)
+
+        submenu.addSeparator()
+
+        error_action = QAction("Error", self)
+        submenu.addAction(error_action)
+        error_action.triggered.connect(self.on_error)
+
+        explain_action = QAction("Explain", self)
+        submenu.addAction(explain_action)
+        explain_action.triggered.connect(self.on_explain)
+
+        files_action = QAction("Files", self)
+        submenu.addAction(files_action)
+        files_action.triggered.connect(self.on_files)
+
+        logic_action = QAction("Logic", self)
+        submenu.addAction(logic_action)
+        logic_action.triggered.connect(self.on_logic)
+
+        match_action = QAction("Match", self)
+        submenu.addAction(match_action)
+        match_action.triggered.connect(self.on_match)
+
+        print_action = QAction("Print", self)
+        submenu.addAction(print_action)
+        print_action.triggered.connect(self.on_print)
+
+        return_action = QAction("Return", self)
+        submenu.addAction(return_action)
+        return_action.triggered.connect(self.on_return)
+
+        run_action = QAction("Run", self)
+        submenu.addAction(run_action)
+        run_action.triggered.connect(self.on_run)
+
+        source_action = QAction("Source", self)
+        submenu.addAction(source_action)
+        source_action.triggered.connect(self.on_source)
+
+        transfer_action = QAction("Transfer", self)
+        submenu.addAction(transfer_action)
+        transfer_action.triggered.connect(self.on_transfer)
+
+        unmatched_action = QAction("Unmatched", self)
+        submenu.addAction(unmatched_action)
+        unmatched_action.triggered.connect(self.on_unmatched)
+
+        validation_action = QAction("Validation", self)
+        submenu.addAction(validation_action)
+        validation_action.triggered.connect(self.on_validation)
+
+        menu.addMenu(submenu)
+
+        cursor = self.textCursor()
+        position = cursor.position()
+
+        if not sput.in_comment(self.toPlainText(), position):
+            submenu.setEnabled(False)
         #
         # Show the menu
         #
@@ -72,6 +177,61 @@ class CsvPathTextEdit(QPlainTextEdit):
         # Clean up
         #
         del menu
+
+    def _insert_mode(self, m:str) -> None:
+        if not self.desaved():
+            return
+        position = self.textCursor().position()
+        self.setPlainText(sput.insert(text=self.toPlainText(), position=position, insert=m))
+
+    def on_test_data(self) -> None:
+        self._insert_mode("test-data:")
+
+    def on_test_delimiter(self) -> None:
+        self._insert_mode("test-delimiter:")
+
+    def on_test_quotechar(self) -> None:
+        self._insert_mode("test-quotechar:")
+
+    def on_error(self) -> None:
+        self._insert_mode("error-mode:")
+
+    def on_explain(self) -> None:
+        self._insert_mode("explain-mode:")
+
+    def on_files(self) -> None:
+        self._insert_mode("files-mode:")
+
+    def on_logic(self) -> None:
+       self._insert_mode("logic-mode:")
+
+    def on_match(self) -> None:
+       self._insert_mode("match-mode:")
+
+    def on_print(self) -> None:
+       self._insert_mode("print-mode:")
+
+    def on_return(self) -> None:
+       self._insert_mode("return-mode:")
+
+    def on_run(self) -> None:
+       self._insert_mode("run-mode:")
+
+    def on_source(self) -> None:
+       self._insert_mode("source-mode:")
+
+    def on_transfer(self) -> None:
+       self._insert_mode("transfer-mode:")
+
+    def on_unmatched(self) -> None:
+       self._insert_mode("unmatched-mode:")
+
+    def on_validation(self) -> None:
+       self._insert_mode("validation-mode:")
+
+    def on_load(self) -> None:
+        loader = CsvpathLoader(self.parent.main)
+        loader.load_paths(self.parent.path)
 
     def on_save_as(self, switch_local=False) -> None:
         #
@@ -160,6 +320,13 @@ class CsvPathTextEdit(QPlainTextEdit):
         text = self.toPlainText()
         text = self.find_csvpath_at_position( position, text )
         self.parent.run_one_csvpath(text)
+
+    def on_append(self) -> None:
+        if self.editable is False:
+            return
+        text = self.toPlainText()
+        text = f"{text}\n\n---- CSVPATH ----\n\n~\n   id: \n~\n\n$[*][ yes() ]\n"
+        self.setPlainText(text)
 
     def find_csvpath_at_position(self, position:int, text:str) -> str:
         #

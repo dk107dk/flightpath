@@ -105,14 +105,14 @@ class State:
                 # we can assume main.py will create its own CsvPaths and config for
                 # its long term use.
                 #
-                main.csvpath_config = CsvPaths().config
+                CsvPaths().config
                 examples = os.path.join(cwd, "examples")
                 nos = Nos(examples)
                 if not nos.exists():
                     nos.makedirs()
                     em = ExamplesMarshal(main)
                     em.add_examples(path=examples)
-        except Exception as e:
+        except ValueError as e:
             print(f"Error setting cwd: {type(e)}: {e}")
 
 

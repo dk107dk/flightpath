@@ -15,13 +15,15 @@ from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
+#from flightpath.widgets.sidebars.sidebar import Sidebar
 from flightpath.util.help_finder import HelpFinder
 
 class LoadPathsDialog(QDialog):
 
-    def __init__(self, *, path, parent):
+    def __init__(self, *, path:str, parent:"Sidebar", loader:"CsvpathLoader"):
         super().__init__(parent)
         self.sidebar = parent
+        self.loader = loader
         self.csvpaths = CsvPaths()
         self.mgr = self.csvpaths.paths_manager
         self.named_paths_names = self.mgr.named_paths_names
@@ -101,12 +103,12 @@ class LoadPathsDialog(QDialog):
 
         self.append_button = QPushButton()
         self.append_button.setText("Append")
-        self.append_button.clicked.connect(self.sidebar.do_append_named_paths_load)
+        self.append_button.clicked.connect(self.loader.do_append_named_paths_load)
 
         self.load_button = QPushButton()
         text = "Create or overwrite" if self.json or not file else "Create"
         self.load_button.setText(text)
-        self.load_button.clicked.connect(self.sidebar.do_overwrite_named_paths_load)
+        self.load_button.clicked.connect(self.loader.do_overwrite_named_paths_load)
 
         if self.json:
             self.load_button.setEnabled(True)
