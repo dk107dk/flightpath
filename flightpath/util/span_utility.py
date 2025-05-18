@@ -36,6 +36,73 @@ class SpanUtility:
         return ret
 
 
+    @classmethod
+    def in_comment(cls, text:str, pos:int) -> bool:
+        #
+        # TODO: make this method just returnthe set of booleans and another
+        # that returns if in an external comment or not.
+        #
+        inc = False
+        ins = False
+        inroot = False
+        inscan = False
+        inmatch = False
+        for i, c in enumerate(text):
+            #print(c, end="")
+            if i == pos:
+                break
+            if c == "$":
+                ins = True
+                inc = False
+                inroot = True
+                inscan = True
+                inmatch = False
+            elif c == "~":
+                if inc:
+                    inc = False
+                elif ins:
+                    inc = False
+                else:
+                    inc = True
+            elif c == '[':
+                if inroot:
+                    inroot = False
+                    inscan = True
+                    inmatch = False
+                    inc = False
+                    ins = True
+                elif inscan:
+                    # error
+                    ...
+                else:
+                    inmatch = True
+            elif c == ']':
+                if inmatch:
+                    inmatch = False
+                    ins = False
+                    inc = False
+                    inroot = False
+                    inscan = False
+                elif inscan:
+                    inmatch = False
+                    ins = True
+                    inc = False
+                    inroot = False
+                    inscan = False
+                else:
+                    # error
+                    ...
+        """
+        print(f"\n---------\nin root: {inroot}")
+        print(f"in scan: {inscan}")
+        print(f"in match: {inmatch}")
+        print(f"in comment: {inc}")
+        print(f"in statment: {ins}")
+        """
+        return inc
 
+    @classmethod
+    def insert(self, *, text, position, insert) -> str:
+        return f"{text[:position]}{insert}{text[position:]}"
 
 
