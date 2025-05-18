@@ -14,7 +14,7 @@ class ExtensionsForm(BlankForm):
         layout = QFormLayout()
 
         self.csvs = QLineEdit()
-        layout.addRow("CSV file extensions: ", self.csvs)
+        layout.addRow("Data file extensions: ", self.csvs)
 
         self.csvpaths = QLineEdit()
         layout.addRow("Csvpath file extensions: ", self.csvpaths)
@@ -29,8 +29,6 @@ class ExtensionsForm(BlankForm):
     def _setup(self) -> None:
         self.csvs.textChanged.connect(self.main.on_config_changed)
         self.csvpaths.textChanged.connect(self.main.on_config_changed)
-
-
 
     def populate(self):
         config = self.config

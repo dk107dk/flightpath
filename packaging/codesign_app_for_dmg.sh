@@ -12,10 +12,10 @@ security default-keychain -s flightpath.keychain
 #
 # TODO: see codesign_app_for_store for streamlining
 #
-security unlock-keychain -p @env:FLIGHTPATH_KEYCHAIN_PASSWORD flightpath.keychain
+security unlock-keychain -p $FLIGHTPATH_KEYCHAIN_PASSWORD flightpath.keychain
 #security delete-identity -Z B986A6D4F58275808006AC62C2152F05E3A7A696
-security import assets/certs/mac_app_not_store_developerID_application.p12 -k flightpath.keychain -P @env:FLIGHTPATH_KEYCHAIN_PASSWORD -T /usr/bin/codesign
-security set-key-partition-list -S apple-tool:,apple:,codedign: -s -k @env:FLIGHTPATH_KEYCHAIN_PASSWORD flightpath.keychain
+security import assets/certs/mac_app_not_store_developerID_application.p12 -k flightpath.keychain -P $FLIGHTPATH_KEYCHAIN_PASSWORD -T /usr/bin/codesign
+security set-key-partition-list -S apple-tool:,apple:,codedign: -s -k $FLIGHTPATH_KEYCHAIN_PASSWORD flightpath.keychain
 
 echo -e "\nsigning app"
 
@@ -24,7 +24,7 @@ codesign \
     --deep \
     --options=runtime \
     --entitlements ./assets/entitlements.plist \
-    -s Q6VE7XAQF3 \
+    --sign "${CERT_COMMON_NAME:q}" \
     --timestamp \
     ./tmp/FlightPath\ Data.app
 

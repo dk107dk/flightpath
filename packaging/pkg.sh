@@ -11,12 +11,12 @@ pkgbuild --component ./tmp/FlightPath\ Data.app \
 # Step 2: Build the final package with productbuild
 #
 echo -e '\ndoing productbuild with pkg to create distribution...\n'
-security unlock-keychain -p @env:FLIGHTPATH_KEYCHAIN_PASSWORD flightpath.keychain
+security unlock-keychain -p $FLIGHTPATH_KEYCHAIN_PASSWORD flightpath.keychain
 productbuild --product ./assets/product_definition.plist \
              --package-path ./pkg \
              --identifier com.flightpathdata.flightpath \
              --version 1.0.01 \
-             --sign @env:CERT_COMMON_NAME \
+             --sign "${CERT_COMMON_NAME:q}" \
              --keychain ~/Library/Keychains/flightpath.keychain-db \
              --component ./tmp/FlightPath\ Data.app \
              /Applications \

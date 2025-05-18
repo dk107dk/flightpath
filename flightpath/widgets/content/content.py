@@ -83,13 +83,29 @@ class Content(QWidget):
         #
         # if we're in a csvpath file that has changes we need to confirm we're discarding the changes
         #
-        while self.tab_widget.count() > 0:
-            if not self.tab_widget.close_tab_at(0):
-                print(f"content: cannot close tab @ 0!")
-                return False
-        #
-        # set to welcome
-        #
-        self.main.main_layout.setCurrentIndex(0)
-        return True
+        ret = True
+        close = []
+        for i in range(self.tab_widget.count()):
+            widget = self.tab_widget.widget(i)
+            if self.do_i_close(i):
+                name = widget.objectName()
+                close.append(name)
+            else:
+                ret = False
+        #print(f"close_all_tabs: ret: {ret}, close: {close}")
+        for widget in self.tab_widget.findChildren(QWidget):
+            #print(f"close_all_tabs: widget: {widget}")
+            #print(f"close_all_tabs: widget: {widget.objectName()}")
+            name = widget.objectName()
+            if name in close:
+                i = self.tab_widget.indexOf(widget)
+                self.tab_widget.close_tab_at(i)
+                close.remove(name)
+                widget.deleteLater()
+        if ret:
+            #
+            # set to welcome
+            #
+            self.main.main_layout.setCurrentIndex(0)
+        return ret
 

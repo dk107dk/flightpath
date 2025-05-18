@@ -9,7 +9,7 @@ create-dmg \
   --icon "FlightPath Data.app" 200 190 \
   --hide-extension "FlightPath Data.app" \
   --app-drop-link 600 185 \
-  "./dist_dmg/FlightPath Data.dmg" \
+  "./dmg/FlightPath Data.dmg" \
   "./tmp"
 
 
