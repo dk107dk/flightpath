@@ -28,6 +28,7 @@ from flightpath.widgets.custom_tree_view import CustomTreeView
 from flightpath.widgets.sidebars.sidebar_named_paths import SidebarNamedPaths
 from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.file_tree_model.directory_filter_proxy_model import DirectoryFilterProxyModel
+from flightpath.util.csvpath_loader import CsvpathLoader
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.help_finder import HelpFinder
@@ -386,14 +387,15 @@ class Sidebar(QWidget):
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
-            self.load_dialog = LoadPathsDialog(path=path, parent=self)
-            self.load_dialog.show_dialog()
-        else:
-            ... # should never happen, but what if it did?
+            #self.load_dialog = LoadPathsDialog(path=path, parent=self)
+            #self.load_dialog.show_dialog()
+            loader = CsvpathLoader(main=self.main)
+            loader.load_paths(path)
 
     def _run_paths(self) -> None:
         ...
 
+    """
     def do_append_named_paths_load(self) ->None:
         self.do_load(overwrite=False)
 
@@ -510,6 +512,7 @@ class Sidebar(QWidget):
         self.load_dialog.close()
         self.load_dialog.deleteLater()
         self.load_dialog = None
+    """
 
     def _renew_sidebars(self) -> None:
         #
@@ -626,6 +629,7 @@ class Sidebar(QWidget):
         if ok and new_name:
             b, msg = self._valid_new_file(new_name)
             if b is True:
+                ns = fiut.split_filename(new_name)
                 #
                 # if we're creating a JSON file we need to populate with a {} or []
                 #
@@ -635,6 +639,18 @@ class Sidebar(QWidget):
                     item, ok = QInputDialog.getItem(self, "Data structure", "Start with", items, 0, False)
                     if ok and item:
                         content = item
+                elif ns[1] in self.main.csvpath_config.csvpath_file_extensions:
+                    testdata = ""
+                    _ = os.path.join(self.main.state.cwd, "examples/test.csv")
+                    if Nos(_).exists():
+                        testdata = "examples/test.csv"
+
+                    content = f"""~
+   id: hello world
+   test-data: {testdata}
+~
+
+$[*][ print("hello world") ]"""
 
                 try:
                     if not new_name.startswith(self.main.state.cwd):

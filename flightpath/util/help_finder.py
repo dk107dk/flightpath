@@ -9,6 +9,10 @@ class HelpFinder:
 
     def help(self, path:str, fallback=None) -> str:
         mdpath = fiut.make_app_path(f"assets{os.sep}help{os.sep}{path}")
+        if mdpath is None:
+            if fallback is None:
+                return None
+            return self.help(fallback)
         mdpath = pathu.resep(mdpath)
         md = ""
         if os.path.exists(mdpath):

@@ -10,8 +10,8 @@
 echo -e "\nloading cert for code-sign"
 
 security default-keychain -s flightpath.keychain
-security unlock-keychain -p @env:FLIGHTPATH_KEYCHAIN_PASSWORD flightpath.keychain
-security set-key-partition-list -S apple-tool:,apple:,codedign: -s -k @env:FLIGHTPATH_KEYCHAIN_PASSWORD flightpath.keychain
+security unlock-keychain -p $FLIGHTPATH_KEYCHAIN_PASSWORD flightpath.keychain
+security set-key-partition-list -S apple-tool:,apple:,codedign: -s -k $FLIGHTPATH_KEYCHAIN_PASSWORD flightpath.keychain
 
 echo -e "\nsigning app"
 
@@ -21,7 +21,7 @@ codesign \
     --options=runtime \
     --keychain ~/Library/Keychains/flightpath.keychain-db \
     --entitlements ./assets/entitlements.plist \
-    --sign @env:CERT_COMMON_NAME \
+    --sign "${CERT_COMMON_NAME:q}" \
     --timestamp \
     ./tmp/FlightPath\ Data.app
 
