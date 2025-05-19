@@ -1,5 +1,17 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
+import os
+
+
+
+build_number = None
+with open("build_number.txt", "r") as file:
+    build_number = file.read()
+    build_number = build_number.strip()
+if build_number is None:
+    raise ValueError("The FLIGHTPATH_BUILD env var must exist")
+
+
 
 datas = []
 binaries = []
@@ -27,6 +39,8 @@ a = Analysis(
     optimize=0,
 )
 pyz = PYZ(a.pure)
+
+
 
 exe = EXE(
     pyz,
@@ -69,11 +83,11 @@ app = BUNDLE(
         'CFBundleInfoDictionaryVersion' :'6.0',
         'CFBundleName' :'FlightPath Data',
         'CFBundlePackageType' :'APPL',
-        'CFBundleVersion':'1.0.01',
+        'CFBundleVersion':build_number,
         'LSApplicationCategoryType':'public.app-category.developer-tools',
         'LSRequiresNativeExecution':True,
         'LSMinimumSystemVersion':'12.0.0',
-        'CFBundleShortVersionString': '1.0.02',
+        'CFBundleShortVersionString': build_number,
         'ITSAppUsesNonExemptEncryption': False,
         'NSHighResolutionCapable': False
     },

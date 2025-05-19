@@ -18,12 +18,12 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
     QTabWidget,
     QSizePolicy,
     QMessageBox,
-    QTextEdit
+    QTextEdit,
+    QLabel,
+    QMenuBar
 )
 
-
-
-from PySide6.QtGui import QIcon # pylint: disable=E0611
+from PySide6.QtGui import QIcon, QAction # pylint: disable=E0611
 from PySide6.QtCore import ( # pylint: disable=E0611
     Qt,
     QFileInfo,
@@ -129,6 +129,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.log("ready to load project")
         self._load_state_and_cd()
 
+
+
     @property
     def csvpath_config(self) -> CsvPathConfig:
         if self._csvpath_config is None:
@@ -190,6 +192,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.show()
         self.statusBar().showMessage(f"  Working directory: {self.state.cwd}")
 
+        build_number = fiut.read_string(fiut.make_app_path(f"assets{os.sep}build_number.txt")).strip()
+        bn = QLabel(build_number)
+        bn.setStyleSheet("QLabel {font-size:10px;color:#999}")
+
+        self.statusBar().addPermanentWidget(bn, 0)
 
     def _setup_central_widget(self) -> None:
         """ central widget is a vert splitter with left & right

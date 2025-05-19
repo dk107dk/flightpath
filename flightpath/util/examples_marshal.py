@@ -7,17 +7,19 @@ from flightpath.util.file_utility import FileUtility as fiut
 
 class ExamplesMarshal:
 
-    def __init__(self, main=None) -> None:
+    def __init__(self, main) -> None:
         self.main = main
 
     def add_examples(self, *, path:str, source_path=None) -> str:
         if source_path is None:
             source_path = fiut.make_app_path(os.path.join("assets", "examples"))
+        self.main.log(f"ExamplesMarshal: setting up examples from {source_path}")
         exampleslist = os.path.join(source_path, "list.txt")
         lst = None
         with DataFileReader(exampleslist) as file:
             lst = file.read()
         examples = lst.split("\n")
+        self.main.log(f"ExamplesMarshal: examples are {lst}")
         for example in examples:
             try:
                 example = example.strip()
@@ -26,7 +28,9 @@ class ExamplesMarshal:
                 if example.startswith("#"):
                     continue
                 from_path = os.path.join(source_path, example)
+                self.main.log(f"ExamplesMarshal: from_path {from_path}")
                 to_path = os.path.join(path,example)
+                self.main.log(f"ExamplesMarshal: from_path {to_path}")
                 nos = Nos(os.path.dirname(to_path))
                 if not nos.exists():
                     nos.makedirs()
