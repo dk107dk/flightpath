@@ -69,6 +69,12 @@ class PickCwdDialog(QDialog):
         #self.cancel_button.clicked.connect(self.reject)
         right_side.layout().addWidget(self.cancel_button)
 
+        build_number = fiut.read_string(fiut.make_app_path(f"assets{os.sep}build_number.txt")).strip()
+        bn = QLabel(build_number)
+        bn.setStyleSheet("QLabel {font-size:10px;color:#999}")
+        bn.setFixedHeight(11)
+        right_side.layout().addWidget(bn)
+
     def _cancel(self) -> bool:
         #self.main.show()
         self.reject()
