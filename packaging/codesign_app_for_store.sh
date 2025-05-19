@@ -21,7 +21,7 @@ codesign \
     --options=runtime \
     --keychain ~/Library/Keychains/flightpath.keychain-db \
     --entitlements ./assets/entitlements.plist \
-    --sign "${CERT_COMMON_NAME:q}" \
+    --sign "${APP_CERT_COMMON_NAME:q}" \
     --timestamp \
     ./tmp/FlightPath\ Data.app
 

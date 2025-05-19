@@ -1,4 +1,10 @@
 
+#if [ -f "6745823097.itmsp" ]; then
+#  echo ".itmsp exists."
+#else
+#  mv ./6745823097 ./6745823097.itmsp
+#fi
+
 #
 # use calculate_metadata.sh to get the up-to-date values for metadata.xml first.
 #

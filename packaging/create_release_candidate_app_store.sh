@@ -8,6 +8,9 @@ rm -Rf ./dmg/*
 rm -Rf ./pkg/*
 rm -Rf ./tmp/*
 
+echo -e '\nupdate build number...\n'
+. ./env.sh
+
 echo -e '\nbuilding installer...\n'
 #
 # the ID hash needs to be the developer's not the installer creator's ID
@@ -42,7 +45,7 @@ source ./codesign_app_for_store.sh
 # create pkg
 #
 echo -e '\ncreating package...\n'
-source ./pkg.sh
+. ./pkg.sh
 
 #
 # next:
@@ -50,3 +53,11 @@ source ./pkg.sh
 #   - manually setup the .itmsp
 #   - use ./transport.sh to upload
 #
+
+#
+# ship to apple
+#
+echo -e '\ntransporting .itmsp file to apple...\n'
+#source ./transport.sh
+
+
