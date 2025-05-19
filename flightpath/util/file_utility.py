@@ -1,10 +1,17 @@
 import os
 
 from csvpath.util.nos import Nos
+from csvpath.util.file_readers import DataFileReader
 from csvpath.util.path_util import PathUtility as pathu
 
 class FileUtility:
     APP_PATH = None
+
+    @classmethod
+    def read_string(cls, path) -> str:
+        with DataFileReader(path) as reader:
+            return reader.read()
+
 
     @classmethod
     def deconflicted_path(cls, path, name) -> str:

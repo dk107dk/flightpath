@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://apple.com/itunes/importer" version="software5.10">
+    <provider>Q6VE7XAQF3</provider>
+    <software_assets apple_id="6745823097">
+        <asset type="product-archive">
+            <data_file>
+                <file_name>FlightPath-Data.pkg</file_name>
+                <checksum type="md5">0c27f03107bc50560b7a0ec22b973a44</checksum>
+                <size>81077176</size>
+            </data_file>
+        </asset>
+    </software_assets>
+</package>
