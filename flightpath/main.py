@@ -31,7 +31,8 @@ from PySide6.QtCore import ( # pylint: disable=E0611
     Slot,
     QItemSelectionModel,
     QRunnable,
-    QModelIndex
+    QModelIndex,
+    QCoreApplication
 )
 
 from csvpath import CsvPaths
@@ -79,15 +80,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # happen, but if it did, we need the application initalization
         # code to not put the app into exec.
         #
-        self.please_close = False
-        self.show()
-        self.state = State()
-        if not self.state.has_cwd():
-            self.state.pick_cwd(self)
-            has = self.state.has_cwd()
-            if not has:
-                self.please_close = True
-                return
 
         self.main = None
         self.main_top = None
@@ -117,19 +109,43 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # TODO: why do we create state twice?
         #
-        self.state = State()
+        self.state = None
         #
         # get log setup. the level comes from the state. that leaves us
         # in the dark till we obtain state, but that should be fine.
         #
         self.logger = None
         #
+        # if we fail to / chose not to set a cwd we will close the app
+        #
+        self.please_close = False
         #
         #
-        self.log("ready to load project")
-        self._load_state_and_cd()
+        #
+        if not self.state_check():
+            return
+        self.load_state_and_cd()
+        self.show()
 
-
+    def state_check(self) -> bool:
+        self.state = State()
+        if self.state.has_cwd():
+            ...
+        else:
+            self.state.pick_cwd(self)
+            if self.state.has_cwd():
+                ...
+            else:
+                QCoreApplication.instance().exit()
+                #
+                # I'm not 100% clear why exit() isn't enough, but it needs a little help.
+                # this flag works fine and seems good.
+                #
+                self.please_close = True
+                return False
+        self.load_state_and_cd()
+        self.statusBar().showMessage(f"  Working directory changed to: {self.state.cwd}")
+        return True
 
     @property
     def csvpath_config(self) -> CsvPathConfig:
@@ -146,7 +162,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if self.logger:
             self.logger.debug(msg)
 
-    def _load_state_and_cd(self) -> None:
+    def load_state_and_cd(self) -> None:
         """ sets the project directory into .flightpath file, cds to project dir, and reloads UI. """
         self.state.load_state_and_cd(self)
         self.startup()
@@ -706,13 +722,69 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         else:
             self.main.setSizes([4, 1])
 
+    def is_writable(self, path) -> bool:
+        try:
+            if not os.path.exists(path):
+                return False
+            from uuid import uuid4
+            t = f"{uuid4()}"
+            p = os.path.join(path, t)
+            print("main.is_writable: attempting to write to: {p}")
+            with open( p, "w" ) as file:
+                file.write("test")
+            nos = Nos(p)
+            if nos.exists():
+                print("main.is_writable: file exists")
+                nos.remove()
+                return True
+            else:
+                print("main.is_writable: not writable")
+                return False
+        except Exception as e:
+            print(f"Error in is_writable: {type(e)}: {e}")
+            return False
+
     def on_set_cwd_click(self):
-        path = QFileDialog.getExistingDirectory(self)
+        #
+        # the Qt dialog is more relable in some circumstances
+        #
+        """
+        path = QFileDialog.getExistingDirectory(
+            parent=self,
+            caption="Pick a new project location",
+            dir=self.state.home,
+            options=QFileDialog.Option.DontUseNativeDialog,
+        )
         if path:
             path = str(path)
             self.state.cwd = path
-            self._load_state_and_cd()
+            self.load_state_and_cd()
             self.statusBar().showMessage(f"  Working directory changed to: {self.state.cwd}")
+        """
+        caption = "FlightPath requires a project directory. Please pick one."
+        home = str(Path.home())
+        path = QFileDialog.getExistingDirectory(
+            parent=self,
+            caption=caption,
+            dir=home,
+            options=QFileDialog.Option.DontUseNativeDialog,
+        )
+        if path:
+            if self.is_writable(path):
+                print(f"pick_cwd_dialog: _pick_cwd: {path} is writable")
+                self.state.cwd = path
+            else:
+                print(f"pick_cwd_dialog: _pick_cwd: {path} is not writable")
+                msg_box = QMessageBox()
+                msg_box.setIcon(QMessageBox.Critical)
+                msg_box.setWindowTitle("Not writable")
+                msg_box.setText(f"{path} is not a writable location. Please pick another.")
+                msg_box.setStandardButtons(QMessageBox.Ok)
+                msg_box.exec()
+                self.on_set_cwd_click()
+
+
+
 
     def on_reload_data(self) -> None:
         self.read_validate_and_display_file()

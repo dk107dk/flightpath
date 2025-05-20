@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from PySide6.QtWidgets import ( # pylint: disable=E0611
         QWidget,
@@ -7,6 +8,7 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QPushButton,
         QLabel,
         QFileDialog,
+        QMessageBox,
         QDialog
 )
 from PySide6.QtCore import Qt # pylint: disable=E0611
@@ -66,7 +68,6 @@ class PickCwdDialog(QDialog):
         self.cancel_button = QPushButton()
         self.cancel_button.setText(self.tr("Come back later"))
         self.cancel_button.clicked.connect(self._cancel)
-        #self.cancel_button.clicked.connect(self.reject)
         right_side.layout().addWidget(self.cancel_button)
 
         build_number = fiut.read_string(fiut.make_app_path(f"assets{os.sep}build_number.txt")).strip()
@@ -76,21 +77,38 @@ class PickCwdDialog(QDialog):
         right_side.layout().addWidget(bn)
 
     def _cancel(self) -> bool:
-        #self.main.show()
         self.reject()
 
     def _pick_cwd(self) -> bool:
-        path = QFileDialog.getExistingDirectory(self.main, "FlightPath requires a project directory. Please pick one.")
+        """
+        caption = "FlightPath requires a project directory. Please pick one."
+        home = str(Path.home())
+        path = QFileDialog.getExistingDirectory(
+            parent=self,
+            caption=caption,
+            dir=home,
+            options=QFileDialog.Option.DontUseNativeDialog,
+        )
         if path:
-            self.main.state.cwd = path
-            self.main.state.load_state_and_cd(self.main)
-            self.main.statusBar().showMessage(f"  Working directory changed to: {path}")
+            if self.main.is_writable(path):
+                print(f"pick_cwd_dialog: _pick_cwd: {path} is writable")
+                self.main.state.cwd = path
+            else:
+                print(f"pick_cwd_dialog: _pick_cwd: {path} is not writable")
+                msg_box = QMessageBox()
+                msg_box.setIcon(QMessageBox.Critical)
+                msg_box.setWindowTitle("Not writable")
+                msg_box.setText(f"{path} is not a writable location. Please pick another.")
+                msg_box.setStandardButtons(QMessageBox.Ok)
+                msg_box.exec()
+                self._pick_cwd()
+        """
+        self.main.on_set_cwd_click()
         #
-        # reject dismisses the dialog and we exit the app. we could
-        # just return.
+        # closes dialog, not app
         #
-        #self.main.show()
         self.reject()
+
 
     def show_dialog(self) -> None:
         self.exec()
