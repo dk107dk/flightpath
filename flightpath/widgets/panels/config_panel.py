@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QStackedLayout,
     QApplication,
-    QMessageBox,
     QTreeWidget,
     QTreeWidgetItem,
     QListWidget,
