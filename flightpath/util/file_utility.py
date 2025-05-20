@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 
 from csvpath.util.nos import Nos
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.path_util import PathUtility as pathu
+from .os_utility import OsUtility as osut
 
 class FileUtility:
     APP_PATH = None
@@ -88,32 +90,25 @@ class FileUtility:
         nos = Nos(path)
         t = pathu.resep(t)
         nos.rename(t)
-        """
-        if not os.path.exists(path):
-            #
-            # log files can not exist if we've never used it.
-            #
-            return
-        if not os.path.exists(dirpath):
-            os.makedirs(dirpath)
-        n = cls.count_files(dirpath)
-        n += 1
-        t = os.path.join(dirpath, f"{os.path.basename(path)}_{n}")
-        os.rename(path, t)
-        """
 
     @classmethod
     def count_files(cls, dirpath:str) -> int:
         nos = Nos(dirpath)
         lst = nos.listdir()
         return len(lst)
-        """
-        i = 0
-        for i, f in enumerate( os.listdir(dirpath) ):
-            ...
-        return i
-        """
 
     @classmethod
     def is_in(path:str, is_in_dir:str) -> bool:
         return os.path.dirname(path) == os.path.basename(is_in_dir)
+
+    @classmethod
+    def real_home_dir(self) -> str:
+        """ this method gets the expected home dir for macos regardless of sandboxing
+            that may not be what you want because it may not be writable """
+        home = str(Path.home())
+        if osut.is_mac():
+            if home.find("Container") > -1:
+                parts = pathu.parts(home)
+                print(f"fiut: real_home_dir: {parts}")
+                home = f"/{parts[1]}/{parts[2]}"
+        return home

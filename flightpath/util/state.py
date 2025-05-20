@@ -5,7 +5,7 @@ from pathlib import Path
 
 from csvpath import CsvPaths
 from csvpath.util.config import Config as CsvPath_Config
-from csvpath.util.nos import Nos
+#from csvpath.util.nos import Nos
 
 from flightpath.dialogs.pick_cwd_dialog import PickCwdDialog
 from flightpath.util.file_utility import FileUtility as fiut
@@ -15,14 +15,18 @@ class State:
 
     def __init__(self):
         self._state_path = None
-        self._home = str(Path.home())
+
+    @property
+    def home(self) -> str:
+        home = str(Path.home())
+        print(f"state.home: home is: {home}")
+        return home
 
     @property
     def state_path(self) -> str:
         if self._state_path is None:
-            self._state_path = os.path.join(self._home, ".flightpath")
-            nos = Nos(self._state_path)
-            if not nos.exists():
+            self._state_path = os.path.join(self.home, ".flightpath")
+            if not os.path.exists(self._state_path):
                 self._create_new_state_file(self._state_path)
         return self._state_path
 
@@ -39,7 +43,6 @@ class State:
         # default cwd has to be writable. the macos app package isn't so we
         # use the user's home dir.
         #
-        #state["cwd"] = self._home
         with open(statepath, mode="w", encoding="utf-8") as file:
             json.dump(state, file, indent=2)
 
@@ -48,13 +51,14 @@ class State:
         self._state_path = state_path
 
     @property
-    def cwd(self) -> str:
-        cwd = self.data.get("cwd")
-        return cwd
-
-    @property
     def debug(self) -> str:
         return self.data.get("debug")
+
+    @property
+    def cwd(self) -> str:
+        cwd = self.data.get("cwd")
+        print(f"state.cwd: {cwd}")
+        return cwd
 
     @cwd.setter
     def cwd(self, cwd:str) -> None:
@@ -78,42 +82,48 @@ class State:
         # to find out if we succeeded. fine, i think.
         #
         dialog = PickCwdDialog(main)
-        dialog.show_dialog()
+        dialog.exec()
 
     def has_cwd(self) -> bool:
-        state = self.data
-        if "cwd" in state:
-            return True
-        return False
+        return self.cwd is not None
 
     def load_state_and_cd(self, main) -> None:
         cwd = self.cwd
-        if cwd is None:
-            cwd = self._home
-        try:
-            os.chdir(cwd)
-            new_project = not os.path.exists(f".{os.sep}config{os.sep}config.ini")
+        #
+        # to make things more clear, let's blow up if we don't have cwd at this point.
+        #
+        #print(f"state.load state & cd: cwd 1: {cwd}")
+        #if cwd is None:
+        #    cwd = self.home
+        #print(f"state.load state & cd: cwd 2: {cwd}")
+        os.chdir(cwd)
+        configfile = f".{os.sep}config{os.sep}config.ini"
+        new_project = not os.path.exists(configfile)
+        #
+        # if the dir has no config it is a new project. CsvPath Framework
+        # will generate a config file. We need to add an examples folder
+        # to help people get started. CsvPath Framework does not offer
+        # examples.
+        #
+        if new_project:
+            # ffr: we don't need this because Config creates a relative path by default
+            #os.environ[CsvPath_Config.CSVPATH_CONFIG_FILE_ENV] = cwd
             #
-            # if the dir has no config it is a new project. CsvPath Framework
-            # will generate a config file. We need to add an examples folder
-            # to help people get started. CsvPath Framework does not offer
-            # examples.
+            # this line is principlly to get the project dirs and files created
+            # we can assume main.py will create its own CsvPaths and config for
+            # its long term use.
             #
-            if new_project:
-                #
-                # this line is principlly to get the project dirs and files created
-                # we can assume main.py will create its own CsvPaths and config for
-                # its long term use.
-                #
-                CsvPaths().config
-                examples = os.path.join(cwd, "examples")
-                nos = Nos(examples)
-                if not nos.exists():
-                    nos.makedirs()
-                    em = ExamplesMarshal(main)
-                    em.add_examples(path=examples)
-        except ValueError as e:
-            print(f"Error setting cwd: {type(e)}: {e}")
+            CsvPaths().config
+            examples = os.path.join(cwd, "examples")
+            if os.path.exists(examples):
+                ...
+            else:
+                os.makedirs(examples)
+                em = ExamplesMarshal(main)
+                em.add_examples(path=examples)
+        else:
+            ...
+
 
 
 
