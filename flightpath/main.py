@@ -5,6 +5,9 @@ import os
 import csv
 
 from pathlib import Path
+
+import darkdetect
+
 from PySide6.QtWidgets import ( # pylint: disable=E0611
     QApplication,
     QMainWindow,
@@ -22,7 +25,6 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
     QLabel,
     QMenuBar
 )
-
 from PySide6.QtGui import QIcon, QAction # pylint: disable=E0611
 from PySide6.QtCore import ( # pylint: disable=E0611
     Qt,
@@ -64,6 +66,7 @@ from flightpath.widgets.help.helper import Helper
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.log_utility import LogUtility as lout
+from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.state import State
 
 
@@ -105,6 +108,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.threadpool = None
         self.selected_file_path = None
         self.last_main = None
+        self.build_number = None
         self.progress_dialog = None # not sure we need this as a member, but it is used as one atm.
         #
         # TODO: why do we create state twice?
@@ -126,6 +130,38 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             return
         self.load_state_and_cd()
         self.show()
+        #
+        # react to light/dark changes
+        #
+        QCoreApplication.instance().styleHints().colorSchemeChanged.connect(self.on_color_scheme_changed)
+        if darkdetect.isDark():
+            self.on_color_scheme_changed()
+
+    def on_color_scheme_changed(self) -> None:
+        print(f"main.on_color_scheme_changed: we're in dark mode: {darkdetect.isDark()}")
+        QCoreApplication.instance().setStyle("Fusion")
+        #
+        # splitters apparently need special handling.
+        #
+        if darkdetect.isDark():
+            s = "QSplitter::handle { background-color: #535353;  margin:1px; }"
+            self.centralWidget().setStyleSheet(s)
+            self.rt_col_helpers.setStyleSheet(s)
+            self.rt_col.setStyleSheet(s)
+            self.main.setStyleSheet(s)
+        if darkdetect.isLight():
+            s = "QSplitter::handle { background-color: #f3f3f3;  margin:1px; }"
+            self.centralWidget().setStyleSheet(s)
+            self.rt_col_helpers.setStyleSheet(s)
+            self.rt_col.setStyleSheet(s)
+            self.main.setStyleSheet(s)
+        #
+        # schedule an update for the splitters
+        #
+        self.rt_col_helpers.update()
+        self.rt_col.update()
+        self.main.update()
+        self.centralWidget().update()
 
     def state_check(self) -> bool:
         self.state = State()
@@ -193,6 +229,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if central_widget:
             central_widget.deleteLater()
         central_widget = QSplitter(self)
+        central_widget.setObjectName("central_widget")
         central_widget.setHandleWidth(3)
         central_widget.setStyleSheet("QSplitter::handle { background-color: #f3f3f3;  margin:1px; }")
         self.setCentralWidget(central_widget)
@@ -209,10 +246,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.statusBar().showMessage(f"  Working directory: {self.state.cwd}")
 
         build_number = fiut.read_string(fiut.make_app_path(f"assets{os.sep}build_number.txt")).strip()
-        bn = QLabel(build_number)
-        bn.setStyleSheet("QLabel {font-size:10px;color:#999}")
-
-        self.statusBar().addPermanentWidget(bn, 0)
+        if self.build_number is None:
+            self.build_number = QLabel()
+            self.build_number.setObjectName("build_number")
+            self.build_number.setStyleSheet("QLabel {font-size:10px;color:#999}")
+            self.statusBar().addPermanentWidget(self.build_number, 0)
+        self.build_number.setText(build_number)
 
     def _setup_central_widget(self) -> None:
         """ central widget is a vert splitter with left & right
@@ -523,6 +562,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             csvpath_view.setObjectName(filepath)
             csvpath_view.open_file(path=filepath, data=data)
             self.content.tab_widget.addTab(csvpath_view, os.path.basename(filepath) )
+
+            save = "cmd-s" if osut.is_mac() else "ctrl-s"
+            run = "cmd-r" if osut.is_mac() else "ctrl-r"
+            shortcuts = f"{save} to save, {run} to run"
+            i = taut.find_tab(self.content.tab_widget, filepath)
+            self.content.tab_widget.setTabToolTip(i[0], shortcuts)
+
         else:
             csvpath_view = csvpath_view[1]
         csvpath_view.editable = editable if editable else True
@@ -606,16 +652,18 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.read_validate_and_display_file()
 
-    def read_validate_and_display_file(self, editable=True) -> QRunnable:
+    def read_validate_and_display_file(self, editable=True, *, finished_callback=None) -> QRunnable:
         return self.read_validate_and_display_file_for_path(self.selected_file_path, editable=editable)
 
-    def read_validate_and_display_file_for_path(self, path:str, editable=True) -> QRunnable:
+    def read_validate_and_display_file_for_path(self, path:str, editable=True, *, finished_callback=None) -> QRunnable:
+        print(f"main.read_validate_and_display_file_for_path: path: {path}, editable: {editable}, finished_callback: {finished_callback}")
         info = QFileInfo(path)
         #
         # TODO: consolidate below
         #
         # pylint thinks csv_file_extensions doesn't support membership tests but it is list[str]. :/
         worker = None
+        print(f"main.read_validate_and_display_file_for_path: path: {path}, info: {info}: {info.isFile()}, {info.suffix()}")
         if info.isFile() and info.suffix() in self.csvpath_config.csv_file_extensions: # pylint: disable=E1135
             worker = GeneralDataWorker(
                 path,
@@ -626,6 +674,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 quotechar=self.content.toolbar.quotechar_char()
             )
             worker.signals.finished.connect(self.update_views)
+            if finished_callback:
+                worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
@@ -634,7 +684,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.threadpool.start(worker)
         # pylint thinks csvpath_file_extensions doesn't support membership tests but it is list[str]. :/
         elif info.isFile() and info.suffix() in self.csvpath_config.csvpath_file_extensions: # pylint: disable=E1135
+            print(f"main.read_validate_and_display_file_for_path: a csvpath")
             worker = CsvpathFileWorker(path, self, editable=editable)
+            worker.signals.finished.connect(self.update_csvpath_views)
+            if finished_callback:
+                worker.signals.finished.connect(finished_callback)
             worker.signals.finished.connect(self.update_csvpath_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
@@ -645,6 +699,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         elif info.isFile() and info.suffix() == "json":
             worker = JsonDataWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_json_views)
+            if finished_callback:
+                worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
@@ -729,7 +785,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             from uuid import uuid4
             t = f"{uuid4()}"
             p = os.path.join(path, t)
-            print("main.is_writable: attempting to write to: {p}")
+            print(f"main.is_writable: attempting to write to: {p}")
             with open( p, "w" ) as file:
                 file.write("test")
             nos = Nos(p)
@@ -763,12 +819,21 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         """
         caption = "FlightPath requires a project directory. Please pick one."
         home = str(Path.home())
+        print(f"main.on_set_cwd_click: home: {home}")
+        """
         path = QFileDialog.getExistingDirectory(
             parent=self,
             caption=caption,
-            dir=home,
-            options=QFileDialog.Option.DontUseNativeDialog,
+            dir=home
+            #options=QFileDialog.Option.DontUseNativeDialog,
         )
+        """
+
+        path = QFileDialog.getExistingDirectory(self, caption)
+        if path is None or path.strip() == "":
+            path = QFileDialog.getExistingDirectory(self, caption, dir=".")
+
+        print(f"main.on_set_cwd_click: path: {path}")
         if path:
             if self.is_writable(path):
                 print(f"pick_cwd_dialog: _pick_cwd: {path} is writable")

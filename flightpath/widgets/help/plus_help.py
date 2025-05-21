@@ -26,7 +26,7 @@ class HelpIconPackager:
 class HelpHeaderView(QHeaderView):
     def __init__(self, parent=None, *, on_help):
         super().__init__(Qt.Horizontal, parent)
-        self.help_icon_label = HelpIconPackager.make_clickable_label(self, on_help=on_help)
+        self.help_icon_label = HelpIconPackager.make_clickable_label(self if parent is None else parent, on_help=on_help)
         self.help_icon_label.setToolTip("Click here for help")
 
     def resizeEvent(self, event):

@@ -19,10 +19,11 @@ from csvpath.util.file_writers import DataFileWriter
 
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.help.plus_help import HelpIconPackager
+from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.file_utility import FileUtility as fiut
+from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.file_collector import FileCollector
-from flightpath.dialogs.new_run_dialog import NewRunDialog
 
 class Welcome(QWidget):
 
@@ -72,7 +73,12 @@ class Welcome(QWidget):
         main_layout.addStretch(1)
 
         self.setLayout(main_layout)
-
+        #
+        # this holds the path of a run-one-time run till the file is loaded
+        # it is imaginable that we could strand the path due to some error, but
+        # hard to see how the wrong path could be there when we look for a path.
+        #
+        self._run_one_time = None
 
     def on_click_copy_in(self) -> None:
         csvps = FileCollector.csvpaths_filter(self.main.csvpath_config)
@@ -83,7 +89,7 @@ class Welcome(QWidget):
             parent=self,
             cwd=self.main.state.cwd,
             title="Select File",
-            filter=afilter
+            file_type_filter=afilter
         )
         print(f"welcome: on_click_copy_in: path: {path}")
 
@@ -111,6 +117,32 @@ class Welcome(QWidget):
         print(f"welcome: on_click_validate: csvpath path: {csvpath}")
         if csvpath is None:
             return
+
+        #
+        # how do we open and run a single csvpath from this file?
+        #
+
+        #
+        # exp.
+        #  get it read
+        #
+        self.selected_file_path = csvpath
+        self._run_one_time = csvpath
+        self.main.read_validate_and_display_file_for_path(path=csvpath, editable=True, finished_callback=self._on_run_one_load)
+
+    def _on_run_one_load(self) -> None:
+        csvpath = self._run_one_time
+        print(f"welcome._on_run_one_load: looking for: {csvpath}")
+        #
+        # iterate content's tabs to find one with widget.objectName() == csvpath
+        #
+        w = taut.find_tab(self.main.content.tab_widget, csvpath)
+        #
+        # w should be a csvpath viewer
+        #
+        #
+        # this is probably still useful. not sure if best way.
+        #
         with DataFileReader(csvpath) as file:
             csvpath = file.read()
         cs = csvpath.split("---- CSVPATH ----")
@@ -130,7 +162,10 @@ class Welcome(QWidget):
             #
             if cs[0].strip() == "":
                 cs[0] = cs[1]
-        self.main.content.csvpath_source_view.run_one_csvpath(cs[0], None)
+        #self.main.content.csvpath_source_view.run_one_csvpath(cs[0], None)
+        print(f"welcome._on_run_one_load: cs: {cs}")
+        w[1].run_one_csvpath(cs[0], None)
+
 
     def on_click_copy_in_help(self) -> None:
         md = HelpFinder(main=self.main).help("welcome/copy_in.md")

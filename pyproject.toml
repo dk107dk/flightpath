@@ -10,6 +10,7 @@ python = ">3.10,<3.14"
 pyside6 = ">=6.8.3"
 pygments = "^2.19.1"
 csvpath = { path = "../csvpath/dist/csvpath-0.0.540.tar.gz" }
+darkdetect = "^0.8.0"
 
 [tool.poetry.scripts]
 flightpath = "flightpath.main:run"
