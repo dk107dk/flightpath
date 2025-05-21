@@ -119,23 +119,13 @@ class DataToolbar(QToolBar):
         self.quotechar.addItem(self.QUOTES)
         self.quotechar.addItem(self.SINGLE_QUOTES)
         self.addWidget(self.quotechar)
+        self._add_help(self.on_help_delimiter_toolbar)
         #
         # switch to raw source view
         #
-        separator = QFrame()
-        separator.setFrameShape(QFrame.Shape.VLine)
-        separator.setFrameShadow(QFrame.Shadow.Plain)
-        separator.setLineWidth(0)
-        w = QWidget()
-        l = QHBoxLayout()
-        l.setContentsMargins(3, 1, 3, 1)
-        l.addWidget(separator)
-        w.setLayout(l)
-        # Add the separator to the toolbar
-        self.addWidget(w)
-        #self.addWidget(separator)
         self.raw_source = QPushButton("Toggle raw source")
         self.addWidget(self.raw_source)
+        self._add_help(self.on_help_raw_source_toolbar)
         #
         # let it move
         #
@@ -145,6 +135,21 @@ class DataToolbar(QToolBar):
         # hide the toolbar till needed
         #
         self.hide()
+
+    def _add_help(self, callback) -> None:
+        self.help = ClickableLabel()
+        self.help.setStyleSheet("ClickableLabel { margin-left:5px;font-weight:100;color:#eeaa55;margin-right:20px; }")
+        svg_renderer = QSvgRenderer(fiut.make_app_path(f"assets{os.sep}icons{os.sep}help.svg"))
+        if not svg_renderer.isValid():
+            print("Failed to load SVG file")
+        pixmap = QPixmap(16,16)
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+        svg_renderer.render(painter)
+        painter.end()
+        self.help.setPixmap(pixmap)
+        self.addWidget(self.help)
+        self.help.clicked.connect( callback )
 
     def delimiter_char(self) -> str:
         d = self.delimiter.currentText()
@@ -168,6 +173,24 @@ class DataToolbar(QToolBar):
 
     def on_help_sample_toolbar(self) -> None:
         md = HelpFinder(main=self.parent.main).help(f"data_view/samples.md")
+        if md is None:
+            self.parent.helper.close_help()
+            return
+        self.parent.helper.get_help_tab().setMarkdown(md)
+        if not self.parent.helper.is_showing_help():
+            self.parent.helper.on_click_help()
+
+    def on_help_delimiter_toolbar(self) -> None:
+        md = HelpFinder(main=self.parent.main).help(f"data_view/delimiter.md")
+        if md is None:
+            self.parent.helper.close_help()
+            return
+        self.parent.helper.get_help_tab().setMarkdown(md)
+        if not self.parent.helper.is_showing_help():
+            self.parent.helper.on_click_help()
+
+    def on_help_raw_source_toolbar(self) -> None:
+        md = HelpFinder(main=self.parent.main).help(f"data_view/raw_source.md")
         if md is None:
             self.parent.helper.close_help()
             return

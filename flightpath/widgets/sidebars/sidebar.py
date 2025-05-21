@@ -90,11 +90,11 @@ class Sidebar(QWidget):
         self._last_file_index = i
 
     def _help_button(self, *, text:str, on_click, on_help) -> QWidget:
-        self.button_copy_in = QPushButton()
-        self.button_copy_in.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        box = HelpIconPackager.add_help(main=self.main, widget=self.button_copy_in, on_help=on_help)
-        self.button_copy_in.setText(text)
-        self.button_copy_in.clicked.connect(on_click)
+        button = QPushButton()
+        button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        box = HelpIconPackager.add_help(main=self.main, widget=button, on_help=on_help)
+        button.setText(text)
+        button.clicked.connect(on_click)
         return box
 
     def on_click_cwd_help(self) -> None:
@@ -376,7 +376,6 @@ class Sidebar(QWidget):
         elif self.copied:
             name = os.path.basename(self.copied)
             path = fiut.deconflicted_path(path, name)
-            #path = os.path.join(path, name)
             nos = Nos(self.copied)
             # disambiguate here
             nos.copy(path)
@@ -387,8 +386,6 @@ class Sidebar(QWidget):
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
-            #self.load_dialog = LoadPathsDialog(path=path, parent=self)
-            #self.load_dialog.show_dialog()
             loader = CsvpathLoader(main=self.main)
             loader.load_paths(path)
 
