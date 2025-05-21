@@ -584,6 +584,20 @@ type = "file"
 url = "../csvpath/dist/csvpath-0.0.540.tar.gz"
 
 [[package]]
+name = "darkdetect"
+version = "0.8.0"
+description = "Detect OS Dark Mode from Python"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "darkdetect-0.8.0-py3-none-any.whl", hash = "sha256:a7509ccf517eaad92b31c214f593dbcf138ea8a43b2935406bbd565e15527a85"},
+    {file = "darkdetect-0.8.0.tar.gz", hash = "sha256:b5428e1170263eb5dea44c25dc3895edd75e6f52300986353cd63533fe7df8b1"},
+]
+
+[package.extras]
+macos-listener = ["pyobjc-framework-Cocoa"]
+
+[[package]]
 name = "deprecated"
 version = "1.2.18"
 description = "Python @deprecated decorator to deprecate old python classes, functions or methods."
@@ -2863,4 +2877,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">3.10,<3.14"
-content-hash = "2b9224471dd37c0aa6e94fbcc5f5117426a820db5b92ac59bf318d567a0c17b8"
+content-hash = "76477c6339aa5e48a784667f2241ea12a1c0fb7bd1bc2e7b4a40626bba92c196"

@@ -51,10 +51,10 @@ class Helper:
     def get_help_tab(self) -> QWidget:
         i = self.get_help_tab_index_if()
         if i == -1:
-            h = QTextEdit()
-            h.setObjectName("Help Content")
-            self.help_and_feedback.addTab(h, "Help Content")
-            return h
+            self.help = QTextEdit()
+            self.help.setObjectName("Help Content")
+            self.help_and_feedback.addTab(self.help, "Help Content")
+            return self.help
         return self.help_and_feedback.widget(i)
 
     def on_click_help(self) -> None:
