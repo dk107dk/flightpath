@@ -1,6 +1,6 @@
 import os
 from PySide6.QtWidgets import QPlainTextEdit, QInputDialog, QStyle, QMenu
-from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut, QPixmap, QPainter, QIcon
+from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut, QPixmap, QPainter, QIcon, QFont
 from PySide6.QtCore import Qt
 from PySide6.QtSvg import QSvgRenderer
 
@@ -11,6 +11,7 @@ from csvpath.managers.paths.paths_manager import PathsManager
 from flightpath.util.csvpath_loader import CsvpathLoader
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.span_utility import SpanUtility as sput
+from flightpath.util.os_utility import OsUtility as osut
 
 class CsvPathTextEdit(QPlainTextEdit):
 
@@ -21,14 +22,37 @@ class CsvPathTextEdit(QPlainTextEdit):
         self.editable = editable
         self.icon = None
         self.parent.saved = True
-        save_shortcut_ctrl_save = QShortcut(QKeySequence("Ctrl+S"), self)
-        save_shortcut_cmd_save = QShortcut(QKeySequence("Command+S"), self)
+        #
+        #
+        #
+        save_shortcut_ctrl_save = QShortcut(QKeySequence("Ctrl+s"), self)
+        save_shortcut_cmd_save = QShortcut(QKeySequence("Command+s"), self)
         save_shortcut_ctrl_save.activated.connect(self.on_save)
         save_shortcut_cmd_save.activated.connect(self.on_save)
-        save_shortcut_ctrl_run = QShortcut(QKeySequence("Ctrl+R"), self)
-        save_shortcut_cmd_run = QShortcut(QKeySequence("Command+R"), self)
+        #
+        #
+        #
+        save_shortcut_ctrl_run = QShortcut(QKeySequence("Ctrl+r"), self)
+        save_shortcut_cmd_run = QShortcut(QKeySequence("Command+r"), self)
         save_shortcut_ctrl_run.activated.connect(self.on_run)
         save_shortcut_cmd_run.activated.connect(self.on_run)
+        #
+        #
+        #
+        load_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+l"), self)
+        load_shortcut_cmd = QShortcut(QKeySequence("Command+l"), self)
+        load_shortcut_ctrl.activated.connect(self.on_load)
+        load_shortcut_cmd.activated.connect(self.on_load)
+        #
+        #
+        #
+        append_shortcut_ctrl = QShortcut(QKeySequence("Shift+Ctrl+A"), self)
+        append_shortcut_cmd = QShortcut(QKeySequence("Shift+Command+A"), self)
+        append_shortcut_ctrl.activated.connect(self.on_append)
+        append_shortcut_cmd.activated.connect(self.on_append)
+        #
+        #
+        #
         self.load_dialog = None
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -70,8 +94,11 @@ class CsvPathTextEdit(QPlainTextEdit):
         # separator and save options
         #
         menu.addSeparator()
-        save_action = QAction("Save", self)
+        save = "Save"
+        save_action = QAction(save, self)
         save_action.triggered.connect(self.on_save)
+        save_action.setShortcut(QKeySequence("Ctrl+S"))
+        save_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(save_action)
 
         save_as_action = QAction("Save as", self)
@@ -83,6 +110,8 @@ class CsvPathTextEdit(QPlainTextEdit):
         menu.addSeparator()
         load_action = QAction("Load to group", self)
         load_action.triggered.connect(self.on_load)
+        load_action.setShortcut(QKeySequence("Ctrl+L"))
+        load_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(load_action)
         #
         # separator and run
@@ -90,10 +119,14 @@ class CsvPathTextEdit(QPlainTextEdit):
         #menu.addSeparator()
         run_action = QAction("Run", self)
         run_action.triggered.connect(self.on_run)
+        run_action.setShortcut(QKeySequence("Ctrl+R"))
+        run_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(run_action)
         menu.addSeparator()
         append_action = QAction("Append a csvpath", self)
         append_action.triggered.connect(self.on_append)
+        append_action.setShortcut(QKeySequence("Shift+Ctrl+A"))
+        append_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(append_action)
         #
         # submenus
@@ -289,6 +322,7 @@ class CsvPathTextEdit(QPlainTextEdit):
             self.parent.reset_saved()
 
     def on_save(self) -> None:
+        print(f"csvpath_text_edit: on_save!")
         #
         # if the path is under the inputs or archive we have to save-as, not just save
         #

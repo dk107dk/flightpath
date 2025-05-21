@@ -88,6 +88,6 @@ app = BUNDLE(
         'LSMinimumSystemVersion':'12.0.0',
         'CFBundleShortVersionString': build_number,
         'ITSAppUsesNonExemptEncryption': False,
-        'NSHighResolutionCapable': False
+        'NSHighResolutionCapable': True
     },
 )

@@ -4,13 +4,16 @@
             width:80px; white-space: wrap; background-color:#494949; border:1px solid #494949;color:#fff;
         }
         td.center {
-            width:80px; white-space: wrap; text-align:center; border-left:1px solid #494949; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#fff;
+            font-style:italic; color:#000; width:80px; white-space: wrap; text-align:center; border-left:1px solid #494949; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#fff;
         }
         td.right {
-            white-space: wrap; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#fff;
+            color:#000; white-space: wrap; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#fff;
         }
         td.bottom {
             border-bottom:1px solid #494949;
+        }
+        th {
+                background-color:#666;
         }
 
    </style>
@@ -28,10 +31,22 @@
             </p>
 
 
-<h3 style="margin-top:25px;">
+<h3 style="margin-top:30px;">
 Basic Info
 </h3>
-<table cellspacing="0" cellpadding="2" >
+<table cellspacing="0" cellpadding="2" style="margin-top:5px;">
+    <tr>
+        <th class='left' width="120">
+            Field
+        </th>
+        <th class='center' width="120">
+            Value this run
+        </th>
+        <th class='right'>
+            What does it mean?
+        </th>
+    </tr>
+
     <tr>
         <td class='left' width="120">
             Identity
@@ -119,13 +134,7 @@ Basic Info
         <td class='right '>
             One-off runs in FlightPath are always configured to collect lines. This is because they are run using the <i>collect()</i> method on the <i>CsvPath</i> class. If you ran a named-paths group using one of the fast-forward methods your run would not be configured to collect lines because the fast-forward methods drop matched and unmatched lines, resulting in metadata, variables, and errors only.
         </td>
-
-
-
     </tr>
-
-
-
     <tr>
         <td class='left bottom'>
            Error format
@@ -177,7 +186,21 @@ An error that looks like:
 <h3 style="margin-top:30px;">
 Detailed Run Configuration
 </h3>
-<table cellspacing="0" cellpadding="2" >
+<table cellspacing="0" cellpadding="2" style="margin-top:5px;">
+    <tr>
+        <th class='left' width="120">
+            Field
+        </th>
+        <th class='center' width="120">
+            Value this run
+        </th>
+        <th class='right'>
+            What does it mean?
+        </th>
+    </tr>
+
+
+
     <tr>
         <td class='left ' width="120">
             Logging level

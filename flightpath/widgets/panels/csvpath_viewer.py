@@ -19,9 +19,9 @@ from flightpath.widgets.panels.table_model import TableModel
 from flightpath.util.printer import CapturePrinter
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.log_utility import LogUtility as lout
-from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_collector import FileCollector
 from flightpath.util.style_utils import StyleUtility as stut
+from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.highlighters import MultiHighlighter, CommentHighlighter
 from flightpath.util.syntax_highlighter import CsvpathHighlighter
 from flightpath.util.run_info import RunInfo
@@ -199,6 +199,7 @@ class CsvpathViewer(QWidget):
             #
             ...
         # if we don't have the file in the cstr already add it
+        print(f"csvpathviewer.run_one_csvpath: filepath: {filepath}, cstr: {cstr}")
         if cstr.find(filepath) == -1:
             csvpath = f"~{comment}~ ${filepath}{cstr.lstrip('$')}"
         else:

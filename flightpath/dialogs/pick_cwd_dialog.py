@@ -7,7 +7,6 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QHBoxLayout,
         QPushButton,
         QLabel,
-        QFileDialog,
         QMessageBox,
         QDialog
 )
