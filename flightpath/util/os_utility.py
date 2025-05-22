@@ -4,6 +4,10 @@ import sys
 class OsUtility:
 
     @classmethod
+    def is_sandboxed(cls) -> bool:
+        return os.environ.get("APP_SANDBOX_CONTAINER_ID") is not None
+
+    @classmethod
     def is_windows(cls) -> bool:
         return sys.platform == "win32"
 

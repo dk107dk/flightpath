@@ -88,6 +88,9 @@ class SidebarArchive(QWidget):
             self._setup_view_context_menu()
         self.setLayout(layout)
 
+    def update_style(self) -> None:
+        self.model.set_style(self.view.style())
+
     def refresh(self) -> None:
         if self.view:
             layout = self.layout()  # Get the existing layout
