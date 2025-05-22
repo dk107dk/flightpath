@@ -162,6 +162,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.rt_col.update()
         self.main.update()
         self.centralWidget().update()
+        #
+        # handle the file trees specially. there is probably a better way.
+        #
+        self.sidebar_rt_top.update_style()
+        self.sidebar_rt_mid.update_style()
+        self.sidebar_rt_bottom.update_style()
+
 
     def state_check(self) -> bool:
         self.state = State()
@@ -366,18 +373,22 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self._connects()
 
     def renew_sidebar_archive(self) -> None:
+        print(f"main.renew_sidebar_archive: starting")
         d = self.sidebar_rt_bottom
         self.sidebar_rt_bottom = SidebarArchive(main=self, config=self.csvpath_config, role=3)
         self.rt_col.replaceWidget(2, self.sidebar_rt_bottom)
         self.sidebar_rt_bottom.view.clicked.connect(self.on_archive_tree_click)
         d.deleteLater()
+        print(f"main.renew_sidebar_archive: done")
 
     def renew_sidebar_named_files(self) -> None:
+        print(f"main.renew_sidebar_files: starting")
         d = self.sidebar_rt_top
         self.sidebar_rt_top = SidebarNamedFiles(main=self, config=self.csvpath_config, role=3)
         self.rt_col.replaceWidget(0, self.sidebar_rt_top)
         self.sidebar_rt_top.view.clicked.connect(self.on_named_file_tree_click)
         d.deleteLater()
+        print(f"main.renew_sidebar_files: done")
 
     def renew_sidebar_named_paths(self) -> None:
         d = self.sidebar_rt_mid
@@ -779,6 +790,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.main.setSizes([4, 1])
 
     def is_writable(self, path) -> bool:
+        return fiut.is_writable_dir(path)
+        """
         try:
             if not os.path.exists(path):
                 return False
@@ -799,40 +812,24 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         except Exception as e:
             print(f"Error in is_writable: {type(e)}: {e}")
             return False
+        """
 
     def on_set_cwd_click(self):
-        #
-        # the Qt dialog is more relable in some circumstances
-        #
-        """
-        path = QFileDialog.getExistingDirectory(
-            parent=self,
-            caption="Pick a new project location",
-            dir=self.state.home,
-            options=QFileDialog.Option.DontUseNativeDialog,
-        )
-        if path:
-            path = str(path)
-            self.state.cwd = path
-            self.load_state_and_cd()
-            self.statusBar().showMessage(f"  Working directory changed to: {self.state.cwd}")
-        """
         caption = "FlightPath requires a project directory. Please pick one."
         home = str(Path.home())
         print(f"main.on_set_cwd_click: home: {home}")
-        """
         path = QFileDialog.getExistingDirectory(
-            parent=self,
-            caption=caption,
-            dir=home
-            #options=QFileDialog.Option.DontUseNativeDialog,
+                self,
+                caption,
+                options=QFileDialog.Option.ShowDirsOnly,
+                dir=home
         )
+        print(f"main.on_set_cwd_click: selected path: {path}")
         """
-
-        path = QFileDialog.getExistingDirectory(self, caption)
         if path is None or path.strip() == "":
+            print(f"main.on_set_cwd_click: path was None or empty. trying again")
             path = QFileDialog.getExistingDirectory(self, caption, dir=".")
-
+        """
         print(f"main.on_set_cwd_click: path: {path}")
         if path:
             if self.is_writable(path):
@@ -847,8 +844,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 msg_box.setStandardButtons(QMessageBox.Ok)
                 msg_box.exec()
                 self.on_set_cwd_click()
-
-
 
 
     def on_reload_data(self) -> None:

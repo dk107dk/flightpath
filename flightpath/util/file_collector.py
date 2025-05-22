@@ -38,8 +38,14 @@ class FileCollector:
         # selects a single file. if the file is not in the project's folder tree it will be copied in.
         #
         d = QFileDialog()
-        #d.setOptions(QFileDialog.Option.DontUseNativeDialog)
+        d.setOptions(
+                QFileDialog.Option.DontResolveSymlinks |
+                QFileDialog.Option.ReadOnly |
+                QFileDialog.Option.DontUseCustomDirectoryIcons
+        )
         d.setFileMode(QFileDialog.FileMode.ExistingFile)
+        d.setViewMode(QFileDialog.ViewMode.List)
+        d.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
         if file_type_filter:
             d.setNameFilter(file_type_filter)
         if title:

@@ -112,3 +112,82 @@ class FileUtility:
                 print(f"fiut: real_home_dir: {parts}")
                 home = f"/{parts[1]}/{parts[2]}"
         return home
+
+    @classmethod
+    def is_new_writable(cls, path) -> bool:
+        try:
+            if os.path.exists(path):
+                #
+                # the name must be available
+                #
+                return False
+            if not os.path.exists(os.path.dirname(path)):
+                return False
+            with open( path, "w" ) as file:
+                file.write("test")
+            nos = Nos(path)
+            if nos.exists():
+                print("main.is_new_writable: file exists")
+                nos.remove()
+                return True
+            else:
+                print("main.is_new_writable: not writable")
+                return False
+        except Exception as e:
+            print(f"Error in is_new_writable: {type(e)}: {e}")
+            return False
+
+    @classmethod
+    def is_writable_dir(cls, path) -> bool:
+        print(f"main.is_writable_dir: checking writeability of: {path}")
+        try:
+            if not os.path.exists(path):
+                return False
+            from uuid import uuid4
+            t = f"{uuid4()}"
+            p = os.path.join(path, t)
+            print(f"main.is_writable_dir: attempting to write to: {p}")
+            return cls.is_new_writable(p)
+        except Exception as e:
+            print(f"Error in is_writable_dir: {type(e)}: {e}")
+            return False
+
+    @classmethod
+    def to_sandbox_path(cls, path:str) -> str:
+        if osut.is_mac() and osut.is_sandboxed():
+            insert = "/Library/Containers/com.flightpathdata.flightpath"
+            # do stuff
+            if path.find(insert) > -1:
+                print(f"FileUtility.to_sandbox_path: {path} appears to be in sandbox already.")
+                return path
+            #
+            # separating out Data is probably not needed, but it doesn't hurt and may help in some cases
+            #
+            insert = os.path.join(insert, "Data")
+            if path.startswith( os.path.expanduser('~') ):
+                print(f"FileUtility.to_sandbox_path: {path} is under the user's home at {os.path.expanduser('~')}")
+                top = path[0:len(os.path.expanduser('~'))]
+                bottom = path[len(os.path.expanduser('~')):]
+                new_path = f"{top}{insert}{bottom}"
+            elif path.startswith("/Users/"):
+                print(f"FileUtility.to_sandbox_path: {path} is under the users home at /Users/")
+                parts = pathu.parts(path)
+                bottom = path[len(f"/Users/{parts[2]}"):]
+                new_path = f"/Users/{parts[2]}{insert}{bottom}"
+            print(f"FileUtility.to_sandbox_path: {path} converted to {new_path}")
+            #
+            # not checking for existance or writability. caller's responsibility.
+            #
+            ndir = new_path
+            if os.path.exists(ndir) and os.path.isfile(ndir):
+                ndir = os.path.dirname(ndir)
+            if not cls.is_writable_dir(ndir):
+                print(f"FileUtility.to_sandbox_path: converted dir {ndir} is not writable")
+                return None
+            return new_path
+        elif osut.is_sandboxed():
+            print(f"Error: FileUtility.to_sandbox_path: must be a mac if sandboxed")
+            return None
+        else:
+            print(f"FileUtility.to_sandbox_path: not a mac. Cannot try to convert {path} to sandbox path.")
+            return None
