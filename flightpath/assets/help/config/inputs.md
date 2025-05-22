@@ -1,4 +1,4 @@
-# Inputs
+## Inputs
 
 The inputs section determines where CsvPath Framework looks for staged data and prepared named-paths groups. Along with the <i>results</i> section's <i>archive</i> setting, this is the core operating environment for the Framework.
 

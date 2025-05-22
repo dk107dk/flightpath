@@ -86,6 +86,9 @@ class SidebarNamedFiles(QWidget):
             #
         self.setLayout(layout)
 
+    def update_style(self) -> None:
+        self.model.set_style(self.view.style())
+
 
 
     def refresh(self) -> None:

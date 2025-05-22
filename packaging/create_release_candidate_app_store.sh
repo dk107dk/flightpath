@@ -58,7 +58,7 @@ echo -e '\ncreating package...\n'
 # ship to apple
 #
 echo -e '\ntransporting .itmsp file to apple...\n'
-#source ./transport.sh
+source ./transport.sh
 
 #
 # clean up to help prevent junk from going into git
