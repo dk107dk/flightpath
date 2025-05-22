@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from flightpath.widgets.forms.blank_form import BlankForm
+from flightpath.widgets.forms.projects_form import ProjectsForm
 from flightpath.widgets.forms.cache_form import CacheForm
 from flightpath.widgets.forms.config_form import ConfigForm
 from flightpath.widgets.forms.extensions_form import ExtensionsForm
@@ -106,6 +107,7 @@ class ConfigPanel(QWidget):
 
         self.forms = [
             BlankForm(main=self.main),
+            ProjectsForm(main=self.main),
             CacheForm(main=self.main),
             ConfigForm(main=self.main),
             ErrorsForm(main=self.main),
@@ -127,39 +129,44 @@ class ConfigPanel(QWidget):
     def switch_form(self, index:QModelIndex):
         form = index.data()
         parent = None
+        fallback = f"config{os.sep}about.md"
         if index.parent():
             parent = index.parent().data()
-        if form == "cache" or parent == "cache":
-            self.main.config.show_help_for_form("cache", fallback="about")
+        if form == "projects" or parent == "projects":
+            self.main.config.show_help_for_form("projects", fallback=fallback)
             self.forms_layout.setCurrentIndex(1)
+            self.title.setText("Projects")
+        if form == "cache" or parent == "cache":
+            self.main.config.show_help_for_form("cache", fallback=fallback)
+            self.forms_layout.setCurrentIndex(2)
             self.title.setText("Cache")
         if form == "config" or parent == "config":
-            self.main.config.show_help_for_form("config_path", fallback="about")
-            self.forms_layout.setCurrentIndex(2)
+            self.main.config.show_help_for_form("config_path", fallback=fallback)
+            self.forms_layout.setCurrentIndex(3)
             self.title.setText("Config file")
         elif form == "errors" or parent == "errors":
-            self.main.config.show_help_for_form("errors", fallback="about")
-            self.forms_layout.setCurrentIndex(3)
+            self.main.config.show_help_for_form("errors", fallback=fallback)
+            self.forms_layout.setCurrentIndex(4)
             self.title.setText("Errors")
         elif form == "extensions" or parent == "extensions":
-            self.main.config.show_help_for_form("extensions", fallback="about")
-            self.forms_layout.setCurrentIndex(4)
+            self.main.config.show_help_for_form("extensions", fallback=fallback)
+            self.forms_layout.setCurrentIndex(5)
             self.title.setText("Extensions")
         elif form == "inputs" or parent == "inputs":
-            self.main.config.show_help_for_form("inputs", fallback="about")
-            self.forms_layout.setCurrentIndex(5)
+            self.main.config.show_help_for_form("inputs", fallback=fallback)
+            self.forms_layout.setCurrentIndex(6)
             self.title.setText("Inputs")
         elif form == "listeners" or parent == "listeners":
-            self.main.config.show_help_for_form("listeners", fallback="about")
-            self.forms_layout.setCurrentIndex(6)
+            self.main.config.show_help_for_form("listeners", fallback=fallback)
+            self.forms_layout.setCurrentIndex(7)
             self.title.setText("Listeners")
         elif form == "logging" or parent == "logging":
-            self.main.config.show_help_for_form("logging", fallback="about")
-            self.forms_layout.setCurrentIndex(7)
+            self.main.config.show_help_for_form("logging", fallback=fallback)
+            self.forms_layout.setCurrentIndex(8)
             self.title.setText("logging")
         elif form == "results" or parent == "results":
-            self.main.config.show_help_for_form("results", fallback="about")
-            self.forms_layout.setCurrentIndex(8)
+            self.main.config.show_help_for_form("results", fallback=fallback)
+            self.forms_layout.setCurrentIndex(9)
             self.title.setText("results")
 
     @property
@@ -201,6 +208,7 @@ class ConfigPanel(QWidget):
     def top_config_sections(self) -> list[str]:
         if self._sections is None:
             self._sections = []
+            self._sections.append("projects")
             for s in self.config._config.sections():
                 if self.is_integration(s):
                     continue
@@ -228,6 +236,8 @@ class ConfigPanel(QWidget):
                 if s == "extensions":
                     items.append("csv_files")
                     items.append("csvpath_files")
+                elif s == "projects":
+                    items = []
                 else:
                     for pair in self.config._config.items(s):
                         #
@@ -271,6 +281,12 @@ class ConfigPanel(QWidget):
         print(f"config_panel: save_all_forms: os.cwd: {os.getcwd()}")
         self.config.save_config()
         #
+        # note that some non-config.ini values must/will be saved when add_to_config() is
+        # called on their forms. e.g. projects.
+        #
+
+
+        #
         # need to refresh the inputs and results trees, but only
         # if the paths change
         #
@@ -282,7 +298,5 @@ class ConfigPanel(QWidget):
             self.main.sidebar_rt_mid.refresh()
         if archive != self.config.get(section="results", name="archive"):
             self.main.sidebar_rt_bottom.refresh()
-
-
 
 

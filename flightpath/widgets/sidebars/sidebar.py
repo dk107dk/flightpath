@@ -34,6 +34,7 @@ from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.help_finder import HelpFinder
 
 class Sidebar(QWidget):
+    NEW_PROJECT = "Create new project"
 
     def __init__(self, main, role=0):
         super().__init__()
@@ -56,13 +57,57 @@ class Sidebar(QWidget):
         self.cutted = None
         self.copied = None
 
+        """
         self.cwd_box = self._help_button(
             text="Set working directory",
             on_click=self.main.on_set_cwd_click,
             on_help=self.on_click_cwd_help
         )
         layout.addWidget(self.cwd_box)
+        """
+#         self.use_format.activated.connect(self.main.on_config_changed)
+#        self.use_format.clear()
+#        self.use_format.addItem("full")
+#            self.use_format.setCurrentText("bare")
+#       self.use_format.currentText()
+#
+        self.projects = QComboBox()
+        size = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.projects.setSizePolicy(size)
+        """
+        proj = self.main.state.current_project
+        projs = os.path.join(self.main.state.home, self.main.state.projects_home)
+        nos = Nos(projs)
+        lst = nos.listdir(dirs_only=True)
+        #
+        # should not have to filter dirs because dirs_only=True, but stupidly the files
+        # version of Nos only filters for files. to-be-fixed soon!
+        #
+        ps = [p for p in lst if not Nos(os.path.join(projs, p)).isfile()]
+        ps.sort()
+        for p in ps:
+            self.projects.addItem(p)
+            if p == proj:
+                self.projects.setCurrentText(p)
+        self.projects.insertSeparator(self.projects.count())
+        self.projects.addItem(self.NEW_PROJECT)
+        """
+        self._build_combo()
+        self.projects.activated.connect(self.on_project_changed)
+        self.projects.setStyleSheet("QComboBox { margin:1px; height:23px; }")
+        #
+        #
+        #
+        box = HelpIconPackager.add_help(
+            main=self.main,
+            widget=self.projects,
+            on_help=self.on_click_cwd_help
+        )
+        layout.addWidget(box)
 
+        #
+        #
+        #
         self._setup_tree()
 
         self.open_config_box = self._help_button(
@@ -80,6 +125,58 @@ class Sidebar(QWidget):
 
         self.stage_dialog = None
         self.load_dialog = None
+
+    def on_project_changed(self):
+        proj = self.projects.currentText()
+        if proj == self.NEW_PROJECT:
+            proj, ok = QInputDialog.getText(self, self.tr("New Project"), self.tr("Enter new project name:"), text="")
+        self.main.state.current_project = proj
+        print(f"Sidebar.on_project_changed: cur proj: {self.main.state.current_project}")
+        print(f"Sidebar.on_project_changed: rebuilding UI: {self.main.state.current_project}")
+        #
+        # update the working dir
+        #
+        #self.main.state.load_state_and_cd(self.main)
+        self.main.load_state_and_cd()
+        #
+        # recreate all UI parts
+        #
+        self.main._csvpath_config = None
+        self._setup_tree(replace=True)
+        self._build_combo()
+        #
+        # reload everything on the right
+        #
+        print(f"Sidebar.on_project_changed: rebuilding right side windows")
+        self.main.renew_sidebar_archive()
+        self.main.renew_sidebar_named_paths()
+        self.main.renew_sidebar_named_files()
+        #
+        # sometimes it gets confused about the l&f
+        #
+        self.main.on_color_scheme_changed()
+
+    def _build_combo(self) -> None:
+        self.projects.clear()
+        proj = self.main.state.current_project
+        print(f"Sidebar._build_combo: proj: {proj}")
+        projs = os.path.join(self.main.state.home, self.main.state.projects_home)
+        nos = Nos(projs)
+        lst = nos.listdir(dirs_only=True)
+        #
+        # should not have to filter dirs because dirs_only=True, but stupidly the files
+        # version of Nos only filters for files. to-be-fixed soon!
+        #
+        ps = [p for p in lst if not Nos(os.path.join(projs, p)).isfile()]
+        ps.sort()
+        for p in ps:
+            self.projects.addItem(p)
+            if p == proj:
+                self.projects.setCurrentText(p)
+                print(f"Sidebar._build_combo: setting cur proj: {proj}")
+        self.projects.insertSeparator(self.projects.count())
+        self.projects.addItem("Create new project")
+
 
     @property
     def last_file_index(self) -> QModelIndex:
@@ -109,7 +206,8 @@ class Sidebar(QWidget):
         if not self.main.helper.is_showing_help():
             self.main.helper.on_click_help()
 
-    def _setup_tree(self) -> None:
+    def _setup_tree(self, *, replace=False) -> None:
+        old = self.file_navigator
         self.file_navigator = CustomTreeView()
         self.file_model = QFileSystemModel()
         self.file_model.setRootPath(self.main.state.cwd)
@@ -170,7 +268,10 @@ class Sidebar(QWidget):
         self.file_navigator.setContextMenuPolicy(Qt.CustomContextMenu)
         self.file_navigator.customContextMenuRequested.connect(self._show_context_menu)
         self._setup_file_navigator_context_menu()
-        self.layout().addWidget(self.file_navigator)
+        if replace and old:
+            self.layout().replaceWidget(old, self.file_navigator)
+        else:
+            self.layout().addWidget(self.file_navigator)
 
 
     def _setup_file_navigator_context_menu(self):
@@ -518,6 +619,8 @@ class Sidebar(QWidget):
         # also tricky because we'd want to recreate the opened/closed state of the folders
         # and if we did that the refresh might slow down potentially a lot. so long-term,
         # seems like we should capture what is registered and manually add it. no fun. :/
+        #
+        # we're only actually doing named_paths here. what's up with that?
         #
         self.main.sidebar_rt_mid = SidebarNamedPaths(main=self.main, config=self.main.csvpath_config, role=2)
         self.main.rt_col.replaceWidget(1, self.main.sidebar_rt_mid)
