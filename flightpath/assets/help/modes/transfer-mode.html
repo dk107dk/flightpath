@@ -1,0 +1,74 @@
+<html>
+        <style>
+                .bottom {
+                    border-bottom:1px solid #494949;
+                }
+                .examples {
+                    text-align:left;
+                    border:0px solid #494949;
+                    margin-top:10px;
+                }
+                .left_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    vertical-align:middle;
+                    background-color:#494949;
+                    color:#fff;
+                }
+                .right_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    background-color:#fff;
+                    vertical-align:middle;
+                    color:#000;
+                }
+        </style>
+        <h2>
+            Mode: transfer-mode
+        </h2>
+        <p>
+        <i>transfer-mode</i> let's you copy <i>data.csv</i> or <i>unmatched.csv</i> to an arbitrary location in the transfers directory. The transfers directory is configured in <i>config/config.ini</i> under <i>[results] transfers</i>.
+        </p>
+        <p>
+        To use <i>transfer-mode</i> use the form <i>unmatched > var-name</i>, where <i>var-name</i> is the name of a variable holding the relative path under the transfer directory. You may have as many transfers as you like. Add more transfers by separating them with commas.
+
+        </p>
+        <p>
+        Note that <i>transfer-mode</i> has no effect on the original data. In keeping with CsvPath Framework's copy-on-write semantics, your data remains immutably registered in the archive. Also keep in mind that you can achieve a similar transfer result using the SFTP or CKAN integrations.
+        </p>
+
+        <h3 style="margin-top:25px;">
+            Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td class='left_example bottom' width="300">
+                        <p>
+                        This csvpath transfers its data.csv output to an external file named for a company.
+                        </p>
+                        <p>
+                        If the transfer directory is configured in <i>config.ini</i> to be at <i>/data/inbound</i>, the transferred file of first names will land at path like <i>/data/inbound/companies/01234567.txt</i>.
+                        </p>
+                </td>
+                <td class='right_example bottom'>
+<code>
+~
+id: transferring
+transfer-mode: data > my-path
+~
+    $[*][
+        #firstname
+
+        @my-path = concat("companies/", #company_id, ".txt")
+    ]
+</code>
+                </td>
+            </tr>
+        </table>
+</html>

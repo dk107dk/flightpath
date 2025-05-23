@@ -1,0 +1,99 @@
+<html>
+        <style>
+                .bottom {
+                    border-bottom:1px solid #494949;
+                }
+                .examples {
+                    text-align:left;
+                    border:0px solid #494949;
+                    margin-top:10px;
+                }
+                .left_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    vertical-align:middle;
+                    background-color:#494949;
+                    color:#fff;
+                }
+                .right_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    background-color:#fff;
+                    vertical-align:middle;
+                    color:#000;
+                }
+        </style>
+        <h2>
+            Mode: return-mode
+        </h2>
+        <p>
+        <i>return-mode</i> is a key part of how CsvPath Framework gives you the flexibility to tailor your validation strategy to your use case. With return mode you are selecting if you want to collect matching lines or unmatched lines.
+        </p>
+        <p>
+            When <i>return-mode</i> is <i>matches</i> all matching lines will be returned by next() or collect(). (fast_forward() never returns lines, regardless of mode). This is the default behavior.
+        </p>
+        <p>
+            When <i>return-mode</i> is <i>no-matches</i> only the unmatched lines will be returned by next() or collect().
+        </p>
+        <p>
+        The simplicity of <i>return-mode</i> makes a big difference in combination with <i>logic-mode</i> and <i>unmatched-mode</i>.
+
+        </p>
+
+        <p>
+        <table style="background-color:#fff" cellpadding="4px" cellspacing="0">
+                <tr>
+                        <td  class='left_example' style="padding:4px">
+                                <i>return-mode</i>
+                        </td>
+                        <td class='right_example' >
+                            Tells if we care about matching or unmatched lines.
+                        </td>
+                </tr>
+                <tr>
+                        <td class='left_example'  style="padding:4px">
+                            <i>logic-mode</i>
+                        </td>
+                        <td class='right_example'>
+                            Specifies if a line must meet all criteria or just one criteria in order to be a match.
+                        </td>
+                </tr>
+                <tr>
+                        <td class='left_example bottom'  style="padding:4px">
+                                <i>unmatched-mode</i>
+                        </td>
+                        <td class='right_example bottom' >
+                              Determines if we capture unmatched lines or just drop them.
+                        </td>
+                </tr>
+            </table>
+        </p>
+
+
+        <h3 style="margin-top:25px;">
+            Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td class='left_example bottom' width="300">
+                        <p>
+                            This setup returns only the unmatched lines. In this case we are collecting only the even numbered lines.
+                        </p>
+                 </td>
+                <td class='right_example bottom'>
+<code>
+    ~ return-mode:no-matches ~
+    $[*][
+        odd(line_number())
+    ]
+</code>
+                </td>
+            </tr>
+        </table>
+</html>

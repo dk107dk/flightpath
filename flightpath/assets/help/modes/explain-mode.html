@@ -1,0 +1,76 @@
+<html>
+        <style>
+                .bottom {
+                    border-bottom:1px solid #494949;
+                }
+                .examples {
+                    text-align:left;
+                    border:0px solid #494949;
+                    margin-top:10px;
+                }
+                .left_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    vertical-align:middle;
+                    background-color:#494949;
+                    color:#fff;
+                }
+                .right_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    background-color:#fff;
+                    vertical-align:middle;
+                    color:#000;
+                }
+        </style>
+        <h2>
+            Mode: explain-mode
+        </h2>
+        <p>
+        The <i>explain-mode</i> setting configures the CsvPath Framework to provide additional information about line matching. The values are <i>explain</i> and <i>no-explain</i>. <i>explain-mode</i> defaults to <i>no-explain</i>.
+        </p>
+        <p>
+        When set, a step-by-step explanation of the values, assignments, match, etc. are dumped to the log on level <i>INFO</i> for each line in the file being processed. This can be an aid to debugging but it is performance expensive. The hit can be around 20-25%.
+        </p>
+        <p>
+        <i>explain-mode</i> is set in an external comment. Like all the modes, it is a metadata field, so it follows the name+colon form of user-set metadata.
+        </p>
+        <h3 style="margin-top:25px;">
+            Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td class='left_example' width="300">
+                        <i>explain</i> means the log file will include additional information explaining how the match decision for each line was made.
+                 </td>
+                <td class='right_example'>
+<code>
+    ~ explain-mode:explain ~
+    $[*][ yes() ]
+</code>
+                </td>
+            </tr>
+            <tr>
+                <td class='left_example bottom' width="300">
+                        The output from the above might look like this.
+                 </td>
+                <td class='right_example bottom'>
+                <code>
+2025-05-22 15:37:05,300 - INFO - csvpath - Dumping explanation:
+2025-05-22 15:37:05,300 - INFO - csvpath -   String(string.notnone:cat) did matching   resulting in True
+2025-05-22 15:37:05,300 - INFO - csvpath -   String(string.notnone:bert) did matching   resulting in True
+2025-05-22 15:37:05,300 - INFO - csvpath -   String(string:miew) did matching   resulting in True
+2025-05-22 15:37:05,300 - INFO - csvpath -   Line(line:None) did matching   resulting in True
+                </code>
+            </tr>
+
+
+        </table>
+
+</html>
