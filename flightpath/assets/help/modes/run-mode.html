@@ -1,0 +1,74 @@
+<html>
+        <style>
+                .bottom {
+                    border-bottom:1px solid #494949;
+                }
+                .examples {
+                    text-align:left;
+                    border:0px solid #494949;
+                    margin-top:10px;
+                }
+                .left_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    vertical-align:middle;
+                    background-color:#494949;
+                    color:#fff;
+                }
+                .right_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    background-color:#fff;
+                    vertical-align:middle;
+                    color:#000;
+                }
+        </style>
+        <h2>
+            Mode: run-mode
+        </h2>
+        <p>
+        <i>run-mode</i> blocks a csvpath from running. The value is principally during testing when you may not want a certain csvpath to run with the other csvpaths in a group.
+
+        </p>
+
+
+        <h3 style="margin-top:25px;">
+            Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td class='left_example bottom' width="300">
+                        <p>
+                        The <i>not-going-to-run</i> csvpath will not participate in its named-paths group. <i>let's run!</i> will participate, as normal.
+                        </p>
+                        <p>
+                        The <i>run-mode</i> default is <i>run</i> so you wouldn't typically see that setting.
+                        </p>
+                 </td>
+                <td class='right_example bottom'>
+<code>
+   ~
+   id: not-going-to-run
+   run-mode:no-run ~
+   $[*][
+       print("I'm going to sit this one out")
+   ]
+
+   ---- CSVPATH ----
+
+   ~ id: let's run!
+   ~
+   $[*][
+       print("I'm ready to go")
+   ]
+</code>
+                </td>
+            </tr>
+        </table>
+</html>
