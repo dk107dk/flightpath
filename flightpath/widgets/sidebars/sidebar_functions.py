@@ -131,7 +131,6 @@ class SidebarFunctions(QWidget):
                 "explain-mode",
                 "files-mode",
                 "logic-mode",
-                "match-mode",
                 "print-mode",
                 "return-mode",
                 "run-mode",

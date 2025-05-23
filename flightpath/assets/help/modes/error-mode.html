@@ -1,0 +1,65 @@
+<html>
+        <style>
+                .bottom {
+                    border-bottom:1px solid #494949;
+                }
+                .examples {
+                    text-align:left;
+                    border:0px solid #494949;
+                    margin-top:10px;
+                }
+                .left_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    vertical-align:middle;
+                    background-color:#494949;
+                    color:#fff;
+                }
+                .right_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    background-color:#fff;
+                    vertical-align:middle;
+                    color:#000;
+                }
+        </style>
+        <h2>
+            Mode: error-mode
+        </h2>
+        <p>
+        <i>error-mode</i> determines how errors are presented in printouts. The values are <i>bare</i> and <i>full</i>. Error mode overrides the error format setting in the CsvPath Framework config file on a csvpath-by-csvpath basis.
+        </p>
+        <p>
+        <i>error-mode</i> is set in an external comment. Like all the modes, it is a metadata field, so it follows the name+colon form of user-set metadata. The value set in <i>config.ini</i> will take precedence when the mode is not used.
+
+        </p>
+        <h3 style="margin-top:25px;">
+            Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td class='left_example bottom' width="300">
+                        <p>
+                        <i>full</i> means format errors in printouts using the <i>config.ini</i> file's <i>[error]</i> section, <i>format</i> key. You can set the format for all csvpaths in all runs using the config panel in FlightPath. Or you can use this mode to set it for a specific csvpath.
+                        </p>
+                        <p>
+                                        In this case the output would have no information beyond the error message. More complete information would still be available in error JSON objects collected for the run.
+
+                        </p>
+                 </td>
+                <td class='right_example bottom'>
+<code>
+    ~ error-mode:bare ~
+    $[*][ yes() ]
+</code>
+                </td>
+            </tr>
+            </tr>
+        </table>
+</html>

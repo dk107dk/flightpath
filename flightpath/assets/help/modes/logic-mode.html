@@ -1,0 +1,91 @@
+<html>
+        <style>
+                .bottom {
+                    border-bottom:1px solid #494949;
+                }
+                .examples {
+                    text-align:left;
+                    border:0px solid #494949;
+                    margin-top:10px;
+                }
+                .left_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    vertical-align:middle;
+                    background-color:#494949;
+                    color:#fff;
+                }
+                .right_example {
+                    white-space: wrap;
+                    text-align:left;
+                    border-left:1px solid #494949;
+                    border-top:1px solid #494949;
+                    border-right:1px solid #494949;
+                    background-color:#fff;
+                    vertical-align:middle;
+                    color:#000;
+                }
+        </style>
+        <h2>
+            Mode: logic-mode
+        </h2>
+        <p>
+        <i>logic-mode</i> controls the relationship between match components during line-matching. For each line of a data file the match components together determine if the line is considered to have matched. A match component is each unit of logic. For example <i>@a == 1</i>. In this case, the attribute <i>a</i> is equal to the integer <i>1</i>. If we put two of these units of logic into a csvpath there are two match components. <i>logic-mode</i> tells us if we are ANDing the two components or ORing them.
+        </p>
+        <p>
+        Csvpaths are essentially predicate logic rules made of simple components. If we AND the components we are saying that all components must be true for a line to match. If we OR the components we consider the line to match if any one of the components is true.
+        </p>
+        <p>
+            The values for <i>logic-mode</i> are <i>AND</i> and <i>OR</i>.
+        </p>
+        <p>
+            Keep in mind that when we say a line matches we are only saying that all the match components taken together say the line should be kept. We are not saying if the line is valid or invalid. You can keep matching or unmatched lines. It is up to the csvpath writer to determine if a matched line is valid or invalid. This stance is different from validation languages like XSD, DTD or SQL's DDL, where a data passes a schema or not. CsvPath Language is more like Schematron or SQL's DML (i.e. queries, not schemas).
+        </p>
+        <h3 style="margin-top:25px;">
+            Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td class='left_example ' width="300">
+                        <p>
+                        <i>AND</i> means all match components must agree on true for a line to match. This csvpath will match all lines because its two match components are always true.
+                        </p>
+                 </td>
+                <td class='right_example '>
+<code>
+    ~ logic-mode:AND ~
+    $[*][ yes() 1 == 1 ]
+</code>
+                </td>
+            </tr>
+            <tr>
+                <td class='left_example ' width="300">
+                        <p>
+                        <i>OR</i> means a match component be true for a line to match. This csvpath will never match because its two match components are never true.
+                        </p>
+                 </td>
+                <td class='right_example '>
+<code>
+    ~ logic-mode:OR ~
+    $[*][ no() 1 == 2 ]
+</code>
+                </td>
+            </tr>
+            <tr>
+                <td class='left_example bottom' width="300">
+                        <p>
+                        This csvpath will always match because one of its two match components is always true.
+                        </p>
+                 </td>
+                <td class='right_example bottom'>
+<code>
+    ~ logic-mode:OR ~
+    $[*][ yes() 1 == 2 ]
+</code>
+                </td>
+            </tr>
+        </table>
+</html>
