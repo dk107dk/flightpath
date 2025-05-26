@@ -1,50 +1,43 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-    table td { padding:5px;  }
-</style>
-<h2>
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
         Symbol: '
-</h2>
-<p>
-    Single quotes are used to create are used with header names that have spaces in them in two ways:
-    <ul>
-       <li>In general, single (or double) quotes can wrap a header name with spaces
-       <li>Within <i>print()</i> only single quotes can wrap header names with spaces
-    </ul>
-
-</p>
-<hr>
-<h3 style="font-weight:bold;">
-Usage
-</h3>
-<table  width="100%" cellspacing="0" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+        </h2>
+        <p>
+            Single quotes are used to create are used with header names that have spaces in them in two ways:
+            <ul>
+               <li>In general, single (or double) quotes can wrap a header name with spaces
+               <li>Within <i>print()</i> only single quotes can wrap header names with spaces
+            </ul>
+        </p>
+        <h3 >
+           Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
             This header name has a space so it must be wrapped in single or double quotes.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
-                    $[*][ #'my name' == "Fred" -> print("hello Fred") ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-<table  width="100%" cellspacing="0" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            Within a print string you must wrap header names with spaces in single-quotes, not double-quotes.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
-                    $[*][ print("Hello, $.headers.'my name'!") ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+   $[*][ #'my name' == "Fred" -> print("hello Fred") ]
+</code>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                    Within a print string you must wrap header names with spaces in
+                    single-quotes, not double-quotes.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+   $[*][ print("Hello, $.headers.'my name'!") ]
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
 </html>

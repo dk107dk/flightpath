@@ -1,51 +1,58 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-    table td { padding:5px;  }
-</style>
-<h2>
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
         Keyword: ID / Id / id / NAME / Name / name
-</h2>
-<p>
-    When multiple csvpaths run together as a named-paths group it is very helpful to identify them individually. Their identity shows up in validation and error messages, the log, and in references, and the resulting file outputs.
-</p>
-<p>
-Csvpaths are given identities by adding a metadata comment above (or less commonly below) the csvpath statement. Comments are wrapped in <i>~</i> characters.
-Within the comment metadata fields are identitied by a colon separating the name from the value. To set an identity use one of these metadata field names:
-<ul>
-        <li> id
-        <li> Id
-        <li> ID
-        <li> name
-        <li> Name
-        <li> NAME
-</ul>
-If two are set the identity is taken in this order. E.g. an <i>id</i> will set the identity, overriding a <i>name</i>
-</p>
-<p>
-If you do not give your csvpaths an identity the 0-based index within the named-paths group will be used.
-You will also see the index in the metadata resulting from a run referred to as the csvpath's identity and as the automatically-set value of the <i>NAME</i> metadata field, unless you set <i>NAME</i> yourself.
-Note that <i>NAME</i> is the lowest priority identity keyword and is overriden by the others.
-</p>
-<hr>
-<h3 style="font-weight:bold;">
-Usage
-</h3>
-<table  width="100%" cellspacing="0" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-                This csvpath will cause a function error message that will include the csvpath's identity so you can find the problem quickly.
+        </h2>
+        <p>
+            When multiple csvpaths run together as a named-paths group it is
+            very helpful to identify them individually. Their identity shows up
+            in validation and error messages, the log, and in references, and
+            the resulting file outputs.
+        </p>
+        <p>
+        Csvpaths are given identities by adding a metadata comment above (or less
+        commonly below) the csvpath statement. Comments are wrapped in <i>~</i>
+        characters. Within the comment metadata fields are identitied by a colon
+        separating the name from the value. To set an identity use one of these
+        metadata field names:
+        <ul>
+                <li> id
+                <li> Id
+                <li> ID
+                <li> name
+                <li> Name
+                <li> NAME
+        </ul>
+        If two are set the identity is taken in this order. E.g. an <i>id</i>
+        will set the identity, overriding a <i>name</i>
+        </p>
+        <p>
+        If you do not give your csvpaths an identity the 0-based index within
+        the named-paths group will be used. You will also see the index in the
+        metadata resulting from a run referred to as the csvpath's identity and
+        as the automatically-set value of the <i>NAME</i> metadata field,
+        unless you set <i>NAME</i> yourself. Note that <i>NAME</i> is the
+        lowest priority identity keyword and is overriden by the others.
+        </p>
+        <h3 >
+           Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                This csvpath will cause a function error message that will include
+                the csvpath's identity so you can find the problem quickly.
         </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
+                <td class='value border-ltr border-bottom code'>
+<code>
 ~ id: invoices
-description: this csvpath breaks because "five" is not a number.
+  description: this csvpath breaks because "five" is not a number.
 ~
 $[*][ @n = add("five", no()) ]
-            </code>
-        </td>
-    </tr>
-</table>
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
 </html>

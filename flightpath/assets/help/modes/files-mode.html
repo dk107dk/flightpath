@@ -1,34 +1,6 @@
 <html>
-        <style>
-                .bottom {
-                    border-bottom:1px solid #494949;
-                }
-                .examples {
-                    text-align:left;
-                    border:0px solid #494949;
-                    margin-top:10px;
-                }
-                .left_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    vertical-align:middle;
-                    background-color:#494949;
-                    color:#fff;
-                }
-                .right_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    background-color:#fff;
-                    vertical-align:middle;
-                    color:#000;
-                }
-        </style>
+    {% include "templates/styles.html" %}
+   <body>
         <h2>
             Mode: files-mode
         </h2>
@@ -45,50 +17,50 @@
         <i>errors.json<i>, <i>vars.json<i>, <i>meta.json<i>, and <i>manifest.json<i> are always generated, regardless of <i>files-mode</i>. When you set <i>files-mode</i> to <i>all</i> CsvPath Framework will double-check that meta, vars, errors files were correctly created, but that part of its checking is largely superfluous.
         </p>
         <p>
-        <table style="background-color:#fff" cellpadding="4px" cellspacing="0">
-                <tr>
-                        <td  class='left_example' style="padding:4px">
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr ">
                                 all
-                        </td>
-                        <td class='right_example' >
+                </td>
+                <td class='value border-ltr'>
 All file types are expected to be generated
-                        </td>
-                </tr>
-                <tr>
-                        <td class='left_example'  style="padding:4px">
+                </td>
+            </tr>
+            <tr>
+                <td width="300"  class="about border-ltr ">
 data / no-data
-                        </td>
-                        <td class='right_example'>
+                </td>
+                <td class='value border-ltr'>
 Determines if the data.csv file is expected
-                        </td>
-                </tr>
-                <tr>
-                        <td class='left_example'  style="padding:4px">
+                 </td>
+            </tr>
+            <tr>
+                <td width="300"  class="about border-ltr ">
 unmatched / no-unmatched
-                        </td>
-                        <td class='right_example' >
+                </td>
+                <td class='value border-ltr'>
 Determines if the unmatched.csv file is expected
-                        </td>
-                </tr>
-                <tr>
-                        <td class='left_example bottom'  style="padding:4px">
+                </td>
+            </tr>
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
 printouts / no-printouts
-                        </td>
-                        <td class='right_example bottom' >
+                </td>
+                <td class='value border-ltr border-bottom'>
 Determines if we expect anything to be sent to the Printer instances using print()
-                        </td>
-                </tr>
-            </table>
+                </td>
+           </tr>
+        </table>
         </p>
         <h3 style="margin-top:25px;">
             Usage
         </h3>
         <table cellspacing="0" cellpadding="2" class='examples' width="900">
             <tr>
-                <td class='left_example' width="300">
+                <td width="300"  class="about border-ltr border-bottom">
                         The possible settings can be combined. This combination requires a <i>data.csv</i> and an <i>unmatched.csv</i> to both have been created.
                  </td>
-                <td class='right_example'>
+                <td class='value border-ltr border-bottom code'>
 <code>
     ~ files-mode:data, unmatched ~
     $[*][ yes() ]
@@ -96,17 +68,16 @@ Determines if we expect anything to be sent to the Printer instances using print
                 </td>
             </tr>
             <tr>
-                <td class='left_example bottom' width="300">
+                <td width="300"  class="about border-ltr border-bottom">
                         If there are no errors and no other printouts we would not expect a printouts file.
                  </td>
-                <td class='right_example bottom'>
-                <code>
+                <td class='value border-ltr border-bottom code'>
+<code>
     ~ files-mode:no-printouts ~
     $[*][ yes() ]
-                </code>
+</code>
+                </td>
             </tr>
-
-
         </table>
-
+   </body>
 </html>

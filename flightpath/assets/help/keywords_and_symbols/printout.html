@@ -1,67 +1,59 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-    table td { padding:5px;  }
-</style>
-<h2>
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
         Keyword: PRINTOUT
-</h2>
-<p>
-    The print function can send printouts to any number of printers.
-    (A <i>Printer</i> is a CsvPath Framework class that collects lines of output).
-    This capability is mainly used in named-paths group runs, not one-off validations.
-</p>
-<p>
-    Every run that has any output has a printouts.txt file. The printout.txt file contains all the printed strings separated in blocks for each printer.
-    The blocks are separated by single line in the form: <i>---- PRINTOUT: name</i>. Where <i>name</i> is the name used for the printer.
-</p>
-<p>
-The <i>print()</i> and <i>error()</i> functions typically print to the <i>default</i> printer. You can pass a specific printer name to <i>print()</i> as a second argument.
-</p>
-
-<hr>
-<h3 style="font-weight:bold;">
-Usage
-</h3>
-<table  width="100%" cellspacing="0" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            This csvpath prints to three print streams.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
+        </h2>
+        <p>
+            The print function can send printouts to any number of printers.
+            (A <i>Printer</i> is a CsvPath Framework class that collects lines of output).
+            This capability is mainly used in named-paths group runs, not one-off validations.
+        </p>
+        <p>
+            Every run that has any output has a printouts.txt file. The printout.txt file contains all the printed strings separated in blocks for each printer.
+            The blocks are separated by single line in the form: <i>---- PRINTOUT: name</i>. Where <i>name</i> is the name used for the printer.
+        </p>
+        <p>
+        The <i>print()</i> and <i>error()</i> functions typically print to the <i>default</i> printer. You can pass a specific printer name to <i>print()</i> as a second argument.
+        </p>
+        <h3 >
+           Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                    This csvpath prints to three print streams.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
 $[0][
     print("This goes to default")
-    error("This also goes to default, as well as throwing an error into errors.json")
+    error("This also goes to default, as well as into errors.json")
     print("This goes to micky-mouse operation", "micky-mouse operation")
     print("And this message goes to popsicle stand", "popsicle stand")
 ]
-            </code>
-        </td>
-    </tr>
-</table>
+</code>
+                </td>
+            </tr>
+        </table>
 
-<table  width="100%" cellspacing="0" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            This is the printouts.txt resulting from the csvpath above.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                    This is the printouts.txt resulting from the csvpath above.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
 ---- PRINTOUT: default
 This goes to default
-This also goes to default, as well as throwing an error into errors.json
+This also goes to default, as well as into errors.json
 ---- PRINTOUT: micky-mouse operation
 This goes to micky-mouse operation
 ---- PRINTOUT: popsicle stand
 And this message goes to popsicle stand
-            </code>
-        </td>
-    </tr>
-</table>
-
-
-
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
 </html>

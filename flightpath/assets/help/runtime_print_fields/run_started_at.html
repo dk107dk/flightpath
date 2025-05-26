@@ -1,34 +1,30 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-</style>
-<h2>
-        Print field: run_started_at
-</h2>
-<p>
-    <i>run_started_at</i> gives the timestamp when the run started. It will never change during the run.
-</p>
-
-<hr>
-<h3 >
-Usage
-</h3>
-<table  width="100%" cellspacing="0" cellpadding="5" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
+                Print field: run_started_at
+        </h2>
+        <p>
+            <i>run_started_at</i> gives the timestamp when the run started. It will never change during the run.
+        </p>
+        <h3 >
+        Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
               Use this field like this.
         </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
+                <td class='value border-ltr border-bottom code'>
+<code>
 $[0][
     print("$.csvpath.run_started_at")
 ]
-            </code>
-        </td>
-    </tr>
-</table>
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
 
 
 </html>
