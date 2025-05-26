@@ -1,61 +1,59 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-    table td { padding:5px;  }
-</style>
-<h2>
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
         Symbol: "
-</h2>
-<p>
-    Quotes are used to create string tokens within the match part of a csvpath. A string can stand alone, be assigned to a variable, used in a function, or compared.
-</p>
-<p>
-    Quotes are also used with header names that have spaces in them. A single or double quote can wrap a header name.
-</p>
-<hr>
-<h3 style="font-weight:bold;">
-Usage
-</h3>
-<table  width="100%" cellspacing="0" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            This is a string assigned to a variable. The variable is used in a print statement's string.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
-                $[*][ @hi = "hello" print("$.variable.hi friend") ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-<table  width="100%" cellspacing="0" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            This header name has a space so it must be wrapped in single or double quotes.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
-                    $[*][ #"my name" == "Fred" -> print("hello Fred") ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-<table  width="100%" cellspacing="0" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            Remember that within a print string you must wrap header names with spaces in single-quotes, not double-quotes.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
-                    $[*][ print("Hello, $.headers.'my name'!") ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-
+        </h2>
+        <p>
+            Quotes are used to create string tokens within the match part of a
+            csvpath. A string can stand alone, be assigned to a variable, used
+            in a function, or compared.
+        </p>
+        <p>
+            Quotes are also used with header names that have spaces in them. A
+            single or double quote can wrap a header name.
+        </p>
+        <h3 >
+           Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                    This is a string assigned to a variable. The variable is used
+                    in a print statement's string.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+   $[*][ @hi = "hello" print("$.variable.hi friend") ]
+</code>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                    This header name has a space so it must be wrapped in single or
+                    double quotes.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+  $[*][ #"my name" == "Fred" -> print("hello Fred") ]
+</code>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                    Remember that within a print string you must wrap header names with
+                    spaces in single-quotes, not double-quotes.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+  $[*][ print("Hello, $.headers.'my name'!") ]
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
 </html>

@@ -1,34 +1,6 @@
 <html>
-        <style>
-                .bottom {
-                    border-bottom:1px solid #494949;
-                }
-                .examples {
-                    text-align:left;
-                    border:0px solid #494949;
-                    margin-top:10px;
-                }
-                .left_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    vertical-align:middle;
-                    background-color:#494949;
-                    color:#fff;
-                }
-                .right_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    background-color:#fff;
-                    vertical-align:middle;
-                    color:#000;
-                }
-        </style>
+    {% include "templates/styles.html" %}
+   <body>
         <h2>
             Mode: source-mode
         </h2>
@@ -45,19 +17,17 @@
         <p>
         Keep in mind that <i>source-mode: preceding</i> is one of two ways to pass data from one csvpath to the next. The other way is to do a breadth-first run. A breadth-first run is one of the <i>_by_line</i> methods on the <i>CsvPaths</i> class: <i>collect_by_line()</i>, <i>fast_forward_by_line()</i>, and <i>next_by_line()</i>. The breadth-first methods pass a line's data to all csvpaths in a named-paths group before moving on to the next line. Each csvpath can modify the data in the line before passing it to the next csvpath. Both serial and breadth-first runs are supported in FlightPath.
         </p>
-
-
-        <h3 style="margin-top:25px;">
+        <h3 >
             Usage
         </h3>
         <table cellspacing="0" cellpadding="2" class='examples' width="900">
             <tr>
-                <td class='left_example bottom' width="300">
+                <td width="300"  class="about border-ltr border-bottom">
                         <p>
                              This named-paths group passes data from one to the next. The result is 1/2 of 1/2 of the starting data.
                         </p>
                 </td>
-                <td class='right_example bottom'>
+                <td class='value border-ltr border-bottom code'>
 <code>
 ~
 id: just the odds
@@ -79,4 +49,5 @@ id: quartering the set
                 </td>
             </tr>
         </table>
+   </body>
 </html>

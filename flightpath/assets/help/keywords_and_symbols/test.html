@@ -1,35 +1,28 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-    table td { padding:5px;  }
-</style>
-<h2>
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
         Symbol: $
-</h2>
-<p>
-    The dollar sign is the anchor of a reference.
-    <i>$</i> is used in all four types of references:
-    <ul>
-            <li> References that point to named-files, named-paths, or results to be used in a new run
-            <li> <i>print()</i> references that display header values, runtime stats, or variables
-            <li> References that feed data into a function
-            <li> A whole csvpaths in the form <i>$file[scan-instruction][match components]</i>
-     </ul>
-</p>
-<p>
-</p>
-<hr>
-<h3 style="font-weight:bold;">
-Usage
-</h3>
-<table  width="100%" cellspacing="0"  style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-             A named-file reference looks like this.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
+        </h2>
+        <p>
+            The dollar sign is the anchor of a reference.
+            <i>$</i> is used in all four types of references:
+            <ul>
+                    <li> References that point to named-files, named-paths, or results to be used in a new run
+                    <li> <i>print()</i> references that display header values, runtime stats, or variables
+                    <li> References that feed data into a function
+                    <li> A whole csvpaths in the form <i>$file[scan-instruction][match components]</i>
+             </ul>
+        </p>
+        <h3 >
+           Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                    A named-file reference looks like this.
+                </td>
+                <td class='value border-ltr border-bottom code'>
             <style>pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
 span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -107,36 +100,38 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 .highlight .il { color: #666 } /* Literal.Number.Integer.Long */</style><div class='code'><div class="highlight"><pre><span></span><span class="nv">$</span><span class="n">invoices.files.Acme</span><span class="p">/</span><span class="nt">orders</span><span class="p">/</span><span class="mi">202</span><span class="p">:</span><span class="nt">last</span>
 </pre></div>
 </div>
-        </td>
-    </tr>
-</table>
-<table  width="100%" cellspacing="0"  style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-             When using references in print statements you don't need the name. The currently acting csvpath, named or unnamed, is clear from the context.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-                <div class='code'><div class="highlight"><pre><span></span><span class="nv">$</span><span class="err">[*][ @</span><span class="n">hello</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;World&quot;</span><span class="w"> </span><span class="err">print(</span><span class="s2">&quot;Hi $.variables.hello&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">]</span>
-</pre></div>
-</div>
-        </td>
-    </tr>
-</table>
-
-<table  width="100%" cellspacing="0"  style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-             A csvpath match component can look up a variable from a previous run or a previous csvpath in the same run.
-             In this case, the <i>$people#invites</i> part of the reference is pointing to the named-results <i>people</i> and within that, the csvpath identified as <i>invites</i>.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-                <div class='code'><div class="highlight"><pre><span></span><span class="nv">$</span><span class="err">[*][ </span><span class="n">in</span><span class="p">(</span><span class="err">#first_name</span><span class="p">,</span><span class="w"> </span><span class="nv">$</span><span class="n">people</span><span class="err">#invites</span><span class="o">.</span><span class="err">variables</span><span class="o">.</span><span class="err">given_name</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">]</span>
-</pre></div>
-</div>
-        </td>
-    </tr>
-</table>
-
-
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                     When using references in print statements you don't need the name.
+                     The currently acting csvpath, named or unnamed, is clear from the
+                     context.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+                        <div class='code'><div class="highlight"><pre><span></span><span class="nv">$</span><span class="err">[*][ @</span><span class="n">hello</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;World&quot;</span><span class="w"> </span><span class="err">print(</span><span class="s2">&quot;Hi $.variables.hello&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">]</span>
+        </pre></div>
+        </div>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                     A csvpath match component can look up a variable from a previous
+                     run or a previous csvpath in the same run. In this case, the
+                     <i>$people#invites</i> part of the reference is pointing to the
+                     named-results <i>people</i> and within that, the csvpath
+                     identified as <i>invites</i>.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+                        <div class='code'><div class="highlight"><pre><span></span><span class="nv">$</span><span class="err">[*][ </span><span class="n">in</span><span class="p">(</span><span class="err">#first_name</span><span class="p">,</span><span class="w"> </span><span class="nv">$</span><span class="n">people</span><span class="err">#invites</span><span class="o">.</span><span class="err">variables</span><span class="o">.</span><span class="err">given_name</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">]</span>
+        </pre></div>
+        </div>
+                </td>
+            </tr>
+        </table>
+    </body>
 </html>
-

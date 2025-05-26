@@ -1,51 +1,49 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-</style>
-<h2>
-        Reference type: csvpath
-</h2>
-<p>
-    The <i>csvpath</i> reference type points to runtime data for the currently running csvpath. It is used exclusively in
-    the <i>print()</i> function.
-</p>
-<p>
-    See the runtime print fields help topic for more about what data is available.
-</p>
-<hr>
-<h3 style="font-weight:bold;">
-Usage
-</h3>
-<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-                This prints the line number.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
-                    $[*][ odd() -> print("This is an odd numbered row: $.csvpath.line_number") ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-                This prints the validity status at the end of a run.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
+                Reference type: csvpath
+        </h2>
+        <p>
+            The <i>csvpath</i> reference type points to runtime data for the currently running csvpath. It is used exclusively in
+            the <i>print()</i> function.
+        </p>
+        <p>
+            See the runtime print fields help topic for more about what data is available.
+        </p>
+        <h3>
+            Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                        This prints the line number.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
 $[*][
-last.nocontrib() ->
-    print("This file is valid: $.csvpath.valid")
+    odd() -> print("This is an odd numbered row: $.csvpath.line_number")
 ]
-            </code>
-        </td>
-    </tr>
-</table>
+</code>
+                </td>
+            </tr>
+        </table>
 
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                        This prints the validity status at the end of a run.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+$[*][
+    last.nocontrib() ->
+        print("This file is valid: $.csvpath.valid")
+]
+</code>
+                </td>
+            </tr>
+        </table>
 
+    </body>
 </html>

@@ -1,0 +1,84 @@
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
+            Qualifier: notnone
+        </h2>
+        <p>
+        <i>notnone</i> disallows a None value for a match component. None is the value of the <i>none()</i> function and is roughly equivalent to the Python <i>None</i>.
+        </p>
+        <p>
+        Within a <i>line()</i> structural schema <i>notnone</i> plays the same role as DDL's <i>NOT NULL</i> designation.
+        </p>
+        <h3>
+            Availability
+        </h3>
+        <table cellspacing="0" cellpadding="2" class="availablity">
+            <tr>
+                <td width="140"  class="about border-ltr centered">
+                    Functions
+                </td>
+                <td width="140"  class="about border-ltr centered">
+                   Headers
+                </td>
+                <td width="140"  class="about border-ltr centered">
+                    Variables
+                </td>
+            </tr>
+            <tr>
+                <td class='value border-bottom border-ltr centered' >
+                   Yes
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   No
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   Yes
+                </td>
+            </tr>
+        </table>
+        <h3>
+            Examples
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                        <p>
+                        A <i>line()</i> schema can use <i>notnone</i> to require a value.
+                        </p>
+                        <p>
+                        This schema requires the first header to be called <i>firstname</i>, have the <i>string()</i>, and always have a value.
+                        </p>
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+$[*][
+  line(
+    string.notnone(#firstname),
+    wildcard("*")
+  )
+]
+</code>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                        <p>
+                        Assignments can be conditional to a value being present.
+                        </p>
+                        <p>
+                        Here the <i>@firstname</i> only changes if there is a new non-None value in the <i>#firstname</i> header.
+                        </p>
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+$[*][
+  @firstname.notnone = #firstname
+]
+</code>
+                </td>
+            </tr>
+        </table>
+</html>

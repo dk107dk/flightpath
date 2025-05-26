@@ -1,0 +1,68 @@
+<html>
+    {% include "templates/styles.html" %}
+    <body>
+        <h2>
+            Qualifier: renew
+        </h2>
+        <p>
+        <i>renew</i> resets a <i>latch</i>ed match component.
+        </p>
+        <h3 style="margin-top:25px;">
+            Availability
+        </h3>
+        <table cellspacing="0" cellpadding="2" class="availablity">
+            <tr>
+                <td class="about border-ltr centered" width="140">
+                    Functions
+                </td>
+                <td class="about border-ltr centered" width="140">
+                   Headers
+                </td>
+                <td class="about border-ltr centered" width="140">
+                    Variables
+                </td>
+            </tr>
+            <tr>
+                <td class='value border-bottom border-ltr centered' >
+                   No
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   No
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   Yes
+                </td>
+            </tr>
+        </table>
+        <h3 style="margin-top:25px;">
+            Examples
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom code">
+                        <p>
+                            This csvpath only says hi to Eddie. A the end of
+                            a run, if the last line's first name is not <i>Eddie</i>
+                            <i>@m</i> will hold the first name and <i>@x</i> will be None.
+                        </p>
+                        <p>
+                        As a simple analogy,
+                        CsvPath Language variables are like HTTP session
+                        variables, in that they last across all lines in the whole
+                        document. However, the <i>renew</i> qualifier makes a variable act
+                        like a request-scoped variable, resetting after every line.
+                        </p>
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+$[*][
+    @m = #"First Name"
+    @m == "Eddie" -> @x.renew = yes()
+    @x.asbool -> print("Hi Eddie")
+ ]
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>

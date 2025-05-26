@@ -1,34 +1,6 @@
 <html>
-        <style>
-                .bottom {
-                    border-bottom:1px solid #494949;
-                }
-                .examples {
-                    text-align:left;
-                    border:0px solid #494949;
-                    margin-top:10px;
-                }
-                .left_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    vertical-align:middle;
-                    background-color:#494949;
-                    color:#fff;
-                }
-                .right_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    background-color:#fff;
-                    vertical-align:middle;
-                    color:#000;
-                }
-        </style>
+    {% include "templates/styles.html" %}
+   <body>
         <h2>
             Mode: transfer-mode
         </h2>
@@ -42,13 +14,12 @@
         <p>
         Note that <i>transfer-mode</i> has no effect on the original data. In keeping with CsvPath Framework's copy-on-write semantics, your data remains immutably registered in the archive. Also keep in mind that you can achieve a similar transfer result using the SFTP or CKAN integrations.
         </p>
-
-        <h3 style="margin-top:25px;">
+        <h3 >
             Usage
         </h3>
         <table cellspacing="0" cellpadding="2" class='examples' width="900">
             <tr>
-                <td class='left_example bottom' width="300">
+                <td width="300"  class="about border-ltr border-bottom">
                         <p>
                         This csvpath transfers its data.csv output to an external file named for a company.
                         </p>
@@ -56,7 +27,7 @@
                         If the transfer directory is configured in <i>config.ini</i> to be at <i>/data/inbound</i>, the transferred file of first names will land at path like <i>/data/inbound/companies/01234567.txt</i>.
                         </p>
                 </td>
-                <td class='right_example bottom'>
+                <td class='value border-ltr border-bottom code'>
 <code>
 ~
 id: transferring
@@ -71,4 +42,5 @@ transfer-mode: data > my-path
                 </td>
             </tr>
         </table>
+   </body>
 </html>

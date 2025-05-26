@@ -1,34 +1,6 @@
 <html>
-        <style>
-                .bottom {
-                    border-bottom:1px solid #494949;
-                }
-                .examples {
-                    text-align:left;
-                    border:0px solid #494949;
-                    margin-top:10px;
-                }
-                .left_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    vertical-align:middle;
-                    background-color:#494949;
-                    color:#fff;
-                }
-                .right_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    background-color:#fff;
-                    vertical-align:middle;
-                    color:#000;
-                }
-        </style>
+    {% include "templates/styles.html" %}
+   <body>
         <h2>
             Mode: unmatched-mode
         </h2>
@@ -38,18 +10,17 @@
         <p>
         With <i>unmatched-mode:keep</i> all unmatched lines land in <i>unmatched.csv</i>. With <i>no-keep</i> the unmatched lines are discarded.
         </p>
-
-        <h3 style="margin-top:25px;">
+        <h3 >
             Usage
         </h3>
         <table cellspacing="0" cellpadding="2" class='examples' width="900">
             <tr>
-                <td class='left_example bottom' width="300">
+                <td width="300"  class="about border-ltr border-bottom">
                         <p>
                         This csvpath keeps its unmatched lines. They will be found in <i>unmatched.csv</i> in the run directory, along with <i>data.csv</i> and the other typical run artifacts.
                         </p>
                 </td>
-                <td class='right_example bottom'>
+                <td class='value border-ltr border-bottom code'>
 <code>
 ~
 id: keeping unmatched
@@ -62,4 +33,5 @@ unmatched-mode: keep
                 </td>
             </tr>
         </table>
+   </body>
 </html>

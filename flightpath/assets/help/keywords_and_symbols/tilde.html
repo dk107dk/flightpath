@@ -1,110 +1,111 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-    table td { padding:5px;  }
-</style>
-<h2>
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
         Symbol: ~
-</h2>
-<p>
-The <i>~</i> surrounds a comment.
-
-</p>
-<p>
-    There are two types of comments:
-    <ul>
-            <li> Metadata comments that come above or (less often) below a csvpath
-            <li> Matching comments that are intermixed with the match components within the matching part of a csvpath
-    </ul>
-</p>
-<p>
-    Match component comments are simply a way to add documentation or comment out functionality you don't want to delete, but also don't want to be active.
-</p>
-<p>
-    Metadata comments are more interesting. They can have arbitrary text, whatever needed. But they can also have metadata fields. A metadata field is any word followed by a colon. The value of the field is all the text that comes before the next metadata keyword.
-</p>
-<p>
-    Metadata fields can be seen in the metadata of named-paths runs. More importantly, they are used as configuration modes. The modes control certain CsvPath Framework behavior on a csvpath-by-csvpath basis. Modes are powerful. You can read about them in their own documentation section.
-</p>
-<p>
-    The id/Id/ID or name/Name/NAME metadata field is also key. It assigns an identity to a csvpath that can help in reviewing logs, validation errors, metadata, and other places where knowing what csvpath was the source is important.
-</p>
-<p>
-    And, last but not least, integrations and other tools, including FlightPath, have their own metadata fields they look to for input from the user or an automation setup. These include:
-    <ul>
-        <li/> test-data
-        <li/> test-delimiter
-        <li/> test-quotechar
-    </ul>
-
-</p>
-
-<hr>
-<h3 style="font-weight:bold;">
-Usage
-</h3>
-<table  width="100%" cellspacing="0"  style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-             This comment comments-out a match component that would raise an error.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
+        </h2>
+        <p>
+        The <i>~</i>, the tilde, surrounds a comment.
+        </p>
+        <p>
+            There are two types of comments:
+            <ul>
+                    <li> Metadata comments that come above or (less often) below a csvpath
+                    <li> Matching comments that are intermixed with the match components
+                            within the matching part of a csvpath
+            </ul>
+        </p>
+        <p>
+            Match component comments are simply a way to add documentation or comment out
+            functionality you don't want to delete, but also don't want to be active.
+        </p>
+        <p>
+            Metadata comments are more interesting. They can have arbitrary text, whatever
+            needed. But they can also have metadata fields. A metadata field is any word
+            followed by a colon. The value of the field is all the text that comes before
+            the next metadata keyword.
+        </p>
+        <p>
+            Metadata fields can be seen in the metadata of named-paths runs. More
+            importantly, they are used as configuration modes. The modes control certain
+            CsvPath Framework behavior on a csvpath-by-csvpath basis. Modes are powerful.
+            You can read about them in their own documentation section.
+        </p>
+        <p>
+            The id/Id/ID or name/Name/NAME metadata field is also key. It assigns an
+            identity to a csvpath that can help in reviewing logs, validation errors,
+            metadata, and other places where knowing what csvpath was the source is
+            important.
+        </p>
+        <p>
+            And, last but not least, integrations and other tools, including FlightPath,
+            have their own metadata fields they look to for input from the user or an automation
+            setup. These include:
+            <ul>
+                <li> test-data
+                <li> test-delimiter
+                <li> test-quotechar
+            </ul>
+        </p>
+        <h3 >
+           Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                 This comment comments-out a match component that would raise an error.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
 $[*][ print("hello world") ~ add( "five", 3) ~ ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-<table  width="100%" cellspacing="0" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-                This comment sets the identity of this csvpath to <i>hello world example</i>.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
+</code>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                    This comment sets the identity of this csvpath to <i>hello world example</i>.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
 ~ id: hello world example ~
 $[*][ print("hello world") ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-<table  width="100%" cellspacing="0"  style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-             This comment adds two user-defined metadata fields:
-             <ul>
-                     <li> description, equal to <i>this is my first csvpath</i>
-                     <li> color_of_the_sky, set to the value <i>blue</i>
-             </ul>
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
+</code>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                 This comment adds two user-defined metadata fields:
+                     <ul>
+                             <li> description, equal to <i>this is my first csvpath</i>
+                             <li> color_of_the_sky, set to the value <i>blue</i>
+                     </ul>
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
 ~ description: this is my first csvpath color_of_the_sky: blue
 ~
 $[*][ print("hello world")]
-            </code>
-        </td>
-    </tr>
-</table>
-
-
-<table  width="100%" cellspacing="0"  style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-                This comment tells FlightPath to use <i>test.csv</i> as the test data and the pipe char as the delimiter during development.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
+</code>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                  This comment tells FlightPath to use <i>test.csv</i> as the test
+                  data and the pipe char as the delimiter during development.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
 ~ test-data:test.xlsx test-delimiter: | ~
 $[*][ print("hello world") ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
 </html>

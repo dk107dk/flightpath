@@ -1,0 +1,47 @@
+<html style='background-color:#c8d5df;'>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
+                Reference type: metadata
+        </h2>
+        <p>
+            The <i>metadata</i> reference type indicates values in the
+            currently executing csvpath's metadata collection.
+        </p>
+        <p>
+            A csvpath's metadata collection is
+            the set of user-defined and CsvPath Framework-defined fields found in
+            an external comment. External comments are comments that come before, or
+            less commonly after the csvpath expression itself. That means before the
+            root, starting with the '$' character, or after the last ']' character that
+            closes the matching part of the statement.
+        </p>
+        <p>
+            Within the external comment, a metadata field is a word followed by a colon.
+            The modes are captured from comments to metadata. Any user-defined
+            field is likewise captured.
+        </p>
+        <p>
+            The most common function of metadata is their use in <i>print()</i> functions.
+            Metadata is also seen in the results of named-paths group runs in the
+            <i>meta.json</i> file.
+        </p>
+        <h3>
+        Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                   This reference prints the current header's user-defined <i>description</i> field.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+~
+     description:An example of using metadata in a print function.
+~
+    $[*][ print("This is the description: $.metadata.description") ]
+</code>
+                </td>
+            </tr>
+        </table>
+</html>
