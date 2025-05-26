@@ -1,34 +1,6 @@
 <html>
-        <style>
-                .bottom {
-                    border-bottom:1px solid #494949;
-                }
-                .examples {
-                    text-align:left;
-                    border:0px solid #494949;
-                    margin-top:10px;
-                }
-                .left_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    vertical-align:middle;
-                    background-color:#494949;
-                    color:#fff;
-                }
-                .right_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    background-color:#fff;
-                    vertical-align:middle;
-                    color:#000;
-                }
-        </style>
+    {% include "templates/styles.html" %}
+   <body>
         <h2>
             Mode: logic-mode
         </h2>
@@ -49,12 +21,12 @@
         </h3>
         <table cellspacing="0" cellpadding="2" class='examples' width="900">
             <tr>
-                <td class='left_example ' width="300">
+                <td width="300"  class="about border-ltr ">
                         <p>
                         <i>AND</i> means all match components must agree on true for a line to match. This csvpath will match all lines because its two match components are always true.
                         </p>
                  </td>
-                <td class='right_example '>
+                <td class='value border-ltr code'>
 <code>
     ~ logic-mode:AND ~
     $[*][ yes() 1 == 1 ]
@@ -62,12 +34,12 @@
                 </td>
             </tr>
             <tr>
-                <td class='left_example ' width="300">
+                <td width="300"  class="about border-ltr ">
                         <p>
                         <i>OR</i> means a match component be true for a line to match. This csvpath will never match because its two match components are never true.
                         </p>
                  </td>
-                <td class='right_example '>
+                <td class='value border-ltr  code'>
 <code>
     ~ logic-mode:OR ~
     $[*][ no() 1 == 2 ]
@@ -75,12 +47,12 @@
                 </td>
             </tr>
             <tr>
-                <td class='left_example bottom' width="300">
+                <td width="300"  class="about border-ltr border-bottom">
                         <p>
                         This csvpath will always match because one of its two match components is always true.
                         </p>
                  </td>
-                <td class='right_example bottom'>
+                <td class='value border-ltr border-bottom code'>
 <code>
     ~ logic-mode:OR ~
     $[*][ yes() 1 == 2 ]
@@ -88,4 +60,5 @@
                 </td>
             </tr>
         </table>
+   </body>
 </html>

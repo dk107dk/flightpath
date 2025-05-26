@@ -1,0 +1,46 @@
+<html style='background-color:#c8d5df;'>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
+                Reference type: variables
+        </h2>
+        <p>
+            The <i>variables</i> reference type accesses values in the
+            currently executing csvpath's set of variables.
+        </p>
+        <p>
+            Csvpath variables are set within CsvPath Language using the <i>@</i> sign. A
+            variable named <i>@city</i> holds user defined data that presumably relates
+            to cities. Once set, variables typically hold values, possibly changing, for
+            the duration of the run.
+        </p>
+        <p>
+            A reference to the variables namespace is useful in at least two ways:
+            <ul>
+                    <li> Variable references can be used in <i>print()</i> statements
+                    <li> A variable reference can pull data in from the variables of
+                            a past run
+            </ul>
+            Currently, references to variables from past runs only accesses the most
+            recent run. In the future the capability to access any past run will probably
+            be added.
+        </p>
+        <h3>
+        Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                   This reference prints the <i>@description</i> variable.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+    $[*][
+    @description = #model
+    #color -> @description = concat(#color, " ", #model)
+    print("The car is a $.variables.description") ]
+</code>
+                </td>
+            </tr>
+        </table>
+</html>

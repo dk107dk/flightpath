@@ -1,0 +1,64 @@
+<html>
+    {% include "templates/styles.html" %}
+    <body>
+        <h2>
+            Qualifier: once
+        </h2>
+        <p>
+        <i>once</i> permits a match component to evaluate one and only one time.
+        </p>
+        <p>
+        After a component that carries the <i>once</i> qualifier has its only evaluation it has no future contribution to line matching. The effect is as if the <i>once</i> qualifier is replaced thereafter with the <i>nocontrib</i> qualifier.
+        </p>
+        <h3 style="margin-top:25px;">
+            Availability
+        </h3>
+        <table cellspacing="0" cellpadding="2" class="availablity">
+            <tr>
+                <td class="about border-ltr centered" width="140">
+                    Functions
+                </td>
+                <td class="about border-ltr centered" width="140">
+                   Headers
+                </td>
+                <td class="about border-ltr centered" width="140">
+                    Variables
+                </td>
+            </tr>
+            <tr>
+                <td class='value border-bottom border-ltr centered' >
+                   Yes
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   No
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   No
+                </td>
+            </tr>
+        </table>
+        <h3 style="margin-top:25px;">
+            Examples
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom code">
+                        <p>
+                        A side-effect like <i>print()</i> might use <i>once</i> to register a situation one time, rather than adding noise by continuing to announce the situation.
+                        </p>
+                        <p>
+                        This csvpath prints an alert if a header value goes above a certain level; however, it only prints it one time.
+                        </p>
+                </td>
+                <td class='value border-ltr border-bottom code'>
+
+<code>
+$[*][
+    gt(#temperature, 100) -> print.once("Too hot!")
+]
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>

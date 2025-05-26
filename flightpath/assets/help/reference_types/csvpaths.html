@@ -1,47 +1,49 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-</style>
-<h2>
-        Reference type: csvpaths
-</h2>
-<p>
-    The <i>csvpaths</i> reference type points to named-paths groups. It is used to create run references.
-</p>
-<p>
-    The main benefit of using csvpaths type references is that you can choose what csvpaths within the group are used in the run. Individual csvpaths can be selected, or you can select a starting or an ending csvpath.
-</p>
-<hr>
-<h3 style="font-weight:bold;">
-Usage
-</h3>
-<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-                This reference starts the run at the 3rd csvpath.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
-                    $shippment-tracking.cvspaths.2:from
-            </code>
-        </td>
-    </tr>
-</table>
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
+                Reference type: csvpaths
+        </h2>
+        <p>
+            The <i>csvpaths</i> reference type points to named-paths groups. It is used to create run references.
+        </p>
+        <p>
+            The main benefit of using csvpaths type references is that you can choose what csvpaths within the group are used in the run. Individual csvpaths can be selected, or you can select a starting or an ending csvpath.
+        </p>
+        <h3>
+        Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                        This reference starts the run at the 3rd csvpath.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
 
-<table  width="100%" cellspacing="0" cellpadding="2" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-                This reference starts the run at the 0th csvpath and stops it on the csvpath identified as <i>readings</i>.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
-                    $wind-troposphere.cvspaths.readings:to
-            </code>
-        </td>
-    </tr>
-</table>
+    $shippment-tracking.cvspaths.2:from
 
+</code>
+                </td>
+            </tr>
+        </table>
+
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                 <td width="300"  class="about border-ltr border-bottom">
+                       This reference starts the run at the 0th csvpath and stops it
+                       on the csvpath identified as <i>readings</i>.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+
+    $wind-troposphere.cvspaths.readings:to
+
+</code>
+                </td>
+            </tr>
+        </table>
+
+    </body>
 
 </html>

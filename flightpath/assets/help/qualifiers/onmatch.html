@@ -1,0 +1,113 @@
+<html>
+    {% include "templates/styles.html" %}
+    <body>
+        <h2>
+            Qualifier: onmatch
+        </h2>
+        <p>
+        <i>onmatch</i> limits a match component to contribute only once
+           all other match components agree that the line matches.
+        </p>
+        <p>
+            <i>onmatch</i> is order-sensitive, as all match components are. In the case
+            of <i>onmatch</i>, the order is flipped. Normally csvpath match components are
+            evaluated top-to-bottom, left-to-right. When a csvpath has a multiple <i>onmatch</i>
+            qualified components those <i>onmatch</i> components are evaluated in reverse order.
+            I.e., the last <i>onmatch</i> component is evaluated before the preceding
+            <i>onmatch</i> component is considered.
+        </p>
+        <h3 style="margin-top:25px;">
+            Availability
+        </h3>
+        <table cellspacing="0" cellpadding="2" class="availablity">
+            <tr>
+                <td class="about border-ltr centered" width="140">
+                    Functions
+                </td>
+                <td class="about border-ltr centered" width="140">
+                   Headers
+                </td>
+                <td class="about border-ltr centered" width="140">
+                    Variables
+                </td>
+            </tr>
+            <tr>
+                <td class='value border-bottom border-ltr centered' >
+                   Yes
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   No
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   Yes
+                </td>
+            </tr>
+        </table>
+        <h3 style="margin-top:25px;">
+            Examples
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom code">
+                        <p>
+                        Side-effects like <i>print()</i> can be activated when all other components match.
+                        </p>
+                        <p> This csvpath prints on odd line numbers.
+                        </p>
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+    $[*][ print.onmatch("This line matches") odd(line_number())]
+</code>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom code">
+                        <p>
+                        <i>onmatch</i> makes a variable assignment react to matching.
+                        In this case a line only matches when the name is Eddie or
+                        Aimee or switches to or from one of those names.
+                        </p>
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+$[*][
+   not(#"First Name" == "Eddie")
+   print.onmatch("Hi $.variables.om.. My name is Eddie.")
+   @om.onmatch = #"First Name"
+ ]
+</code>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom code">
+                        <p>
+                        <i>onmatch</i> changes the order of evaluation. A match component with
+                        the <i>onmatch</i> qualifier wants to go last so it knows how the other
+                        match components voted. If there are multiple <i>onmatch</i> components
+                        the last one "wins", in the sense that it is evaluated first, and therefore,
+                        it may have an effect on the remaining <i>onmatch</i> components.
+                        </p>
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+$[*][
+~ we match odd lines ~
+  odd(line_number())
+~ since we have three onmatch components, this one goes last ~
+  print.onmatch("I'll after: $.csvpath.line_number:  b: $.variables.b")
+~ this comes second ~
+  print.onmatch("I'm next! $.csvpath.line_number:  b: $.variables.b")
+~ this is evaluated first, setting the line number before printing ~
+  @b.onmatch = line_number()
+]
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>

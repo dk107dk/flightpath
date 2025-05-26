@@ -1,34 +1,6 @@
 <html>
-        <style>
-                .bottom {
-                    border-bottom:1px solid #494949;
-                }
-                .examples {
-                    text-align:left;
-                    border:0px solid #494949;
-                    margin-top:10px;
-                }
-                .left_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    vertical-align:middle;
-                    background-color:#494949;
-                    color:#fff;
-                }
-                .right_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    background-color:#fff;
-                    vertical-align:middle;
-                    color:#000;
-                }
-        </style>
+    {% include "templates/styles.html" %}
+   <body>
         <h2>
             Mode: return-mode
         </h2>
@@ -43,50 +15,46 @@
         </p>
         <p>
         The simplicity of <i>return-mode</i> makes a big difference in combination with <i>logic-mode</i> and <i>unmatched-mode</i>.
-
         </p>
-
         <p>
-        <table style="background-color:#fff" cellpadding="4px" cellspacing="0">
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
                 <tr>
-                        <td  class='left_example' style="padding:4px">
+                    <td width="300"  class="about border-ltr ">
                                 <i>return-mode</i>
                         </td>
-                        <td class='right_example' >
+                    <td class='value border-ltr'>
                             Tells if we care about matching or unmatched lines.
                         </td>
                 </tr>
                 <tr>
-                        <td class='left_example'  style="padding:4px">
+                    <td width="300"  class="about border-ltr ">
                             <i>logic-mode</i>
                         </td>
-                        <td class='right_example'>
+                    <td class='value border-ltr'>
                             Specifies if a line must meet all criteria or just one criteria in order to be a match.
                         </td>
                 </tr>
                 <tr>
-                        <td class='left_example bottom'  style="padding:4px">
+                    <td width="300"  class="about border-ltr ">
                                 <i>unmatched-mode</i>
                         </td>
-                        <td class='right_example bottom' >
+                    <td class='value border-ltr border-bottom'>
                               Determines if we capture unmatched lines or just drop them.
                         </td>
                 </tr>
             </table>
         </p>
-
-
         <h3 style="margin-top:25px;">
             Usage
         </h3>
         <table cellspacing="0" cellpadding="2" class='examples' width="900">
             <tr>
-                <td class='left_example bottom' width="300">
+                <td width="300"  class="about border-ltr border-bottom">
                         <p>
                             This setup returns only the unmatched lines. In this case we are collecting only the even numbered lines.
                         </p>
                  </td>
-                <td class='right_example bottom'>
+                <td class='value border-ltr border-bottom code'>
 <code>
     ~ return-mode:no-matches ~
     $[*][
@@ -96,4 +64,5 @@
                 </td>
             </tr>
         </table>
+   </body>
 </html>

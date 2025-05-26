@@ -1,125 +1,128 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-</style>
-<h2>
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
         Keyword: test-delimiter
-</h2>
-<p>
-    <i>test-delimiter</i> is a metadata field specifically for FlightPath. It tells FlightPath that the file or files you will be running the current csvpath on have a certain delimiter.
-</p>
-<p>
-    To use <i>test-delimiter</i> create a metadata comment above your csvpath. In it, add the field with <i>test-delimiter:delimiter-word</i>, where <i>delimiter-word</i> is one of the words in the left-hand column, mapping the character on the right:
-    <style>
-        table { margin:5px 0 0 10px; border-bottom:1px solid #494949; }
-        table td {border-top:1px solid #494949; border-top:1px solid #494949; border-right:1px solid #494949;}
-        table td.left {background-color:#494949; color:#fff}
-        table td.right {background-color:#fff; color:#000}
-    </style>
-    <table cellspacing="0" cellpadding="5" >
-        <tr>
-            <td class='left'>
-                    bar</td>
-            <td class='right'>
-                    |</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    pipe</td>
-            <td class='right'>
-                    |</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    semi-colon</td>
-            <td class='right'>
-                    ;</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    semicolon</td>
-            <td class='right'>
-                    ;</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    comma</td>
-            <td class='right'>
-                    ,</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    hash</td>
-            <td class='right'>
-                    #</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    percent</td>
-            <td class='right'>
-                    %</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    star</td>
-            <td class='right'>
-                    *</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    asterisk</td>
-            <td class='right'>
-                    *</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    at</td>
-            <td class='right'>
-                    @</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    tilde</td>
-            <td class='right'>
-                    ~</td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    tab</td>
-            <td class='right'>
-                    <i>the tab character</i></td>
-        </tr>
-        <tr>
-            <td class='left'>
-                    int</td>
-            <td class='right'>
-                    <i>any positive char code integer</i></td>
-        </tr>
-    </table>
-</p>
-<p>
-    The <i>int</i> code allows you to use any Unicode character. In most cases, pipe, semi-colon, and comma are enough. Comma is the default. There is no need to specify that the delimiter to use is a comma.
-</p>
-<hr>
-<h3 style="font-weight:bold;">
-Usage
-</h3>
-<table  width="100%" cellspacing="0" cellpadding="5" style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-              This csvpath will always run within FlightPath using the identified file when you right-click and select <i>Run</i> or hit <i>ctrl-r</i>.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
+        </h2>
+        <p>
+            <i>test-delimiter</i> is a metadata field specifically for FlightPath. It tells FlightPath that the file or files you will be running the current csvpath on have a certain delimiter.
+        </p>
+        <p>
+            To use <i>test-delimiter</i> create a metadata comment above your csvpath. In it, add the field with <i>test-delimiter:delimiter-word</i>, where <i>delimiter-word</i> is one of the words in the left-hand column, mapping the character on the right:
+            <style>
+                table { margin:5px 0 0 10px; border-bottom:1px solid #494949; }
+                table td {border-top:1px solid #494949; border-top:1px solid #494949; border-right:1px solid #494949;}
+                table td.left {background-color:#494949; color:#fff}
+                table td.right {background-color:#fff; color:#000}
+            </style>
+
+
+
+
+            <table cellspacing="0" cellpadding="5" >
+                <tr>
+                    <td class="about border-ltr">
+                            bar</td>
+                    <td class='value border-ltr code'>
+                           |</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            pipe</td>
+                    <td class='value border-ltr  code'>
+                            |</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            semi-colon</td>
+                    <td class='value border-ltr code'>
+                            ;</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            semicolon</td>
+                    <td class='value border-ltr code'>
+                            ;</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            comma</td>
+                    <td class='value border-ltr code'>
+                            ,</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            hash</td>
+                    <td class='value border-ltr code'>
+                            #</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            percent</td>
+                    <td class='value border-ltr code'>
+                            %</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            star</td>
+                    <td class='value border-ltr code'>
+                            *</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            asterisk</td>
+                    <td class='value border-ltr code'>
+                            *</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            at</td>
+                    <td class='value border-ltr code'>
+                            @</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            tilde</td>
+                    <td class='value border-ltr code'>
+                            ~</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            tab</td>
+                    <td class='value border-ltr code'>
+                            <i>the tab character</i></td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr border-bottom ">
+                            int</td>
+                    <td class='value border-ltr border-bottom code'>
+                            <i>any positive char code integer</i></td>
+                </tr>
+            </table>
+        </p>
+        <p>
+            The <i>int</i> code allows you to use any Unicode character. In most
+            cases, pipe, semi-colon, and comma are enough. Comma is the default.
+            There is no need to specify that the delimiter to use is a comma.
+        </p>
+        <h3 >
+           Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                      This csvpath will always run within FlightPath using the identified
+                      file when you right-click and select <i>Run</i> or hit <i>ctrl-r</i>.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
 ~ test-delimiter: pipe ~
 $[0][
     yes()
 ]
-            </code>
-        </td>
-    </tr>
-</table>
-
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
 </html>

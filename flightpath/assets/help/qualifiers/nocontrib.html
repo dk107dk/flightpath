@@ -1,39 +1,6 @@
 <html>
-        <style>
-                .left {
-                    white-space: wrap; text-align:center; background-color:#494949; border:1px solid #494949; color:#fff;
-                }
-                .center {
-                    white-space: wrap; text-align:center; border-left:1px solid #494949; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#494949; color:#fff;
-                }
-                .right {
-                    white-space: wrap; text-align:center; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#494949; color:#fff;
-                }
-                .bottom {
-                    border-bottom:1px solid #494949;
-                }
-                .left.white, td.center.white, td.right.white {
-                    background-color:#fff; color:#000; text-align:left;
-                }
-                .availablity td.centered {
-                    text-align:center;
-                }
-
-
-                .examples {
-                    text-align:left;
-                    border:0px solid #494949;
-                    margin-top:10px;
-                }
-
-                .left_example {
-                    white-space: wrap; text-align:left; border:1px solid #494949; background-color:#494949; color:#fff;
-                }
-
-                .right_example {
-                    white-space: wrap; text-align:left; border:1px solid #494949; background-color:#fff; color:#000;
-                }
-        </style>
+    {% include "templates/styles.html" %}
+    <body>
         <h2>
             Qualifier: nocontrib
         </h2>
@@ -45,47 +12,45 @@
             the left-hand side of a <i>do-when</i> expression in order to make the side-effect happen
             without the line matching.
         </p>
-
-        <h3 style="margin-top:25px;">
+        <h3>
             Availability
         </h3>
-        <table cellspacing="0" cellpadding="2" class="availablity">
+        <table cellspacing="0" cellpadding="2" >
             <tr>
-                <td class='left' width="140">
+                <td width="140"  class="about border-ltr centered">
                     Functions
                 </td>
-                <td class='center' width="140">
+                <td width="140"  class="about border-ltr centered">
                    Headers
                 </td>
-                <td class='right' width="140">
+                <td width="140"  class="about border-ltr centered">
                     Variables
                 </td>
             </tr>
             <tr>
-                <td class='left white bottom centered' >
+                <td class='value border-bottom border-ltr centered' >
                    Yes
                 </td>
-                <td class='center white bottom centered'>
+                <td class='value border-bottom border-ltr centered' >
                    Yes
                 </td>
-                <td class='right white bottom centered'>
+                <td class='value border-bottom border-ltr centered' >
                    Yes
                 </td>
             </tr>
         </table>
-
-        <h3 style="margin-top:25px;">
+        <h3>
             Examples
         </h3>
-        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+        <table cellspacing="0" cellpadding="2" width="900">
             <tr>
-                <td class='left_example' width="300">
+                <td width="300"  class="about border-ltr border-bottom">
                 Say we have a data with 10 lines and one of the 9 data lines
                 has <i>georgia</i> as the value of the <i>firstname</i> header.
                 This csvpath says hello only to Georgia, but it matches all the
                 lines, not only Georgia.
                 </td>
-                <td class='right_example'>
+                <td class='value border-ltr border-bottom code'>
 <code>
 $[1*][
 	#firstname.nocontrib == "georgia" -> print("Hi Georgia!")
@@ -95,5 +60,5 @@ $[1*][
             </tr>
             </tr>
         </table>
-
+    </body>
 </html>

@@ -1,34 +1,6 @@
 <html>
-        <style>
-                .bottom {
-                    border-bottom:1px solid #494949;
-                }
-                .examples {
-                    text-align:left;
-                    border:0px solid #494949;
-                    margin-top:10px;
-                }
-                .left_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    vertical-align:middle;
-                    background-color:#494949;
-                    color:#fff;
-                }
-                .right_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    background-color:#fff;
-                    vertical-align:middle;
-                    color:#000;
-                }
-        </style>
+    {% include "templates/styles.html" %}
+   <body>
         <h2>
             Mode: validation-mode
         </h2>
@@ -42,12 +14,12 @@
             There are a number of options for <i>validation-mode</i>. You may select multiple of them using commas.
         </p>
         <p>
-        <table style="background-color:#fff" cellpadding="4px" cellspacing="0">
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
                 <tr>
-                        <td  class='left_example' style="padding:4px">
+                <td width="300"  class="about border-ltr ">
                                 print
                         </td>
-                        <td class='right_example'  >
+                <td class='value border-ltr '>
                                 <p style="margin:4px">
                                     Adding <i>print</i> to <i>validation-mode</i> makes CsvPath Framework
                                     print errors to the default printer.
@@ -55,50 +27,50 @@
                         </td>
                 </tr>
                 <tr>
-                        <td class='left_example'  style="padding:4px">
+                <td width="300"  class="about border-ltr ">
                                 raise
                         </td>
-                        <td class='right_example'>
+                <td class='value border-ltr '>
                                 <p style="margin:4px">
                                 When set, the first error stops the run with a raised exception. This is, of course, very disruptive.
                                 </p>
                         </td>
                 </tr>
                 <tr>
-                        <td class='left_example'  style="padding:4px">
+                <td width="300"  class="about border-ltr">
                                 stop
                         </td>
-                        <td class='right_example'>
+                <td class='value border-ltr '>
                                 <p style="margin:4px">
                                 <i>stop</i> immediately halts the run on the invalid line.
                                 </p>
                         </td>
                 </tr>
                 <tr>
-                        <td class='left_example '  style="padding:4px">
+                <td width="300"  class="about border-ltr ">
                                 fail
                         </td>
-                        <td class='right_example '>
+                <td class='value border-ltr '>
                                 <p style="margin:4px">
                                 Fail does not stop the run. It only sets the csvpath to be invalid. The invalid setting is visible in the run metadata, by programmatic access, and within the run using CsvPath Language functions.
                                 </p>
                         </td>
                 </tr>
                 <tr>
-                        <td class='left_example '  style="padding:4px">
+                <td width="300"  class="about border-ltr ">
                                 match
                         </td>
-                        <td class='right_example ' >
+                <td class='value border-ltr '>
                                 <p style="margin:4px">
                                 <i>match</i> makes all errors result in matches. This doesn't mean all lines will match, but it does mean that no lines will fail to match solely because of built-in validation problems.
                                 </p>
                         </td>
                 </tr>
                 <tr>
-                        <td class='left_example bottom'  style="padding:4px">
+                <td width="300"  class="about border-ltr border-bottom">
                                 collect
                         </td>
-                        <td class='right_example bottom'  >
+                <td class='value border-ltr border-bottom'>
                                 <p style="margin:4px">
                             When <i>collect</i> is set errors are sent to the run's <i>errors.json</i> file. They are also available programmatically. Collecting errors is a default. But in some cases you may not want to, or need to, capture all the errors. This setting allows you to generate less data.
                                 </p>
@@ -109,15 +81,15 @@
         <p>
         Note that the global <i>config.ini</i> settings can also take a <i>quiet</i> setting which condenses error messaging going into the logs. <i>quiet</i> is not available in <i>validation-mode</i>.
         </p>
-        <h3 style="margin-top:25px;">
+        <h3 >
             Usage
         </h3>
         <table cellspacing="0" cellpadding="2" class='examples' width="900">
             <tr>
-                <td class='left_example' width="300">
+                <td width="300"  class="about border-ltr">
                         The possible settings can be combined. This csvpath prints a validation error whenever the random number equals 2 because the variable <i>@a</i> is set to a string that cannot be added to 5. With a data file of any significant size there will be an error and this csvpath's run will be marked as failed.
                 </td>
-                <td class='right_example'>
+                <td class='value border-ltr '>
 <code>
     ~ validation-mode:print, fail ~
     $[*][
@@ -129,7 +101,7 @@
                 </td>
             </tr>
             <tr>
-                <td class='left_example bottom' width="300">
+                <td width="300"  class="about border-ltr border-bottom">
             <p>
            When processing very large files, working in development, or for some other reason, you may want to halt processing immediately when there is an error.
            </p>
@@ -140,14 +112,13 @@
            We would expect this csvpath to fail on the first line, assuming the file does not have 1000 headers.
             </p>
                 </td>
-                <td class='right_example bottom'>
-                <code>
+                <td class='value border-ltr border-bottom code'>
+<code>
     ~ files-mode: raise ~
     $[*][ line( wildcard(1000) ) ]
-                </code>
+</code>
+                </td>
             </tr>
-
-
         </table>
-
+   </body>
 </html>
