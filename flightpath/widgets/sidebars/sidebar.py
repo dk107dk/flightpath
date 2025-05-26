@@ -159,21 +159,24 @@ class Sidebar(QWidget):
     def _build_combo(self) -> None:
         self.projects.clear()
         proj = self.main.state.current_project
-        print(f"Sidebar._build_combo: proj: {proj}")
         projs = os.path.join(self.main.state.home, self.main.state.projects_home)
         nos = Nos(projs)
         lst = nos.listdir(dirs_only=True)
+
         #
         # should not have to filter dirs because dirs_only=True, but stupidly the files
         # version of Nos only filters for files. to-be-fixed soon!
         #
-        ps = [p for p in lst if not Nos(os.path.join(projs, p)).isfile()]
+        # csvpath has a clear test: /Users/davidkershaw/dev/csvpath/tests/dirs/test_dirs_local.py
+        #
+        #ps = [p for p in lst if not Nos(os.path.join(projs, p)).isfile()]
+        #
+        ps = lst
         ps.sort()
         for p in ps:
             self.projects.addItem(p)
             if p == proj:
                 self.projects.setCurrentText(p)
-                print(f"Sidebar._build_combo: setting cur proj: {proj}")
         self.projects.insertSeparator(self.projects.count())
         self.projects.addItem("Create new project")
 

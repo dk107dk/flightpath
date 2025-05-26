@@ -1,50 +1,44 @@
-<html style='background-color:#c8d5df;'>
-<style>
-    div.code {
-       border:1px dotted #aaa;border-radius:5px;padding:10px;margin:10px;background-color:#eee;
-    }
-    table td { padding:5px;  }
-</style>
-<h2>
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
         Symbol: +
-</h2>
-<p>
-    The plus sign is used in scan instructions. A scan instruction is in the first brackets of a csvpath. It points to lines that should be included in runs.
-</p>
-<p>
-<i>+</i> adds lines to the scan. E.g. <i>3+5</i> means scan the 4th line and the fifth line. (Remember that line numbers are 0-based).
-</p>
-<p>
-</p>
-<hr>
-<h3 style="font-weight:bold;">
-Usage
-</h3>
-<table  width="100%" cellspacing="0"  style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            This scan instruction picks out the 3rd and 5th lines
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
-                $[3+5][ print("hello") ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-<table  width="100%" cellspacing="0"  style="margin-top:20px" >
-    <tr>
-        <td width="200" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            This scan instruction includes the first 50 lines and all lines after the 100th.
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            <code>
-                $[0-49+99*][ print("hello") ]
-            </code>
-        </td>
-    </tr>
-</table>
-
-
+        </h2>
+        <p>
+            The plus sign is used in scan instructions. A scan instruction is in
+            the first brackets of a csvpath. It points to lines that should be
+            included in runs.
+        </p>
+        <p>
+        <i>+</i> adds lines to the scan. E.g. <i>3+5</i> means scan the 4th line
+        and the fifth line. (Remember that line numbers are 0-based).
+        </p>
+        <h3 >
+           Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                    This scan instruction picks out the 3rd and 5th lines
+                </td>
+                <td class='value border-ltr border-bottom code'>
+                    <code>
+                        $[3+5][ print("hello") ]
+                    </code>
+                </td>
+            </tr>
+        </table>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+                    This scan instruction includes the first 50 lines and all lines after the 100th.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+    $[0-49+99*][ print("hello") ]
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
 </html>

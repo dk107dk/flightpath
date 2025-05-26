@@ -1,0 +1,86 @@
+<html>
+    {% include "templates/styles.html" %}
+    <body>
+        <h2>
+            Qualifier: onchange
+        </h2>
+        <p>
+        <i>onchange</i> allows match components to activate when their value
+        changes from one line to the next.
+        </p>
+        <h3 style="margin-top:25px;">
+            Availability
+        </h3>
+        <table cellspacing="0" cellpadding="2" class="availablity">
+            <tr>
+                <td class="about border-ltr centered" width="140">
+                    Functions
+                </td>
+                <td class="about border-ltr centered" width="140">
+                   Headers
+                </td>
+                <td class="about border-ltr centered" width="140">
+                    Variables
+                </td>
+            </tr>
+            <tr>
+                <td class='value border-bottom border-ltr centered' >
+                   Yes
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   No
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   Yes
+                </td>
+            </tr>
+        </table>
+        <h3 style="margin-top:25px;">
+            Examples
+        </h3>
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom code">
+                        <p>
+                        Using <i>onchange</i> a print statement can be activated only when
+                        it would print something different.
+                        </p>
+                </td>
+                <td class='value border-ltr border-bottom code'>
+
+<code>
+$[*][
+    ~ this statement prints only the first city ~
+    print.onchange.once("The city is $.headers.city")
+    ~ this statement prints only when the city changes ~
+    print.onchange("The city is $.headers.city")
+    ~ this statement prints only when the city changes and the line matches ~
+    print.onchange.onmatch("The city is $.headers.city")
+]
+</code>
+                </td>
+            </tr>
+        </table>
+
+
+        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom code">
+                        <p>
+                        <i>onchange</i> makes a variable assignment contribute to matching.
+                        In this case a line only matches when the name is Eddie or
+                        Aimee or switches to or from one of those names.
+                        </p>
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+$[*][
+   @oc.onchange = in(#"First Name", "Eddie|Aimee")
+   print.onmatch("oc: $.variables.oc, count: $.csvpath.count_matches")
+ ]
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>

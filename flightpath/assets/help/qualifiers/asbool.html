@@ -1,84 +1,50 @@
 <html>
-        <style>
-                .left {
-                    white-space: wrap; text-align:center; background-color:#494949; border:1px solid #494949; color:#fff;
-                }
-                .center {
-                    white-space: wrap; text-align:center; border-left:1px solid #494949; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#494949; color:#fff;
-                }
-                .right {
-                    white-space: wrap; text-align:center; border-right:1px solid #494949; border-top:1px solid #494949; solid #494949; background-color:#494949; color:#fff;
-                }
-                .bottom {
-                    border-bottom:1px solid #494949;
-                }
-                .left.white, td.center.white, td.right.white {
-                    background-color:#fff; color:#000; text-align:left;
-                }
-                .availablity td.centered {
-                    text-align:center;
-                }
-
-
-                .examples {
-                    text-align:left;
-                    border:0px solid #494949;
-                    margin-top:10px;
-                }
-
-                .left_example {
-                    white-space: wrap; text-align:left; border:1px solid #494949; background-color:#494949; color:#fff;
-                }
-
-                .right_example {
-                    white-space: wrap; text-align:left; border:1px solid #494949; background-color:#fff; color:#000;
-                }
-        </style>
+    {% include "templates/styles.html" %}
+    <body>
         <h2>
             Qualifier: asbool
         </h2>
         <p>
             The <i>asbool</i> qualifier makes a match component's output be considered a boolean value.
         </p>
-
-        <h3 style="margin-top:25px;">
+        <h3>
             Availability
         </h3>
-        <table cellspacing="0" cellpadding="2" class="availablity">
+        <table cellspacing="0" cellpadding="2" >
             <tr>
-                <td class='left' width="140">
+                <td width="140"  class="about border-ltr centered">
                     Functions
                 </td>
-                <td class='center' width="140">
+                <td width="140" class="about border-ltr centered">
                    Headers
                 </td>
-                <td class='right' width="140">
+                <td width="140" class="about border-ltr centered">
                     Variables
                 </td>
             </tr>
             <tr>
-                <td class='left white bottom' >
+                <td class='value border-bottom border-ltr centered' >
                    Some, see specific function docs.
                 </td>
-                <td class='center white bottom centered'>
+                <td class='value border-bottom border-ltr centered'>
                    Yes
                 </td>
-                <td class='right white bottom centered'>
+                <td class='value border-bottom border-ltr centered'>
                    Yes
                 </td>
             </tr>
         </table>
-
-        <h3 style="margin-top:25px;">
+        <h3>
             Examples
         </h3>
-        <table cellspacing="0" cellpadding="2" class='examples' width="900">
+        <table cellspacing="0" cellpadding="2" width="900">
             <tr>
-                <td class='left_example' width="300">
-                    Variables used alone always match if they exist. Using <i>asbool</i> we can check that the value of a
+                <td width="300"  class="about border-ltr border-bottom">
+                    Variables used alone always match if they exist.
+                    Using <i>asbool</i> we can check that the value of a
                     variable is true or false.
                 </td>
-                <td class='right_example'>
+                <td class='value border-ltr border-bottom code'>
 <code>
 $[*][
    @a = 0
@@ -90,15 +56,14 @@ $[*][
             </tr>
             </tr>
         </table>
-
-        <table cellspacing="0" cellpadding="2" class='examples'  width="900">
+        <table cellspacing="0" cellpadding="2"  width="900">
             <tr>
-                <td class='left_example' width="300">
+                <td class='about border-ltr border-bottom' width="300">
     Say we have a file with four names and one <i>sally</i>.
     With <i>asbool</i> we will say hi to Sally once.
     Without <i>asbool</i> we will say hi four times
                 </td>
-                <td class='right_example'>
+                <td class='value border-ltr border-bottom code'>
 <code>
 $[*][
 	@in.asbool = in(#firstname, "sally")
@@ -108,4 +73,5 @@ $[*][
                 </td>
             </tr>
         </table>
+    </body>
 </html>

@@ -1,63 +1,65 @@
 <html>
-<h2>
-        Function: {{data.name}}
-</h2>
 
-{% for d in data.description %}
-<p>
-    {{d}}
-</p>
-{% endfor %}
+    {% include "styles.html" %}
 
-<hr>
-<p style="font-weight:bold;">
-Usage
-</p>
-<table  width="100%" cellspacing="0" cellpadding="2" >
-    <tr>
-        <td width="33%" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            Action type
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-                 {{data.name}} {{data.focus}}
-        </td>
-    </tr>
-    <tr>
-        <td width="33%" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            Schema type
-        </td>
-        <td style='border-left:1px solid #494949;border-right:1px solid #494949; border-bottom:1px solid #494949; background-color:#fff;'>
-                {{data.name}} {{data.schema_type}}
-        </td>
-    </tr>
-</table>
-<table  width="100%" cellspacing="0" cellpadding="2" >
-    <tr>
-        <td colspan="2">
-            <table cellspacing="0" cellpadding="2" width="80%">
-                {% for s in data.sigs %}
-                        <tr style='font-weight:bold'>
+    <body style='margin:0'>
+        <h2>
+            Function: {{data.name}}
+        </h2>
+        {% for d in data.description %}
+        <p>
+            {{d}}
+        </p>
+        {% endfor %}
+        <hr>
+        <h3 style="margin-top:25px;">
+            Usage
+        </h3>
+        <table width="100%" cellspacing="0" cellpadding="2" >
+            <tr>
+                <td width="33%" class="about border-ltr" >
+                    Action type
+                </td>
+                <td class="value border-ltr" >
+                     {{data.name}} {{data.focus}}
+                </td>
+            </tr>
+            <tr>
+                <td width="33%" class="about border-ltr border-bottom" >
+                    Schema type
+                </td>
+                <td class="value border-ltr border-bottom" >
+                    {{data.name}} {{data.schema_type}}
+                </td>
+            </tr>
+        </table>
+        <table  width="100%" cellspacing="0" cellpadding="2" >
+            <tr>
+                <td colspan="2">
+                    <table cellspacing="0" cellpadding="2" width="80%">
+                        {% for s in data.sigs %}
+                            <tr style='font-weight:bold'>
                                 <td colspan="2" style=';padding-top:15px;'>
-                                        Signature {{ loop.index0 + 1 }}
+                                    Signature {{ loop.index0 + 1 }}
                                 </td>
-                        </tr>
-                        <tr >
-                               <td width="33%" style="background-color:#494949; border:1px solid #494949;color:#fff">
+                            </tr>
+                            <tr >
+                               <td width="33%" class="about border-ltr" >
                                         Arg descriptions
                                </td>
-                                <td style='border:1px solid #494949; background-color:#fff;'>
+                                <td class="value border-ltr" >
                                     <ol>
                                          {% for a in s %}
                                             <li>{{a.name}}</li>
                                          {% endfor %}
                                     </ol>
                                </td>
-                        </tr>
-                        <tr>
-                               <td width="33%" style="background-color:#494949; border:1px solid #494949;color:#fff">
+                            </tr>
+                            <tr>
+                               <td width="33%" class="about border-ltr" >
                                         By type
                                </td>
-                                <td style='border-left:1px solid #494949;border-right:1px solid #494949; border-bottom:1px solid #494949; background-color:#fff;'>
+                                <td class="value border-ltr" >
                                        {{data.name}}(
                                         {% if list_name|length > 0 %} <br/>  {% endif %}
                                          {% for a in s %}
@@ -67,12 +69,12 @@ Usage
                                          {% endfor %}
                                         )
                                </td>
-                        </tr>
-                        <tr>
-                               <td width="33%" style="background-color:#494949; border:1px solid #494949;color:#fff">
+                            </tr>
+                            <tr>
+                                <td width="33%" class="about border-ltr border-bottom">
                                         By value
                                 </td>
-                                 <td style='border-left:1px solid #494949;border-right:1px solid #494949; border-bottom:1px solid #494949; background-color:#fff;'>
+                                <td class="value border-ltr border-bottom" >
                                       {{data.name}}(
                                          {% for a in s %}
                                              {{a.actuals}}
@@ -80,58 +82,49 @@ Usage
                                              {% if a.unbounded %}...{% endif %}
                                          {% endfor %}
                                         )
-                               </td>
-                        </tr>
-
-
-
-                {% endfor %}
-            <table>
-        </td>
-    </tr>
-</table>
-<p style="font-weight:bold;">
-Qualifiers
-</p>
-<table  width="100%" cellspacing="0" cellpadding="2" >
-    <tr>
-        <td width="33%" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            Value qualifiers
-        </td>
-        <td style='border:1px solid #494949; background-color:#fff;'>
-            {% if data.value_qualifiers %}
-                {% for q in data.value_qualifiers %}
-                <li/>- {{q}}
-                {% endfor %}
-             {% endif %}
-        </td>
-    </tr>
-
-    <tr>
-        <td width="33%" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            Match qualifiers
-        </td>
-        <td style='border-left:1px solid #494949;border-right:1px solid #494949; border-bottom:1px solid #494949; background-color:#fff;'>
-            {% if data.match_qualifiers %}
-                {% for q in data.match_qualifiers %}
-                <li/>- {{q}}
-                {% endfor %}
-             {% endif %}
-        </td>
-    </tr>
-
-    {% if data.name_qualifier %}
-    <tr>
-        <td width="33%" style="background-color:#494949; border:1px solid #494949;color:#fff">
-            Will use a name qualifier
-        </td>
-        <td style='border-left:1px solid #494949;border-right:1px solid #494949; border-bottom:1px solid #494949; background-color:#fff;'>
-                {{data.name_qualifier}}
-        </td>
-    </tr>
-    {% endif %}
-
-
-
-</table>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    <table>
+                </td>
+            </tr>
+        </table>
+        <p style="font-weight:bold;">
+            Qualifiers
+        </p>
+        <table  width="100%" cellspacing="0" cellpadding="2" >
+            <tr>
+                <td width="33%" class="about border-ltr">
+                    Value qualifiers
+                </td>
+                <td  class="value ltr">
+                {% if data.value_qualifiers %}
+                    {% for q in data.value_qualifiers %}
+                    <li/>- {{q}}
+                    {% endfor %}
+                {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td width="33%" class="about border-ltr">
+                    Match qualifiers
+                </td>
+                <td class="value ltr" >
+                    {% if data.match_qualifiers %}
+                        {% for q in data.match_qualifiers %}
+                            <li/>- {{q}}
+                        {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td width="33%" class="about border-ltr border-bottom" >
+                    Uses name qualifiers
+                </td>
+                <td class="value border-ltr border-bottom">
+                    {{data.name_qualifier}}
+                </td>
+            </tr>
+        </table>
+    </body>
 </html>

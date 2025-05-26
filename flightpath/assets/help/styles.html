@@ -1,0 +1,38 @@
+    <style>
+        body {
+            background-color: {% if data.ui_dark %}#333{% else %}#efefef{% endif %};
+            color: {% if data.ui_dark %}#fff{% else %}#494949{% endif %};
+            margin:0;
+        }
+        /* tables */
+        td.about {
+            background-color: {% if data.ui_dark %}#fff;{% else %}#494949;{% endif %}
+            color: {% if data.ui_dark %}#494949;{% else %}#fff;{% endif %}
+        }
+
+        td.value {
+            background-color: {% if data.ui_dark %}#494949;{% else %}#fff;{% endif %}
+            color: {% if data.ui_dark %}#fff;{% else %}#494949;{% endif %}
+        }
+        /* borders */
+        .border-ltr {
+            {% if data.ui_dark %}
+                border-left:1px solid #aaa;
+                border-right:1px solid #aaa;
+                border-top:1px solid #aaa;
+            {% else %}
+                border-left:1px solid #494949;
+                border-right:1px solid #494949;
+                border-top:1px solid #494949;
+            {% endif %}
+        }
+        .border-bottom {
+            {% if data.ui_dark %}
+                border-bottom:1px solid #aaa;
+            {% else %}
+                border-bottom:1px solid #494949;
+            {% endif %}
+        }
+
+    </style>
+

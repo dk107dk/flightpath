@@ -1,34 +1,6 @@
 <html>
-        <style>
-                .bottom {
-                    border-bottom:1px solid #494949;
-                }
-                .examples {
-                    text-align:left;
-                    border:0px solid #494949;
-                    margin-top:10px;
-                }
-                .left_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    vertical-align:middle;
-                    background-color:#494949;
-                    color:#fff;
-                }
-                .right_example {
-                    white-space: wrap;
-                    text-align:left;
-                    border-left:1px solid #494949;
-                    border-top:1px solid #494949;
-                    border-right:1px solid #494949;
-                    background-color:#fff;
-                    vertical-align:middle;
-                    color:#000;
-                }
-        </style>
+    {% include "templates/styles.html" %}
+   <body>
         <h2>
             Mode: print-mode
         </h2>
@@ -43,7 +15,7 @@
         </h3>
         <table cellspacing="0" cellpadding="2" class='examples' width="900">
             <tr>
-                <td class='left_example bottom' width="300">
+                <td width="300"  class="about border-ltr border-bottom">
                         <p>
                         The default printer can be shut off with <i>no-default</i>. Other printers can remain active.
                         </p>
@@ -53,7 +25,7 @@
                         However, the built-in error you would expect from trying to add an integer to a string does not appear in the default printout because the default printout is suppressed. The error will nevertheless still be captured to <i>errors.json</i> if this is a named-paths group run.
                         </p>
                  </td>
-                <td class='right_example bottom'>
+                <td class='value border-ltr border-bottom code'>
 <code>
     ~ print-mode:no-default ~
     $[*][
@@ -65,4 +37,5 @@
                 </td>
             </tr>
         </table>
+   </body>
 </html>

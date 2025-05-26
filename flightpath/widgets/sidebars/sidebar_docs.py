@@ -1,6 +1,7 @@
 import json
 import os
 
+import darkdetect
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
@@ -26,9 +27,6 @@ from flightpath.widgets.sidebars.sidebar_functions import SidebarFunctions
 
 class SidebarDocs(QWidget):
 
-
-
-
     def __init__(self, *, main, functions:FunctionCollector=None):
         super().__init__()
         self.main = main
@@ -51,7 +49,7 @@ class SidebarDocs(QWidget):
             layout = QVBoxLayout()
             layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.setSpacing(0)
-        layout.setContentsMargins(1, 1, 1, 1)
+        layout.setContentsMargins(0, 0,0,0)
 
         self.label_top = QLabel()
         self.label_top.setText("Help Info")
@@ -65,7 +63,10 @@ class SidebarDocs(QWidget):
         #
         self.description = QTextEdit()
         self.description.setText("")
-        self.description.setStyleSheet("QTextEdit {background-color:#c8d5df;}")
+        s = "QTextEdit {"
+        s = f"{s}background-color:#{'#494949' if darkdetect.isDark() else 'fff'}"
+        s = s + ";}"
+        self.description.setStyleSheet(s)
         #
         # display all the parts
         #
@@ -87,6 +88,13 @@ class SidebarDocs(QWidget):
 
     def _generate_html(self, f:dict) -> str:
         path = fiut.make_app_path(f"assets{os.sep}help{os.sep}templates{os.sep}function_description.html")
+        #
+        # add indication of light / dark mode so we can adjust colors
+        #
+        f["ui_dark"] = darkdetect.isDark()
+        #
+        #
+        #
         html = HtmlGenerator.load_and_transform(path, f)
         return html
 
@@ -101,32 +109,42 @@ class SidebarDocs(QWidget):
 
         self.main.log(f"DocsSidebar: template path: {path}")
 
+        f = {}
+        f["ui_dark"] = darkdetect.isDark()
+        #
+        #
+        #
+        raw = HtmlGenerator.load_and_transform(path, f)
+        print(f"\nwra:\n{raw}")
+        """
         nos = Nos(path)
         if nos.exists():
             with DataFileReader(path) as file:
                 raw = file.read()
-                html = ""
-                styles = ""
-                for _ in raw.split("<code>"):
-                    a = ""
-                    b = ""
-                    if _.find("</code>"):
-                        s = _.split("</code>")
-                        a = s[0]
-                        b = s[1] if len(s) > 1 else ""
-                        if b == "":
-                            html = f"{html}{a}"
-                        else:
-                            lexer = get_lexer_by_name("xquery", stripall=True)
-                            formatter = HtmlFormatter()
-                            a = highlight(a, lexer, formatter)
-                            if styles == "":
-                                styles = formatter.get_style_defs('.highlight')
-                                html = f"{html}<style>{styles}</style>"
-                            html = f"{html}<div class='code'>{a}</div>{b}"
-                    else:
-                        html = f"{html}{a}"
-                self.description.setText( html )
+        """
+
+        html = ""
+        styles = ""
+        for _ in raw.split("<code>"):
+            a = ""
+            b = ""
+            if _.find("</code>"):
+                s = _.split("</code>")
+                a = s[0]
+                b = s[1] if len(s) > 1 else ""
+                if b == "":
+                    html = f"{html}{a}"
+                else:
+                    lexer = get_lexer_by_name("xquery", stripall=True)
+                    formatter = HtmlFormatter()
+                    a = highlight(a, lexer, formatter)
+                    if styles == "":
+                        styles = formatter.get_style_defs('.highlight')
+                        html = f"{html}<style>{styles}</style>"
+                    html = f"{html}<div class='code'>{a}</div>{b}"
+            else:
+                html = f"{html}{a}"
+        self.description.setText( html )
 
     def refresh(self) -> None:
         if self.view:
