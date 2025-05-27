@@ -1,28 +1,20 @@
-#
-# run this script from ./packaging
-#
-echo '\nclearing old stuff\n'
-rmdir /S /Q dist build/*
-rmdir /S /Q dist dist/*
-rmdir /S /Q dist dmg/*
-rmdir /S /Q dist pkg/*
-rmdir /S /Q dist tmp/*
+echo 'clearing old stuff'
+rmdir /S /Q build
+mkdir build
+mkdir dist
+rmdir /S /Q tmp
+mkdir tmp
 
-echo '\nbuilding installer\n'
-#
-# windows spec is exactly like the macos spec. to join them we just need to lose the space.
-# will do that from the macos side.
-#
-poetry run pyinstaller FlightPath-Data-windows.spec
+rem rmdir /S /Q dist
+rem echo 'building installer'
+rem poetry run pyinstaller FlightPath-Data-windows.spec
 
-#
-# building runs CsvPath so the usual project stuff gets created
-#
-echo '\ncleaning up\n'
-rmdir /S /Q dist transfers
-rmdir /S /Q dist logs
-rmdir /S /Q dist cache
-rmdir /S /Q dist archive
-rmdir /S /Q dist config
-rmdir /S /Q dist inputs
+echo 'cleaning up'
+rmdir /S /Q transfers
+rmdir /S /Q logs
+rmdir /S /Q cache
+rmdir /S /Q archive
+rmdir /S /Q config
+rmdir /S /Q inputs
 
+C:\"Program Files (x86)"\"Windows Kits"\10\bin\10.0.26100.0\arm64\makeappx pack /d C:\dev\flightpath\packaging\dist\FlightPath_Data /p FlightPath_Data.msix
