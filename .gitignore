@@ -8,7 +8,7 @@ certs/
 *.p12
 *.certSigningRequest
 *.provisionprofile
-
+*.pfx
 
 *.app
 *.dmg
