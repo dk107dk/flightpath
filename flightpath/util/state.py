@@ -8,27 +8,21 @@ from csvpath import CsvPaths
 from csvpath.util.config import Config as CsvPath_Config
 from csvpath.util.nos import Nos
 
-from flightpath.dialogs.pick_cwd_dialog import PickCwdDialog
 from flightpath.util.examples_marshal import ExamplesMarshal
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
 
 class State:
-    #
-    # home is a path, typically a full path
-    # projects_home is a dirname
-    # cwd is a dirname
-    #
-    # to find a project you stackup all three: f"{home}{projects_home}{cwd}
-    #
-    # in version one home was static (same), there was no projects_home and cwd
-    # was a full path. anything remaining of that should be removed. the reason
-    # for the switch was Apple's sandbox's silly way of handling/mixing container
-    # home and user's traditional home, while manditating the use of the native
-    # file picker dialog. untenable, but also results in something simpler and
-    # probably better.
-    #
 
+    DEFAULT_PROJECT_NAME = "Default"
+
+    #
+    # home is the path to user's home dir. not stored in state.
+    # projects_home is a dirname
+    # current_project is a dirname
+    #
+    # to find a project you stackup all three: f"{home}{projects_home}{current_project}
+    #
     def __init__(self):
         self._state_path = None
 
@@ -61,7 +55,7 @@ class State:
             nos = Nos(os.path.join(self.home, home))
             if not nos.exists():
                 nos.makedirs()
-            nos.path = os.path.join(home, "Default")
+            nos.path = os.path.join(home, self.DEFAULT_PROJECT_NAME)
             if not nos.exists():
                 nos.makedirs()
             #
@@ -71,10 +65,9 @@ class State:
                 print(f"state.project_home: setting project home in state")
                 data["projects_home"] = home
                 #
-                # set the default project as cwd while we're at it.
+                # make the default project while we're at it.
                 #
-                data["cwd"] = os.path.join(home, "Default")
-                nos = Nos(os.path.join(os.path.join(self.home, home), "Default"))
+                nos = Nos(os.path.join(os.path.join(self.home, home), self.DEFAULT_PROJECT_NAME))
                 if not nos.exists():
                     nos.makedirs()
                 self.data = data
@@ -96,11 +89,15 @@ class State:
     def current_project(self) -> str:
         proj = self.data.get("current_project")
         if proj is None:
-            proj = "Default"
+            proj = self.DEFAULT_PROJECT_NAME
             nos = Nos(os.path.join(self.projects_home, proj))
             if not nos.exists():
                 nos.makedirs()
             self.current_project = proj
+        elif proj.strip() == "":
+            proj = self.DEFAULT_PROJECT_NAME
+        elif proj.find(os.sep):
+            proj = proj[0:proj.find(os.sep)]
         return proj
 
     @current_project.setter
@@ -161,48 +158,9 @@ class State:
         home = self.home
         projs = self.projects_home
         proj = self.current_project
+        if proj is None or proj.strip() == "":
+            proj = self.DEFAULT_PROJECT_NAME
         return f"{home}{os.sep}{projs}{os.sep}{proj}"
-
-        #cwd = self.data.get("cwd")
-        #print(f"state.cwd: {cwd}")
-        #return cwd
-
-    @cwd.setter
-    def cwd(self, cwd:str) -> None:
-        #
-        # still needed?
-        #
-        if osut.is_mac() and osut.is_sandboxed():
-            ncwd = fiut.to_sandbox_path(cwd)
-            if ncwd is None:
-                #
-                # warn. we don't have main so we cannot resurface the cdw picker.
-                # that may not be bad. it is possible the user knows what they are
-                # doing. it is also possible that this situation could never happen.
-                #
-                msg_box = QMessageBox()
-                msg_box.setIcon(QMessageBox.Critical)
-                msg_box.setWindowTitle("Unknown path")
-                msg_box.setText(f"{cwd} is not within the app sandbox. This may be an issue.")
-                msg_box.setStandardButtons(QMessageBox.Ok)
-                msg_box.exec()
-            else:
-                cwd = ncwd
-
-        proj = os.path.basename(cwd)
-        projs = os.path.dirname(cwd)
-        home = os.path.dirname(projs)
-        projs = os.path.basename(projs)
-
-        self.home = home
-        self.current_project = proj
-        self.projects_dir = projs
-
-        """
-        data = self.data
-        data["cwd"] = cwd
-        self.data = data
-        """
 
     @property
     def data(self) -> dict:
@@ -214,56 +172,14 @@ class State:
         with open(self.state_path, mode="w", encoding="utf-8") as file:
             state = json.dump(state, file)
 
-    def pick_cwd(self, main) -> None:
-        # NO LONGER USED
-        #
-        # the caller has to check our has_cwd() method again
-        # to find out if we succeeded. fine, i think.
-        #
-        #dialog = PickCwdDialog(main)
-        #dialog.exec()
-        ...
-
     def has_cwd(self) -> bool:
         return self.cwd is not None
 
     def load_state_and_cd(self, main) -> None:
         cwd = self.cwd
-        #
-        # we may want to check writability since we are still giving folks the
-        # ability to easily set their projects home, but since we're not file
-        # picking, we're starting within the container (if sandboxed) and we use
-        # the home as the root of the projects dir, we may be able to just not.
-        # the main worry would be people setting a ../../xyz type path. but that's
-        # not likely and probably not our problem.
-        #
-        """
-        if cwd and not fiut.is_writable_dir(cwd):
-            #
-            # create a workable cwd, if possible, otherwise alert user
-            #
-            ncwd = fiut.to_sandbox_path(cwd)
-            if ncwd is None:
-                #
-                # warn
-                #
-                msg_box = QMessageBox()
-                msg_box.setIcon(QMessageBox.Critical)
-                msg_box.setWindowTitle("Path is not writable")
-                msg_box.setText(f"{cwd} is not writable. Use the config panel to pick another directory for your work.")
-                msg_box.setStandardButtons(QMessageBox.Ok)
-                msg_box.exec()
-                cwd = None
-            else:
-                self.cwd = ncwd
-        """
-        #
-        # for now, let's blow up if we're missing a cwd
-        #
         nos = Nos(cwd)
         if not nos.exists():
             nos.makedirs()
-
         os.chdir(cwd)
         configfile = f".{os.sep}config{os.sep}config.ini"
         new_project = not os.path.exists(configfile)
