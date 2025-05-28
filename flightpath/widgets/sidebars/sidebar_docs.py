@@ -62,6 +62,7 @@ class SidebarDocs(QWidget):
         # the function's name
         #
         self.description = QTextEdit()
+        self.description.setReadOnly(True)
         self.description.setText("")
         s = "QTextEdit {"
         s = f"{s}background-color:#{'#494949' if darkdetect.isDark() else 'fff'}"

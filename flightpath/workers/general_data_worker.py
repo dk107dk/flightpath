@@ -67,26 +67,19 @@ class GeneralDataWorker(QRunnable):
 
     @Slot()
     def run(self):
-        self.signals.messages.emit(QApplication.translate("DataWorker", "Reading file..."))
-        data = []
-        if self.sampling == DataToolbar.RANDOM_ALL and self.lines_to_take is None:
-            self.prep_sampling()
-        path = str(self.filepath)
-        lines:list[int] = []
-        lines_to_take = self.lines_to_take[:] if self.lines_to_take else None
-        t = 0
-        i = 0
-        with DataFileReader( path ) as file:
-            #
-            # TODO: we don't need to handle CSV ourselves, right? shouldn't DataFileReader do it?
-            #
-            #
-            # TODO: need to handle delimiters and quotechars
-            #
-            try:
-                reader = csv.reader(file.source, delimiter=self.delimiter, quotechar=self.quotechar)
+        try:
+            self.signals.messages.emit(QApplication.translate("DataWorker", "Reading file..."))
+            data = []
+            if self.sampling == DataToolbar.RANDOM_ALL and self.lines_to_take is None:
+                self.prep_sampling()
+            path = str(self.filepath)
+            lines:list[int] = []
+            lines_to_take = self.lines_to_take[:] if self.lines_to_take else None
+            t = 0
+            i = 0
+            with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar ) as file:
                 max = self.sample_size
-                for line in reader:
+                for line in file.next():
                     b = self.accept_line(i, line)
                     i += 1
                     if b is True:
@@ -95,10 +88,12 @@ class GeneralDataWorker(QRunnable):
                         data.append(line)
                     elif b is None:
                         break
-            except Exception as e:
-                print(f"Error: {type(e)}: {e}")
-        errors = []
-        self.signals.messages.emit(QApplication.translate("DataWorker", f"  Opened {path}"))
+        except Exception as e:
+            print(f"Error: {type(e)}: {e}")
+            self.signals.messages.emit(f"  Erroring opening {path}")
+            self.signals.finished.emit((f"Error", e, None, None, None))
+            return
+        self.signals.messages.emit(f"  Opened {path}")
         self.signals.finished.emit((f"Took {t} lines out of {i} seen", lines, path, data, lines_to_take))
 
 
