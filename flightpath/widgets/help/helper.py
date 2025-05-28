@@ -32,6 +32,7 @@ class Helper:
         if self.help is None:
             self.help = QTextEdit()
             self.help.setObjectName("Help Content")
+            self.help.setReadOnly(True)
         t = self.help_and_feedback.findChild(QWidget, "Help Content")
         if t is None:
             self.help_and_feedback.addTab(self.help, "Help Content")
@@ -52,6 +53,7 @@ class Helper:
         i = self.get_help_tab_index_if()
         if i == -1:
             self.help = QTextEdit()
+            self.help.setReadOnly(True)
             self.help.setObjectName("Help Content")
             self.help_and_feedback.addTab(self.help, "Help Content")
             return self.help

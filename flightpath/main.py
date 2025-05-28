@@ -187,7 +187,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 self.please_close = True
                 return False
         self.load_state_and_cd()
-        self.statusBar().showMessage(f"  Working directory changed to: {self.state.cwd}")
+        self.statusBar().showMessage(f"  Project changed to: {self.state.cwd}")
         return True
 
     @property
@@ -530,6 +530,15 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def update_json_views(self, worker_data):
         filepath, data, editable = worker_data   # pylint: disable=W0612
         self.progress_dialog.close()
+        if isinstance( data, Exception ):
+            print(f"Error opening file: {type(data)}: {data}")
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setWindowTitle("File opening error")
+            msg_box.setText(f"Error: {data}")
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            msg_box.exec()
+            return
         self.last_main = self.main_layout.currentIndex()
         #
         # show code/data tabs' panel
@@ -553,6 +562,15 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def update_csvpath_views(self, worker_data):
         filepath, data, editable = worker_data # pylint: disable=W0612
         self.progress_dialog.close()
+        if isinstance( data, Exception ):
+            print(f"Error opening file: {type(data)}: {data}")
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setWindowTitle("File opening error")
+            msg_box.setText(f"Error: {data}")
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            msg_box.exec()
+            return
         self.last_main = self.main_layout.currentIndex()
         #
         # show code/data tabs' panel
@@ -592,15 +610,17 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @Slot(tuple)
     def update_views(self, worker_data):
         msg, lines, filepath, data, lines_to_take = worker_data # pylint: disable=W0612
-        self.table_model = TableModel(data)
-        #
-        # we're going to put a button on the toolbar to switch to a raw source
-        # display, rather than have another tab for the same doc. for now, just
-        # disable
-        #
-        # self.content.source_view.open_file(filepath, lines)
-        #
         self.progress_dialog.close()
+        if isinstance( lines, Exception ):
+            print(f"Error opening file: {type(lines)}: {lines}")
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setWindowTitle("File opening error")
+            msg_box.setText(f"Error: {lines}")
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            msg_box.exec()
+            return
+        self.table_model = TableModel(data)
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(1)
         #
@@ -664,7 +684,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.read_validate_and_display_file()
 
     def read_validate_and_display_file(self, editable=True, *, finished_callback=None) -> QRunnable:
-        return self.read_validate_and_display_file_for_path(self.selected_file_path, editable=editable)
+        return self.read_validate_and_display_file_for_path(self.selected_file_path, editable=editable, finished_callback=finished_callback)
 
     def read_validate_and_display_file_for_path(self, path:str, editable=True, *, finished_callback=None) -> QRunnable:
         print(f"main.read_validate_and_display_file_for_path: path: {path}, editable: {editable}, finished_callback: {finished_callback}")
@@ -700,7 +720,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             worker.signals.finished.connect(self.update_csvpath_views)
             if finished_callback:
                 worker.signals.finished.connect(finished_callback)
-            worker.signals.finished.connect(self.update_csvpath_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
