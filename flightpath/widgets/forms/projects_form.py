@@ -21,9 +21,8 @@ class ProjectsForm(BlankForm):
 
         layout = QFormLayout()
         self.project_dir = QLineEdit()
+        self.project_dir.setReadOnly(True)
         layout.addRow("Name of projects directory: ", self.project_dir)
-        #msg = QLabel("The default is FlightPath")
-        #msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
         button = QPushButton("Open projects dir")
         layout.addRow("", button)
 

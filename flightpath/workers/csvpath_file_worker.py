@@ -18,18 +18,24 @@ class CsvpathFileWorker(QRunnable):
 
     @Slot()
     def run(self):
-        nos = Nos(self.filepath)
-        if not nos.exists():
-            raise RuntimeError("Path {filepath} cannot not exist")
+        try:
+            nos = Nos(self.filepath)
+            if not nos.exists():
+                raise RuntimeError(f"Path {self.filepath} does not exist")
 
-        self.signals.messages.emit(QApplication.translate("DataWorker", "Reading file..."))
-        data = None
-        with DataFileReader(self.filepath) as file:
-            data = file.source.read()
+            self.signals.messages.emit("Reading file...")
+            data = None
+            with DataFileReader(self.filepath) as file:
+                data = file.source.read()
+        except Exception as e:
+            print(f"Error: {type(e)}: {e}")
+            self.signals.messages.emit(f"  Erroring opening {self.filepath}")
+            self.signals.finished.emit(("Error", e, None))
+            return
         #
         # try running/parsing w/a CsvPath to chk file is basically valid CsvPath Language?
         #
-        self.signals.messages.emit(QApplication.translate("DataWorker", f"Opened: {self.filepath}" ))
+        self.signals.messages.emit(f"Opened: {self.filepath}" )
         #
         # provide editable indicator
         #

@@ -57,41 +57,10 @@ class Sidebar(QWidget):
         self.cutted = None
         self.copied = None
 
-        """
-        self.cwd_box = self._help_button(
-            text="Set working directory",
-            on_click=self.main.on_set_cwd_click,
-            on_help=self.on_click_cwd_help
-        )
-        layout.addWidget(self.cwd_box)
-        """
-#         self.use_format.activated.connect(self.main.on_config_changed)
-#        self.use_format.clear()
-#        self.use_format.addItem("full")
-#            self.use_format.setCurrentText("bare")
-#       self.use_format.currentText()
-#
         self.projects = QComboBox()
         size = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.projects.setSizePolicy(size)
-        """
-        proj = self.main.state.current_project
-        projs = os.path.join(self.main.state.home, self.main.state.projects_home)
-        nos = Nos(projs)
-        lst = nos.listdir(dirs_only=True)
-        #
-        # should not have to filter dirs because dirs_only=True, but stupidly the files
-        # version of Nos only filters for files. to-be-fixed soon!
-        #
-        ps = [p for p in lst if not Nos(os.path.join(projs, p)).isfile()]
-        ps.sort()
-        for p in ps:
-            self.projects.addItem(p)
-            if p == proj:
-                self.projects.setCurrentText(p)
-        self.projects.insertSeparator(self.projects.count())
-        self.projects.addItem(self.NEW_PROJECT)
-        """
+
         self._build_combo()
         self.projects.activated.connect(self.on_project_changed)
         self.projects.setStyleSheet("QComboBox { margin:1px; height:23px; }")
@@ -104,7 +73,6 @@ class Sidebar(QWidget):
             on_help=self.on_click_cwd_help
         )
         layout.addWidget(box)
-
         #
         #
         #
@@ -116,7 +84,6 @@ class Sidebar(QWidget):
             on_help=self.on_click_open_config_help
         )
         layout.addWidget(self.open_config_box)
-
         #
         # holds the last file right-clicked or None for the root whitespace or no previous rt-clicks
         #
@@ -126,17 +93,30 @@ class Sidebar(QWidget):
         self.stage_dialog = None
         self.load_dialog = None
 
-    def on_project_changed(self):
+    def on_project_changed(self) -> None:
         proj = self.projects.currentText()
+        if proj == self.main.state.current_project:
+            #
+            # no change
+            #
+            return
         if proj == self.NEW_PROJECT:
             proj, ok = QInputDialog.getText(self, self.tr("New Project"), self.tr("Enter new project name:"), text="")
+            if ok and proj and proj.strip() != "":
+                self.main.state.current_project = proj
+                self._set_project_from_state()
+            else:
+                #
+                # reset the combobox back to the current project
+                #
+                index = self.projects.findText(self.main.state.current_project)
+                if index >= 0:
+                    self.projects.setCurrentIndex(index)
+            return
         self.main.state.current_project = proj
-        print(f"Sidebar.on_project_changed: cur proj: {self.main.state.current_project}")
-        print(f"Sidebar.on_project_changed: rebuilding UI: {self.main.state.current_project}")
-        #
-        # update the working dir
-        #
-        #self.main.state.load_state_and_cd(self.main)
+        self._set_project_from_state()
+
+    def _set_project_from_state(self) -> None:
         self.main.load_state_and_cd()
         #
         # recreate all UI parts
@@ -147,7 +127,6 @@ class Sidebar(QWidget):
         #
         # reload everything on the right
         #
-        print(f"Sidebar.on_project_changed: rebuilding right side windows")
         self.main.renew_sidebar_archive()
         self.main.renew_sidebar_named_paths()
         self.main.renew_sidebar_named_files()
@@ -155,6 +134,7 @@ class Sidebar(QWidget):
         # sometimes it gets confused about the l&f
         #
         self.main.on_color_scheme_changed()
+
 
     def _build_combo(self) -> None:
         self.projects.clear()
