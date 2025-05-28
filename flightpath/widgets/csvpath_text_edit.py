@@ -25,52 +25,42 @@ class CsvPathTextEdit(QPlainTextEdit):
         #
         #
         #
-        save_shortcut_ctrl_save = QShortcut(QKeySequence("Ctrl+s"), self)
-        save_shortcut_cmd_save = QShortcut(QKeySequence("Command+s"), self)
-        save_shortcut_ctrl_save.activated.connect(self.on_save)
-        save_shortcut_cmd_save.activated.connect(self.on_save)
+        save_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+s"), self)
+        save_shortcut_ctrl.activated.connect(self.on_save)
         #
         #
         #
-        save_shortcut_ctrl_run = QShortcut(QKeySequence("Ctrl+r"), self)
-        save_shortcut_cmd_run = QShortcut(QKeySequence("Command+r"), self)
-        save_shortcut_ctrl_run.activated.connect(self.on_run)
-        save_shortcut_cmd_run.activated.connect(self.on_run)
+        run_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+r"), self)
+        run_shortcut_ctrl.activated.connect(self.on_run)
         #
         #
         #
         load_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+l"), self)
-        load_shortcut_cmd = QShortcut(QKeySequence("Command+l"), self)
         load_shortcut_ctrl.activated.connect(self.on_load)
-        load_shortcut_cmd.activated.connect(self.on_load)
         #
         #
         #
         append_shortcut_ctrl = QShortcut(QKeySequence("Shift+Ctrl+A"), self)
-        append_shortcut_cmd = QShortcut(QKeySequence("Shift+Command+A"), self)
         append_shortcut_ctrl.activated.connect(self.on_append)
-        append_shortcut_cmd.activated.connect(self.on_append)
         #
+        # we use the seqs to make sure we're not setting a doc to
+        # desaved when we should just be reacting to a shortcut
         #
-        #
+        self.short_seqs = []
+        self.short_seqs.append(save_shortcut_ctrl.key())
+        self.short_seqs.append(save_shortcut_ctrl.key())
+        self.short_seqs.append(load_shortcut_ctrl.key())
+        self.short_seqs.append(append_shortcut_ctrl.key())
+
         self.load_dialog = None
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.editable is False:
             return
-        """
-        if self.parent.saved is True:
-            path = self.parent.path
-            path = os.path.dirname(path)
-            i = self.main.content.tab_widget.currentIndex()
-            name = self.main.content.tab_widget.tabText(i)
-            name = name.replace("+", "")
-            self.main.content.tab_widget.setTabText(i, f"+ {name}" )
-            self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
-            self.parent.saved = False
-        """
         super().keyPressEvent(event)
-        self.desaved()
+        t = event.text()
+        if t and t != "":
+            self.desaved()
 
     def desaved(self) -> bool:
         if self.editable is False:
@@ -177,7 +167,7 @@ class CsvPathTextEdit(QPlainTextEdit):
 
         run_action = QAction("Run", self)
         submenu.addAction(run_action)
-        run_action.triggered.connect(self.on_run)
+        run_action.triggered.connect(self.on_run_mode)
 
         source_action = QAction("Source", self)
         submenu.addAction(source_action)
@@ -216,6 +206,7 @@ class CsvPathTextEdit(QPlainTextEdit):
             return
         position = self.textCursor().position()
         self.setPlainText(sput.insert(text=self.toPlainText(), position=position, insert=m))
+        self.desaved()
 
     def on_test_data(self) -> None:
         self._insert_mode("test-data:")
@@ -247,7 +238,7 @@ class CsvPathTextEdit(QPlainTextEdit):
     def on_return(self) -> None:
        self._insert_mode("return-mode:")
 
-    def on_run(self) -> None:
+    def on_run_mode(self) -> None:
        self._insert_mode("run-mode:")
 
     def on_source(self) -> None:
@@ -361,6 +352,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         text = self.toPlainText()
         text = f"{text}\n\n---- CSVPATH ----\n\n~\n   id: \n~\n\n$[*][ yes() ]\n"
         self.setPlainText(text)
+        self.desaved()
 
     def find_csvpath_at_position(self, position:int, text:str) -> str:
         #
