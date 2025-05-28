@@ -654,13 +654,39 @@ class Sidebar(QWidget):
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
-            name = os.path.dirname(path)
-            new_name, ok = QInputDialog.getText(self, self.tr("Rename"), self.tr("Enter new name:"), text=name)
-            if ok and new_name:
-                nos = Nos(path).rename(os.path.join( os.path.dirname(path), new_name))
+            dir_name = os.path.dirname(path)
+            name = os.path.basename(path)
+            new_name, ok = QInputDialog.getText(self, "Rename", "Enter new name:", text=name)
+            if ok and new_name and new_name.strip() != "" and new_name != name:
+                if new_name.find(os.sep) > -1:
+                    new_dir = os.path.dirname(new_name)
+                    np = os.path.join(dir_name, new_dir)
+                    np = os.path.normpath(np)
+                    if np.startswith( self.main.state.cwd ):
+                        try:
+                            nos = Nos( np )
+                            if not nos.exists():
+                                nos.makedirs()
+                        except Exception as e:
+                            msg_box = QMessageBox()
+                            msg_box.setIcon(QMessageBox.Critical)
+                            msg_box.setWindowTitle("Path error")
+                            msg_box.setText(f"Error: invalid path: {np}")
+                            msg_box.setStandardButtons(QMessageBox.Ok)
+                            msg_box.exec()
+                            return
+                    else:
+                        msg_box = QMessageBox()
+                        msg_box.setIcon(QMessageBox.Critical)
+                        msg_box.setWindowTitle("Path error")
+                        msg_box.setText(f"Error: invalid path: {np}")
+                        msg_box.setStandardButtons(QMessageBox.Ok)
+                        msg_box.exec()
+                        return
+                nos = Nos(path).rename(os.path.join( dir_name, new_name) )
 
     def _new_folder_navigator_item(self):
-        new_name, ok = QInputDialog.getText(self, self.tr("New folder"), self.tr("Enter the new folder name: "), text="")
+        new_name, ok = QInputDialog.getText(self, "New folder", "Enter the new folder name: ", text="")
         if ok and new_name:
             b, msg = self._valid_new_folder(new_name)
             if b is True:

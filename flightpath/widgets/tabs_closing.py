@@ -31,7 +31,10 @@ class ClosingTabs(QTabWidget):
         #
         # confirm if needed
         #
-        if not self.main.content.do_i_close(t[0]):
+        if self.parent and hasattr( self.parent, "do_i_close"):
+            if not self.parent.do_i_close(t[0]):
+                return False
+        elif not self.main.content.do_i_close(t[0]):
             return False
         #
         # remove and delete

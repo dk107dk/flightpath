@@ -20,6 +20,12 @@ class Helper:
             self.help_and_feedback = None
         self.help_and_feedback = ClosingTabs(main=self.main, parent=self)
 
+    def do_i_close(self, t) -> bool:
+        #
+        # we don't allow save-as help/ad-hoc runs
+        #
+        return True
+
     @property
     def help(self) -> QTextEdit:
         return self._help
@@ -29,14 +35,7 @@ class Helper:
         self._help = t
 
     def assure_help_tab(self) -> None:
-        if self.help is None:
-            self.help = QTextEdit()
-            self.help.setObjectName("Help Content")
-            self.help.setReadOnly(True)
-        t = self.help_and_feedback.findChild(QWidget, "Help Content")
-        if t is None:
-            self.help_and_feedback.addTab(self.help, "Help Content")
-        self.help_and_feedback.setCurrentWidget(t)
+        self.help_and_feedback.setCurrentWidget(self.get_help_tab())
         self.help_and_feedback.show()
 
     def get_help_tab_if(self) -> QWidget:
@@ -79,6 +78,9 @@ class Helper:
             return False
         return ss[1] > 0
 
+    """
+        why are these three event handlers here. where are others. consolidate?
+    """
     def on_click_named_files_help(self) -> None:
         md = HelpFinder(main=self.main).help("named_files/about.md")
         self.get_help_tab().setMarkdown(md)
