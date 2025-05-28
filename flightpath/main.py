@@ -895,12 +895,16 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # minimal change to help us not overwrite
         #
         new_name, ok = QInputDialog.getText(self, "Save sample", "Enter a name for the sample file:", text=name)
-        if ok and new_name:
+        if ok and new_name and new_name.strip() != "":
+            if not new_name.endswith(".csv"):
+                new_name = f"{new_name}.csv"
             path = fiut.deconflicted_path(path, new_name)
             data = self.table_model.get_data()
             with DataFileWriter(path=path) as file: # pylint: disable=E0110
                 writer = csv.writer(file.sink)
                 writer.writerows(data)
+        else:
+            return
         #
         # reload views with new file
         # set the file tree to highlight the new file
