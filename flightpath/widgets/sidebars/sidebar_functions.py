@@ -175,6 +175,14 @@ class SidebarFunctions(QWidget):
         self.view.setModel(self.model)
         self.view.updateGeometries()
         layout.addWidget(self.view)
+        #
+        # exp!
+        #
+        from flightpath.widgets.help.plus_help import HelpHeaderView
+        self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_docs_help))
+        self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.view.header().setFixedHeight(24)
+        self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
 
         self.setLayout(layout)
         self.view.clicked.connect(self.on_functions_tree_click)

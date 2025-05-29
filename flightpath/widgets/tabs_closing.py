@@ -5,7 +5,6 @@ from PySide6.QtCore import Slot
 from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
-#from flightpath.widgets.help.helper import Helper
 from flightpath.util.tabs_utility import TabsUtility as taut
 
 class ClosingTabs(QTabWidget):
@@ -67,10 +66,11 @@ class ClosingTabs(QTabWidget):
         #
         # show and hides
         #
-        if not self.has_data_tabs():
-            self.main._on_data_toolbar_hide()
-        if not self.has_csvpath_tabs():
-            self.main._rt_tabs_hide()
+        if self.parent.can_have_edit_tabs:
+            if not self.has_data_tabs():
+                self.main._on_data_toolbar_hide()
+            if not self.has_csvpath_tabs():
+                self.main._rt_tabs_hide()
         #
         # helper is responsable for the closing tabs it desplays help in
         # so we cannot use Helper directly. we could just assume any time

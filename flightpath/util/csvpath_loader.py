@@ -84,13 +84,13 @@ class CsvpathLoader:
         # warn the user that they are overwriting any existing named-path to the group
         #
         msg = "Ok to overwrite any existing named-paths groups referenced in your JSON?"
-        confirm = QMessageBox.question( self, "Load Paths", msg, QMessageBox.Yes | QMessageBox.No)
+        confirm = QMessageBox.question( self.main, "Load Paths", msg, QMessageBox.Yes | QMessageBox.No)
         if confirm == QMessageBox.No:
             return
         name = self.load_dialog.path
         name = "" if not name else name.strip()
         paths.paths_manager.add_named_paths_from_json(file_path=name)
-        self._renew_sidebars()
+        self.main.sidebar._renew_sidebars()
         self._delete_load_dialog()
 
     def do_load_dir(self, *, overwrite=True) -> None:

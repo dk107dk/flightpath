@@ -4,10 +4,12 @@ from PySide6.QtWidgets import QWidget
 
 from flightpath.util.help_finder import HelpFinder
 from flightpath.widgets.tabs_closing import ClosingTabs
+from flightpath.widgets.tabs_closing_holder import ClosingTabsHolder
 
-class Helper:
+class Helper(ClosingTabsHolder):
 
     def __init__(self, main) -> None:
+        super().__init__()
         self.main = main
         self._help = None
         self.help_and_feedback = None
@@ -99,6 +101,11 @@ class Helper:
         if not self.is_showing_help():
             self.on_click_help()
 
+    def on_click_docs_help(self) -> None:
+        md = HelpFinder(main=self.main).help("docs/functions.md")
+        self.get_help_tab().setMarkdown(md)
+        if not self.is_showing_help():
+            self.on_click_help()
 
 
 
