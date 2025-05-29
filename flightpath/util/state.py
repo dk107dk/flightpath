@@ -96,7 +96,7 @@ class State:
             self.current_project = proj
         elif proj.strip() == "":
             proj = self.DEFAULT_PROJECT_NAME
-        elif proj.find(os.sep):
+        elif proj.find(os.sep) > -1:
             proj = proj[0:proj.find(os.sep)]
         return proj
 

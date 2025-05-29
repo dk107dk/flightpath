@@ -16,6 +16,13 @@ simple_model.csvpath
 my_named_paths.json
 
 #
+# schemas
+#
+schemas/person.sql.txt
+schemas/schemas.csvpath
+schemas/people.csv
+
+#
 #
 #
 README.md
