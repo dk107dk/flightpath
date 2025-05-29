@@ -2,7 +2,6 @@ import os
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
-#from csvpath.util.path_util import PathUtility as pathu
 from flightpath.util.file_utility import FileUtility as fiut
 
 class ExamplesMarshal:
