@@ -221,7 +221,7 @@ class JsonViewer(QWidget):
             self.save_action.setEnabled(True)
         else:
             self.save_action.setEnabled(False)
-        self.context_menu.exec_(global_pos)
+        self.context_menu.exec(global_pos)
 
     def _setup_for_parent_parent(self, item):
         if (

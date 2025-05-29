@@ -13,12 +13,13 @@ from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.tab_overlay import TabWidgetOverlayButton
 from flightpath.widgets.tabs_closing import ClosingTabs
+from flightpath.widgets.tabs_closing_holder import ClosingTabsHolder
 from flightpath.widgets.toolbars.data_toolbar import DataToolbar
 
-class Content(QWidget):
+class Content(ClosingTabsHolder):
 
     def __init__(self, main):
-        super().__init__()
+        super().__init__(can_have_edit_tabs=True)
         self.main = main
         layout = QVBoxLayout()
         layout.setSpacing(0)

@@ -25,11 +25,21 @@
                 </td>
             </tr>
             <tr>
-                <td width="33%" class="about border-ltr border-bottom" >
+                <td width="33%" class="about border-ltr " >
                     Schema type
                 </td>
-                <td class="value border-ltr border-bottom" >
+                <td class="value border-ltr " >
                     {{data.name}} {{data.schema_type}}
+                </td>
+            </tr>
+            <tr>
+                <td width="33%" class="about border-ltr border-bottom" >
+                    Aliases
+                </td>
+                <td class="value border-ltr border-bottom" >
+                     {% for s in data.aliases %}
+                        {{s}}{% if not loop.last %}, {% endif %}
+                     {% endfor %}
                 </td>
             </tr>
         </table>
@@ -89,6 +99,7 @@
                 </td>
             </tr>
         </table>
+
         <p style="font-weight:bold;">
             Qualifiers
         </p>
@@ -97,7 +108,7 @@
                 <td width="33%" class="about border-ltr">
                     Value qualifiers
                 </td>
-                <td  class="value ltr">
+                <td  class="value border-ltr">
                 {% if data.value_qualifiers %}
                     {% for q in data.value_qualifiers %}
                     <li/>- {{q}}
@@ -109,7 +120,7 @@
                 <td width="33%" class="about border-ltr">
                     Match qualifiers
                 </td>
-                <td class="value ltr" >
+                <td  class="value border-ltr">
                     {% if data.match_qualifiers %}
                         {% for q in data.match_qualifiers %}
                             <li/>- {{q}}
