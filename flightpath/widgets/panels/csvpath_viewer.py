@@ -3,7 +3,7 @@ import json
 import os
 import traceback
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QPlainTextEdit, QTextEdit, QLabel, QMessageBox, QTableView
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QTextEdit, QLabel, QMessageBox, QTableView
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt, QFileInfo
 

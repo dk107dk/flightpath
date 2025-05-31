@@ -22,6 +22,7 @@ class Helper(ClosingTabsHolder):
             self.help_and_feedback = None
         self.help_and_feedback = ClosingTabs(main=self.main, parent=self)
 
+
     def do_i_close(self, t) -> bool:
         #
         # we don't allow save-as help/ad-hoc runs

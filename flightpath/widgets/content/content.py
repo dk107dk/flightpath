@@ -93,10 +93,7 @@ class Content(ClosingTabsHolder):
                 close.append(name)
             else:
                 ret = False
-        #print(f"close_all_tabs: ret: {ret}, close: {close}")
         for widget in self.tab_widget.findChildren(QWidget):
-            #print(f"close_all_tabs: widget: {widget}")
-            #print(f"close_all_tabs: widget: {widget.objectName()}")
             name = widget.objectName()
             if name in close:
                 i = self.tab_widget.indexOf(widget)

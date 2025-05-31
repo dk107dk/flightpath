@@ -33,7 +33,7 @@ class FileCollector:
         return f"Data files ({ext_str})"
 
     @classmethod
-    def select_file(cls, *, parent:QWidget, cwd:str, title:str, file_type_filter:str) -> str:
+    def select_file(cls, *, parent:QWidget, cwd:str, title:str, file_type_filter:str ) -> str:
         #
         # selects a single file. if the file is not in the project's folder tree it will be copied in.
         #

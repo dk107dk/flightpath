@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
+from csvpath.util.nos import Nos
 
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.help.plus_help import HelpIconPackager
@@ -84,10 +85,24 @@ class Welcome(QWidget):
         csvps = FileCollector.csvpaths_filter(self.main.csvpath_config)
         csvs = FileCollector.csvs_filter(self.main.csvpath_config)
         afilter = f"{csvps};;{csvs}"
-
+        #
+        # find dir to copy into
+        #
+        cwd = self.main.state.cwd
+        cpath = self.main.sidebar.current_path
+        cpath = cpath if cpath is not None else ""
+        cpath = cpath.rstrip(os.sep)
+        if not cwd.endswith(cpath):
+            cwd = os.path.join(cwd, cpath)
+            nos = Nos(cwd)
+            if not nos.exists():
+                nos.makedirs()
+        #
+        # pick and copy
+        #
         path = FileCollector.select_file(
             parent=self,
-            cwd=self.main.state.cwd,
+            cwd=cwd,
             title="Select File",
             file_type_filter=afilter
         )

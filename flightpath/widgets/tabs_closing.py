@@ -1,10 +1,15 @@
-from PySide6.QtWidgets import QTabWidget, QPushButton, QStyle, QTabBar, QWidget
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import Slot
+import os
+
+from PySide6.QtWidgets import QTabWidget, QPushButton, QStyle, QTabBar, QWidget, QMenu
+from PySide6.QtGui import QIcon, QAction
+from PySide6.QtCore import Slot, Qt
+
+from csvpath.util.nos import Nos
 
 from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
+from flightpath.widgets.tabs_nonscrolling_tab_bar import NonScrollingTabBar
 from flightpath.util.tabs_utility import TabsUtility as taut
 
 class ClosingTabs(QTabWidget):
@@ -17,6 +22,59 @@ class ClosingTabs(QTabWidget):
         #
         self.parent = parent
         self.currentChanged.connect(self.on_tab_change)
+        self.setup_context_menu()
+        #
+        # exp
+        #
+        tab_bar = NonScrollingTabBar()
+        self.setTabBar(tab_bar)
+
+    def wheelEvent(self, event):
+        event.ignore()
+
+    def setup_context_menu(self) -> None:
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
+
+    def show_context_menu(self, pos):
+        index = self.tabBar().tabAt(pos)
+        if index == -1:
+            return  # Clicked outside of any tab
+        t = self.widget(index)
+        #
+        # this could allow for a ctx menu on the main tab bar if a file were named
+        # "Matches". but that would be a weird name and a subtle impact. can probably just
+        # ignore so we don't have to check what tab bar we are in.
+        #
+        if not t.objectName() == "Matches":
+            return
+        menu = QMenu(self)
+        save_sample = QAction("Save sample", self)
+        menu.addAction(save_sample)
+        save_sample.triggered.connect(lambda: self.on_save_sample(index))
+        menu.popup(self.mapToGlobal(pos))
+
+    def on_save_sample(self, index:int) -> None:
+        if index == -1:
+            return  # Clicked outside of any tab
+        #
+        # find directory
+        #
+        path = self.main.selected_file_path
+        print(f"tabs_cls: onsavesam: path 1: {path}")
+        nos = Nos(path)
+        if nos.isfile():
+            path = os.path.dirname(path)
+        t = self.widget(index)
+        if not t.objectName() == "Matches":
+            return
+        l = t.layout()
+        w = l.itemAt(0).widget()
+        m = w.model()
+        data = m.get_data()
+
+        print(f"tabs_cls: onsavesam: path 2: {path}")
+        self.main.save_sample(path=path, name="sample.csv", data=data)
 
     @Slot(str)
     def close_tab(self, name:str) -> bool:
@@ -106,10 +164,11 @@ class ClosingTabs(QTabWidget):
         w = self.widget(i)
         if w:
             path = w.objectName()
-            self.main.selected_file_path = path
-            self.main.statusBar().showMessage(f"  {path}")
-            if isinstance(w, DataViewer):
-                self.main.content.toolbar.enable()
-            else:
-                self.main.content.toolbar.disable()
+            if self.main.content == self.parent:
+                self.main.selected_file_path = path
+                self.main.statusBar().showMessage(f"  {path}")
+                if isinstance(w, DataViewer):
+                    self.main.content.toolbar.enable()
+                else:
+                    self.main.content.toolbar.disable()
 
