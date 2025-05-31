@@ -375,17 +375,6 @@ class Sidebar(QWidget):
                     self.cut_action.setEnabled(False)
                     self.copy_action.setEnabled(False)
                     self.paste_action.setEnabled(False)
-
-                #
-                # if a csvpath file is open and changed we need to offer to save it
-                # this was from when we only allowed 1 csvpath at a time. can be deleted.
-                #
-                """
-                if ext in self.main.csvpath_config.csvpath_file_extensions:
-                    i = self.main.content.tab_widget.currentIndex()
-                    if i == 2 and not self.main.content.csvpath_view.saved:
-                        self.save_file_action.setVisible(True)
-                """
             else:
                 #
                 # paste only if dir and cutted. cut only if file.
@@ -425,6 +414,19 @@ class Sidebar(QWidget):
             #
             self._last_path = None
         self.context_menu.exec(global_pos)
+
+    @property
+    def current_path(self) -> str:
+        index = self.file_navigator.currentIndex()
+        if index.isValid():
+            path = self.proxy_model.filePath(index)
+            return path
+        return None
+
+    @property
+    def current_path_is_dir(self) -> str:
+        nos = Nos(self.current_path)
+        return nos.exists() and not nos.isfile()
 
     def _stage_data(self) -> None:
         index = self.file_navigator.currentIndex()
