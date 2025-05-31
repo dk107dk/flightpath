@@ -90,7 +90,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.welcome = None
         self.content = None
         self.config = None
-        self.table_model = None
+        #self.table_model = None
         self.sidebar = None
         self.sidebar_rt_top = None
         self.sidebar_rt_mid = None
@@ -106,7 +106,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self._helper = None
         self._csvpath_config = None
         self.threadpool = None
-        self.selected_file_path = None
+        self._selected_file_path = None
         self.last_main = None
         self.build_number = None
         self.progress_dialog = None # not sure we need this as a member, but it is used as one atm.
@@ -195,6 +195,17 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if self._csvpath_config is None:
             self._csvpath_config = CsvPaths().config
         return self._csvpath_config
+
+    @property
+    def selected_file_path(self) -> str:
+        return self._selected_file_path
+
+    @selected_file_path.setter
+    def selected_file_path(self, path:str) -> None:
+        print(f"main.selected_file_path: path: {path}")
+        from csvpath.util.log_utility import LogUtility as lout
+        lout.log_brief_trace()
+        self._selected_file_path = path
 
     def log(self, msg:str) -> None:
         if self.logger is None:
@@ -620,7 +631,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             msg_box.setStandardButtons(QMessageBox.Ok)
             msg_box.exec()
             return
-        self.table_model = TableModel(data)
+        table_model = TableModel(data)
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(1)
         #
@@ -643,7 +654,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             # find_tab -> (index, widget)
             #
             data_view = data_view[1]
-        data_view.display_data(self.table_model)
+        data_view.display_data(table_model)
         #
         # when  data _view is visible we show the sample tool bar
         #
@@ -887,40 +898,100 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
 
     def on_save_sample(self) -> None:
-        if not self.table_model:
-            raise ValueError("Table model cannot be None")
-        name = os.path.basename(self.selected_file_path)
-        path = os.path.dirname(self.selected_file_path)
+        #if not self.table_model:
+        #    raise ValueError("Table model cannot be None")
+        nos = Nos(self.selected_file_path)
+        name = self.selected_file_path
+        path = self.selected_file_path
+        if nos.isfile():
+            name = os.path.basename(name)
+            path = os.path.dirname(path)
+        else:
+            name = "sample.csv"
+        """
+        # have to get to something like this:
+        t = self.widget(index)
+        if not t.objectName() == "Matches":
+            return
+        l = t.layout()
+        w = l.itemAt(0).widget()
+        m = w.model()
+        data = m.get_data()
+        """
         #
-        # minimal change to help us not overwrite
+        # this is from the days of one file at a time
+        #
+        #data = self.table_model.get_data()
+        #
+        # get current tab
+        #
+        index = self.content.tab_widget.currentIndex()
+        t = self.content.tab_widget.widget(index)
+        l = t.layout()
+        w = l.itemAt(0).widget()
+        m = w.model()
+        data = m.get_data()
+        #
+        #
+        #
+        print(f"main.on_save_sample: name: {name}, path: {path}, data: {len(data)}")
+        b = self.save_sample(path=path, name=name, data=data)
+        #
+        # reload views with new file
+        # set the file tree to highlight the new file
+        #
+        if b:
+            self.read_validate_and_display_file()
+            #
+            # i have a path str
+            # i need the proxy model index at that path
+            #   1. get file_model index at path
+            #   2. get proxy model index mapped to source model index
+            # give proxy model index to tree_view to select
+            #
+            index = self.sidebar.file_model.index(path)
+            pindex = self.sidebar.proxy_model.mapFromSource(index)
+            if index.isValid():
+                self.sidebar.file_navigator.setCurrentIndex(pindex)
+
+    def save_sample(self, *, path:str, name:str, data:str) -> bool:
+        #
+        # if the app entered a subpath somehow pull it off name, into path, and check if it exists
+        #
+        if name.find(os.sep):
+            path = os.path.join(path, name)
+            name = os.path.basename(path)
+            path = os.path.dirname(path)
+        nos = Nos(path)
+        if not nos.exists():
+            nos.makedirs()
+        #
+        # get user's file name and save
         #
         new_name, ok = QInputDialog.getText(self, "Save sample", "Enter a name for the sample file:", text=name)
         if ok and new_name and new_name.strip() != "":
             if not new_name.endswith(".csv"):
                 new_name = f"{new_name}.csv"
+            #
+            # do the same subpath rejiggering in case the user added a subpath to name
+            #
+            if new_name.find(os.sep):
+                path = os.path.join(path, new_name)
+                new_name = os.path.basename(path)
+                path = os.path.dirname(path)
+            nos = Nos(path)
+            if not nos.exists():
+                nos.makedirs()
+            #
+            # minimal change to help us not overwrite
+            #
             path = fiut.deconflicted_path(path, new_name)
-            data = self.table_model.get_data()
             with DataFileWriter(path=path) as file: # pylint: disable=E0110
                 writer = csv.writer(file.sink)
                 writer.writerows(data)
+            return True
         else:
-            return
-        #
-        # reload views with new file
-        # set the file tree to highlight the new file
-        #
-        self.read_validate_and_display_file()
-        #
-        # i have a path str
-        # i need the proxy model index at that path
-        #   1. get file_model index at path
-        #   2. get proxy model index mapped to source model index
-        # give proxy model index to tree_view to select
-        #
-        index = self.sidebar.file_model.index(path)
-        pindex = self.sidebar.proxy_model.mapFromSource(index)
-        if index.isValid():
-            self.sidebar.file_navigator.setCurrentIndex(pindex)
+            return False
 
     def open_config(self):
         self.last_main = self.main_layout.currentIndex()

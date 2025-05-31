@@ -272,7 +272,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         # for that switch local must be True to let us know not to
         # use self.parent.path
         #
-        # sadly, since we catch rt-clicks direct, we have to recheck
+        # since we catch rt-clicks direct, we have to recheck
         # if switch_local should be true.
         #
         if not switch_local:
