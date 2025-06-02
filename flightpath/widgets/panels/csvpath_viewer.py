@@ -56,7 +56,13 @@ class CsvpathViewer(QWidget):
         super().__init__()
         self.main = main
         self.editable = editable
+        #
+        # sets the font size
+        #
         stut.set_common_style(self)
+        #
+        #
+        #
         layout = QVBoxLayout()
         self.setLayout(layout)
         self.saved = True

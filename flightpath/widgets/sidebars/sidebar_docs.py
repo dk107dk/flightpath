@@ -33,7 +33,7 @@ class SidebarDocs(QWidget):
         self.setMinimumWidth(300)
         self.context_menu = None
         self._function_collector = functions if functions is not None else FunctionCollector()
-        self.setStyleSheet("font-size: 13px; padding: 5px;")
+        self.setStyleSheet("font-size: 13px; padding: 0px;")
         self.description = None
         self.setup()
 
@@ -116,14 +116,6 @@ class SidebarDocs(QWidget):
         #
         #
         raw = HtmlGenerator.load_and_transform(path, f)
-        print(f"\nwra:\n{raw}")
-        """
-        nos = Nos(path)
-        if nos.exists():
-            with DataFileReader(path) as file:
-                raw = file.read()
-        """
-
         html = ""
         styles = ""
         for _ in raw.split("<code>"):

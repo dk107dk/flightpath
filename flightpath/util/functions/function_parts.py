@@ -29,7 +29,13 @@ class FunctionParts:
         cls.prep(function)
         desc = {}
         desc["name"] = function.name
-        desc["description"] = function.description
+        function.description = [] if function.description is None else function.description
+        ds = []
+        for s in function.description:
+            ss = s.split("\n\n")
+            for _ in ss:
+                ds.append(_)
+        desc["description"] = ds
         cls.aliases(function, desc)
         cls.sigs(function, desc)
         cls.schema_type(function, desc)

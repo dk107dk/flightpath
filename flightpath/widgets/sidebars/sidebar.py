@@ -206,42 +206,30 @@ class Sidebar(QWidget):
         if "*.json" not in exts:
             exts.append("*.json")
         #
+        # added for md/other user created docs
+        #
+        if "*.html" not in exts:
+            exts.append("*.html")
+        if "*.md" not in exts:
+            exts.append("*.md")
+        if "*.txt" not in exts:
+            exts.append("*.txt")
+        #
         # TODO: find the current key dirs in config and filter out
         #
         self.file_model.setNameFilters(exts)
         self.file_model.setNameFilterDisables(False)
-
         #
-        # this works as far as the ascending alpha sort, but it does a segmention fault 11 when
-        # you click on a file. could be similar to the way we needed the trap dict in an
-        # early version of the tree model?
+        # exp. don't show the std background dirs
         #
-        """
-        #
-        # exp
-        #
-        self.proxy_model = QSortFilterProxyModel()
-        self.proxy_model.setSourceModel(self.file_model)
-
-        self.proxy_model.sort(0, Qt.AscendingOrder)
-
-        self.file_navigator.setModel(self.proxy_model)
-        self.file_navigator.setRootIndex(self.proxy_model.mapFromSource(self.file_model.index(self.main.state.cwd)))
-        print(f"setupdtr: {self.main.state.cwd}")
-        #
-        # end exp
-        #
-        """
-
-        #
-        # exp
-        #
-        self.proxy_model = DirectoryFilterProxyModel(excluded_dirs=['config', 'logs', 'cache', 'archive', 'inputs'], sidebar=self)
+        self.proxy_model = DirectoryFilterProxyModel(
+            excluded_dirs=['config', 'logs', 'cache', 'archive', 'inputs', 'logs_bak'],
+            sidebar=self
+        )
         self.proxy_model.setSourceModel(self.file_model)
         self.proxy_model.sort(0, Qt.AscendingOrder)
         self.file_navigator.setModel(self.proxy_model)
         self.file_navigator.setRootIndex(self.proxy_model.mapFromSource(self.file_model.index(self.main.state.cwd)))
-
         #
         # end exp; orig 2 below
         #
@@ -262,11 +250,9 @@ class Sidebar(QWidget):
         else:
             self.layout().addWidget(self.file_navigator)
 
-
     def _setup_file_navigator_context_menu(self):
         """Create the context menu for the file navigator."""
         self.context_menu = QMenu(self)
-
         self.rename_action = QAction()
         self.open_location_action = QAction()
         self.delete_action = QAction()
@@ -275,7 +261,6 @@ class Sidebar(QWidget):
         self.new_folder_action = QAction()
         self.stage_data_action = QAction()
         self.load_paths_action = QAction()
-
         self.run_action = QAction()
         #
         # cut and paste
@@ -698,7 +683,15 @@ $[*][ print("hello world") ]"""
         ext = name[name.rfind(".")+1:]
         if ext == "json":
             return True, "Ok"
-        if ext not in self.main.csvpath_config.csvpath_file_extensions and ext not in self.main.csvpath_config.csv_file_extensions:
+        #
+        # do we want to allow creating html files?  that's a whole can of worms.
+        # maybe just display them. perhaps also editing, to a degree?
+        #
+        if ext in ["md", "txt"]:
+            return True, "Ok"
+        if ( ext not in self.main.csvpath_config.csvpath_file_extensions
+             and ext not in self.main.csvpath_config.csv_file_extensions
+        ):
             return False, "File name must have an extension configured for csvpaths or data files"
         return True, "Ok"
 

@@ -24,9 +24,6 @@ class HtmlGenerator:
             i = path.find(f"{os.sep}help{os.sep}")
             dirname = path[0:i+6]
             basename = path[i+6:]
-            print(f"htmlgen: transform: dirname: {dirname}")
-            print(f"htmlgen: transform: basename: {basename}")
-
             #e = Environment(loader=FileSystemLoader(os.path.dirname(path)))
             e = Environment(loader=FileSystemLoader(dirname))
             t = e.get_template( basename )
