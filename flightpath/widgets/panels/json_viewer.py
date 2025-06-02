@@ -59,7 +59,13 @@ class JsonViewer(QWidget):
         self.path = None
         self.main = main
         self.editable = editable
+        #
+        # sets the font size
+        #
         stut.set_common_style(self)
+        #
+        #
+        #
         layout = QVBoxLayout()
         self.setLayout(layout)
         layout.setContentsMargins(0, 0, 0, 0)
