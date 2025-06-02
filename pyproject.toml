@@ -9,8 +9,7 @@ readme = "README.md"
 python = ">3.10,<3.14"
 pyside6 = ">=6.8.3"
 pygments = "^2.19.1"
-csvpath = "0.0.541"
-#csvpath = { path = "../csvpath/dist/csvpath-0.0.540.tar.gz" }
+csvpath = { path = "../csvpath/dist/csvpath-0.0.542.tar.gz" }
 darkdetect = "^0.8.0"
 
 [tool.poetry.scripts]

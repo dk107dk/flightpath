@@ -1,12 +1,13 @@
-## The functions: how to read
+## How to read the functions
 
 The functions documentation is driven from the code. It is rendered both in
 FlightPath and in CsvPath Framework's CLI. Each description holds a lot of
 information. Some of the details may be different than what you would
 expect from a similar domain specific language.
 
+<br/>
 
-## Sections
+### Sections
 There are two main sections:
 * A narrative description
 * Usage details
@@ -19,9 +20,11 @@ Within the Usage section you will see:
 * Qualifiers
 
 
-## Usage
+<br/>
 
-### Action type
+### Usage
+
+#### Action type
 Every function in CsvPath Language is one of three things:
 * A value-producer
 * A match-decider
@@ -48,7 +51,7 @@ is typically immaterial to the evaluation of the csvpath. There are
 some side-effects that also trigger actions. For example, a print()
 statement can also cause a function to be evaluated.
 
-### Schema type
+#### Schema type
 Functions that are schema types may be used with line() to declare
 structural schemas that are similar to SQL table definitions. There
 are only a handful of schema types:
@@ -69,12 +72,12 @@ A table-like entity describing a person might look like:
     line( string(#firstname), string(#lastname), integer(#age) )
 ```
 
-### Aliases
+#### Aliases
 Unlike most languages CsvPath Language has many function aliases. The purpose is:
 * To be forgiving of forgetting function names
 * To allow for a more semantically cognizant approach to writing csvpaths
 
-### Signatures
+#### Signatures
 A function signature is a description of how you call the function. It is the name
 of a function along with its arguments. Often functions will have multiple distinct
 signatures that represent different combinations of allowable arguments.
@@ -150,7 +153,7 @@ be permitted when it is checked at the start of a run. But each time an illegal 
 `five` is seen an error will be raised. If we have an error policy that allows the run to
 continue past errors we will, notwithstanding the error on `five`, finish the run.
 
-### Qualifiers
+#### Qualifiers
 The last section of the function documentation is qualifiers. Qualifiers change the way
 Functions work. For example, a line() like:
 
