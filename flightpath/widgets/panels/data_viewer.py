@@ -19,7 +19,13 @@ class DataViewer(QWidget):
 
     def __init__(self, parent):
         super().__init__()
+        #
+        # sets the font size
+        #
         stut.set_common_style(self)
+        #
+        #
+        #
         self.parent = parent
         self.main = parent.main
         self.path = self.main.selected_file_path

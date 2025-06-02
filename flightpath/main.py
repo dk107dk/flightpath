@@ -42,10 +42,12 @@ from csvpath.util.config import Config as CsvPathConfig
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 
+from flightpath.workers.md_worker import MdWorker
 from flightpath.workers.csvpath_file_worker import CsvpathFileWorker
 from flightpath.workers.general_data_worker import GeneralDataWorker
 from flightpath.workers.json_data_worker import JsonDataWorker
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
+from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.table_model import TableModel
@@ -203,8 +205,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @selected_file_path.setter
     def selected_file_path(self, path:str) -> None:
         print(f"main.selected_file_path: path: {path}")
-        from csvpath.util.log_utility import LogUtility as lout
-        lout.log_brief_trace()
+        #from csvpath.util.log_utility import LogUtility as lout
+        #lout.log_brief_trace()
         self._selected_file_path = path
 
     def log(self, msg:str) -> None:
@@ -569,6 +571,62 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         taut.select_tab(self.content.tab_widget, json_view)
         self._rt_tabs_hide()
 
+
+
+
+    @Slot(tuple)
+    def update_md_views(self, worker_data):
+        filepath, data, editable = worker_data # pylint: disable=W0612
+        self.progress_dialog.close()
+        if isinstance( data, Exception ):
+            print(f"Error opening file: {type(data)}: {data}")
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setWindowTitle("File opening error")
+            msg_box.setText(f"Error: {data}")
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            msg_box.exec()
+            return
+        self.last_main = self.main_layout.currentIndex()
+        #
+        # show code/data tabs' panel
+        #
+        self.main_layout.setCurrentIndex(1)
+        self.content.toolbar.disable()
+        #
+        #
+        #
+        view = taut.find_tab(self.content.tab_widget, filepath)
+        if view is None:
+            editable = editable if editable is not None else True
+            view = MdViewer(main=self, editable=editable)
+            view.setObjectName(filepath)
+            #
+            # TODO: oddly, we use the worker to open and then just open again
+            # this is a legacy of something validation related. it exists
+            # in csvpath and json files too.
+            #
+            view.open_file(path=filepath, data=data)
+            self.content.tab_widget.addTab(view, os.path.basename(filepath) )
+            save = "cmd-s" if osut.is_mac() else "ctrl-s"
+            shortcuts = f"{save} to save"
+            i = taut.find_tab(self.content.tab_widget, filepath)
+            self.content.tab_widget.setTabToolTip(i[0], shortcuts)
+        else:
+            view = view[1]
+        view.editable = editable if editable else True
+        taut.select_tab(self.content.tab_widget, view)
+        #
+        # we show the right tabs because we may be showing
+        # information relating to them in some way. if this
+        # feels odd in practice we can be more careful in
+        # when/if we do it.
+        #
+        self._rt_tabs_show()
+
+
+
+
     @Slot(tuple)
     def update_csvpath_views(self, worker_data):
         filepath, data, editable = worker_data # pylint: disable=W0612
@@ -748,6 +806,21 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
+        elif info.isFile() and info.suffix() in ["md", "html", "txt"]:
+            #
+            # txt could be set in csv extensions. probably not, but possible. we
+            # don't need these to be configurable at this time.
+            #
+            worker = MdWorker(path, self, editable=editable)
+            worker.signals.finished.connect(self.update_md_views)
+            if finished_callback:
+                worker.signals.finished.connect(finished_callback)
+            worker.signals.messages.connect(self.statusBar().showMessage)
+            self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
+            self.progress_dialog.setWindowModality(Qt.WindowModal)
+            self.progress_dialog.setValue(0)
+            self.progress_dialog.setMinimumDuration(400)
+            self.threadpool.start(worker)
         #
         # need to recognize .txt (if not in csv extensions) and .md
         #
@@ -898,8 +971,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
 
     def on_save_sample(self) -> None:
-        #if not self.table_model:
-        #    raise ValueError("Table model cannot be None")
         nos = Nos(self.selected_file_path)
         name = self.selected_file_path
         path = self.selected_file_path
@@ -908,16 +979,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             path = os.path.dirname(path)
         else:
             name = "sample.csv"
-        """
-        # have to get to something like this:
-        t = self.widget(index)
-        if not t.objectName() == "Matches":
-            return
-        l = t.layout()
-        w = l.itemAt(0).widget()
-        m = w.model()
-        data = m.get_data()
-        """
         #
         # this is from the days of one file at a time
         #
@@ -934,7 +995,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         #
         #
-        print(f"main.on_save_sample: name: {name}, path: {path}, data: {len(data)}")
         b = self.save_sample(path=path, name=name, data=data)
         #
         # reload views with new file

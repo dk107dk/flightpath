@@ -14,7 +14,13 @@ class RawViewer(QWidget):
 
     def __init__(self, main):
         super().__init__()
+        #
+        # sets the font size
+        #
         stut.set_common_style(self)
+        #
+        #
+        #
         self.main = main
         self.path = main.selected_file_path
         layout = QVBoxLayout()
