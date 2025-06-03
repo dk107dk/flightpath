@@ -1,29 +1,43 @@
-
-#
-# a trivial example
-#
-test.csv
-test.csvpath
-
-#
-# a trivial model validation
-#
-simple_model.csvpath
-
-#
-# a simple named-paths group definition
-#
-my_named_paths.json
-
-#
-# schemas
-#
-schemas/person.sql.txt
-schemas/schemas.csvpath
-schemas/people.csv
-
-#
-#
-#
 README.md
 
+counting/increment_counter_every.csvpaths
+counting/projects.csv
+counting/README.md
+counting/tally_and_subtotal.csvpaths
+
+debugging/error.csvpath
+debugging/README.md
+debugging/run_table.csvpath
+debugging/set_log_level.csvpath
+debugging/validation_mode.csvpath
+debugging/World_Port_Index_sample.csv
+
+duplicates/Alzheimers_Disease_and_Healthy_Aging_Data_sample.csv
+duplicates/dups.csvpaths
+duplicates/README.md
+
+first steps/Hello World.csvpath
+first steps/README.md
+first steps/simple_model.csvpath
+first steps/test.csv
+
+headers/collecting.csvpaths
+headers/missing example.csvpaths
+headers/names_and_indexes.csvpaths
+headers/projects_with_reset.csv
+headers/projects.csv
+headers/README.md
+
+math
+math/Automobiles_Annual_Imports_and_Exports_Port_Authority_of_NY.csv
+math/math.csvpaths
+math/min_max_average_percents.csvpaths
+math/README.md
+
+named-paths groups/my_named_paths.json
+named-paths groups/README.md
+
+schemas/people.csv
+schemas/person.sql.txt
+schemas/README.md
+schemas/schemas.csvpath

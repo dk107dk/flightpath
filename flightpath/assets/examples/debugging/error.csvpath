@@ -1,0 +1,26 @@
+~
+   CsvPath Framework has a ton of built-in validations. But a large part of 
+   rules-based validation is creating rules to test business requirements. When
+   your rules find a problem you need to use either print() or error().
+
+   Run this simple csvpath and have a look at the error captured to JSON in 
+   the Errors tab. You will see one error.
+
+   The error is also printed to the default printouts stream in a one-line summary.
+   If you are using the default configuration you will see the full error summary. 
+   You can set your own format or print just the bare message by changing the config.
+   See the 'Open config' button in the lower left-hand of FlightPath.
+
+   id: raising an error
+   test-data: examples/debugging/World_Port_Index_sample.csv
+~
+
+$[*][ 
+
+	print("$.csvpath.line_number")
+ 	
+	line_number() == 5 -> error("Line 5 is unacceptable")
+
+	line_number() == 10 -> stop()
+
+]

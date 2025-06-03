@@ -1,0 +1,60 @@
+
+---- CSVPATH ----
+
+~
+   When used without arguments, all() returns True (it matches) when all headers 
+   have values. 
+
+   all()'s opposite is the missing() function. In this example we are looking for 
+   any lines where a header has no value. We could use missing(), but to make 
+   a more interesting example, we are using return-mode to return only lines that
+   do not match.
+   
+   On the last line we print a tally of lines and matches. Notice that we add a 
+   nocontrib qualifier to last(). nocontrib means that the match component with 
+   that qualifier does not contribute to matching. If we didn't add nocontrib the
+   last() would only match with the last line. Since we are interested in all(), 
+   not last(), we use nocontrib to neutralize last().
+
+   return-mode:no-matches
+   id: missing example
+   test-data:examples/headers/projects.csv
+~
+
+$[*][ 
+
+	all()
+
+	last.nocontrib() -> 
+               print("Lines: $.csvpath.line_number, Matches: $.csvpath.count_matches")
+]
+
+
+---- CSVPATH ----
+
+~
+   In some cases you may want to reset headers. This often happens when there are prolog lines at the 
+   top of a file or if multiple datasets are joined in one file.
+
+   When that happens you may do a reset and then need to check that the new headers are what you expect.
+
+   This csvpath shows how to do the check on the new set of headers.
+
+   id: reset headers
+   test-data:examples/headers/projects_with_reset.csv
+~
+$[1*][ 
+
+    line_number() == 18 -> reset_headers(skip())
+
+    header_names_mismatch.u("agency|neighborhood|project|outcome")
+
+    print(
+"Line: $.csvpath.line_number:
+present: $.variables.u_present
+misordered: $.variables.u_misordered
+unmatched: $.variables.u_unmatched
+duplicated: $.variables.u_duplicated
+")
+
+]

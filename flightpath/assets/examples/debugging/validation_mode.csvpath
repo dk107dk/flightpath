@@ -1,0 +1,56 @@
+~
+   Validation-mode changes how CsvPath Framework handles errors on a csvpath-by-csvpath
+   basis. It overrides the settings in the config file. To see those settings click the 
+   Open config button on the bottom left.
+
+   This csvpath prints an error message when it sees line 10. The message goes to the 
+   Printouts tab and the Errors tab. You can see the other 999 lines in Matched.
+
+   If we didn't want to see the error in the print tab we could use no-raise. And if we 
+   didn't want to capture the error to the Errors tab we could use no-collect.
+
+   id: errors example
+   test-data: examples/debugging/World_Port_Index_sample.csv
+   validation-mode: print
+~
+
+$[*][ 
+	~ 
+           make sure we're logging on error for a quiet log 
+         ~
+	debug("error")
+
+	~ 
+           on line 10 raise an error. you will see this in 
+           the Printouts, Log, and Errors tabs 
+         ~
+         line_number.nocontrib() == 10 -> error("This is a problem!")
+
+         ~ 
+           print the last line count just so we can see that the file ran 
+         ~
+	last.nocontrib() -> print("$.csvpath.line_number")
+]
+
+---- CSVPATH ----
+
+~
+   This csvpath sets validation-mode so that the run stops on the first error.
+   It also sets the metadata field is_valid = False. 
+
+   In a named-paths group run you would see the is_valid = False in the meta.json 
+   file. In an ad-hoc run you can see the field's value in the "What am I seeing?" 
+   tab.
+
+   validation-mode: fail, stop
+   id: fail and stop example
+   test-data: examples/debugging/World_Port_Index_sample.csv
+~
+$[0-10][ 
+	print("$.csvpath.line_number")
+         line_number.nocontrib() == 3 -> error("This is a problem!")	
+ ]
+
+
+
+
