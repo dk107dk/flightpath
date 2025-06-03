@@ -1,0 +1,56 @@
+~
+The run_table() function prints the metadata and runtime data collected during the run. 
+In FlightPath you will get the same information in the **What Am I Seeing** tab. 
+
+The library that creates the formatted table is quite good, but the tables display 
+better or worse depending on the viewer application. Vim is very clean. Microsoft Word 
+also displays well, but you have to open the file as UTF-8 to get the best presentation.
+
+Note that this information is available in named-paths group runs in the meta.json file. 
+It can also be sent to some 3rd party systems using built-in integrations. That is a 
+topic for another example.
+
+ name:run table
+ description: prints a run-table when the last line is scanned.
+ test-data: examples/first steps/test.csv
+~
+$[*][ 
+
+   last() -> run_table()
+
+]
+
+
+
+---- CSVPATH ----
+
+~
+   The vote stack function gives you a line-by-line tally of how the 
+   match components voted. 
+
+   In this case: 
+     - print() is a side-effect so always matches
+     - yes() always matches
+     - 2 is never > 4
+     - line 5 only comes once
+     - line 10 only comes once, but the component isn't counted because of the nocontrib qualifier.
+     - the last two match components are side-effects and so always match
+
+   Note that the var_table() doesn't actually register its own vote 
+   because it comes after vote_stack().
+
+   id: vote stack example
+   test-data: examples/debugging/World_Port_Index_sample.csv
+~
+
+$[*][ 
+	print("$.csvpath.line_number")
+
+	yes()
+	gt(2, 4)
+	line_number() == 5
+	line_number.nocontrib() == 10 -> stop()
+	
+	@votes = vote_stack()
+	var_table("votes")
+]

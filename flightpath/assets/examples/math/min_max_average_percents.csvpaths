@@ -1,0 +1,57 @@
+~
+  This csvpath shows the min() and max() functions' potential to mirror the 
+  increase and decrease qualfiers. Look in the Variables tab to see the results.
+
+  Notice that increase and decrease will do a lexical comparison if you don't
+  pass them numbers. min() and max() convert to numbers, but plain headers 
+  are always strings until you do something with them. 
+  
+  id: min-max
+  test-data: examples/math/Automobiles_Annual_Imports_and_Exports_Port_Authority_of_NY.csv
+~
+$[1*][ 
+	@m1 = max(#"Automobile Volume")
+	
+	@m2.increase = int(#"Automobile Volume")
+
+	@m3 = min(#"Automobile Volume")
+	
+	@m4.decrease = int(#"Automobile Volume")
+]
+
+---- CSVPATH ----
+
+~
+  Here we have the running median and the running average. The end result in variables @a and 
+  @m are for the full list of numbers. However, @a and @m are available at each line as the
+  average and median of the lines scanned to that point.
+
+  id: ave and median
+  validation-mode: raise, print, stop
+  test-data: examples/math/Automobiles_Annual_Imports_and_Exports_Port_Authority_of_NY.csv
+~
+
+$[1*][ 
+     @a = average(#"Automobile Volume")
+     @m = median(#"Automobile Volume")
+]
+
+
+---- CSVPATH ----
+
+~
+   This csvpath checks if the % unique values is below 80% after at least 10% of years 
+   have been checked.
+   
+   id: percent unique
+   validation-mode: raise, print, stop
+   test-data: examples/math/Automobiles_Annual_Imports_and_Exports_Port_Authority_of_NY.csv
+~
+$[1*][ 
+
+   @reviewed = percent("scan")
+   @uniques = percent_unique.units(#"Automobile Volume")   
+
+   below( @reviewed, 10 ) -> skip()
+   below( @uniques, 80 ) -> print("These numbers look off")
+]

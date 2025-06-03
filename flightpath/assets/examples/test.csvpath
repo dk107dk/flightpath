@@ -1,7 +1,0 @@
-~
- name:hello world
- description: this is a super simple hello world.
- test-data: examples/test.csv
-~
-$[*][ #firstname == "cat" -> print("hello world") ]
-
