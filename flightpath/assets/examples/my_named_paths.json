@@ -1,9 +1,0 @@
-{
-    "test_named_paths_group": [
-        "examples/simple_model.csvpath",
-        "examples/test.csvpath"
-    ],
-    "another_test_named_paths_group": [
-        "examples/test.csvpath"
-    ]
-}
