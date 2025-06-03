@@ -1,0 +1,11 @@
+~
+ This csvpath reads 1 line of a file and outputs a greeting. The data file is
+ identified using the test-data metadata field. test-data links a data file 
+ to your csvpath for easy development and testing iterations.
+
+ name:hello world
+ description: super simple hello world
+ test-data: examples/first steps/test.csv
+~
+$[1][ print("hello world") ]
+

@@ -1,0 +1,75 @@
+
+~
+  This csvpath tracks the number of electricians. See the Variables tab for the 
+  results.
+
+  Using increment() and mod() we can see that there are five electricians, and that 
+  there are two pairs with one electrician remaining. The mod() function will 
+  trigger errors until it has the values it needs for its calculation. But for this 
+  example we'll use validation-mode to make sure we ignore the complaints.
+
+  From count() we can see that as well as those five electricians there are another 12
+  trades persons who are not electricians.
+
+  id: electricians
+  test-data: examples/counting/projects.csv
+  validation-mode: no-raise, no-print, no-stop
+~
+
+$[*][ 
+	
+     count.electricians(#trade == "Electrician")
+
+     increment.half(#trade == "Electrician", 2)
+
+     @half_remainder = mod(@half, 2)
+]
+
+
+---- CSVPATH ----
+
+~
+  This csvpath uses a decimal counter value to create a score for a 
+  developer based on how many projects they have.
+ 
+  It also uses increment() to create a scaled impact metric based on 
+  a count of developer projects.
+
+   id: developers
+  test-data: examples/counting/projects.csv
+~
+
+$[1*][ 
+
+     #developer == "The Druker Company LTD" -> counter.influence(6.35)
+     increment.impact_scale(#developer == "The Druker Company LTD", 3)
+]
+
+---- CSVPATH ----
+
+~
+  tally(), every(), and count() create the same counts in variables. However, they
+  each have their own different capabilities. 
+   
+   - count(): counts line matches (the union of all match components) and individual
+              match component matches
+   - every(): counts values, produces a scaled count, and matches if the modulus is 0
+   - tally(): counts as a side-effect and can count joined header values
+
+  tally() has no impact on matching and produces only the default value -- it 
+  is a complete side-effect. count() has no impact on matching, but produces its 
+  current count as its value. every() both produces a value, the scaled count, 
+  and votes on matching based on the remainder.
+     
+  id: counts
+  test-data: examples/counting/projects.csv
+~
+$[1*][ 
+     ~ we'll limit the matches to every 3rd Suffolk project ~
+     #general_contractor_name == "Suffolk Construction Company"
+     every.e(#general_contractor_name, 3) 
+
+     tally.t(#general_contractor_name)
+
+     count.c(#general_contractor_name)
+]

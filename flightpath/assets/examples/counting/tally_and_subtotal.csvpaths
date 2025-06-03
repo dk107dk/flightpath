@@ -1,0 +1,33 @@
+~
+ This csvpath shows the difference between tally() and subtotal(). 
+
+ Tally counts the number of times a value is seen in a header or combination of headers.
+
+ Subtotal keeps a running sum of values of one header for each value of another.
+
+ To better understand the difference and usage, check out the Variables tab.
+
+ Also, notice two things in the print() statement:
+
+   - We can add the tracking value to the variable to get the specific tally or subtotal 
+   - After the line number reference we use two periods, rather than just one
+
+ The two points are related. A reference (pointers starting with $) has 
+ four parts separated by three bullets. When we use references in print statements 
+ the reference is local so we drop the first part of the reference, leaving the $. 
+ notation. Typically we don't use a tracking value name in print() either, so we don't
+ have the third period. However, if we want to put a period after a reference, 
+ grammatically, when there is no tracking value name we need to escape the period. We 
+ do that by doubling up with two periods.
+
+ id: tally and subtotal
+ test-data: examples/counting/projects.csv
+~
+
+$[1*][ 
+
+	tally.projects_per(#agency)
+	subtotal.worker_hours(#agency, #13)
+
+	print("Line: $.csvpath.line_number.. BPDA projects: $.variables.projects_per_agency.BPDA")
+]

@@ -624,6 +624,10 @@ class Sidebar(QWidget):
                     item, ok = QInputDialog.getItem(self, "Data structure", "Start with", items, 0, False)
                     if ok and item:
                         content = item
+                elif new_name.endswith(".md"):
+                    content = """# Title
+*(hit control-t to toggle to raw markdown editing)*
+                    """
                 elif ns[1] in self.main.csvpath_config.csvpath_file_extensions:
                     testdata = ""
                     _ = os.path.join(self.main.state.cwd, "examples/test.csv")
@@ -650,9 +654,9 @@ $[*][ print("hello world") ]"""
                 # create file
                 #
                 except PermissionError:
-                    QMessageBox.warning(self, self.tr("Error"), self.tr("Operation not permitted."))
+                    QMessageBox.warning(self, "Error", "Operation not permitted.")
                 except OSError:
-                    QMessageBox.warning(self, self.tr("Error"), self.tr("File with this name already exists."))
+                    QMessageBox.warning(self, "Error", "File with this name already exists.")
             else:
                 #
                 # show a simple error msg dialog. may look significantly different from the modal, but

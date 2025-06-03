@@ -1,10 +1,10 @@
 ~
-   id: one
+   id: example one
    description: Exactly the right headers and wildcards
    test-data: examples/schemas/people.csv
 ~
 $[1*][
-    line.person(
+         line.person(
 		integer.id.notnone(#0),
 		string.notnone(#given_name),
 		string.notnone(#family_name),
@@ -23,11 +23,17 @@ $[1*][
 		url(#linkedin),
 		string.cell(#phone)
 	)
+
+	~ 
+          Just to see something in the printouts let's say hello. 
+         ~
+	@name = concat(caps(#1), " ", caps(#2))
+	print("Hello $.variables.name")
 ]
 
 ---- CSVPATH ----
 ~
-   id: two
+   id: example two
    description: 2 wildcards in address
    test-data: examples/schemas/people.csv
 ~
@@ -55,7 +61,7 @@ $[1*][
 
 ---- CSVPATH ----
 ~
-   id: three
+   id: example three
    description: Extra wildcard at end of contact
    test-data: examples/schemas/people.csv
 ~
@@ -84,7 +90,7 @@ $[1*][
 
 ---- CSVPATH ----
 ~
-   id: four
+   id: example four
    description: Unnecessary wildcard at end of contact and a distinct.
    test-data: examples/schemas/people.csv
 ~
