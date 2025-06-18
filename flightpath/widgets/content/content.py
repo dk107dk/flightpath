@@ -2,19 +2,19 @@
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QStackedLayout,
     QTabWidget,
-    QMessageBox,
-    QTabBar
+    QMessageBox
 )
 from PySide6.QtCore import Slot
 
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.json_viewer import JsonViewer
+from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.tab_overlay import TabWidgetOverlayButton
 from flightpath.widgets.tabs_closing import ClosingTabs
 from flightpath.widgets.tabs_closing_holder import ClosingTabsHolder
 from flightpath.widgets.toolbars.data_toolbar import DataToolbar
+from flightpath.util.message_utility import MessageUtility as meut
 
 class Content(ClosingTabsHolder):
 
@@ -56,7 +56,8 @@ class Content(ClosingTabsHolder):
         widget = self.tab_widget.widget(i)
         cmod = isinstance(widget, CsvpathViewer) and not widget.saved
         jmod = isinstance(widget, JsonViewer) and widget.modified
-        mod = cmod or jmod
+        mmod = isinstance(widget, MdViewer) and not widget.saved
+        mod = cmod or jmod or mmod
         if mod:
             #
             # bring tab into view
@@ -70,13 +71,7 @@ class Content(ClosingTabsHolder):
             path = widget.objectName()
             if path.startswith(self.main.state.cwd):
                 path = path[len(self.main.state.cwd) + 1:]
-            confirm = QMessageBox.question(
-                self,
-                "Close file",
-                f"Close {path} without saving?",
-                QMessageBox.Yes | QMessageBox.No,
-            )
-            if confirm == QMessageBox.No:
+            if not meut.yesNo(parent=self, title="Close file", msg=f"Close {path} without saving?"):
                 return False
         return True
 

@@ -29,9 +29,10 @@ from flightpath.widgets.sidebars.sidebar_named_paths import SidebarNamedPaths
 from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.file_tree_model.directory_filter_proxy_model import DirectoryFilterProxyModel
 from flightpath.util.csvpath_loader import CsvpathLoader
+from flightpath.util.help_finder import HelpFinder
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.help_finder import HelpFinder
+from flightpath.util.message_utility import MessageUtility as meut
 
 class Sidebar(QWidget):
     NEW_PROJECT = "Create new project"
@@ -488,9 +489,14 @@ class Sidebar(QWidget):
 
     def do_stage(self) -> None:
         template = self.stage_dialog.template_ctl.text()
-        if template and template.strip() == "":
+        template = template.strip()
+        if template == "":
             template = None
-        if template and template.find(":filename") == -1:
+        #if template and template.find(":filename") == -1:
+        if template and not template.endswith(":filename"):
+            meut.message(msg="The :filename token must be the last component of the template", title="Incomplete")
+            return
+
             #
             # there's a fair chance this will be the desired template, but could
             # easily not be. regardless, we need a :filename and we can delete and
@@ -502,10 +508,20 @@ class Sidebar(QWidget):
         name = self.stage_dialog.path
         nos = Nos(name)
         paths = CsvPaths()
-        if nos.isfile():
-            paths.file_manager.add_named_file(name=named_file_name, path=name, template=template)
-        else:
-            paths.file_manager.add_named_files_from_dir(name=named_file_name, dirname=name, template=template, recurse=recurse)
+        try:
+            if nos.isfile():
+                paths.file_manager.add_named_file(name=named_file_name, path=name, template=template)
+            else:
+                if self.stage_dialog.separate_ctl.isChecked():
+                    paths.file_manager.add_named_files_from_dir(name=None, dirname=name, template=template, recurse=recurse)
+                else:
+                    if not named_file_name or named_file_name.strip() == "":
+                        meut.message(title="No name given", msg="You must provide a named-file name")
+                        return
+                    paths.file_manager.add_named_files_from_dir(name=named_file_name, dirname=name, template=template, recurse=recurse)
+        except Exception as e:
+            meut.message(title="Stage error", msg=f"{e}")
+            return
         #
         # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
         # but for now it should work. refreshing named_files is probably fair, but that's

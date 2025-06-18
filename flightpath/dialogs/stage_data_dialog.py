@@ -19,11 +19,14 @@ from csvpath.util.path_util import PathUtility as pathu
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
+from flightpath.util.message_utility import MessageUtility as meut
 
 
 class StageDataDialog(QDialog): # pylint: disable=R0902
     """ loads source data files as named-files. the resulting
         named-file is visiable in the top right-hand window """
+
+    SET_TO_FILES_NAME = "  ... Set file's name ..."
 
     def __init__(self, *, path, parent):
         super().__init__(parent)
@@ -52,17 +55,26 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         file = Nos(self.path).isfile()
 
         self.named_file_name_ctl = QLineEdit()
+
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.named_file_name_ctl,
             on_help=self.on_help_named_file
         )
         box.setFixedHeight(30)
+
         form_layout.addRow("Named-file name: ", box)
+
+
+        self.separate_ctl = QCheckBox("Yes")
+        self.separate_ctl.setChecked(True)
+        self._set_separate_names()
+        self.separate_ctl.stateChanged.connect(self._set_separate_names)
 
         self.recurse_ctl = QCheckBox("Yes")
         self.recurse_ctl.setChecked(self.recurse is True)
         if not file:
+            form_layout.addRow("Separate named-files: ", self.separate_ctl)
             form_layout.addRow("Add files recursively: ", self.recurse_ctl)
 
         self._setup_area()
@@ -99,6 +111,26 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
 
         buttons.setLayout(buttons_layout)
         main_layout.addWidget(buttons)
+
+    def _set_separate_names(self) -> None:
+        nos = Nos(self.path)
+        if nos.isfile():
+            return
+        if self.separate_ctl.isChecked():
+            self.named_file_name_ctl.setEnabled(False)
+            self.named_file_name_ctl.setStyleSheet(""" QLineEdit {
+                                                        color:#666;
+                                                        background-color:#eaeaea;
+                                                        font-style:italic}""")
+            self.named_file_name_ctl.setText(self.SET_TO_FILES_NAME)
+        else:
+            self.named_file_name_ctl.setEnabled(True)
+            self.named_file_name_ctl.setStyleSheet(""" QLineEdit {
+                                                        color:#000;
+                                                        background-color:#fff;
+                                                        font-style:plain}""")
+            self.named_file_name_ctl.setText("")
+
 
     def on_help_named_file(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("stage_data/named_file.md")
@@ -148,25 +180,27 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         layout.setSizeConstraint(layout.SizeConstraint.SetFixedSize)
         content_widget.setLayout(layout)
         parts = pathu.parts(self.path)
-        for part in parts:
+        for i, part in enumerate(parts):
             p = ClickableLabel()
             p.setText(part)
             p.clicked.connect(self._source_path_click)
-
-            s = QLabel()
-            s.setText("/")
             p.setStyleSheet("QLabel {color:#885522;}")
             p.adjustSize()
             layout.addWidget(p)
-
-            s.adjustSize()
-            layout.addWidget(s)
+            if i < len(parts)-1:
+                s = QLabel()
+                s.setText("/")
+                s.adjustSize()
+                layout.addWidget(s)
 
         self.area.setWidget(content_widget)
 
 
     @Slot(str)
     def _source_path_click(self, text:str) -> None:
+        if self.template_ctl.text().endswith(":filename"):
+            meut.message(msg="Filename must be the last component of the path", title="Complete")
+            return
         cursor_pos = self.template_ctl.cursorPosition()
         parts = pathu.parts(self.path)
         i = 0
@@ -179,9 +213,11 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         middle = ""
         bottom = t[cursor_pos:]
         if i == len(parts) -1:
-            middle = ":filename"
+            if top != "" and not top.endswith("/"):
+                middle = "/"
+            middle = f"{middle}:filename"
         else:
-            bottom = f":{i}"
+            bottom = f"/:{i}"
         nt = f"{top}{middle}{bottom}"
         self.template_ctl.setText( nt )
         #

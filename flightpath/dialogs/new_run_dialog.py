@@ -53,7 +53,9 @@ class NewRunDialog(QDialog):
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-        self.setWindowModality(Qt.ApplicationModal)
+
+        #self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         form_layout = QFormLayout()
         form_layout.setRowWrapPolicy(QFormLayout.RowWrapPolicy.DontWrapRows)

@@ -40,7 +40,7 @@ class CsvpathLoader:
         template = None
         if self.load_dialog.template_ctl:
             template = self.load_dialog.template_ctl.text()
-        if template and template.strip() == "":
+        if template is not None or template.strip() == "":
             template = None
         named_paths_name = None
         if self.load_dialog.named_paths_name_ctl:
@@ -66,6 +66,7 @@ class CsvpathLoader:
                 # testing and a local release so we can use it. till then, this will
                 # break
                 #
+                print(f"loadertemplatex: {template}")
                 paths.paths_manager.add_named_paths_from_file(
                     #name=None,
                     name=named_paths_name,
