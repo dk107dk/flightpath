@@ -13,21 +13,25 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QTableView,
         QHeaderView,
         QSizePolicy,
-        QApplication
+        QApplication,
+        QStackedLayout,
+        QTextEdit
+
 )
 
 from PySide6.QtGui import QClipboard, QStandardItemModel, QStandardItem, QAction
 from PySide6.QtCore import Qt # pylint: disable=E0611
 
 from csvpath import CsvPaths
-from csvpath.util.references.files_reference_finder import FilesReferenceFinder
-from csvpath.util.references.results_reference_finder import ResultsReferenceFinder
+from csvpath.util.references.files_reference_finder_2 import FilesReferenceFinder2 as FilesReferenceFinder
+from csvpath.util.references.results_reference_finder_2 import ResultsReferenceFinder2 as ResultsReferenceFinder
 from csvpath.util.path_util import PathUtility as pathu
 from csvpath.util.nos import Nos
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.icon_packager import IconPackager
 from flightpath.widgets.panels.table_model import TableModel
+from flightpath.dialogs.find_file_name_one_context_menu import NameOneLineEdit
 
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.log_utility import LogUtility as lout
@@ -42,20 +46,16 @@ class FindFileByReferenceDialog(QDialog):
 
         self.setWindowTitle("Find files by reference")
 
-        self.setFixedHeight(290)
-        self.setFixedWidth(700)
-
+        self.resize(700, 290)
+        self.setSizeGripEnabled(True)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-        #self.setWindowModality(Qt.ApplicationModal)
-
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         #
         # named file name
         #
         ref_line = QWidget()
-
         ref_line_layout = QHBoxLayout()
         ref_line.setLayout(ref_line_layout)
         main_layout.addWidget(ref_line)
@@ -65,6 +65,15 @@ class FindFileByReferenceDialog(QDialog):
         self.named_x_name.addItem("...")
         self.named_x_name.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.named_x_name.activated.connect(self._on_pick_name)
+        self.named_x_name.hide()
+        #
+        # this is always the last name, but the last name does not always make a good reference
+        #
+        self.last_name = None
+        #
+        # this is the last reference. it has the hints but not the query.
+        #
+        self.ref = None
 
         self.datatype = QComboBox()
         ref_line_layout.addWidget(self.datatype)
@@ -73,18 +82,63 @@ class FindFileByReferenceDialog(QDialog):
         self.datatype.addItem("results")
         self.datatype.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.datatype.activated.connect(self._on_pick_datatype)
+        #
+        # this is ReferenceParser.name_one and ReferenceParser.name_one_tokens
+        #
+        self.name_one = NameOneLineEdit(parent=self)
+        self.name_one.textChanged.connect(self._on_pick_name)
+        #
+        # exp
+        #
+        #self.name_one.setContextMenuPolicy(Qt.CustomContextMenu)
+        #self.name_one.customContextMenuRequested.connect(self._show_name_one_context_menu)
 
-        self.path = QLineEdit()
+        ref_line_layout.addWidget(self.name_one)
+        self.name_one.hide()
         paths = [f"assets{os.sep}icons{os.sep}copy.svg", HelpIconPackager.HELP_ICON]
-        on_click = [self._on_copy, self._on_help]
-
-        box = IconPackager.add_svg_icon(main=main, widget=self.path, on_click=on_click, icon_path=paths )
-        self.path.textChanged.connect(self._on_pick_name)
-        ref_line_layout.addWidget(box)
-
-
+        on_click = [self._on_copy, self._on_help_find_files]
+        self.box = IconPackager.add_svg_icon(main=main, widget=self.name_one, on_click=on_click, icon_path=paths )
+        ref_line_layout.addWidget(self.box)
+        self.box.hide()
+        #
+        #
+        #
+        self.hints = QScrollArea()
+        self.hints.setWidgetResizable(True)
+        self.hints.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.hints.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.hints.setFixedHeight(35)
+        self.hints_text = QLabel()
+        self.hints_text.setText("")
+        self.hints.setWidget(self.hints_text)
+        main_layout.addWidget(self.hints)
+        #
+        #
+        #
+        #
+        #
+        #self.table_view = QTableView()
+        #main_layout.addWidget(self.table_view)
+        self.stacker = QWidget()
+        self.stack_layout = QStackedLayout()
+        self.stacker.setLayout(self.stack_layout)
         self.table_view = QTableView()
-        main_layout.addWidget(self.table_view)
+        self.stack_layout.addWidget(self.table_view)
+
+        self.howto = QTextEdit()
+        self.howto.setReadOnly(True)
+        self.howto.setObjectName("How-to")
+        self.stack_layout.addWidget(self.howto)
+        md = HelpFinder(main=self.main).help("find_data/howto.md")
+        self.howto.setMarkdown(md)
+        self.howto.show()
+        self.stack_layout.setCurrentIndex(1)
+        main_layout.addWidget(self.stacker)
+        #
+        # end exp
+        #
+        #
+        #
         self.model = QStandardItemModel(self)
         self.model.setColumnCount(1)
         self.table_view.setModel(self.model)
@@ -92,6 +146,7 @@ class FindFileByReferenceDialog(QDialog):
         header.hide()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table_view.verticalHeader().setVisible(False)
+
 
         self.count = QScrollArea()
         self.count.setWidgetResizable(True)
@@ -231,11 +286,39 @@ class FindFileByReferenceDialog(QDialog):
 
     def _on_pick_datatype(self) -> None:
         datatype = self.datatype.currentText()
-        if datatype == "files":
-            self._add_named_files()
+        if datatype in ["files", "results"]:
+            if datatype == "files":
+                self._add_named_files()
+            elif datatype == "results":
+                self._add_named_results()
+            self._on_pick_name()
+            self.named_x_name.show()
+            self.name_one.show()
+            self.box.show()
         else:
-            self._add_named_results()
-        self._on_pick_name()
+            self.named_x_name.hide()
+            self.name_one.hide()
+            self.box.hide()
+        #
+        # zero out other controls
+        #
+
+        #
+        # show the query help for the datatype
+        #
+        if datatype == "files":
+            md = HelpFinder(main=self.main).help("find_data/file_queries.md")
+            self.howto.setMarkdown(md)
+            self.howto.show()
+            self.stack_layout.setCurrentIndex(1)
+        elif datatype == "results":
+            md = HelpFinder(main=self.main).help("find_data/results_queries.md")
+            self.howto.setMarkdown(md)
+            self.howto.show()
+            self.stack_layout.setCurrentIndex(1)
+        else:
+            ...
+
 
     def _add_named_files(self) -> None:
         mgr = self.paths.file_manager
@@ -265,29 +348,27 @@ class FindFileByReferenceDialog(QDialog):
         clipboard = QApplication.instance().clipboard()
         clipboard.setText(self._make_reference())
 
-    def _on_help(self) -> None:
-        ...
+    def _on_help_find_files(self) -> None:
+        md = HelpFinder(main=self.main).help("find_file_by_reference_dialog/help.md")
+        if md is None:
+            self.main.helper.close_help()
+            return
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
     def _resolve( self, r:str, datatype:str) -> str|list[str]:
+        finder = None
         if datatype == "files":
-            try:
-                finder = FilesReferenceFinder(self.paths, name=r)
-                return finder.resolve()
-            except Exception as e:
-                print(f"Error: {type(e)}: {e}")
-                return None
+            finder = FilesReferenceFinder(self.paths, reference=r)
         else:
-            try:
-                finder = ResultsReferenceFinder(self.paths, name=r)
-                return finder.resolve(with_instance=False)
-            except Exception as e:
-                print(f"Error: {type(e)}: {e}")
-                return None
+            finder = ResultsReferenceFinder(self.paths, reference=r)
+        return finder.query()
 
     def _make_reference(self) -> str:
         name = self.named_x_name.currentText()
         datatype = self.datatype.currentText()
-        path = self.path.text()
+        path = self.name_one.text()
         r = f"${name}.{datatype}.{path}"
         return r
 
@@ -302,17 +383,60 @@ class FindFileByReferenceDialog(QDialog):
         name = self.named_x_name.currentText()
         datatype = self.datatype.currentText()
         if not self._can_make_reference():
+            self.stack_layout.setCurrentIndex(1)
             self.model.clear()
             self.results_description.setText("")
             return
-        r = self._make_reference()
-        res = self._resolve(r, datatype)
-        if isinstance(res, str):
-            res = [res]
-        number = len(res) if res else 0
-        if res:
-            self.add_data(res)
-        else:
+        try:
+            if self.last_name != name:
+                self.name_one.setText(":all")
+            r = self._make_reference()
+            q = self._resolve(r, datatype)
+            self.ref = q.ref
+            res = q.files
+            if isinstance(res, str):
+                res = [res]
+            number = len(res) if res else 0
+            if res:
+                self.add_data(res)
+            else:
+                self.model.clear()
+            if res:
+                t = self._generate_hints(q.ref.next)
+                self.hints_text.setText(t)
+            self.results_description.setText(f"  {number} named-{datatype} found with reference {r}")
+            self.stack_layout.setCurrentIndex(0)
+        except Exception as e:
             self.model.clear()
-        self.results_description.setText(f"  {number} named-{datatype} found with reference {r}")
+            if self.name_one.text() is None or self.name_one.text().strip() == "":
+                t = self._generate_hints([])
+                self.hints_text.setText(t)
+            print(f"Error: {type(e)}: {e}")
+        self.last_name = name
+
+
+    def _generate_hints(self, tokens:list[str]) -> str:
+        text = ""
+        t = self.name_one.text()
+        if t is None or t.strip() == "":
+            text = "Start with a path, a date, a range like :yesterday, :after, or :all, or an ordinal like :first or an index like :5"
+        elif not tokens or len(tokens) == 0:
+            return "This reference cannot be extended"
+        else:
+            tokens = [self._token_to_hint(t) for t in tokens]
+            text = f"You can add: {' or '.join(tokens)}"
+        return text
+
+    def _token_to_hint(self, t:str) -> str:
+        t = t[t.rfind("_")+1:]
+
+        if t == "arrival":
+            t = "an arrival time"
+        elif t == "ordinal":
+            t = "an ordinal like :first, :last, or an index like :5"
+        elif t == "range":
+            t = "a range like :before or :from"
+
+        return t
+
 
