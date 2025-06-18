@@ -10,7 +10,7 @@ from csvpath.managers.paths.paths_manager import PathsManager
 
 from flightpath.util.csvpath_loader import CsvpathLoader
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.span_utility import SpanUtility as sput
+from flightpath.util.syntax.span_utility import SpanUtility as sput
 from flightpath.util.os_utility import OsUtility as osut
 
 class CsvPathTextEdit(QPlainTextEdit):
@@ -71,6 +71,7 @@ class CsvPathTextEdit(QPlainTextEdit):
             i = self.main.content.tab_widget.currentIndex()
             name = self.main.content.tab_widget.tabText(i)
             name = name.replace("+", "")
+            name = name.strip()
             self.main.content.tab_widget.setTabText(i, f"+ {name}" )
             self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
             self.parent.saved = False
@@ -313,7 +314,6 @@ class CsvPathTextEdit(QPlainTextEdit):
             self.parent.reset_saved()
 
     def on_save(self) -> None:
-        print(f"csvpath_text_edit: on_save!")
         #
         # if the path is under the inputs or archive we have to save-as, not just save
         #

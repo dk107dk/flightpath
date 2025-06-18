@@ -11,8 +11,10 @@ from PySide6.QtWidgets import (
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.config import Config
+from csvpath.util.nos import Nos
 
 from flightpath.util.file_utility import FileUtility as fiut
+from flightpath.util.message_utility import MessageUtility as meut
 
 class FileCollector:
 
@@ -37,6 +39,15 @@ class FileCollector:
         #
         # selects a single file. if the file is not in the project's folder tree it will be copied in.
         #
+        print(f"file_col: select_file: cwd: {cwd}")
+        #
+        # check if base copy-to is a file. if it is, user must select a dir in the
+        # left-hand navigator.
+        #
+        nos = Nos(cwd)
+        if nos.isfile():
+            meut.message(msg="Please select a directory in the file browser", title="Not a directory")
+            return
         d = QFileDialog()
         d.setOptions(
                 QFileDialog.Option.DontResolveSymlinks |

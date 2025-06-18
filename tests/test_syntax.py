@@ -1,7 +1,7 @@
 import unittest
 
-from flightpath.util.span_utility import SpanUtility as sput
-from flightpath.util.highlighters import CommentHighlighter
+from flightpath.util.syntax.span_utility import SpanUtility as sput
+from flightpath.util.syntax.highlighters import CommentHighlighter
 
 class TestSyntax(unittest.TestCase):
 

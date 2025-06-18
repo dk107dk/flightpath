@@ -17,15 +17,16 @@ from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit
 from flightpath.widgets.panels.table_model import TableModel
 from flightpath.util.printer import CapturePrinter
+from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
+from flightpath.util.run_info import RunInfo
+from flightpath.util.file_collector import FileCollector
+from flightpath.util.html_generator import HtmlGenerator
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.log_utility import LogUtility as lout
-from flightpath.util.file_collector import FileCollector
 from flightpath.util.style_utils import StyleUtility as stut
+from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.os_utility import OsUtility as osut
-from flightpath.util.highlighters import MultiHighlighter, CommentHighlighter
-from flightpath.util.syntax_highlighter import CsvpathHighlighter
-from flightpath.util.run_info import RunInfo
-from flightpath.util.html_generator import HtmlGenerator
+
 
 class CsvpathViewer(QWidget):
     CHAR_NAMES = {
@@ -172,6 +173,9 @@ class CsvpathViewer(QWidget):
             or csvpath.find("[") == -1
             or csvpath.find("$") == -1
         ):
+            meut.message(msg="Check that your cursor is in a csvpath statement", title="No csvpath selected")
+            return
+            """
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
             msg_box.setWindowTitle("No csvpath selected")
@@ -179,6 +183,7 @@ class CsvpathViewer(QWidget):
             msg_box.setStandardButtons(QMessageBox.Ok)
             msg_box.exec()
             return
+            """
         #
         #
         # we need to catch exceptions and display in error feedback panel
@@ -467,11 +472,13 @@ lines = path.collect()
                 data = file.source.read()
 
         self.label.hide()
-
+        CsvPathSyntaxHighlighter(self.text_edit.document())
+        """
         multi = MultiHighlighter(self.text_edit.document())
         highlighter = CsvpathHighlighter(None, parent=multi)
         highlighters = [highlighter, CommentHighlighter(None, parent=multi) ]
         multi.highlighters = highlighters
+        """
 
         self.text_edit.show()
         self.text_edit.setPlainText(data)
