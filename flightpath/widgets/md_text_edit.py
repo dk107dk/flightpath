@@ -7,7 +7,6 @@ from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.span_utility import SpanUtility as sput
 from flightpath.util.os_utility import OsUtility as osut
 
 class MdTextEdit(QTextEdit):

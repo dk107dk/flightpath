@@ -33,7 +33,6 @@ class State:
         # be a sandbox container home dir)
         #
         home = str(Path.home())
-        print(f"state.home: user home is: {home}")
         return home
 
     @property
@@ -73,7 +72,6 @@ class State:
                 self.data = data
             else:
                 print(f"state.project_home: cannot set project home in state")
-        print(f"state.project_home: project home is: {home}")
         return home
 
     @projects_home.setter

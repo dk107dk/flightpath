@@ -18,6 +18,7 @@ from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 
+from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.dialogs.new_run_dialog import NewRunDialog
@@ -47,12 +48,14 @@ class Welcome(QWidget):
         #
         self.copy_in_box = self._copy_in_button(on_click=self.on_click_copy_in, on_help=self.on_click_copy_in_help)
         self.run_box = self._run_button(on_click=self.on_click_run, on_help=self.on_click_run_help)
+        self.find_data_box = self._find_data_button(on_click=self.on_click_find_data, on_help=self.on_click_find_data_help)
         self.validate_box = self._validate_button(on_click=self.on_click_validate, on_help=self.on_click_validate_help)
 
         top_layout = QVBoxLayout()
         top_layout.addWidget(image_label)
         top_layout.addWidget(self.copy_in_box)
         top_layout.addWidget(self.run_box)
+        top_layout.addWidget(self.find_data_box)
         top_layout.addWidget(self.validate_box)
         top_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -116,11 +119,18 @@ class Welcome(QWidget):
         self.new_run_dialog = NewRunDialog(parent=self)
         self.new_run_dialog.show()
 
+    def on_click_find_data_help(self) -> None:
+        md = HelpFinder(main=self.main).help("find_file_by_reference_dialog/help.md")
+        if md is None:
+            self.main.helper.close_help()
+            return
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
-
-
-
-
+    def on_click_find_data(self) -> None:
+        find = FindFileByReferenceDialog(main=self.main)
+        find.show()
 
     def on_click_validate(self) -> None:
         csvpath = FileCollector.select_file(
@@ -129,17 +139,10 @@ class Welcome(QWidget):
             title="Select CsvPath Language File",
             file_type_filter=FileCollector.csvpaths_filter(self.main.csvpath_config)
         )
-        print(f"welcome: on_click_validate: csvpath path: {csvpath}")
         if csvpath is None:
             return
-
         #
         # how do we open and run a single csvpath from this file?
-        #
-
-        #
-        # exp.
-        #  get it read
         #
         self.selected_file_path = csvpath
         self._run_one_time = csvpath
@@ -215,6 +218,15 @@ class Welcome(QWidget):
         self.button_run.setText("Trigger a run")
         self.button_run.clicked.connect(on_click)
         return box
+
+    def _find_data_button(self, *, on_click, on_help) -> QWidget:
+        self.button_find_data = QPushButton()
+        self.button_find_data.setStyleSheet("QPushButton { width:170px;}")
+        box = HelpIconPackager.add_help(main=self.main, widget=self.button_find_data, on_help=on_help)
+        self.button_find_data.setText("Find data")
+        self.button_find_data.clicked.connect(on_click)
+        return box
+
 
     def _validate_button(self, *, on_click, on_help) -> QWidget:
         self.button_validate = QPushButton()

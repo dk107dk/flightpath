@@ -9,8 +9,8 @@ readme = "README.md"
 python = ">3.10,<3.14"
 pyside6 = ">=6.8.3"
 pygments = "^2.19.1"
-csvpath = { path = "../csvpath/dist/csvpath-0.0.542.tar.gz" }
 darkdetect = "^0.8.0"
+csvpath = { path = "../csvpath/dist/csvpath-0.0.545.tar.gz" }
 
 [tool.poetry.scripts]
 flightpath = "flightpath.main:run"
@@ -23,7 +23,7 @@ pyinstaller = "^6.13.0"
 pillow = "^11.2.1"
 pylint = "^3.3.6"
 pytest = "^8.3.5"
-
+#csvpath = { path = "../csvpath/dist/csvpath-0.0.539.tar.gz" }
 
 [[tool.poetry.source]]
 name = "csvpath"
