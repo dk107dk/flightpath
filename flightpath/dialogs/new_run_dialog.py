@@ -7,6 +7,7 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QLineEdit,
         QFormLayout,
         QComboBox,
+        QSizePolicy,
         QWidget,
         QPlainTextEdit,
         QMessageBox
@@ -64,6 +65,7 @@ class NewRunDialog(QDialog):
         #
         # named file name
         #
+        """
         self.named_file_name_ctl = QLineEdit()
         self.named_file_name_ctl.textChanged.connect(self.on_named_file_name_change)
         box = HelpIconPackager.add_help(
@@ -74,10 +76,41 @@ class NewRunDialog(QDialog):
         form_layout.addRow("Named-file name: ", box)
         if self.named_file_name is not None:
             self.named_file_name_ctl.setText(named_file)
+        """
+        csvpaths = CsvPaths()
+        self.named_file_name_ctl = QComboBox()
+        self.named_file_name_ctl.setEditable(True)
+        self.named_file_name_ctl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        names = csvpaths.file_manager.named_file_names
+        names.sort()
+        for _ in names:
+            self.named_file_name_ctl.addItem(_)
+        #self.named_file_name_ctl.editTextChanged.connect(self.on_named_file_name_change)
+        box = HelpIconPackager.add_help(
+            main=self.sidebar.main,
+            widget=self.named_file_name_ctl,
+            on_help=self.on_help_named_files
+        )
+        form_layout.addRow("Named-file name: ", box)
+        if self.named_file_name is not None:
+            self.named_file_name_ctl.setEditText(self.named_file_name)
+
+            #self.named_file_name_ctl.setText(named_file)
         #
         # named paths name
         #
+        """
         self.named_paths_name_ctl = QLineEdit()
+        """
+        self.named_paths_name_ctl = QComboBox()
+        self.named_paths_name_ctl.setEditable(True)
+        self.named_paths_name_ctl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        names = csvpaths.paths_manager.named_paths_names
+        names.sort()
+        for _ in names:
+            self.named_paths_name_ctl.addItem(_)
+
+
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.named_paths_name_ctl,
@@ -85,7 +118,8 @@ class NewRunDialog(QDialog):
         )
         form_layout.addRow("Named-paths name: ", box)
         if self.named_paths_name is not None:
-            self.named_paths_name_ctl.setText(named_paths)
+            self.named_paths_name_ctl.setEditText(self.named_paths_name)
+            #self.named_paths_name_ctl.setText(named_paths)
 
 
         self.template_ctl = QLineEdit()
@@ -171,9 +205,9 @@ class NewRunDialog(QDialog):
             self.sidebar.main.helper.on_click_help()
 
     def on_named_file_name_change(self) -> None:
-        t = self.named_file_name_ctl.text()
+        t = self.named_file_name_ctl.currentText()
         if t.startswith("$") and t.endswith(".") and t.find(".", 0, len(t) -2) == -1:
-            self.named_file_name_ctl.setText(f"{t}files.")
+            self.named_file_name_ctl.setEditText(f"{t}files.")
 
     def show_dialog(self) -> None:
         self.exec()
@@ -185,8 +219,8 @@ class NewRunDialog(QDialog):
         template = self.template_ctl.text()
         if template and template.strip() == "":
             template = None
-        self.named_file_name = self.named_file_name_ctl.text()
-        self.named_paths_name = self.named_paths_name_ctl.text()
+        self.named_file_name = self.named_file_name_ctl.currentText()
+        self.named_paths_name = self.named_paths_name_ctl.currentText()
         self.method = self.run_method_ctl.currentText()
 
         paths = CsvPaths()

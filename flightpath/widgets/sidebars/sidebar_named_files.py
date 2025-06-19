@@ -20,7 +20,8 @@ from PySide6.QtWidgets import QFileSystemModel, QTreeView, QAbstractItemView, QS
 
 from csvpath.util.nos import Nos
 from csvpath.util.config import Config
-
+from csvpath.util.file_readers import DataFileReader
+from csvpath.util.file_writers import DataFileWriter
 
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
@@ -31,7 +32,7 @@ from .sidebar_file_ref_maker import SidebarFileRefMaker
 from flightpath.util.help_finder import HelpFinder
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.file_utility import FileUtility as fiut
-
+from flightpath.util.message_utility import MessageUtility as meut
 
 class SidebarNamedFiles(QWidget):
 
@@ -45,51 +46,75 @@ class SidebarNamedFiles(QWidget):
         self.setup()
 
     def setup(self) -> None:
-        named_files_path = self.config.get(section="inputs", name="files")
-        nos = Nos(named_files_path)
-        layout = self.layout()
-        if layout is None:
-            layout = QVBoxLayout()
+        try:
+            layout = self.layout()
+            if layout is None:
+                layout = QVBoxLayout()
+            layout.setSpacing(0)
+            layout.setContentsMargins(1, 1, 1, 1)
 
-        layout.setSpacing(0)
-        layout.setContentsMargins(1, 1, 1, 1)
 
-        if nos.exists():
-            self.view = QTreeView()
-            self.view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
-            self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            self.view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
-            self.view.setWordWrap(False)
-            self.view.setAnimated(False)
-            self.view.setAllColumnsShowFocus(True)
-            self.view.setAutoScroll(True)
-            self.view.setIndentation(20)
-            self.view.setColumnWidth(0, 250)
-            self.model = TreeModel(["Staged files"], nos, self, title="Staged files", sidebar=self)
-            self.model.set_style(self.view.style())
-            self.view.setModel(self.model)
-            self.view.updateGeometries()
-            layout.addWidget(self.view)
-            self.view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-            self.view.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.view.customContextMenuRequested.connect(self._show_context_menu)
-            self._setup_view_context_menu()
-            #
-            #
-            #
-            self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_named_files_help))
-            self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
-            self.view.header().setFixedHeight(24)
-            self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
-            #
-            #
-            #
-        self.setLayout(layout)
+            named_files_path = self.config.get(section="inputs", name="files")
+            print(f"named_files_path: {named_files_path}")
+            nos = Nos(named_files_path)
+            if nos.dir_exists():
+                print(f"sidebar anme files exists")
+                self.view = QTreeView()
+                self.view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
+                self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+                self.view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+                self.view.setWordWrap(False)
+                self.view.setAnimated(False)
+                self.view.setAllColumnsShowFocus(True)
+                self.view.setAutoScroll(True)
+                self.view.setIndentation(20)
+                self.view.setColumnWidth(0, 250)
+                self.model = TreeModel(["Staged files"], nos, self, title="Staged files", sidebar=self)
+                self.model.set_style(self.view.style())
+                self.view.setModel(self.model)
+                self.view.updateGeometries()
+                layout.addWidget(self.view)
+                self.view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+                self.view.setContextMenuPolicy(Qt.CustomContextMenu)
+                self.view.customContextMenuRequested.connect(self._show_context_menu)
+                self._setup_view_context_menu()
+                #
+                #
+                #
+                self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_named_files_help))
+                self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
+                self.view.header().setFixedHeight(24)
+                self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
+                #
+                # moved from main
+                #
+                self.view.clicked.connect(self.on_named_file_tree_click)
+            else:
+                print(f"sidebar anme files not exists")
+
+            self.setLayout(layout)
+        except Exception as e:
+            print(f"error in named files: {type(e)}: {e}")
+            meut.message(title=f"{type(e)} error loading named-files", msg=f"Named-files error: {e}")
 
     def update_style(self) -> None:
-        self.model.set_style(self.view.style())
+        try:
+            self.model.set_style(self.view.style())
+        except Exception as e:
+            print(f"error in named files: {type(e)}: {e}")
 
-
+    #
+    # moved from main
+    #
+    def on_named_file_tree_click(self, index):
+        self.main.selected_file_path = self.model.filePath(index)
+        nos = Nos(self.main.selected_file_path)
+        if not nos.isfile():
+            ...
+            #self._show_welcome_but_do_not_deselect()
+        else:
+            self.main.read_validate_and_display_file(editable=False)
+            self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
     def refresh(self) -> None:
         if self.view:
@@ -155,7 +180,7 @@ class SidebarNamedFiles(QWidget):
         from_index = self.view.currentIndex()
         if from_index.isValid():
             from_path = self.model.filePath(from_index)
-            from_nos = Nos(from_path)
+            #from_nos = Nos(from_path)
             to_index = self.main.sidebar.file_navigator.currentIndex()
             to_path = None
             if to_index.isValid():
@@ -166,13 +191,26 @@ class SidebarNamedFiles(QWidget):
             if to_nos.isfile():
                 to_nos.path = os.path.dirname(to_path)
             to_path = fiut.deconflicted_path(to_path, f"{os.path.basename(from_path)}")
+            print(f"_copy_file_back_to_cwd: ")
+            print(f"    from: {from_path}")
+            print(f"      to: {to_path}")
             to_nos.path = to_path
             if to_nos.exists():
                 #
                 # this won't realistically happen
                 #
                 print(f"ERROR: {to_nos} exists")
-            from_nos.copy(to_nos.path)
+            print(f"local path does not exist. ready to do the copy from {from_path}")
+            print(f"doing the copy to {to_nos.path}")
+            #
+            # nos copy only works if we're copying to the same backend, which we won't always be.
+            # so we use reader/writers. leaving as a reminder.
+            #
+            #from_nos.copy(to_nos.path)
+            #
+            with DataFileReader(from_path) as ffrom:
+                with DataFileWriter(path=to_path) as tto:
+                    tto.write(ffrom.read())
         else:
             QMessageBox.warning(self, "Error", "Cannot copy item")
 

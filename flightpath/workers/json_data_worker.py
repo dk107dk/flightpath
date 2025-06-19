@@ -19,11 +19,13 @@ class JsonDataWorker(QRunnable):
 
     @Slot()
     def run(self):
+        print(f"JsonDataWorker: run: reading {self.filepath}")
         self.signals.messages.emit("Reading file...")
         try:
             data = []
             with DataFileReader(str(self.filepath)) as file:
                 data = json.load(file.source)
+            print(f"JsonDataWorker: run: data: {len(data)}: {data}")
         except Exception as e:
             print(f"Error: {type(e)}: {e}")
             self.signals.messages.emit(f"  Erroring opening {self.filepath}")
@@ -32,5 +34,6 @@ class JsonDataWorker(QRunnable):
         self.signals.messages.emit(f" Opened {str(self.filepath)}")
         self.signals.finished.emit(( str(self.filepath), data, self.editable))
 
+        print(f"JsonDataWorker: run: done reading {self.filepath}. found: \n{json.dumps(data, indent=4)}")
 
 

@@ -459,7 +459,7 @@ lines = path.collect()
     def open_file(self, *, path:str, data:str) -> None:
         self.path = path
         info = QFileInfo(path)
-        if not info.isFile() or not info.suffix() in self.main.csvpath_config.csvpath_file_extensions:
+        if not info.suffix() in self.main.csvpath_config.csvpath_file_extensions:
             self.label.show()
             self.text_edit.hide()
             return

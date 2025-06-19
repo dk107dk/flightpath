@@ -484,7 +484,7 @@ class Sidebar(QWidget):
         #
         self.main.sidebar_rt_mid = SidebarNamedPaths(main=self.main, config=self.main.csvpath_config, role=2)
         self.main.rt_col.replaceWidget(1, self.main.sidebar_rt_mid)
-        self.main.sidebar_rt_mid.view.clicked.connect(self.main.on_named_paths_tree_click)
+        #self.main.sidebar_rt_mid.view.clicked.connect(self.main.on_named_paths_tree_click)
 
 
     def do_stage(self) -> None:
@@ -531,7 +531,7 @@ class Sidebar(QWidget):
         #
         self.main.sidebar_rt_top = SidebarNamedFiles(main=self.main, config=self.main.csvpath_config, role=1)
         self.main.rt_col.replaceWidget(0, self.main.sidebar_rt_top)
-        self.main.sidebar_rt_top.view.clicked.connect(self.main.on_named_file_tree_click)
+        #self.main.sidebar_rt_top.view.clicked.connect(self.main.on_named_file_tree_click)
         #
         #
         #
