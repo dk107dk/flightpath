@@ -16,6 +16,7 @@ from PySide6.QtCore import Qt, QFileInfo
 from PySide6.QtGui import QAction, QKeyEvent, QShortcut, QKeySequence
 
 from csvpath.util.file_writers import DataFileWriter
+from csvpath.util.nos import Nos
 
 from flightpath.widgets.json_tree_model.json_model import JsonModel
 from flightpath.dialogs.pick_paths_dialog import PickPathsDialog
@@ -357,7 +358,11 @@ class JsonViewer(QWidget):
     def open_file(self, *, path:str, data:str):
         self.path = path
         info = QFileInfo(path)
-        if not info.isFile() or info.suffix() != "json":
+        #
+        # do we really want / need to double check if we're handling a file?
+        #
+        nos = Nos(path)
+        if not nos.isfile() or info.suffix() != "json":
             self.view.hide()
             return
         self.model.load(data)

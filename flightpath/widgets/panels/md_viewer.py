@@ -80,7 +80,7 @@ class MdViewer(QWidget):
     def open_file(self, *, path:str, data:str) -> None:
         self.path = path
         info = QFileInfo(path)
-        if not info.isFile() or not info.suffix() in ["md", "txt", "html"]:
+        if not info.suffix() in ["md", "txt", "html"]:
             self.text_edit.hide()
             return
         self.text_edit.clear()

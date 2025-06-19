@@ -69,6 +69,7 @@ from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.os_utility import OsUtility as osut
+from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.state import State
 
 
@@ -390,7 +391,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         d = self.sidebar_rt_bottom
         self.sidebar_rt_bottom = SidebarArchive(main=self, config=self.csvpath_config, role=3)
         self.rt_col.replaceWidget(2, self.sidebar_rt_bottom)
-        self.sidebar_rt_bottom.view.clicked.connect(self.on_archive_tree_click)
         d.deleteLater()
         print(f"main.renew_sidebar_archive: done")
 
@@ -399,7 +399,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         d = self.sidebar_rt_top
         self.sidebar_rt_top = SidebarNamedFiles(main=self, config=self.csvpath_config, role=3)
         self.rt_col.replaceWidget(0, self.sidebar_rt_top)
-        self.sidebar_rt_top.view.clicked.connect(self.on_named_file_tree_click)
         d.deleteLater()
         print(f"main.renew_sidebar_files: done")
 
@@ -407,7 +406,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         d = self.sidebar_rt_mid
         self.sidebar_rt_mid = SidebarNamedPaths(main=self, config=self.csvpath_config, role=3)
         self.rt_col.replaceWidget(1, self.sidebar_rt_mid)
-        self.sidebar_rt_mid.view.clicked.connect(self.on_named_paths_tree_click)
         d.deleteLater()
 
     def hide_rt_tabs(self) -> None:
@@ -450,9 +448,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # rt-side trees
         #
-        self.sidebar_rt_top.view.clicked.connect(self.on_named_file_tree_click)
-        self.sidebar_rt_mid.view.clicked.connect(self.on_named_paths_tree_click)
-        self.sidebar_rt_bottom.view.clicked.connect(self.on_archive_tree_click)
+        #self.sidebar_rt_top.view.clicked.connect(self.on_named_file_tree_click)
+        #self.sidebar_rt_mid.view.clicked.connect(self.on_named_paths_tree_click)
+        #self.sidebar_rt_bottom.view.clicked.connect(self.on_archive_tree_click)
         #
         # config stuff
         #
@@ -541,36 +539,44 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     @Slot(tuple)
     def update_json_views(self, worker_data):
-        filepath, data, editable = worker_data   # pylint: disable=W0612
-        self.progress_dialog.close()
-        if isinstance( data, Exception ):
-            print(f"Error opening file: {type(data)}: {data}")
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle("File opening error")
-            msg_box.setText(f"Error: {data}")
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.exec()
-            return
-        self.last_main = self.main_layout.currentIndex()
-        #
-        # show code/data tabs' panel
-        #
-        self.main_layout.setCurrentIndex(1)
-        #
-        # hide grid, source tabs
-        #
-        json_view = taut.find_tab(self.content.tab_widget, filepath)
-        if json_view is None:
-            json_view = JsonViewer(self, editable)
-            json_view.open_file(path=filepath, data=data)
-            json_view.setObjectName(filepath)
-            self.content.tab_widget.addTab(json_view, os.path.basename(filepath) )
-        else:
-            json_view = json_view[1]
-        taut.select_tab(self.content.tab_widget, json_view)
-        self._rt_tabs_hide()
-
+        try:
+            print(f"main.update_json_views: worker_data: {worker_data}")
+            filepath, data, editable = worker_data   # pylint: disable=W0612
+            self.progress_dialog.close()
+            if isinstance( data, Exception ):
+                meux.message(icon=QMessageBox.Critical, title="File opening error", msg=f"Error: {data}")
+                """
+                print(f"Error opening file: {type(data)}: {data}")
+                msg_box = QMessageBox()
+                msg_box.setIcon(QMessageBox.Critical)
+                msg_box.setWindowTitle("File opening error")
+                msg_box.setText(f"Error: {data}")
+                msg_box.setStandardButtons(QMessageBox.Ok)
+                msg_box.exec()
+                """
+                return
+            self.last_main = self.main_layout.currentIndex()
+            #
+            # show code/data tabs' panel
+            #
+            self.main_layout.setCurrentIndex(1)
+            #
+            # hide grid, source tabs
+            #
+            json_view = taut.find_tab(self.content.tab_widget, filepath)
+            print(f"update_json_views: json_view: {json_view}")
+            if json_view is None:
+                json_view = JsonViewer(self, editable)
+                json_view.open_file(path=filepath, data=data)
+                json_view.setObjectName(filepath)
+                self.content.tab_widget.addTab(json_view, os.path.basename(filepath) )
+                print(f"update_json_views: created json_view: {json_view}")
+            else:
+                json_view = json_view[1]
+            taut.select_tab(self.content.tab_widget, json_view)
+            self._rt_tabs_hide()
+        except Exception as e:
+            print(f"Error opening json: {type(e)}: {e}")
 
 
 
@@ -756,15 +762,17 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         return self.read_validate_and_display_file_for_path(self.selected_file_path, editable=editable, finished_callback=finished_callback)
 
     def read_validate_and_display_file_for_path(self, path:str, editable=True, *, finished_callback=None) -> QRunnable:
-        print(f"main.read_validate_and_display_file_for_path: path: {path}, editable: {editable}, finished_callback: {finished_callback}")
+        print(f"main.read_validate_and_display_file_for_path: path: {path}, editable: {editable}, finished_callback method: {finished_callback}")
         info = QFileInfo(path)
         #
         # TODO: consolidate below
         #
         # pylint thinks csv_file_extensions doesn't support membership tests but it is list[str]. :/
         worker = None
-        print(f"main.read_validate_and_display_file_for_path: path: {path}, info: {info}: {info.isFile()}, {info.suffix()}")
-        if info.isFile() and info.suffix() in self.csvpath_config.csv_file_extensions: # pylint: disable=E1135
+        nos = Nos(path)
+        isfile = nos.isfile()
+        print(f"main.read_validate_and_display_file_for_path: path: {path}, info: {info}: is file: {isfile}, ext: {info.suffix()}")
+        if isfile and info.suffix() in self.csvpath_config.csv_file_extensions: # pylint: disable=E1135
             worker = GeneralDataWorker(
                 path,
                 self,
@@ -783,7 +791,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         # pylint thinks csvpath_file_extensions doesn't support membership tests but it is list[str]. :/
-        elif info.isFile() and info.suffix() in self.csvpath_config.csvpath_file_extensions: # pylint: disable=E1135
+        elif isfile and info.suffix() in self.csvpath_config.csvpath_file_extensions: # pylint: disable=E1135
             print(f"main.read_validate_and_display_file_for_path: a csvpath")
             worker = CsvpathFileWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_csvpath_views)
@@ -795,18 +803,21 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
-        elif info.isFile() and info.suffix() == "json":
+        elif isfile and info.suffix() == "json":
+            print("main:read_validate_and_display_file_for_path: json file")
             worker = JsonDataWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_json_views)
             if finished_callback:
                 worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
+            print("main:read_validate_and_display_file_for_path: wired up worker")
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(400)
+            print("main:read_validate_and_display_file_for_path: setup progress dialog. starting worker.")
             self.threadpool.start(worker)
-        elif info.isFile() and info.suffix() in ["md", "html", "txt"]:
+        elif isfile and info.suffix() in ["md", "html", "txt"]:
             #
             # txt could be set in csv extensions. probably not, but possible. we
             # don't need these to be configurable at this time.
@@ -821,10 +832,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
-        #
-        # need to recognize .txt (if not in csv extensions) and .md
-        #
+        elif not info.isFile():
+            meut.message(title="File opening error", msg=f"Cannot open {path}")
         else:
+            print("Error: main.read_validate_and_display_file_for_path: cannot open file")
             self.clear_views()
         return worker
 
@@ -852,6 +863,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.sidebar.last_file_index = index
 
+    """
+    #
+    # moved to sidebar
+    #
     def on_named_file_tree_click(self, index):
         self.selected_file_path = self.sidebar_rt_top.model.filePath(index)
         nos = Nos(self.selected_file_path)
@@ -861,7 +876,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         else:
             self.read_validate_and_display_file(editable=False)
             self.statusBar().showMessage(f"  {self.selected_file_path}")
-
+    """
+    """
     def on_named_paths_tree_click(self, index):
         self.selected_file_path = self.sidebar_rt_mid.model.filePath(index)
         nos = Nos(self.selected_file_path)
@@ -871,7 +887,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         else:
             self.read_validate_and_display_file(editable=False)
             self.statusBar().showMessage(f"  {self.selected_file_path}")
-
+    """
+    """
     def on_archive_tree_click(self, index):
         self.selected_file_path = self.sidebar_rt_bottom.model.filePath(index)
         nos = Nos(self.selected_file_path)
@@ -881,6 +898,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         else:
             self.read_validate_and_display_file(editable=False)
             self.statusBar().showMessage(f"  {self.selected_file_path}")
+    """
 
     def clear_views(self):
         self.content.close_all_tabs()
