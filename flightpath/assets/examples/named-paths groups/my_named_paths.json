@@ -1,9 +1,10 @@
 {
   "another_test_named_paths_group": [
-    "examples/first steps/test.csvpath"
+    "examples/first steps/Hello World.csvpath"
   ],
   "test_named_paths_group": [
     "examples/first steps/simple_model.csvpath",
-    "examples/first steps/test.csvpath"
+    "examples/first steps/Hello World.csvpath"
   ]
 }
+

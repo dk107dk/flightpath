@@ -70,8 +70,10 @@ class FileCollector:
                 new_name, ok = QInputDialog.getText(parent, "Copy into project", "Enter a name for the copy:", text=name)
                 if ok and new_name:
                     new_path = fiut.deconflicted_path(cwd, new_name)
-                    with DataFileReader(the_path) as the_file:
-                        with DataFileWriter(path=new_path) as new_file:
+                    print(f"FileCollector: select_file: the_path: {the_path}")
+                    print(f"FileCollector: select_file: new_path: {new_path}")
+                    with DataFileReader(the_path, mode="rb") as the_file:
+                        with DataFileWriter(path=new_path, mode="wb") as new_file:
                             new_file.write(the_file.read())
                     the_path = new_path
         return the_path

@@ -1,4 +1,4 @@
-# Logging
+## Logging
 
 Like several other sections, the CsvPath Framework configures logging for individual csvpaths and for named-paths groups separately. This flexibility, combined with logging configuration overrides on a csvpath-by-csvpath basis, gives you the ability to cut down logging noise to help you better see what you're looking for.
 
