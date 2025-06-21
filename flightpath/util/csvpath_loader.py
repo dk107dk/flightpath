@@ -7,6 +7,7 @@ from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
 from flightpath.dialogs.load_paths_dialog import LoadPathsDialog
+from flightpath.util.message_utility import MessageUtility as meut
 
 class CsvpathLoader:
 
@@ -90,8 +91,20 @@ class CsvpathLoader:
             return
         name = self.load_dialog.path
         name = "" if not name else name.strip()
-        paths.paths_manager.add_named_paths_from_json(file_path=name)
-        self.main.sidebar._renew_sidebars()
+        ex = None
+        try:
+            paths.paths_manager.add_named_paths_from_json(file_path=name)
+        except Exception as e:
+            ex = e
+        if paths.has_errors():
+            if ex is not None:
+                meut.message(title="Errors", msg=f"There were errors: {ex}")
+            else:
+                meut.message(title="Errors", msg="There were {paths.has_errors)} errors")
+        elif ex is not None:
+            meut.message(title="Errors", msg=f"There were errors: {ex}")
+        else:
+            self.main.sidebar._renew_sidebars()
         self._delete_load_dialog()
 
     def do_load_dir(self, *, overwrite=True) -> None:

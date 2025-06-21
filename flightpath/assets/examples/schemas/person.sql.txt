@@ -1,4 +1,8 @@
-
+/*
+   Compare this SQL DDL schema to the schema in schemas.csvpath.
+   They are obviously not identical, but you can see the way they
+   each supply excellent guardrails for the data they support.
+*/
 
 CREATE DATABASE IF NOT EXISTS examples;
 USE examples;

@@ -133,7 +133,7 @@ class State:
         # use the user's home dir.
         #
         with open(statepath, mode="w", encoding="utf-8") as file:
-            json.dump(state, file, indent=2)
+            json.dump(state, file, indent=4)
 
     @state_path.setter
     def state_path(self, state_path:str) -> None:
@@ -168,10 +168,37 @@ class State:
     @data.setter
     def data(self, state:dict) -> None:
         with open(self.state_path, mode="w", encoding="utf-8") as file:
-            state = json.dump(state, file)
+            #state = json.dump(state, file)
+            json.dump(state, file, indent=4)
 
     def has_cwd(self) -> bool:
         return self.cwd is not None
+
+    def load_env(self) -> bool:
+        data = self.data
+        env = data.get("env")
+        if env is None:
+            env = {}
+            data["env"] = env
+            self.data = data
+        for k, v in env.items():
+            try:
+                os.environ[k] = v
+            except ValueError as e:
+                print(f"Error setting {k} to {v}: {e}")
+
+    def set_env(self, k:str, v:str) -> None:
+        data = self.data
+        env = data.get("env")
+        if env is None:
+            env = {}
+            data["env"] = env
+        if v is None:
+            if k in env:
+                del env[k]
+        else:
+            env[k] = v
+        self.data = data
 
     def load_state_and_cd(self, main) -> None:
         cwd = self.cwd
