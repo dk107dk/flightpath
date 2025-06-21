@@ -82,12 +82,6 @@ class TreeModel(QAbstractItemModel):
         name = os.path.basename(name)
         return name
 
-
-
-
-
-
-
     def filePath(self, index:QModelIndex):
         if not index.isValid():
             return None
@@ -142,12 +136,14 @@ class TreeModel(QAbstractItemModel):
         return result
 
     def setup_model_data(self, parent: TreeItem):
+        #
+        # what is the purpose of lst?
+        #
         lst = parent.data(0).listdir()
         #
         # get the child_items in order to make it load its children
         #
         parent.child_items
-
 
     def _repr_recursion(self, item: TreeItem, indent: int = 0) -> str:
         result = " " * indent + repr(item) + "\n"

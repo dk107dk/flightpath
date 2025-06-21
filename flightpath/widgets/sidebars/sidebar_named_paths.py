@@ -54,42 +54,46 @@ class SidebarNamedPaths(QWidget):
             layout.setSpacing(0)
             layout.setContentsMargins(1, 1, 1, 1)
             if nos.dir_exists():
-                self.view = QTreeView()
-                self.view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
-                self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-                self.view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
-                self.view.setWordWrap(False)
-                self.view.setAnimated(False)
-                self.view.setAllColumnsShowFocus(True)
-                self.view.setAutoScroll(True)
-                self.view.setIndentation(20)
-                self.view.setColumnWidth(0, 250)
-                header = self.view.header()
-                header.setStretchLastSection(True)
-                header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-                self.model = TreeModel(["Csvpath groups"], nos, self, title="Csvpath groups", sidebar=self)
-                self.model.set_style(self.view.style())
-                self.view.setModel(self.model)
-                self.view.updateGeometries()
-                layout.addWidget(self.view)
                 #
                 #
                 #
-                self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_named_paths_help))
-                self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
-                self.view.header().setFixedHeight(24)
-                self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
-                #
-                #
-                #
-                self.view.setContextMenuPolicy(Qt.CustomContextMenu)
-                self.view.customContextMenuRequested.connect(self._show_context_menu)
-                self._setup_view_context_menu()
-                #
-                # moved from main
-                #
-                self.view.clicked.connect(self.on_named_paths_tree_click)
-                self.setLayout(layout)
+                nos.makedir()
+            self.view = QTreeView()
+            self.view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
+            self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            self.view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+            self.view.setWordWrap(False)
+            self.view.setAnimated(False)
+            self.view.setAllColumnsShowFocus(True)
+            self.view.setAutoScroll(True)
+            self.view.setIndentation(20)
+            self.view.setColumnWidth(0, 250)
+            header = self.view.header()
+            header.setStretchLastSection(True)
+            header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+            self.model = TreeModel(["Csvpath groups"], nos, self, title="Csvpath groups", sidebar=self)
+            self.model.set_style(self.view.style())
+            self.view.setModel(self.model)
+            self.view.updateGeometries()
+            layout.addWidget(self.view)
+            #
+            #
+            #
+            self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_named_paths_help))
+            self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
+            self.view.header().setFixedHeight(24)
+            self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
+            #
+            #
+            #
+            self.view.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.view.customContextMenuRequested.connect(self._show_context_menu)
+            self._setup_view_context_menu()
+            #
+            # moved from main
+            #
+            self.view.clicked.connect(self.on_named_paths_tree_click)
+            self.setLayout(layout)
         except Exception as e:
             meut.message(title=f"{type(e)} error loading named-paths", msg=f"Named-paths error: {e}")
 

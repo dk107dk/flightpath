@@ -54,46 +54,50 @@ class SidebarArchive(QWidget):
 
             archive_path = self.config.get(section="results", name="archive")
             nos = Nos(archive_path)
-            if nos.dir_exists():
-                self.view = QTreeView()
-                self.view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
-                self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-                self.view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
-                self.view.setWordWrap(False)
-                self.view.setAnimated(False)
-                self.view.setAllColumnsShowFocus(True)
-                self.view.setAutoScroll(True)
-                self.view.setIndentation(20)
-                self.view.setColumnWidth(0, 250)
-                header = self.view.header()
-                header.setStretchLastSection(True)
-                header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-                self.model = TreeModel(["Archive"], nos, self, title="Archive", sidebar=self)
-                self.model.set_style(self.view.style())
-                self.view.setModel(self.model)
-                self.view.updateGeometries()
+            if not nos.dir_exists():
+                #
+                #
+                #
+                nos.makedir()
+            self.view = QTreeView()
+            self.view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
+            self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            self.view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+            self.view.setWordWrap(False)
+            self.view.setAnimated(False)
+            self.view.setAllColumnsShowFocus(True)
+            self.view.setAutoScroll(True)
+            self.view.setIndentation(20)
+            self.view.setColumnWidth(0, 250)
+            header = self.view.header()
+            header.setStretchLastSection(True)
+            header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+            self.model = TreeModel(["Archive"], nos, self, title="Archive", sidebar=self)
+            self.model.set_style(self.view.style())
+            self.view.setModel(self.model)
+            self.view.updateGeometries()
 
-                layout.addWidget(self.view)
-                #
-                #
-                #
-                self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_archive_help))
-                self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
-                self.view.header().setFixedHeight(24)
-                self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
-                #
-                #
-                #
-                #
-                # set up context menu
-                #
-                self.view.setContextMenuPolicy(Qt.CustomContextMenu)
-                self.view.customContextMenuRequested.connect(self._show_context_menu)
-                self._setup_view_context_menu()
-                #
-                # moved from main
-                #
-                self.view.clicked.connect(self.on_archive_tree_click)
+            layout.addWidget(self.view)
+            #
+            #
+            #
+            self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_archive_help))
+            self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
+            self.view.header().setFixedHeight(24)
+            self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
+            #
+            #
+            #
+            #
+            # set up context menu
+            #
+            self.view.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.view.customContextMenuRequested.connect(self._show_context_menu)
+            self._setup_view_context_menu()
+            #
+            # moved from main
+            #
+            self.view.clicked.connect(self.on_archive_tree_click)
             self.setLayout(layout)
         except Exception as e:
             meut.message(title=f"{type(e)} error loading named-paths", msg=f"Archive error: {e}")
