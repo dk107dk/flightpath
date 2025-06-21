@@ -52,7 +52,7 @@ class SftpPlusTab(QWidget):
 
 
     def add_to_config(self, config) -> None:
-        admin_username = self.admin_admin_password.text()
+        admin_username = self.admin_username.text()
         self.form.config.add_to_config("sftpplus", "admin_username", admin_username)
 
         admin_password = self.admin_password.text()

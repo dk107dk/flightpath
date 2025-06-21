@@ -41,6 +41,13 @@ class ListenersForm(BlankForm):
 
     def add_to_config(self, config) -> None:
         config.add_to_config("listeners", "groups", self.groups.text() )
+        #
+        #
+        #
+        for k, v in self._group_tabs.items():
+            if v is None:
+                continue
+            v.add_to_config(config)
 
     def _setup(self) -> None:
         self.groups.textChanged.connect(self.main.on_config_changed)

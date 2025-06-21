@@ -98,7 +98,6 @@ class TreeItem:
     def set_data(self, column: int, value):
         if column < 0 or column >= len(self.item_data):
             return False
-
         self.item_data[column] = value
         return True
 

@@ -15,7 +15,6 @@ from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
-#from flightpath.widgets.sidebars.sidebar import Sidebar
 from flightpath.util.help_finder import HelpFinder
 
 class LoadPathsDialog(QDialog):

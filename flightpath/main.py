@@ -222,6 +222,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def load_state_and_cd(self) -> None:
         """ sets the project directory into .flightpath file, cds to project dir, and reloads UI. """
         self.state.load_state_and_cd(self)
+        #
+        # if we have env vars set them for this process
+        #
+        self.state.load_env()
         self.startup()
 
     def startup(self) -> None:
