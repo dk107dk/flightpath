@@ -19,6 +19,7 @@ from csvpath import CsvPaths
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.log_utility import LogUtility as lout
+from flightpath.util.message_utility import MessageUtility as meut
 
 class NewRunDialog(QDialog):
     COLLECT_SERIAL = "collect serially"
@@ -62,22 +63,8 @@ class NewRunDialog(QDialog):
         form_layout.setRowWrapPolicy(QFormLayout.RowWrapPolicy.DontWrapRows)
         main_layout.addLayout(form_layout)
 
-        #
-        # named file name
-        #
-        """
-        self.named_file_name_ctl = QLineEdit()
-        self.named_file_name_ctl.textChanged.connect(self.on_named_file_name_change)
-        box = HelpIconPackager.add_help(
-            main=self.sidebar.main,
-            widget=self.named_file_name_ctl,
-            on_help=self.on_help_named_files
-        )
-        form_layout.addRow("Named-file name: ", box)
-        if self.named_file_name is not None:
-            self.named_file_name_ctl.setText(named_file)
-        """
         csvpaths = CsvPaths()
+        self.csvpaths = csvpaths
         self.named_file_name_ctl = QComboBox()
         self.named_file_name_ctl.setEditable(True)
         self.named_file_name_ctl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -85,7 +72,7 @@ class NewRunDialog(QDialog):
         names.sort()
         for _ in names:
             self.named_file_name_ctl.addItem(_)
-        #self.named_file_name_ctl.editTextChanged.connect(self.on_named_file_name_change)
+        self.named_file_name_ctl.editTextChanged.connect(self.on_names_change)
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.named_file_name_ctl,
@@ -99,9 +86,6 @@ class NewRunDialog(QDialog):
         #
         # named paths name
         #
-        """
-        self.named_paths_name_ctl = QLineEdit()
-        """
         self.named_paths_name_ctl = QComboBox()
         self.named_paths_name_ctl.setEditable(True)
         self.named_paths_name_ctl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -109,7 +93,7 @@ class NewRunDialog(QDialog):
         names.sort()
         for _ in names:
             self.named_paths_name_ctl.addItem(_)
-
+        self.named_paths_name_ctl.editTextChanged.connect(self.on_names_change)
 
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
@@ -120,7 +104,6 @@ class NewRunDialog(QDialog):
         if self.named_paths_name is not None:
             self.named_paths_name_ctl.setEditText(self.named_paths_name)
             #self.named_paths_name_ctl.setText(named_paths)
-
 
         self.template_ctl = QLineEdit()
         self.template_ctl.setStyleSheet("QLineEdit {height:19px;}")
@@ -159,6 +142,7 @@ class NewRunDialog(QDialog):
         self.run_button = QPushButton()
         self.run_button.setText(self.tr("Run"))
         self.run_button.clicked.connect(self.do_run)
+        self.run_button.setEnabled(False)
         self.cancel_button = QPushButton()
         self.cancel_button.setText(self.tr("Cancel"))
         self.cancel_button.clicked.connect(self.reject)
@@ -204,12 +188,33 @@ class NewRunDialog(QDialog):
         if not self.sidebar.main.helper.is_showing_help():
             self.sidebar.main.helper.on_click_help()
 
-    def on_named_file_name_change(self) -> None:
-        t = self.named_file_name_ctl.currentText()
-        if t.startswith("$") and t.endswith(".") and t.find(".", 0, len(t) -2) == -1:
-            self.named_file_name_ctl.setEditText(f"{t}files.")
+    def on_names_change(self) -> None:
+        f = self.named_file_name_ctl.currentText()
+        p = self.named_paths_name_ctl.currentText()
+        if f and f.strip() != "" and p and p.strip() != "":
+            self.run_button.setEnabled(True)
+        else:
+            self.run_button.setEnabled(False)
 
     def show_dialog(self) -> None:
+        #
+        # check if we have enough names to run
+        #
+        print(f"shoing dialgo: {self.csvpaths.file_manager.named_files_count}")
+        if self.csvpaths.file_manager.named_files_count == 0:
+            #
+            #
+            #
+            meut.message(title="No staged data", msg="You must stage data before you can start a run")
+        print(f"shoing dialgo: {self.csvpaths.paths_manager.total_named_paths()}")
+        if self.csvpaths.paths_manager.total_named_paths() == 0:
+            #
+            #
+            #
+            meut.message(title="No CsvPath Language files", msg="You must load csvpaths into a named-paths group before you can start a run")
+        #
+        # show the dialog
+        #
         self.exec()
 
     #
