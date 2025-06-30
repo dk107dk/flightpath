@@ -31,6 +31,7 @@ from PySide6.QtCore import ( # pylint: disable=E0611
     QFileInfo,
     QThreadPool,
     Slot,
+    QSize,
     QItemSelectionModel,
     QRunnable,
     QModelIndex,
@@ -548,7 +549,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             filepath, data, editable = worker_data   # pylint: disable=W0612
             self.progress_dialog.close()
             if isinstance( data, Exception ):
-                meux.message(icon=QMessageBox.Critical, title="File opening error", msg=f"Error: {data}")
+                meut.message(icon=QMessageBox.Critical, title="File opening error", msg=f"Error: {data}")
                 """
                 print(f"Error opening file: {type(data)}: {data}")
                 msg_box = QMessageBox()
@@ -867,43 +868,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.sidebar.last_file_index = index
 
-    """
-    #
-    # moved to sidebar
-    #
-    def on_named_file_tree_click(self, index):
-        self.selected_file_path = self.sidebar_rt_top.model.filePath(index)
-        nos = Nos(self.selected_file_path)
-        if not nos.isfile():
-            ...
-            #self._show_welcome_but_do_not_deselect()
-        else:
-            self.read_validate_and_display_file(editable=False)
-            self.statusBar().showMessage(f"  {self.selected_file_path}")
-    """
-    """
-    def on_named_paths_tree_click(self, index):
-        self.selected_file_path = self.sidebar_rt_mid.model.filePath(index)
-        nos = Nos(self.selected_file_path)
-        if not nos.isfile():
-            ...
-            #self._show_welcome_but_do_not_deselect()
-        else:
-            self.read_validate_and_display_file(editable=False)
-            self.statusBar().showMessage(f"  {self.selected_file_path}")
-    """
-    """
-    def on_archive_tree_click(self, index):
-        self.selected_file_path = self.sidebar_rt_bottom.model.filePath(index)
-        nos = Nos(self.selected_file_path)
-        if not nos.isfile():
-            ...
-            #self._show_welcome_but_do_not_deselect()
-        else:
-            self.read_validate_and_display_file(editable=False)
-            self.statusBar().showMessage(f"  {self.selected_file_path}")
-    """
-
     def clear_views(self):
         self.content.close_all_tabs()
 
@@ -916,28 +880,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def is_writable(self, path) -> bool:
         return fiut.is_writable_dir(path)
-        """
-        try:
-            if not os.path.exists(path):
-                return False
-            from uuid import uuid4
-            t = f"{uuid4()}"
-            p = os.path.join(path, t)
-            print(f"main.is_writable: attempting to write to: {p}")
-            with open( p, "w" ) as file:
-                file.write("test")
-            nos = Nos(p)
-            if nos.exists():
-                print("main.is_writable: file exists")
-                nos.remove()
-                return True
-            else:
-                print("main.is_writable: not writable")
-                return False
-        except Exception as e:
-            print(f"Error in is_writable: {type(e)}: {e}")
-            return False
-        """
 
     def on_set_cwd_click(self):
         caption = "FlightPath requires a project directory. Please pick one."
@@ -950,12 +892,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 dir=home
         )
         print(f"main.on_set_cwd_click: selected path: {path}")
-        """
-        if path is None or path.strip() == "":
-            print(f"main.on_set_cwd_click: path was None or empty. trying again")
-            path = QFileDialog.getExistingDirectory(self, caption, dir=".")
-        """
-        print(f"main.on_set_cwd_click: path: {path}")
         if path:
             if self.is_writable(path):
                 print(f"pick_cwd_dialog: _pick_cwd: {path} is writable")
@@ -981,35 +917,28 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.read_validate_and_display_file()
 
     def on_raw_source(self) -> None:
-        #self.content.raw_viewer.open_file(filepath)
-        #self.last_main = self.main_layout.currentIndex()
-        #self.main_layout.setCurrentIndex(1)
-        #
-        # no need to add a tab. we already have one because the grid is default.
-        #
-        obj_name = self.selected_file_path
-        data_view = taut.find_tab(self.content.tab_widget, obj_name)
-        data_view[1].toggle_grid_raw()
-
+        index = self.content.tab_widget.currentIndex()
+        t = self.content.tab_widget.widget(index)
+        t.toggle_grid_raw()
 
     def on_save_sample(self) -> None:
-        nos = Nos(self.selected_file_path)
-        name = self.selected_file_path
-        path = self.selected_file_path
+        index = self.content.tab_widget.currentIndex()
+        t = self.content.tab_widget.widget(index)
+        path = t.objectName()
+
+        name = None
+        nos = Nos(path)
+        if path.endswith("xlsx") or path.endswith("xls"):
+            path = path[0:path.rfind(".")]
+            path = f"{path}.csv"
         if nos.isfile():
-            name = os.path.basename(name)
+            name = os.path.basename(path)
             path = os.path.dirname(path)
         else:
             name = "sample.csv"
         #
-        # this is from the days of one file at a time
+        # get current tab data
         #
-        #data = self.table_model.get_data()
-        #
-        # get current tab
-        #
-        index = self.content.tab_widget.currentIndex()
-        t = self.content.tab_widget.widget(index)
         l = t.layout()
         w = l.itemAt(0).widget()
         m = w.model()
@@ -1017,13 +946,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         #
         #
-        b = self.save_sample(path=path, name=name, data=data)
+        path = self.save_sample(path=path, name=name, data=data)
         #
         # reload views with new file
         # set the file tree to highlight the new file
         #
-        if b:
-            self.read_validate_and_display_file()
+        if path is not None:
+            self.read_validate_and_display_file_for_path(path=path, editable=True)
             #
             # i have a path str
             # i need the proxy model index at that path
@@ -1040,17 +969,31 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # if the app entered a subpath somehow pull it off name, into path, and check if it exists
         #
+        print(f"save_sample: path: {path}, name: {name}")
         if name.find(os.sep):
             path = os.path.join(path, name)
             name = os.path.basename(path)
             path = os.path.dirname(path)
-        nos = Nos(path)
-        if not nos.exists():
-            nos.makedirs()
+        #
+        # if we're not saving to the root check that we have a location
+        #
+        print(f"save_sample: path: {path}")
+        if path.strip() != "":
+            nos = Nos(path)
+            if not nos.exists():
+                nos.makedirs()
         #
         # get user's file name and save
         #
-        new_name, ok = QInputDialog.getText(self, "Save sample", "Enter a name for the sample file:", text=name)
+        dialog = QInputDialog()
+        dialog.setFixedSize(QSize(420, 125))
+        dialog.setLabelText("Enter a name for the sample file:")
+        dialog.setTextValue(name)
+        ok = dialog.exec()
+        new_name = dialog.textValue()
+        #
+        #
+        #
         if ok and new_name and new_name.strip() != "":
             if not new_name.endswith(".csv"):
                 new_name = f"{new_name}.csv"
@@ -1061,9 +1004,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 path = os.path.join(path, new_name)
                 new_name = os.path.basename(path)
                 path = os.path.dirname(path)
-            nos = Nos(path)
-            if not nos.exists():
-                nos.makedirs()
+            if path.strip() != "":
+                nos = Nos(path)
+                if not nos.exists():
+                    nos.makedirs()
             #
             # minimal change to help us not overwrite
             #
@@ -1071,9 +1015,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             with DataFileWriter(path=path) as file: # pylint: disable=E0110
                 writer = csv.writer(file.sink)
                 writer.writerows(data)
-            return True
+            return path
         else:
-            return False
+            return None
 
     def open_config(self):
         self.last_main = self.main_layout.currentIndex()

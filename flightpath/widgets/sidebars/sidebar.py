@@ -548,7 +548,15 @@ class Sidebar(QWidget):
             path = self.proxy_model.filePath(index)
             dir_name = os.path.dirname(path)
             name = os.path.basename(path)
-            new_name, ok = QInputDialog.getText(self, "Rename", "Enter new name:", text=name)
+            #new_name, ok = QInputDialog.getText(self, "Rename", "Enter new name:", text=name)
+
+            dialog = QInputDialog()
+            dialog.setFixedSize(QSize(420, 125))
+            dialog.setLabelText("Enter new name:")
+            dialog.setTextValue(name)
+            ok = dialog.exec()
+            new_name = dialog.textValue()
+
             if ok and new_name and new_name.strip() != "" and new_name != name:
                 if new_name.find(os.sep) > -1:
                     new_dir = os.path.dirname(new_name)
@@ -578,7 +586,15 @@ class Sidebar(QWidget):
                 nos = Nos(path).rename(os.path.join( dir_name, new_name) )
 
     def _new_folder_navigator_item(self):
-        new_name, ok = QInputDialog.getText(self, "New folder", "Enter the new folder name: ", text="")
+        #new_name, ok = QInputDialog.getText(self, "New folder", "Enter the new folder name: ", text="")
+
+        dialog = QInputDialog()
+        dialog.setFixedSize(QSize(420, 125))
+        dialog.setLabelText("Enter the new folder name: ")
+        #dialog.setTextValue(name)
+        ok = dialog.exec()
+        new_name = dialog.textValue()
+
         if ok and new_name:
             b, msg = self._valid_new_folder(new_name)
             if b is True:
@@ -626,7 +642,16 @@ class Sidebar(QWidget):
         self.main.content.csvpath_source_view.text_edit.on_save()
 
     def _new_file_navigator_item(self):
-        new_name, ok = QInputDialog.getText(self, "New file", "Enter the new file name: ", text="")
+        #new_name, ok = QInputDialog.getText(self, "New file", "Enter the new file name: ", text="")
+
+        dialog = QInputDialog()
+        dialog.setFixedSize(QSize(420, 125))
+        dialog.setLabelText("Enter the new file's name:")
+        #dialog.setTextValue()
+        ok = dialog.exec()
+        new_name = dialog.textValue()
+
+
         if ok and new_name:
             b, msg = self._valid_new_file(new_name)
             if b is True:
@@ -698,6 +723,7 @@ $[*][ print("hello world") ]"""
             and not ( name.startswith(self.main.state.cwd) or name.startswith(f".{os.sep}") )
         ):
             return False, "File must be in or below the working directory"
+        print(f"_valid_new_file: name: {name}: {name.find('.', 1)}")
         if name.find(".", 1) == -1:
             return False, "File name must have an extension recognized by CsvPath"
         ext = name[name.rfind(".")+1:]

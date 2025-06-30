@@ -49,14 +49,14 @@ class Welcome(QWidget):
         self.copy_in_box = self._copy_in_button(on_click=self.on_click_copy_in, on_help=self.on_click_copy_in_help)
         self.run_box = self._run_button(on_click=self.on_click_run, on_help=self.on_click_run_help)
         self.find_data_box = self._find_data_button(on_click=self.on_click_find_data, on_help=self.on_click_find_data_help)
-        self.validate_box = self._validate_button(on_click=self.on_click_validate, on_help=self.on_click_validate_help)
+        #self.validate_box = self._validate_button(on_click=self.on_click_validate, on_help=self.on_click_validate_help)
 
         top_layout = QVBoxLayout()
         top_layout.addWidget(image_label)
         top_layout.addWidget(self.copy_in_box)
         top_layout.addWidget(self.run_box)
         top_layout.addWidget(self.find_data_box)
-        top_layout.addWidget(self.validate_box)
+        #top_layout.addWidget(self.validate_box)
         top_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         top_box = QWidget()
@@ -117,7 +117,7 @@ class Welcome(QWidget):
 
     def _new_run(self) -> None:
         self.new_run_dialog = NewRunDialog(parent=self)
-        self.new_run_dialog.show()
+        self.new_run_dialog.show_dialog()
 
     def on_click_find_data_help(self) -> None:
         md = HelpFinder(main=self.main).help("find_file_by_reference_dialog/help.md")

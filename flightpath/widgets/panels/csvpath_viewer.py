@@ -175,15 +175,6 @@ class CsvpathViewer(QWidget):
         ):
             meut.message(msg="Check that your cursor is in a csvpath statement", title="No csvpath selected")
             return
-            """
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle("No csvpath selected")
-            msg_box.setText(f"Check that your cursor is in a csvpath statement")
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.exec()
-            return
-            """
         #
         #
         # we need to catch exceptions and display in error feedback panel
@@ -229,7 +220,16 @@ class CsvpathViewer(QWidget):
         capture = None
         try:
             path.parse(csvpath)
-            path.logger.info("starting one-off run")
+            path.logger.info(f"starting one-off run: path: {path}, file: {path.scanner.filename}")
+            #print(f"\nstarting one-off run: path: {path}, file: {path.scanner.filename}")
+            b = self._warn_file_size_if(path.scanner.filename)
+            if b is True:
+                #
+                # open file so the user can create a sample
+                #
+                self.main.selected_file_path = path.scanner.filename
+                self.main.read_validate_and_display_file_for_path(path=path.scanner.filename, editable=True)
+                return
             path.update_settings_from_metadata()
             path.ecoms = ErrorCommunications(csvpath=path)
             #
@@ -254,6 +254,13 @@ class CsvpathViewer(QWidget):
         # there's no absolute need to drop the metadata, but it seems prudent
         #
         self.mdata = None
+
+    def _warn_file_size_if(self, path) -> bool:
+        size = os.path.getsize(path)
+        if size >= 1000000:
+            msg = "Development goes faster with smaller samples. Stop to create a sample?"
+            title = "Large file"
+        return meut.yesNo(parent=self, msg=msg, title=title)
 
     def _display_stacktrace(self, trace:str) -> None:
         self._clear_feedback()
