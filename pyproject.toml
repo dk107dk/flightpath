@@ -10,7 +10,7 @@ python = ">3.10,<3.14"
 pyside6 = ">=6.8.3"
 pygments = "^2.19.1"
 darkdetect = "^0.8.0"
-csvpath = { path = "../csvpath/dist/csvpath-0.0.546.tar.gz" }
+csvpath = "^0.0.547"
 
 [tool.poetry.scripts]
 flightpath = "flightpath.main:run"
@@ -34,3 +34,4 @@ priority = "explicit"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
