@@ -34,7 +34,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     icon=os.path.abspath('..\\flightpath\\assets\\icons\\icon.ico'),
 )
