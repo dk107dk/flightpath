@@ -53,8 +53,10 @@ class DataViewer(QWidget):
 
     def display_data(self, model):
         self.table_view.setModel(model)
-        self.table_view.show()
-        self.parent.toolbar.show()
+        self.main.show_now_or_later(self.table_view)
+        #self.table_view.show()
+        self.main.show_now_or_later(self.parent.toolbar)
+        #self.parent.toolbar.show()
         self.layout().setCurrentIndex(0)
 
     def clear(self, model):

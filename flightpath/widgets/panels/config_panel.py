@@ -263,6 +263,7 @@ class ConfigPanel(QWidget):
 
     def save_all_forms(self) -> None: # , filepath: Path
         named_files = self.config.get(section="inputs", name="files")
+        print(f"cfgpanel: save_all_forms: named_files: {named_files}")
         named_paths = self.config.get(section="inputs", name="csvpaths")
         archive = self.config.get(section="results", name="archive")
         #
@@ -278,9 +279,11 @@ class ConfigPanel(QWidget):
         #
         # self.config.reload()
         #
+        print(f"cfgpanel: save_all_forms: starting forms")
         for form in self.forms:
             print(f"config_panel: save_all_forms: saving form {form}")
             form.add_to_config(self.config) #self.metadata)
+            print(f"config_panel: save_all_forms: done saving form {form}")
         print(f"config_panel: save_all_forms: done with forms")
         print(f"config_panel: save_all_forms: saving config {self.config} ")
         print(f"config_panel: save_all_forms: state.cwd: {self.main.state.cwd}")

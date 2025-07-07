@@ -35,8 +35,6 @@ class CacheForm(BlankForm):
         self.config.add_to_config("cache", "path", path )
         self.config.add_to_config("cache", "use_cache", self.use_cache.currentText() )
 
-
-
     def populate(self):
         config = self.config
         cache_path = config.get(section="cache", name="path", default="cache")

@@ -87,14 +87,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # happen, but if it did, we need the application initalization
         # code to not put the app into exec.
         #
-
+        print("main.init: starting")
         self.main = None
         self.main_top = None
         self.main_layout = None
         self.welcome = None
         self.content = None
         self.config = None
-        #self.table_model = None
         self.sidebar = None
         self.sidebar_rt_top = None
         self.sidebar_rt_mid = None
@@ -126,20 +125,50 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # if we fail to / chose not to set a cwd we will close the app
         #
+        print("main.init: done with None-set members")
         self.please_close = False
         #
+        # at first launch we want to be sure to call show() on child windows
+        # after we call show on the main window; otherwise, on Windows, at
+        # least, on launch we get a popcorn of windows before things settle
+        # down.
         #
-        #
+        self.launch_shows = []
+
         if not self.state_check():
             return
+        print("main.init: checked state")
         self.load_state_and_cd()
+        print("main.init: loaded state and switched directories")
+        #
+        # after this we show the other first shows()
+        #
         self.show()
+        #
+        # do child shows here?
+        #
+        for _ in self.launch_shows:
+            _.show()
+        #
+        # when we're done launching set this to None to make sure we
+        # call show() right away.
+        #
+        self.launch_shows = None
         #
         # react to light/dark changes
         #
         QCoreApplication.instance().styleHints().colorSchemeChanged.connect(self.on_color_scheme_changed)
         if darkdetect.isDark():
             self.on_color_scheme_changed()
+
+    def show_now_or_later(self, showable) -> None:
+        if not hasattr(showable, "show"):
+            raise ValueError(f"Cannot show a {showable}")
+        if self.launch_shows is None:
+            showable.show()
+        else:
+            self.launch_shows.append(showable)
+
 
     def on_color_scheme_changed(self) -> None:
         print(f"main.on_color_scheme_changed: we're in dark mode: {darkdetect.isDark()}")
@@ -175,14 +204,21 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
 
     def state_check(self) -> bool:
+        print(f"main.state_check: starting")
         self.state = State()
+        print(f"main.state_check: created state")
         if self.state.has_cwd():
+            print(f"main.state_check: state has cwd")
             ...
         else:
+            print(f"main.state_check: state has not cwd")
             self.state.pick_cwd(self)
+            print(f"main.state_check: picked cwd")
             if self.state.has_cwd():
+                print(f"main.state_check: state has cwd")
                 ...
             else:
+                print(f"main.state_check: could not pick cwd. exiting.")
                 QCoreApplication.instance().exit()
                 #
                 # I'm not 100% clear why exit() isn't enough, but it needs a little help.
@@ -190,7 +226,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 #
                 self.please_close = True
                 return False
+        print(f"main.state_check: loading state and changing directories")
         self.load_state_and_cd()
+        print(f"main.state_check: finished loading state and changing directories")
         self.statusBar().showMessage(f"  Project changed to: {self.state.cwd}")
         return True
 
@@ -221,13 +259,17 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.logger.debug(msg)
 
     def load_state_and_cd(self) -> None:
+        print(f"main.load_state_and_cd: starting")
         """ sets the project directory into .flightpath file, cds to project dir, and reloads UI. """
         self.state.load_state_and_cd(self)
+        print(f"main.load_state_and_cd: loaded state and changed dirs")
         #
         # if we have env vars set them for this process
         #
         self.state.load_env()
+        print(f"main.load_state_and_cd: env vars loaded")
         self.startup()
+        print(f"main.load_state_and_cd: started up")
 
     def startup(self) -> None:
         """ (re)loads UI """
@@ -267,8 +309,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.last_main = 0
         #self.config.config_panel.setup_forms()
-
-        self.show()
+        #self.show()
         self.statusBar().showMessage(f"  Working directory: {self.state.cwd}")
 
         build_number = fiut.read_string(fiut.make_app_path(f"assets{os.sep}build_number.txt")).strip()
@@ -425,7 +466,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         return self._helper
 
     def _on_data_toolbar_show(self) -> None:
-        self.content.toolbar.show()
+        self.show_now_or_later( self.content.toolbar )
 
     def _on_data_toolbar_hide(self) -> None:
         self.content.toolbar.hide()
@@ -502,7 +543,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.rt_tab_widget.tabBar().hide()
 
     def _rt_tabs_show(self) -> None:
-        self.rt_tab_widget.tabBar().show()
+        self.show_now_or_later(self.rt_tab_widget.tabBar())
+        #self.rt_tab_widget.tabBar().show()
 
     def _on_stack_change(self) ->None:
         i = self.main_layout.currentIndex()
@@ -535,7 +577,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             # and make both visible in the tabbar. if we haven't shown the tabbar before we
             # don't have a populated helper tree, so we need to get on that.
             #
-            self._rt_tabs_show()
+            if self.launch_shows is not None:
+                self.launch_shows.append(self._rt_tabs_show)
+            else:
+                self._rt_tabs_show()
             if self.rt_col_helpers.count() == 0:
                 self.sidebar_functs = SidebarFunctions(main=self)
                 self.rt_col_helpers.addWidget(self.sidebar_functs)
@@ -728,7 +773,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # when  data _view is visible we show the sample tool bar
         #
         self.content.toolbar.enable()
-        self.content.toolbar.show()
+        self.show_now_or_later(self.content.toolbar)
+        #self.content.toolbar.show()
         #
         # hide right tabs because we don't need csvpath helpers when looking
         # at data
@@ -1040,14 +1086,20 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.config.reset_config_toolbar()
 
     def cancel_config_changes(self):
+        # exp
+        self.csvpath_config.reload()
+        #
         self.config.config_panel.populate_all_forms()
         self.reset_config_toolbar()
 
     def save_config_changes(self):
         print(f"save_config_changes: starting")
-        self.config.config_panel.save_all_forms()
-        print(f"save_config_changes: resetting")
-        self.reset_config_toolbar()
+        try:
+            self.config.config_panel.save_all_forms()
+            print(f"save_config_changes: resetting")
+            self.reset_config_toolbar()
+        except Exception as e:
+            meut.message(title="Error saving config", msg=f"Error saving config: {e}")
         print(f"save_config_changes: done")
 
     def on_config_changed(self):
@@ -1076,15 +1128,18 @@ def run():
     app.setApplicationName(MainWindow.TITLE)
     app.setStyle("Fusion")
 
+    print(f"creating main window")
     window = MainWindow()
     if window.please_close:
         return
+    print(f"not closing main window")
     #
     # careful, this was throwing an error at one point, but is currently
     # commented mainly because a smaller window is easier for dev.
     #
     #window.showMaximized()
     #window.show()
+    print(f"showing main window")
     sys.exit(app.exec())
 
 if __name__ == "__main__":

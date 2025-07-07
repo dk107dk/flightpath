@@ -50,6 +50,22 @@ class NewRunDialog(QDialog):
         self.method = None
         self.named_paths_name = named_paths
         self.named_file_name = named_file
+        #
+        # while we don't want to set it up yet, self.named_paths_name_ctl needs to
+        # be a thing because self.named_file_name_ctl will update and the event
+        # handler wants to check both members.
+        #
+        self.named_paths_name_ctl = None
+        self.run_button = QPushButton()
+        self.run_button.setText("Run")
+        self.run_button.clicked.connect(self.do_run)
+        self.run_button.setEnabled(False)
+        self.cancel_button = QPushButton()
+        self.cancel_button.setText("Cancel")
+        self.cancel_button.clicked.connect(self.reject)
+        #
+        #
+        #
         self.setFixedHeight(200)
         self.setFixedWidth(650)
 
@@ -139,14 +155,6 @@ class NewRunDialog(QDialog):
         form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         form_layout.addRow("Run method: ", box)
 
-        self.run_button = QPushButton()
-        self.run_button.setText(self.tr("Run"))
-        self.run_button.clicked.connect(self.do_run)
-        self.run_button.setEnabled(False)
-        self.cancel_button = QPushButton()
-        self.cancel_button.setText(self.tr("Cancel"))
-        self.cancel_button.clicked.connect(self.reject)
-
         buttons_layout = QHBoxLayout()
         buttons_layout.addWidget(self.cancel_button)
         buttons_layout.addWidget(self.run_button)
@@ -190,11 +198,15 @@ class NewRunDialog(QDialog):
 
     def on_names_change(self) -> None:
         f = self.named_file_name_ctl.currentText()
-        p = self.named_paths_name_ctl.currentText()
-        if f and f.strip() != "" and p and p.strip() != "":
-            self.run_button.setEnabled(True)
+        if self.named_paths_name_ctl:
+            p = self.named_paths_name_ctl.currentText()
+            if f and f.strip() != "" and p and p.strip() != "":
+                self.run_button.setEnabled(True)
+            else:
+                self.run_button.setEnabled(False)
         else:
             self.run_button.setEnabled(False)
+
 
     def show_dialog(self) -> None:
         #
