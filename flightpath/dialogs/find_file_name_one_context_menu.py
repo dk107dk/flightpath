@@ -147,7 +147,6 @@ class NameOneLineEdit(QLineEdit):
                 self._add_ordinal(":last", menu)
 
     def _add_index_if(self, menu) -> bool:
-        print(f"show an index?  {self.parent.ref.next};; {self.parent.ref.sequence}")
         return
 
     def _on_add_to_ref(self, name:str) -> None:

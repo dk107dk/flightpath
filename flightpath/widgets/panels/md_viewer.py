@@ -65,7 +65,8 @@ class MdViewer(QWidget):
         # add and show
         #
         self.layout().addWidget(self.text_edit)
-        self.text_edit.show()
+        self.main.show_now_or_later(self.text_edit)
+        #self.text_edit.show()
 
     def reset_saved(self) -> None:
         self.saved = True
@@ -90,7 +91,8 @@ class MdViewer(QWidget):
         if data is None:
             with DataFileReader(path) as file:
                 data = file.source.read()
-        self.text_edit.show()
+        self.main.show_now_or_later(self.text_edit)
+        #self.text_edit.show()
         if info.suffix() == "md":
             #
             # we can allow editing MD. need a raw view for that.
@@ -120,7 +122,8 @@ class MdViewer(QWidget):
             print(f"MdViewer: unknown file type: {info.suffix()}")
         c = "cmd" if osut.is_mac() else "ctrl"
         self.main.statusBar().showMessage(f"{c}-s to save • Opened {path}")
-        self.text_edit.show()
+        self.main.show_now_or_later(self.text_edit)
+        #self.text_edit.show()
 
     def clear(self):
         self.text_edit.hide()

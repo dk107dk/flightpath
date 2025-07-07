@@ -203,7 +203,8 @@ class SidebarNamedPaths(QWidget):
         if t:
             self.new_run_dialog.template = t
             self.new_run_dialog.template_ctl.setText(t)
-        self.new_run_dialog.show()
+        self.main.show_now_or_later(self.new_run_dialog)
+        #self.new_run_dialog.show()
 
 
     def _show_context_menu(self, position) -> None:

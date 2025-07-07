@@ -85,6 +85,7 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
 
         # foods/:1/data/:0/:filename
         self.template_ctl = QLineEdit()
+        self.template_ctl.textChanged.connect(self._update_actual_path)
 
         #
         # add a help icon for templates
@@ -203,7 +204,9 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
             return
         cursor_pos = self.template_ctl.cursorPosition()
         parts = pathu.parts(self.path)
+        parts.remove("")
         i = 0
+        print(f"stage_data_dialog: _source_path_click: parts: {parts}")
         try:
             i = parts.index(text)
         except ValueError:
@@ -217,16 +220,28 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
                 middle = "/"
             middle = f"{middle}:filename"
         else:
-            bottom = f"/:{i}"
+            bottom = f":{i}/"
+            if not top.endswith("/"):
+                bottom = f"/{bottom}"
         nt = f"{top}{middle}{bottom}"
+        nt = nt.lstrip("/")
         self.template_ctl.setText( nt )
         #
         # update the t_lab with what the path will be
         #
-        gen_path = nt
+        self._update_actual_path(nt)
+
+    def _update_actual_path(self, gen_path:str) -> None:
+        if gen_path is None:
+            gen_path = self.template_ctl.text()
+        parts = pathu.parts(self.path)
+        parts.remove("")
         for i, p in enumerate(parts):
             gen_path = gen_path.replace(f":{i}", p)
         gen_path = gen_path.replace(":filename", parts[len(parts)-1])
+        print(f"stage_data_dialog: _source_path_click 1: gen_path: {gen_path}")
+        gen_path = gen_path.lstrip("/")
+        print(f"stage_data_dialog: _source_path_click 2: gen_path: {gen_path}")
         self.t_lab.setText(gen_path)
         self.t_lab.adjustSize()
 

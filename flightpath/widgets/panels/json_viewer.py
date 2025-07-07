@@ -366,7 +366,14 @@ class JsonViewer(QWidget):
             self.view.hide()
             return
         self.model.load(data)
-        self.view.show()
+        """
+        if hasattr(self.parent, "show_now_or_later"):
+            self.parent.show_now_or_later(self.view)
+        else:
+            self.parent.main.show_now_or_later(self.view)
+        """
+        self.main.show_now_or_later(self.view)
+        #self.view.show()
         self.view.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
         self.view.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.view.setAlternatingRowColors(True)

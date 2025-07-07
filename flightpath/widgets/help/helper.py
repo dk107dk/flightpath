@@ -39,7 +39,8 @@ class Helper(ClosingTabsHolder):
 
     def assure_help_tab(self) -> None:
         self.help_and_feedback.setCurrentWidget(self.get_help_tab())
-        self.help_and_feedback.show()
+        self.main.show_now_or_later(self.help_and_feedback)
+        #self.help_and_feedback.show()
 
     def get_help_tab_if(self) -> QWidget:
         t = self.help_and_feedback.findChild(QWidget, "Help Content")

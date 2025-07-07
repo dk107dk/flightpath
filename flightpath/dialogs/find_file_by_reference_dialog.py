@@ -131,7 +131,9 @@ class FindFileByReferenceDialog(QDialog):
         self.stack_layout.addWidget(self.howto)
         md = HelpFinder(main=self.main).help("find_data/howto.md")
         self.howto.setMarkdown(md)
-        self.howto.show()
+
+        self.main.show_now_or_later(self.howto)
+        #self.howto.show()
         self.stack_layout.setCurrentIndex(1)
         main_layout.addWidget(self.stacker)
         #
@@ -292,9 +294,12 @@ class FindFileByReferenceDialog(QDialog):
             elif datatype == "results":
                 self._add_named_results()
             self._on_pick_name()
-            self.named_x_name.show()
-            self.name_one.show()
-            self.box.show()
+            self.main.show_now_or_later(self.named_x_name)
+            #self.named_x_name.show()
+            self.main.show_now_or_later(self.name_one)
+            #self.name_one.show()
+            self.main.show_now_or_later(self.box)
+            #self.box.show()
         else:
             self.named_x_name.hide()
             self.name_one.hide()
@@ -309,12 +314,14 @@ class FindFileByReferenceDialog(QDialog):
         if datatype == "files":
             md = HelpFinder(main=self.main).help("find_data/file_queries.md")
             self.howto.setMarkdown(md)
-            self.howto.show()
+            self.main.show_now_or_later(self.howto)
+            #self.howto.show()
             self.stack_layout.setCurrentIndex(1)
         elif datatype == "results":
             md = HelpFinder(main=self.main).help("find_data/results_queries.md")
             self.howto.setMarkdown(md)
-            self.howto.show()
+            self.main.show_now_or_later(self.howto)
+            #self.howto.show()
             self.stack_layout.setCurrentIndex(1)
         else:
             ...
