@@ -152,43 +152,4 @@ class CsvPathSyntaxHighlighter(QSyntaxHighlighter):
                 break
 
 
-# Example usage and test application
-class CsvPathEditor(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("CsvPath DSL Editor")
-        self.setGeometry(100, 100, 800, 600)
 
-        # Create central widget and layout
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        layout = QVBoxLayout(central_widget)
-
-        # Create text editor
-        self.text_edit = QTextEdit()
-        self.text_edit.setFont(QFont("Consolas", 12))  # Use monospace font
-        layout.addWidget(self.text_edit)
-
-        # Apply syntax highlighter
-        self.highlighter = CsvPathSyntaxHighlighter(self.text_edit.document())
-
-        # Add some sample CsvPath code
-        sample_code = '''[
-    ~ This is a comment ~
-    #name == "John" -> @found = yes()
-    @count = count(#age)
-    $reference_var
-    /regex_pattern/
-    function_call(#header, @variable, "string", 123)
-    #"quoted header" = @value
-]'''
-        self.text_edit.setPlainText(sample_code)
-
-
-if __name__ == "__main__":
-    app = QApplication([])
-
-    editor = CsvPathEditor()
-    editor.show()
-
-    app.exec()

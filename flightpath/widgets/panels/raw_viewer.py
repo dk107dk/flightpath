@@ -57,12 +57,14 @@ class RawViewer(QWidget):
                 self.label.setText(f"Error opening file: {type(e)}: {e}")
                 return
         self.label.hide()
-        self.text_edit.show()
+        self.main.show_now_or_later(self.text_edit)
+        #self.text_edit.show()
         self.text_edit.setPlainText(content)
         self.loaded = True
 
     def clear(self):
-        self.label.show()
+        self.main.show_now_or_later(self.text_edit)
+        #self.label.show()
         self.text_edit.hide()
 
 

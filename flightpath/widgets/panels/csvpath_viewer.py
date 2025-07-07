@@ -221,7 +221,6 @@ class CsvpathViewer(QWidget):
         try:
             path.parse(csvpath)
             path.logger.info(f"starting one-off run: path: {path}, file: {path.scanner.filename}")
-            #print(f"\nstarting one-off run: path: {path}, file: {path.scanner.filename}")
             b = self._warn_file_size_if(path.scanner.filename)
             if b is True:
                 #
@@ -257,9 +256,11 @@ class CsvpathViewer(QWidget):
 
     def _warn_file_size_if(self, path) -> bool:
         size = os.path.getsize(path)
-        if size >= 1000000:
-            msg = "Development goes faster with smaller samples. Stop to create a sample?"
-            title = "Large file"
+        if size <= 1000000:
+            return False
+        msg = ""
+        msg = "Development goes faster with smaller samples. Stop to create a sample?"
+        title = "Large file"
         return meut.yesNo(parent=self, msg=msg, title=title)
 
     def _display_stacktrace(self, trace:str) -> None:
@@ -275,7 +276,8 @@ class CsvpathViewer(QWidget):
         layout.addWidget(ev)
         layout.setContentsMargins(0, 0, 0, 0)
         self.main.helper.help_and_feedback.setCurrentWidget(es)
-        self.main.helper.help_and_feedback.show()
+        main.show_now_or_later(self.main.helper.help_and_feedback)
+        #self.main.helper.help_and_feedback.show()
         if not self.main.helper.is_showing_help():
             self.main.helper.on_click_help()
 
@@ -357,7 +359,9 @@ class CsvpathViewer(QWidget):
             self.main.helper.on_click_help()
         t = self.main.helper.help_and_feedback.findChild(QWidget, printouts_label)
         self.main.helper.help_and_feedback.setCurrentWidget(t)
-        self.main.helper.help_and_feedback.show()
+
+        self.main.show_now_or_later(self.main.helper.help_and_feedback)
+        #self.main.helper.help_and_feedback.show()
 
     def _display_log(self, log:QWidget, log_lines:str) -> None:
         layout = QVBoxLayout()
@@ -467,7 +471,8 @@ lines = path.collect()
         self.path = path
         info = QFileInfo(path)
         if not info.suffix() in self.main.csvpath_config.csvpath_file_extensions:
-            self.label.show()
+            self.main.show_now_or_later(self.label)
+            #self.label.show()
             self.text_edit.hide()
             return
         self.text_edit.clear()
@@ -480,14 +485,9 @@ lines = path.collect()
 
         self.label.hide()
         CsvPathSyntaxHighlighter(self.text_edit.document())
-        """
-        multi = MultiHighlighter(self.text_edit.document())
-        highlighter = CsvpathHighlighter(None, parent=multi)
-        highlighters = [highlighter, CommentHighlighter(None, parent=multi) ]
-        multi.highlighters = highlighters
-        """
 
-        self.text_edit.show()
+        self.main.show_now_or_later(self.text_edit)
+        #self.text_edit.show()
         self.text_edit.setPlainText(data)
         c = "cmd" if osut.is_mac() else "ctrl"
         self.main.statusBar().showMessage(f"{c}-s to save, {c}-r to run • Opened {path}")

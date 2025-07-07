@@ -45,7 +45,8 @@ class EnvForm(BlankForm):
         header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
         self.table.itemChanged.connect(self._on_item_changed)
-        self.table.show()
+        self.main.show_now_or_later(self.table)
+        #self.table.show()
         self.layout.addWidget(self.table)
 
         add = QWidget()

@@ -46,7 +46,8 @@ class IconPackager:
             pixmap = cls._make_pixmap(p)
             icon = ClickableLabel(icon_path=p)
             icon.setPixmap(pixmap)
-            icon.show()
+            main.show_now_or_later(icon)
+            #icon.show()
             box_layout.addWidget(icon)
             icon.icon_pixmap = pixmap
             icon.click_callback = on_click[i]
@@ -84,7 +85,12 @@ class IconPackager:
         path = fiut.make_app_path(icon_path)
         pixmap = cls._make_pixmap(path)
         clk.setPixmap(pixmap)
-        clk.show()
+        if hasattr( parent, "show_now_or_later"):
+            parent.show_now_or_later(clk)
+        elif hasattr(parent, "main"):
+            parent.main.show_now_or_later(clk)
+        else:
+            clk.show()
         clk.clicked.connect( on_click )
         return clk
 
