@@ -220,11 +220,13 @@ class SidebarNamedFiles(QWidget):
         maker = SidebarFileRefMaker(parent=self, main=self.main)
         ref = maker.new_run_ref()
         self.new_run_dialog = NewRunDialog(parent=self, named_paths=None, named_file=ref)
-        self.new_run_dialog.show()
+        self.main.show_now_or_later(self.new_run_dialog)
+        #self.new_run_dialog.show()
 
     def _find_data(self):
         find = FindFileByReferenceDialog(main=self.main)
-        find.show()
+        self.main.show_now_or_later(find)
+        #find.show()
 
     def _delete_view_item(self):
         index = self.view.currentIndex()

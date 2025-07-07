@@ -130,7 +130,8 @@ class Welcome(QWidget):
 
     def on_click_find_data(self) -> None:
         find = FindFileByReferenceDialog(main=self.main)
-        find.show()
+        #self.main.show_now_or_later(self.find)
+        find.show_dialog()
 
     def on_click_validate(self) -> None:
         csvpath = FileCollector.select_file(
