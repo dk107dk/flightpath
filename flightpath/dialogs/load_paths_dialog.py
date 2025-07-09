@@ -20,7 +20,7 @@ from flightpath.util.help_finder import HelpFinder
 class LoadPathsDialog(QDialog):
 
     def __init__(self, *, path:str, parent:"Sidebar", loader:"CsvpathLoader"):
-        super().__init__(parent)
+        super().__init__(None)
         self.sidebar = parent
         self.loader = loader
         self.csvpaths = CsvPaths()
@@ -28,6 +28,8 @@ class LoadPathsDialog(QDialog):
         self.named_paths_names = self.mgr.named_paths_names
 
         self.setWindowTitle("Load csvpath files")
+        self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.NonModal)
 
         self.path = path
         info = QFileInfo(path)
@@ -53,7 +55,7 @@ class LoadPathsDialog(QDialog):
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-        self.setWindowModality(Qt.ApplicationModal)
+        #self.setWindowModality(Qt.ApplicationModal)
 
         form_layout = QFormLayout()
         main_layout.addLayout(form_layout)
@@ -89,11 +91,11 @@ class LoadPathsDialog(QDialog):
         else:
             form_layout.addRow("Register files in: ", area)
 
+        self.template_ctl = QLineEdit()
+        tlabel = QLabel()
+        tlabel.setText("Template:")
+        box = HelpIconPackager.add_help(main=self.sidebar.main, widget=self.template_ctl, on_help=self.on_help_template)
         if not self.json:
-            self.template_ctl = QLineEdit()
-            tlabel = QLabel()
-            tlabel.setText("Template:")
-            box = HelpIconPackager.add_help(main=self.sidebar.main, widget=self.template_ctl, on_help=self.on_help_template)
             form_layout.addRow(tlabel, box)
 
         self.cancel_button = QPushButton()
@@ -152,5 +154,3 @@ class LoadPathsDialog(QDialog):
         if not self.sidebar.main.helper.is_showing_help():
             self.sidebar.main.helper.on_click_help()
 
-    def show_dialog(self) -> None:
-        self.exec()

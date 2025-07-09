@@ -279,22 +279,19 @@ class ConfigPanel(QWidget):
         #
         # self.config.reload()
         #
-        print(f"cfgpanel: save_all_forms: starting forms")
         for form in self.forms:
-            print(f"config_panel: save_all_forms: saving form {form}")
-            form.add_to_config(self.config) #self.metadata)
-            print(f"config_panel: save_all_forms: done saving form {form}")
-        print(f"config_panel: save_all_forms: done with forms")
-        print(f"config_panel: save_all_forms: saving config {self.config} ")
-        print(f"config_panel: save_all_forms: state.cwd: {self.main.state.cwd}")
-        print(f"config_panel: save_all_forms: config.configpath: {self.config.configpath}")
-        print(f"config_panel: save_all_forms: os.cwd: {os.getcwd()}")
+            print(f"configpanel: saving form: {form}")
+            try:
+                form.add_to_config(self.config) #self.metadata)
+            except:
+                import traceback
+                print(traceback.format_exc())
+        print(f"configpanel: saving config: {self.config.configpath}")
         self.config.save_config()
         #
         # note that some non-config.ini values must/will be saved when add_to_config() is
         # called on their forms. e.g. projects.
         #
-
 
         #
         # need to refresh the inputs and results trees, but only

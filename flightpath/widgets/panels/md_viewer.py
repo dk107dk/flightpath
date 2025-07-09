@@ -15,6 +15,7 @@ from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.file_collector import FileCollector
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.style_utils import StyleUtility as stut
+from flightpath.util.message_utility import MessageUtility as meut
 
 class MdViewer(QWidget):
 
@@ -137,9 +138,9 @@ class MdViewer(QWidget):
         thepath = self.text_edit.parent.path
         thepath = os.path.dirname(thepath)
         name = os.path.basename(self.path)
-        name, ok = QInputDialog.getText(self, "Save As", "Where should the new file go? ", text=name)
+
+        name, ok = meut.input(title="Save As", msg="Where should the new file live? ")
         if ok and name:
-            #text = self.text_edit.toPlainText()
             path = fiut.deconflicted_path( thepath, name )
             self._save(path=path)
 
@@ -159,9 +160,9 @@ class MdViewer(QWidget):
                 txt = self.text_edit.toPlainText()
         elif info.suffix() == "html":
             ... # error. html is not editable. if fix!
-        with DataFileWriter(path=self.path) as writer:
+        with DataFileWriter(path=path) as writer:
             writer.write(txt)
-        self.main.statusBar().showMessage(f"  Saved to: {self.path}")
+        self.main.statusBar().showMessage(f"  Saved to: {path}")
         self.reset_saved()
 
     def on_save(self) -> None:
@@ -171,7 +172,8 @@ class MdViewer(QWidget):
 
     def on_toggle(self) -> None:
         info = QFileInfo(self.path)
-        if info.suffix() in ["md", "txt"]:
+        if info.suffix() in ["md"]:
+        #if info.suffix() in ["md", "txt"]:
             editor = self.text_edit
             if self.displaying is True:
                 self.displaying = False
@@ -187,9 +189,8 @@ class MdViewer(QWidget):
                 self.text_edit.setMarkdown(txt)
             editor.hide()
             editor.deleteLater()
-
         else:
-            print(f"md_text_edit: cannot toggle {info}")
+            print(f"md_viewer: cannot toggle {info}")
 
     def _make_paragraphs(self, txt:str) -> str:
         ss = txt.split("\n")

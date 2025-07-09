@@ -61,7 +61,6 @@ class ClosingTabs(QTabWidget):
         # find directory
         #
         path = self.main.selected_file_path
-        print(f"tabs_cls: onsavesam: path 1: {path}")
         nos = Nos(path)
         if nos.isfile():
             path = os.path.dirname(path)
@@ -72,8 +71,6 @@ class ClosingTabs(QTabWidget):
         w = l.itemAt(0).widget()
         m = w.model()
         data = m.get_data()
-
-        print(f"tabs_cls: onsavesam: path 2: {path}")
         self.main.save_sample(path=path, name="sample.csv", data=data)
 
     @Slot(str)

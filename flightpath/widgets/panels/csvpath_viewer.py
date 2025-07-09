@@ -199,9 +199,10 @@ class CsvpathViewer(QWidget):
             #
             # or, error message here.
             #
-            ...
+            if filepath is None:
+                meut.message(title="No File", msg="No file was selected. Cannot continue.")
+                return
         # if we don't have the file in the cstr already add it
-        print(f"csvpathviewer.run_one_csvpath: filepath: {filepath}, cstr: {cstr}")
         if cstr.find(filepath) == -1:
             csvpath = f"~{comment}~ ${filepath}{cstr.lstrip('$')}"
         else:
@@ -240,6 +241,7 @@ class CsvpathViewer(QWidget):
         except Exception as e:
             estr = traceback.format_exc()
             self._display_stacktrace(estr)
+            meut.message(title="Error", msg=f"Error: {e}")
             return
         #
         # shut down the logger. not sure this is needed, but ruling stuff out.
@@ -276,7 +278,7 @@ class CsvpathViewer(QWidget):
         layout.addWidget(ev)
         layout.setContentsMargins(0, 0, 0, 0)
         self.main.helper.help_and_feedback.setCurrentWidget(es)
-        main.show_now_or_later(self.main.helper.help_and_feedback)
+        self.main.show_now_or_later(self.main.helper.help_and_feedback)
         #self.main.helper.help_and_feedback.show()
         if not self.main.helper.is_showing_help():
             self.main.helper.on_click_help()

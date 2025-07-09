@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QMenu,
     QLabel,
     QMessageBox,
-    QInputDialog,
     QVBoxLayout,
     QHBoxLayout,
     QSizePolicy
@@ -53,7 +52,6 @@ class SidebarNamedFiles(QWidget):
             layout.setSpacing(0)
             layout.setContentsMargins(1, 1, 1, 1)
 
-
             named_files_path = self.config.get(section="inputs", name="files")
             nos = Nos(named_files_path)
             if not nos.dir_exists():
@@ -71,7 +69,7 @@ class SidebarNamedFiles(QWidget):
             self.view.setAutoScroll(True)
             self.view.setIndentation(20)
             self.view.setColumnWidth(0, 250)
-            self.model = TreeModel(["Staged files"], nos, self, title="Staged files", sidebar=self)
+            self.model = TreeModel(["Staged files"], nos, self, title="Staged named-files", sidebar=self)
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
             self.view.updateGeometries()
@@ -181,7 +179,6 @@ class SidebarNamedFiles(QWidget):
         from_index = self.view.currentIndex()
         if from_index.isValid():
             from_path = self.model.filePath(from_index)
-            #from_nos = Nos(from_path)
             to_index = self.main.sidebar.file_navigator.currentIndex()
             to_path = None
             if to_index.isValid():
@@ -216,17 +213,14 @@ class SidebarNamedFiles(QWidget):
             QMessageBox.warning(self, "Error", "Cannot copy item")
 
     def _new_run(self):
-        #path = self.model.filePath(index)
         maker = SidebarFileRefMaker(parent=self, main=self.main)
         ref = maker.new_run_ref()
         self.new_run_dialog = NewRunDialog(parent=self, named_paths=None, named_file=ref)
         self.main.show_now_or_later(self.new_run_dialog)
-        #self.new_run_dialog.show()
 
     def _find_data(self):
         find = FindFileByReferenceDialog(main=self.main)
         self.main.show_now_or_later(find)
-        #find.show()
 
     def _delete_view_item(self):
         index = self.view.currentIndex()

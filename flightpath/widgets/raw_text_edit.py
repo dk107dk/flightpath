@@ -1,5 +1,5 @@
 import os
-from PySide6.QtWidgets import QPlainTextEdit, QInputDialog, QMenu
+from PySide6.QtWidgets import QPlainTextEdit, QMenu
 from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtCore import Qt, QFileInfo
 
@@ -59,7 +59,7 @@ class RawTextEdit(QPlainTextEdit):
         if self.editable is not True:
             return
         menu = self.createStandardContextMenu()
-
+        """
         #
         # separator and toggle raw edit
         #
@@ -70,6 +70,7 @@ class RawTextEdit(QPlainTextEdit):
         t_action.setShortcut(QKeySequence("Ctrl+T"))
         t_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(t_action)
+        """
         #
         # separator and save options
         #

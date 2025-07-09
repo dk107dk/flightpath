@@ -1,7 +1,7 @@
 import os
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPixmap, QPainter
+from PySide6.QtGui import QPixmap, QPainter, QShortcut, QKeySequence
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QWidget,
@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
+from csvpath import CsvPaths
 
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.widgets.clickable_label import ClickableLabel
@@ -49,14 +50,12 @@ class Welcome(QWidget):
         self.copy_in_box = self._copy_in_button(on_click=self.on_click_copy_in, on_help=self.on_click_copy_in_help)
         self.run_box = self._run_button(on_click=self.on_click_run, on_help=self.on_click_run_help)
         self.find_data_box = self._find_data_button(on_click=self.on_click_find_data, on_help=self.on_click_find_data_help)
-        #self.validate_box = self._validate_button(on_click=self.on_click_validate, on_help=self.on_click_validate_help)
 
         top_layout = QVBoxLayout()
         top_layout.addWidget(image_label)
         top_layout.addWidget(self.copy_in_box)
         top_layout.addWidget(self.run_box)
         top_layout.addWidget(self.find_data_box)
-        #top_layout.addWidget(self.validate_box)
         top_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         top_box = QWidget()
@@ -75,6 +74,11 @@ class Welcome(QWidget):
         main_layout.addItem(top_spacer)
         main_layout.addWidget(top_container)
         main_layout.addStretch(1)
+
+
+        find_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+f"), self)
+        find_shortcut_ctrl.activated.connect(self.on_click_find_data)
+
 
         self.setLayout(main_layout)
         #
@@ -117,7 +121,7 @@ class Welcome(QWidget):
 
     def _new_run(self) -> None:
         self.new_run_dialog = NewRunDialog(parent=self)
-        self.new_run_dialog.show_dialog()
+        self.main.show_now_or_later(self.new_run_dialog)
 
     def on_click_find_data_help(self) -> None:
         md = HelpFinder(main=self.main).help("find_file_by_reference_dialog/help.md")
@@ -129,9 +133,12 @@ class Welcome(QWidget):
             self.main.helper.on_click_help()
 
     def on_click_find_data(self) -> None:
+        """
         find = FindFileByReferenceDialog(main=self.main)
-        #self.main.show_now_or_later(self.find)
         find.show_dialog()
+        """
+        find = FindFileByReferenceDialog(main=self.main)
+        self.main.show_now_or_later(find)
 
     def on_click_validate(self) -> None:
         csvpath = FileCollector.select_file(
@@ -218,7 +225,15 @@ class Welcome(QWidget):
         box = HelpIconPackager.add_help(main=self.main, widget=self.button_run, on_help=on_help)
         self.button_run.setText("Trigger a run")
         self.button_run.clicked.connect(on_click)
+        self.update_run_button()
         return box
+
+    def update_run_button(self) -> None:
+        paths = CsvPaths()
+        if paths.file_manager.named_files_count == 0 or paths.paths_manager.total_named_paths == 0:
+            self.button_run.setEnabled(False)
+        else:
+            self.button_run.setEnabled(True)
 
     def _find_data_button(self, *, on_click, on_help) -> QWidget:
         self.button_find_data = QPushButton()

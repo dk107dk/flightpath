@@ -3,7 +3,6 @@ import os
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFileDialog,
-    QInputDialog,
     QMessageBox,
     QWidget
 )
@@ -67,7 +66,7 @@ class FileCollector:
             the_path = paths[0]
             if not the_path.startswith(cwd):
                 name = os.path.basename(the_path)
-                new_name, ok = QInputDialog.getText(parent, "Copy into project", "Enter a name for the copy:", text=name)
+                new_name, ok = meut.input(title="Copy into project", msg="Enter a name for the copy:", text=name)
                 if ok and new_name:
                     new_path = fiut.deconflicted_path(cwd, new_name)
                     print(f"FileCollector: select_file: the_path: {the_path}")

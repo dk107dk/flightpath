@@ -1,5 +1,5 @@
 import os
-from PySide6.QtWidgets import QTextEdit, QInputDialog, QMenu
+from PySide6.QtWidgets import QTextEdit, QMenu
 from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtCore import Qt, QFileInfo
 
@@ -63,13 +63,15 @@ class MdTextEdit(QTextEdit):
         #
         # separator and toggle raw edit
         #
-        menu.addSeparator()
-        t = "Toggle edit"
-        t_action = QAction(t, self)
-        t_action.triggered.connect(self.parent.on_toggle)
-        t_action.setShortcut(QKeySequence("Ctrl+T"))
-        t_action.setShortcutVisibleInContextMenu(True)
-        menu.addAction(t_action)
+        path = self.parent.path
+        if path.endswith(".md"):
+            menu.addSeparator()
+            t = "Toggle edit"
+            t_action = QAction(t, self)
+            t_action.triggered.connect(self.parent.on_toggle)
+            t_action.setShortcut(QKeySequence("Ctrl+T"))
+            t_action.setShortcutVisibleInContextMenu(True)
+            menu.addAction(t_action)
         #
         # separator and save options
         #

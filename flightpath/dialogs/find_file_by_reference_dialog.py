@@ -40,7 +40,7 @@ from flightpath.util.tabs_utility import TabsUtility as tabu
 class FindFileByReferenceDialog(QDialog):
 
     def __init__(self, *, main):
-        super().__init__(main)
+        super().__init__(None)
         self.main = main
         self.paths = CsvPaths()
 
@@ -50,8 +50,8 @@ class FindFileByReferenceDialog(QDialog):
         self.setSizeGripEnabled(True)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-
+        self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.NonModal)
         #
         # named file name
         #
@@ -74,7 +74,6 @@ class FindFileByReferenceDialog(QDialog):
         # this is the last reference. it has the hints but not the query.
         #
         self.ref = None
-
         self.datatype = QComboBox()
         ref_line_layout.addWidget(self.datatype)
         self.datatype.addItem("...")
@@ -88,11 +87,8 @@ class FindFileByReferenceDialog(QDialog):
         self.name_one = NameOneLineEdit(parent=self)
         self.name_one.textChanged.connect(self._on_pick_name)
         #
-        # exp
         #
-        #self.name_one.setContextMenuPolicy(Qt.CustomContextMenu)
-        #self.name_one.customContextMenuRequested.connect(self._show_name_one_context_menu)
-
+        #
         ref_line_layout.addWidget(self.name_one)
         self.name_one.hide()
         paths = [f"assets{os.sep}icons{os.sep}copy.svg", HelpIconPackager.HELP_ICON]
@@ -115,10 +111,6 @@ class FindFileByReferenceDialog(QDialog):
         #
         #
         #
-        #
-        #
-        #self.table_view = QTableView()
-        #main_layout.addWidget(self.table_view)
         self.stacker = QWidget()
         self.stack_layout = QStackedLayout()
         self.stacker.setLayout(self.stack_layout)
@@ -133,11 +125,8 @@ class FindFileByReferenceDialog(QDialog):
         self.howto.setMarkdown(md)
 
         self.main.show_now_or_later(self.howto)
-        #self.howto.show()
         self.stack_layout.setCurrentIndex(1)
         main_layout.addWidget(self.stacker)
-        #
-        # end exp
         #
         #
         #
@@ -148,7 +137,6 @@ class FindFileByReferenceDialog(QDialog):
         header.hide()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table_view.verticalHeader().setVisible(False)
-
 
         self.count = QScrollArea()
         self.count.setWidgetResizable(True)
@@ -163,7 +151,6 @@ class FindFileByReferenceDialog(QDialog):
         main_layout.addWidget(self.count)
 
         self.context_menu = None
-        #self._setup_view_context_menu()
         self.table_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(self._show_context_menu)
 
@@ -431,7 +418,7 @@ class FindFileByReferenceDialog(QDialog):
             return "This reference cannot be extended"
         else:
             tokens = [self._token_to_hint(t) for t in tokens]
-            text = f"You can add: {' or '.join(tokens)}"
+            text = f"  You can add: {' or '.join(tokens)}"
         return text
 
     def _token_to_hint(self, t:str) -> str:
