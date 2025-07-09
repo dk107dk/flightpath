@@ -5,6 +5,13 @@ class HtmlGenerator:
 
     @classmethod
     def load_and_transform(self, path:str, tokens:dict[str,str]) -> None:
+        if path is None:
+            #
+            # for now, fail silently. we know there are times when we look for html, but shouldn't.
+            # e.g. the intermediate nodes in the functions tree -- types, math, etc. those don't have
+            # docs.
+            #
+            return None
         page = None
         with open(path, "r", encoding="utf-8") as file:
             page = file.read()
@@ -13,21 +20,22 @@ class HtmlGenerator:
 
     @classmethod
     def transform(self, *, template: str, tokens: dict[str, str] = None, path:str = None) -> str:
+        print(f"htmlgen:transform: path: {path}")
         #
         # leave these imports here. they are super slow.
         # so we don't want the latency in testing or ever
         # unless we're actually rendering a template.
         #
         from jinja2 import Template, TemplateError, FileSystemLoader, Environment  # pylint: disable=C0415
-        content = None
+        content = None        
         try:
-            i = path.find(f"{os.sep}help{os.sep}")
+            # jinja doesn't like backslashes
+            path = path.replace("\\", "/")
+            i = path.find(f"/help/")
             dirname = path[0:i+6]
-            basename = path[i+6:]
-            #e = Environment(loader=FileSystemLoader(os.path.dirname(path)))
+            basename = path[i+6:]            
             e = Environment(loader=FileSystemLoader(dirname))
             t = e.get_template( basename )
-            #t = e.get_template(os.path.basename(path))
             content = t.render(data=tokens)
         except TemplateError:
             print(traceback.format_exc())
