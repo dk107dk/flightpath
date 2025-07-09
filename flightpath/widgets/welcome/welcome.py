@@ -38,7 +38,7 @@ class Welcome(QWidget):
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         image_label = QLabel(self)
-        imgpath = fiut.make_app_path(f"assets{os.sep}images{os.sep}flightpath-gray.svg", main=main)
+        imgpath = fiut.make_app_path(f"assets{os.sep}images{os.sep}flightpath-gray-2.svg", main=main)
         self.main.log(f"Welcome: central image path: {imgpath}")
         pixmap = QPixmap(imgpath)
         image_label.setPixmap(pixmap)
