@@ -164,7 +164,6 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         self.t_lab.setText("")
         self.t_gen_area.setWidget(self.t_lab)
 
-
     def _setup_area(self) -> None:
         self.area = QScrollArea()
         self.area.setFixedWidth(487)
@@ -239,9 +238,7 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         for i, p in enumerate(parts):
             gen_path = gen_path.replace(f":{i}", p)
         gen_path = gen_path.replace(":filename", parts[len(parts)-1])
-        print(f"stage_data_dialog: _source_path_click 1: gen_path: {gen_path}")
         gen_path = gen_path.lstrip("/")
-        print(f"stage_data_dialog: _source_path_click 2: gen_path: {gen_path}")
         self.t_lab.setText(gen_path)
         self.t_lab.adjustSize()
 

@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QMenu,
     QMessageBox,
-    QInputDialog,
     QVBoxLayout
 )
 
@@ -71,7 +70,7 @@ class SidebarNamedPaths(QWidget):
             header = self.view.header()
             header.setStretchLastSection(True)
             header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-            self.model = TreeModel(["Csvpath groups"], nos, self, title="Csvpath groups", sidebar=self)
+            self.model = TreeModel(["Csvpath groups"], nos, self, title="Loaded named-paths groups", sidebar=self)
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
             self.view.updateGeometries()

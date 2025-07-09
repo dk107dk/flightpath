@@ -43,6 +43,8 @@ class NewRunDialog(QDialog):
 
     def __init__(self, *, named_paths=None, named_file=None, parent):
         super().__init__(parent)
+
+        self.csvpaths = CsvPaths()
         self.sidebar = parent
         self.setWindowTitle("Run data through a named-paths group")
 
@@ -72,19 +74,16 @@ class NewRunDialog(QDialog):
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
 
-        #self.setWindowModality(Qt.ApplicationModal)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         form_layout = QFormLayout()
         form_layout.setRowWrapPolicy(QFormLayout.RowWrapPolicy.DontWrapRows)
         main_layout.addLayout(form_layout)
 
-        csvpaths = CsvPaths()
-        self.csvpaths = csvpaths
         self.named_file_name_ctl = QComboBox()
         self.named_file_name_ctl.setEditable(True)
         self.named_file_name_ctl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        names = csvpaths.file_manager.named_file_names
+        names = self.csvpaths.file_manager.named_file_names
         names.sort()
         for _ in names:
             self.named_file_name_ctl.addItem(_)
@@ -97,15 +96,13 @@ class NewRunDialog(QDialog):
         form_layout.addRow("Named-file name: ", box)
         if self.named_file_name is not None:
             self.named_file_name_ctl.setEditText(self.named_file_name)
-
-            #self.named_file_name_ctl.setText(named_file)
         #
         # named paths name
         #
         self.named_paths_name_ctl = QComboBox()
         self.named_paths_name_ctl.setEditable(True)
         self.named_paths_name_ctl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        names = csvpaths.paths_manager.named_paths_names
+        names = self.csvpaths.paths_manager.named_paths_names
         names.sort()
         for _ in names:
             self.named_paths_name_ctl.addItem(_)
@@ -119,7 +116,6 @@ class NewRunDialog(QDialog):
         form_layout.addRow("Named-paths name: ", box)
         if self.named_paths_name is not None:
             self.named_paths_name_ctl.setEditText(self.named_paths_name)
-            #self.named_paths_name_ctl.setText(named_paths)
 
         self.template_ctl = QLineEdit()
         self.template_ctl.setStyleSheet("QLineEdit {height:19px;}")
@@ -136,8 +132,7 @@ class NewRunDialog(QDialog):
         # look for template in the named-paths group
         #
         if self.named_paths_name is not None:
-            paths = CsvPaths()
-            template = paths.paths_manager.get_template_for_paths(self.named_paths_name)
+            template = self.csvpaths.paths_manager.get_template_for_paths(self.named_paths_name)
             if template is not None:
                 self.template_ctl.setText(template)
 
@@ -158,6 +153,7 @@ class NewRunDialog(QDialog):
         buttons_layout = QHBoxLayout()
         buttons_layout.addWidget(self.cancel_button)
         buttons_layout.addWidget(self.run_button)
+        self.on_names_change()
         main_layout.addLayout(buttons_layout)
 
     def on_help_template(self) -> None:
@@ -212,13 +208,11 @@ class NewRunDialog(QDialog):
         #
         # check if we have enough names to run
         #
-        print(f"shoing dialgo: {self.csvpaths.file_manager.named_files_count}")
         if self.csvpaths.file_manager.named_files_count == 0:
             #
             #
             #
             meut.message(title="No staged data", msg="You must stage data before you can start a run")
-        print(f"shoing dialgo: {self.csvpaths.paths_manager.total_named_paths()}")
         if self.csvpaths.paths_manager.total_named_paths() == 0:
             #
             #

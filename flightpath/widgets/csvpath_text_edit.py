@@ -1,5 +1,5 @@
 import os
-from PySide6.QtWidgets import QPlainTextEdit, QInputDialog, QStyle, QMenu
+from PySide6.QtWidgets import QPlainTextEdit, QStyle, QMenu
 from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut, QPixmap, QPainter, QIcon, QFont
 from PySide6.QtCore import Qt
 from PySide6.QtSvg import QSvgRenderer
@@ -9,6 +9,7 @@ from csvpath.util.nos import Nos
 from csvpath.managers.paths.paths_manager import PathsManager
 
 from flightpath.util.csvpath_loader import CsvpathLoader
+from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.syntax.span_utility import SpanUtility as sput
 from flightpath.util.os_utility import OsUtility as osut
@@ -301,7 +302,7 @@ class CsvPathTextEdit(QPlainTextEdit):
             thepath = os.path.dirname(thepath)
 
         name = os.path.basename(self.parent.path)
-        name, ok = QInputDialog.getText(self, "Save As", "Where should the new file go? ", text=name)
+        name, ok = meut.input(title="Save As", msg="Where should the new file live? ")
         if ok and name:
             text = self.toPlainText()
             path = fiut.deconflicted_path( thepath, name )

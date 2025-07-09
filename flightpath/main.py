@@ -77,7 +77,7 @@ from flightpath.util.state import State
 class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     """ Main GUI component. Does much of the MVC controller lifting. """
 
-    TITLE = "FlightPath Data • Data Preboarding Development"
+    TITLE = "FlightPath • Data Preboarding Development and Operations"
 
     def __init__(self):
         super().__init__()
@@ -87,7 +87,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # happen, but if it did, we need the application initalization
         # code to not put the app into exec.
         #
-        print("main.init: starting")
         self.main = None
         self.main_top = None
         self.main_layout = None
@@ -125,7 +124,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # if we fail to / chose not to set a cwd we will close the app
         #
-        print("main.init: done with None-set members")
         self.please_close = False
         #
         # at first launch we want to be sure to call show() on child windows
@@ -137,9 +135,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
         if not self.state_check():
             return
-        print("main.init: checked state")
         self.load_state_and_cd()
-        print("main.init: loaded state and switched directories")
         #
         # after this we show the other first shows()
         #
@@ -171,7 +167,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
 
     def on_color_scheme_changed(self) -> None:
-        print(f"main.on_color_scheme_changed: we're in dark mode: {darkdetect.isDark()}")
         QCoreApplication.instance().setStyle("Fusion")
         #
         # splitters apparently need special handling.
@@ -204,21 +199,14 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
 
     def state_check(self) -> bool:
-        print(f"main.state_check: starting")
         self.state = State()
-        print(f"main.state_check: created state")
         if self.state.has_cwd():
-            print(f"main.state_check: state has cwd")
             ...
         else:
-            print(f"main.state_check: state has not cwd")
             self.state.pick_cwd(self)
-            print(f"main.state_check: picked cwd")
             if self.state.has_cwd():
-                print(f"main.state_check: state has cwd")
                 ...
             else:
-                print(f"main.state_check: could not pick cwd. exiting.")
                 QCoreApplication.instance().exit()
                 #
                 # I'm not 100% clear why exit() isn't enough, but it needs a little help.
@@ -226,9 +214,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 #
                 self.please_close = True
                 return False
-        print(f"main.state_check: loading state and changing directories")
         self.load_state_and_cd()
-        print(f"main.state_check: finished loading state and changing directories")
         self.statusBar().showMessage(f"  Project changed to: {self.state.cwd}")
         return True
 
@@ -244,9 +230,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     @selected_file_path.setter
     def selected_file_path(self, path:str) -> None:
-        print(f"main.selected_file_path: path: {path}")
-        #from csvpath.util.log_utility import LogUtility as lout
-        #lout.log_brief_trace()
         self._selected_file_path = path
 
     def log(self, msg:str) -> None:
@@ -259,17 +242,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.logger.debug(msg)
 
     def load_state_and_cd(self) -> None:
-        print(f"main.load_state_and_cd: starting")
         """ sets the project directory into .flightpath file, cds to project dir, and reloads UI. """
         self.state.load_state_and_cd(self)
-        print(f"main.load_state_and_cd: loaded state and changed dirs")
         #
         # if we have env vars set them for this process
         #
         self.state.load_env()
-        print(f"main.load_state_and_cd: env vars loaded")
         self.startup()
-        print(f"main.load_state_and_cd: started up")
 
     def startup(self) -> None:
         """ (re)loads UI """
@@ -285,7 +264,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # key in state we chdir into it.
         #
         self.setWindowTitle(MainWindow.TITLE)
-        icon = QIcon(fiut.make_app_path(f"assets{os.sep}icons{os.sep}icon.png"))
+        icon = QIcon(fiut.make_app_path(f"assets{os.sep}icons{os.sep}icon.ico"))
         self.setWindowIcon(icon)
         self.threadpool = QThreadPool()
 
@@ -433,20 +412,16 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self._connects()
 
     def renew_sidebar_archive(self) -> None:
-        print(f"main.renew_sidebar_archive: starting")
         d = self.sidebar_rt_bottom
         self.sidebar_rt_bottom = SidebarArchive(main=self, config=self.csvpath_config, role=3)
         self.rt_col.replaceWidget(2, self.sidebar_rt_bottom)
         d.deleteLater()
-        print(f"main.renew_sidebar_archive: done")
 
     def renew_sidebar_named_files(self) -> None:
-        print(f"main.renew_sidebar_files: starting")
         d = self.sidebar_rt_top
         self.sidebar_rt_top = SidebarNamedFiles(main=self, config=self.csvpath_config, role=3)
         self.rt_col.replaceWidget(0, self.sidebar_rt_top)
         d.deleteLater()
-        print(f"main.renew_sidebar_files: done")
 
     def renew_sidebar_named_paths(self) -> None:
         d = self.sidebar_rt_mid
@@ -590,20 +565,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @Slot(tuple)
     def update_json_views(self, worker_data):
         try:
-            print(f"main.update_json_views: worker_data: {worker_data}")
             filepath, data, editable = worker_data   # pylint: disable=W0612
             self.progress_dialog.close()
             if isinstance( data, Exception ):
                 meut.message(icon=QMessageBox.Critical, title="File opening error", msg=f"Error: {data}")
-                """
-                print(f"Error opening file: {type(data)}: {data}")
-                msg_box = QMessageBox()
-                msg_box.setIcon(QMessageBox.Critical)
-                msg_box.setWindowTitle("File opening error")
-                msg_box.setText(f"Error: {data}")
-                msg_box.setStandardButtons(QMessageBox.Ok)
-                msg_box.exec()
-                """
                 return
             self.last_main = self.main_layout.currentIndex()
             #
@@ -614,13 +579,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             # hide grid, source tabs
             #
             json_view = taut.find_tab(self.content.tab_widget, filepath)
-            print(f"update_json_views: json_view: {json_view}")
             if json_view is None:
                 json_view = JsonViewer(self, editable)
                 json_view.open_file(path=filepath, data=data)
                 json_view.setObjectName(filepath)
                 self.content.tab_widget.addTab(json_view, os.path.basename(filepath) )
-                print(f"update_json_views: created json_view: {json_view}")
             else:
                 json_view = json_view[1]
             taut.select_tab(self.content.tab_widget, json_view)
@@ -635,7 +598,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         filepath, data, editable = worker_data # pylint: disable=W0612
         self.progress_dialog.close()
         if isinstance( data, Exception ):
-            print(f"Error opening file: {type(data)}: {data}")
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
             msg_box.setWindowTitle("File opening error")
@@ -688,7 +650,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         filepath, data, editable = worker_data # pylint: disable=W0612
         self.progress_dialog.close()
         if isinstance( data, Exception ):
-            print(f"Error opening file: {type(data)}: {data}")
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
             msg_box.setWindowTitle("File opening error")
@@ -737,7 +698,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         msg, lines, filepath, data, lines_to_take = worker_data # pylint: disable=W0612
         self.progress_dialog.close()
         if isinstance( lines, Exception ):
-            print(f"Error opening file: {type(lines)}: {lines}")
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
             msg_box.setWindowTitle("File opening error")
@@ -813,7 +773,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         return self.read_validate_and_display_file_for_path(self.selected_file_path, editable=editable, finished_callback=finished_callback)
 
     def read_validate_and_display_file_for_path(self, path:str, editable=True, *, finished_callback=None) -> QRunnable:
-        print(f"main.read_validate_and_display_file_for_path: path: {path}, editable: {editable}, finished_callback method: {finished_callback}")
         info = QFileInfo(path)
         #
         # TODO: consolidate below
@@ -822,7 +781,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         worker = None
         nos = Nos(path)
         isfile = nos.isfile()
-        print(f"main.read_validate_and_display_file_for_path: path: {path}, info: {info}: is file: {isfile}, ext: {info.suffix()}")
         if isfile and info.suffix() in self.csvpath_config.csv_file_extensions: # pylint: disable=E1135
             worker = GeneralDataWorker(
                 path,
@@ -843,7 +801,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.threadpool.start(worker)
         # pylint thinks csvpath_file_extensions doesn't support membership tests but it is list[str]. :/
         elif isfile and info.suffix() in self.csvpath_config.csvpath_file_extensions: # pylint: disable=E1135
-            print(f"main.read_validate_and_display_file_for_path: a csvpath")
             worker = CsvpathFileWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_csvpath_views)
             if finished_callback:
@@ -855,18 +812,15 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         elif isfile and info.suffix() == "json":
-            print("main:read_validate_and_display_file_for_path: json file")
             worker = JsonDataWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_json_views)
             if finished_callback:
                 worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
-            print("main:read_validate_and_display_file_for_path: wired up worker")
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(400)
-            print("main:read_validate_and_display_file_for_path: setup progress dialog. starting worker.")
             self.threadpool.start(worker)
         elif isfile and info.suffix() in ["md", "html", "txt"]:
             #
@@ -898,8 +852,16 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         source_index = self.sidebar.proxy_model.mapToSource(index)
         if not source_index.isValid():
             return
+
         file_info = self.sidebar.file_model.fileInfo(source_index)
-        self.selected_file_path = file_info.filePath()
+        #
+        # file_info.filePath sometimes allows a // to prefix the path on Mac. not
+        # sure why that should be, keeping in mind we don't populate the paths in the
+        # file view by hand. regardless for now, just switching to canonical and
+        # moving on.
+        #
+        #self.selected_file_path = file_info.filePath()
+        self.selected_file_path = file_info.canonicalFilePath()
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
             return
@@ -930,20 +892,16 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def on_set_cwd_click(self):
         caption = "FlightPath requires a project directory. Please pick one."
         home = str(Path.home())
-        print(f"main.on_set_cwd_click: home: {home}")
         path = QFileDialog.getExistingDirectory(
                 self,
                 caption,
                 options=QFileDialog.Option.ShowDirsOnly,
                 dir=home
         )
-        print(f"main.on_set_cwd_click: selected path: {path}")
         if path:
             if self.is_writable(path):
-                print(f"pick_cwd_dialog: _pick_cwd: {path} is writable")
                 self.state.cwd = path
             else:
-                print(f"pick_cwd_dialog: _pick_cwd: {path} is not writable")
                 msg_box = QMessageBox()
                 msg_box.setIcon(QMessageBox.Critical)
                 msg_box.setWindowTitle("Not writable")
@@ -971,7 +929,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         index = self.content.tab_widget.currentIndex()
         t = self.content.tab_widget.widget(index)
         path = t.objectName()
-
+        source = path
         name = None
         nos = Nos(path)
         if path.endswith("xlsx") or path.endswith("xls"):
@@ -1011,11 +969,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             if index.isValid():
                 self.sidebar.file_navigator.setCurrentIndex(pindex)
 
-    def save_sample(self, *, path:str, name:str, data:str) -> bool:
+        self.content.tab_widget.close_tab(source)
+
+
+    def save_sample(self, *, path:str, name:str, data:str) -> str:
         #
         # if the app entered a subpath somehow pull it off name, into path, and check if it exists
         #
-        print(f"save_sample: path: {path}, name: {name}")
         if name.find(os.sep):
             path = os.path.join(path, name)
             name = os.path.basename(path)
@@ -1023,7 +983,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # if we're not saving to the root check that we have a location
         #
-        print(f"save_sample: path: {path}")
         if path.strip() != "":
             nos = Nos(path)
             if not nos.exists():
@@ -1093,14 +1052,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.reset_config_toolbar()
 
     def save_config_changes(self):
-        print(f"save_config_changes: starting")
         try:
             self.config.config_panel.save_all_forms()
-            print(f"save_config_changes: resetting")
             self.reset_config_toolbar()
         except Exception as e:
             meut.message(title="Error saving config", msg=f"Error saving config: {e}")
-        print(f"save_config_changes: done")
 
     def on_config_changed(self):
         if hasattr(self, "config") and self.config:
@@ -1128,18 +1084,15 @@ def run():
     app.setApplicationName(MainWindow.TITLE)
     app.setStyle("Fusion")
 
-    print(f"creating main window")
     window = MainWindow()
     if window.please_close:
         return
-    print(f"not closing main window")
     #
     # careful, this was throwing an error at one point, but is currently
     # commented mainly because a smaller window is easier for dev.
     #
     #window.showMaximized()
     #window.show()
-    print(f"showing main window")
     sys.exit(app.exec())
 
 if __name__ == "__main__":
