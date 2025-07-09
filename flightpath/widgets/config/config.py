@@ -21,7 +21,6 @@ class Config(QWidget):
         # was made by hand to config.ini and it hadn't been reloaded.
         # that's not a crazy scenario, even if not expected.
         #
-        print(f"Config.init: csvpath configpath: {self.main.csvpath_config.config_path}")
         self.main.csvpath_config.reload()
         #
         # ready will go True when the forms are all setup and

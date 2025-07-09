@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QMessageBox, QWidget
+from PySide6.QtWidgets import QMessageBox, QWidget, QInputDialog
+from PySide6.QtCore import QSize
 
 class MessageUtility:
 
@@ -24,4 +25,18 @@ class MessageUtility:
             QMessageBox.Yes | QMessageBox.No,
         )
         return confirm == QMessageBox.Yes
+
+
+    @classmethod
+    def input(cls, *, msg:str, title:str="", width:int=420, height:int=125, text:str=None) -> tuple:
+        dialog = QInputDialog()
+        dialog.setFixedSize(QSize(420, 125))
+        dialog.setLabelText("Enter the new file's name:")
+        dialog.setWindowTitle(title)
+        if text is not None:
+            dialog.setTextValue(text)
+        ok = dialog.exec()
+        text = dialog.textValue()
+        return (text, ok)
+
 

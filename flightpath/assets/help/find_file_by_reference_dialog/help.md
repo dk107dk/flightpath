@@ -18,8 +18,9 @@ query that identifies files by named-file name plus one or more of:
 
 This dialog helps you construct and use references to find files. It helps
 you create references that correctly point to files you want to use in runs.
-It can be used to browse, find, and open files. And it can be a shortcut to
-opening named-file and named-results metadata.
+It can be used to browse, find, and open files.
+
+You can use the shortcut *Ctrl-F* from the Welcome screen to open the find dialog.
 
 
 

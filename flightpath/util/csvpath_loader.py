@@ -1,5 +1,4 @@
 import os
-#from pathlib import Path
 
 from PySide6.QtWidgets import QMessageBox
 
@@ -16,10 +15,10 @@ class CsvpathLoader:
         self.main = main
         self.load_dialog = None
 
-
     def load_paths(self, path) -> None:
         self.load_dialog = LoadPathsDialog(path=path, parent=self.main.sidebar, loader=self)
-        self.load_dialog.show_dialog()
+        #self.load_dialog.show_dialog()
+        self.main.show_now_or_later(self.load_dialog)
 
     def do_append_named_paths_load(self) ->None:
         self.do_load(overwrite=False)
@@ -36,13 +35,17 @@ class CsvpathLoader:
             self.do_load_file(overwrite=overwrite)
         else:
             self.do_load_dir(overwrite=overwrite)
+        self.main.welcome.update_run_button()
 
     def do_load_file(self, *, overwrite=True) -> None:
         template = None
+        print(f"loadertemplatex: template_ctl: {self.load_dialog.template_ctl}")
         if self.load_dialog.template_ctl:
             template = self.load_dialog.template_ctl.text()
-        if template is not None or template.strip() == "":
-            template = None
+        template = template.strip() if template is not None else None
+        if template is not None and not template.endswith(":run_dir"):
+            meut.message(title="Incorrect Template", msg="A named-path group template must end in :run_dir")
+            return
         named_paths_name = None
         if self.load_dialog.named_paths_name_ctl:
             named_paths_name = self.load_dialog.named_paths_name_ctl.text()
@@ -52,33 +55,35 @@ class CsvpathLoader:
         #
         # if the named-paths name exists, warn the user that they are adding a named-path to the group
         #
-        if paths.paths_manager.has_named_paths(named_paths_name):
-            if not self._check_ok_to_proceed(overwrite):
-                return
-        name = self.load_dialog.path
-        name = "" if not name else name.strip()
-        if Nos(name).isfile():
-            ext = name[name.rfind(".")+1:]
-            if ext in self.main.csvpath_config.csvpath_file_extensions:
-                #
-                # added append=(not overwrite) to do an append when the form requires.
-                # however, atm, the append is only available on add_named_files(). the
-                # change to add append to add_named_paths_from_file() is done, but needs
-                # testing and a local release so we can use it. till then, this will
-                # break
-                #
-                print(f"loadertemplatex: {template}")
-                paths.paths_manager.add_named_paths_from_file(
-                    #name=None,
-                    name=named_paths_name,
-                    file_path=name,
-                    template=template,
-                    append=(not overwrite)
-                )
-            else:
-                raise ValueError(f"Unknown file type: {name}")
-        self.main.sidebar._renew_sidebars()
-        self._delete_load_dialog()
+        try:
+            if paths.paths_manager.has_named_paths(named_paths_name):
+                if not self._check_ok_to_proceed(overwrite):
+                    return
+            name = self.load_dialog.path
+            name = "" if not name else name.strip()
+            if Nos(name).isfile():
+                ext = name[name.rfind(".")+1:]
+                if ext in self.main.csvpath_config.csvpath_file_extensions:
+                    #
+                    # added append=(not overwrite) to do an append when the form requires.
+                    # however, atm, the append is only available on add_named_files(). the
+                    # change to add append to add_named_paths_from_file() is done, but needs
+                    # testing and a local release so we can use it. till then, this will
+                    # break
+                    #
+                    print(f"loadertemplatex: {template}")
+                    paths.paths_manager.add_named_paths_from_file(
+                        name=named_paths_name,
+                        file_path=name,
+                        template=template,
+                        append=(not overwrite)
+                    )
+                else:
+                    raise ValueError(f"Unknown file type: {name}")
+            self.main.sidebar._renew_sidebars()
+            self._delete_load_dialog()
+        except Exception as e:
+            meut.message(title="Error", msg=f"Cannot load named-paths group: {e}")
 
     def do_load_json(self) -> None:
         paths = CsvPaths()
@@ -127,6 +132,13 @@ class CsvpathLoader:
             if not self._check_ok_to_proceed(overwrite):
                 return
         paths.paths_manager.add_named_paths_from_dir(name=named_paths_name, directory=name, template=template)
+        #
+        # have to check if the named-paths group has a definition file. if not
+        # we need to create one.
+        # -- handling this by adding a default option in CsvPath.
+        #
+        # def store_json_for_paths(self, name: NamedPathsName, definition: str) -> None:
+        #
         self._renew_sidebars()
         self._delete_load_dialog()
 

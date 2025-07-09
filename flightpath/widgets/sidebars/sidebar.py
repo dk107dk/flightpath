@@ -14,14 +14,13 @@ from PySide6.QtWidgets import (
 )
 
 from PySide6.QtGui import QPixmap, QIcon, QAction
-from PySide6.QtCore import Qt, QSize, QSortFilterProxyModel, QModelIndex
+from PySide6.QtCore import Qt, QSize, QModelIndex
 from PySide6.QtWidgets import QFileSystemModel
 
 from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
 from flightpath.dialogs.stage_data_dialog import StageDataDialog
-from flightpath.dialogs.load_paths_dialog import LoadPathsDialog
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.custom_tree_view import CustomTreeView
@@ -64,7 +63,7 @@ class Sidebar(QWidget):
 
         self._build_combo()
         self.projects.activated.connect(self.on_project_changed)
-        self.projects.setStyleSheet("QComboBox { margin:1px; height:23px; }")
+        self.projects.setStyleSheet("QComboBox { margin:1px; height:23px; padding-left:5px;}")
         #
         #
         #
@@ -102,13 +101,7 @@ class Sidebar(QWidget):
             #
             return
         if proj == self.NEW_PROJECT:
-            proj, ok = QInputDialog.getText(
-                self,
-                "New Project",
-                "Enter new project name",
-                text=""
-            )
-            print(f"sidebar.on_project_changed: proj: {proj}")
+            proj, ok = meut.input(title="New Project", msg="Enter the new project's name")
             if ok and proj and proj.strip() != "":
                 self.main.state.current_project = proj
                 self._set_project_from_state()
@@ -179,6 +172,7 @@ class Sidebar(QWidget):
     def _help_button(self, *, text:str, on_click, on_help) -> QWidget:
         button = QPushButton()
         button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        button.setStyleSheet("QPushButton { margin-top:1px; height:23px; }")
         box = HelpIconPackager.add_help(main=self.main, widget=button, on_help=on_help)
         button.setText(text)
         button.clicked.connect(on_click)
@@ -340,6 +334,7 @@ class Sidebar(QWidget):
                 if(
                    ext in self.main.csvpath_config.csvpath_file_extensions
                    or ext in self.main.csvpath_config.csv_file_extensions
+                   or ext in ["md", "json", "txt"]
                 ):
                     #
                     # always visible. shouldn't have to reset visible here, but for now it
@@ -492,11 +487,9 @@ class Sidebar(QWidget):
         template = template.strip()
         if template == "":
             template = None
-        #if template and template.find(":filename") == -1:
         if template and not template.endswith(":filename"):
             meut.message(msg="The :filename token must be the last component of the template", title="Incomplete")
             return
-
             #
             # there's a fair chance this will be the desired template, but could
             # easily not be. regardless, we need a :filename and we can delete and
@@ -541,6 +534,7 @@ class Sidebar(QWidget):
         #
         self.stage_dialog.deleteLater()
         self.stage_dialog = None
+        self.main.welcome.update_run_button()
 
     def _rename_file_navigator_item(self):
         index = self.file_navigator.currentIndex()
@@ -548,8 +542,6 @@ class Sidebar(QWidget):
             path = self.proxy_model.filePath(index)
             dir_name = os.path.dirname(path)
             name = os.path.basename(path)
-            #new_name, ok = QInputDialog.getText(self, "Rename", "Enter new name:", text=name)
-
             dialog = QInputDialog()
             dialog.setFixedSize(QSize(420, 125))
             dialog.setLabelText("Enter new name:")
@@ -586,12 +578,9 @@ class Sidebar(QWidget):
                 nos = Nos(path).rename(os.path.join( dir_name, new_name) )
 
     def _new_folder_navigator_item(self):
-        #new_name, ok = QInputDialog.getText(self, "New folder", "Enter the new folder name: ", text="")
-
         dialog = QInputDialog()
         dialog.setFixedSize(QSize(420, 125))
         dialog.setLabelText("Enter the new folder name: ")
-        #dialog.setTextValue(name)
         ok = dialog.exec()
         new_name = dialog.textValue()
 
@@ -642,16 +631,11 @@ class Sidebar(QWidget):
         self.main.content.csvpath_source_view.text_edit.on_save()
 
     def _new_file_navigator_item(self):
-        #new_name, ok = QInputDialog.getText(self, "New file", "Enter the new file name: ", text="")
-
         dialog = QInputDialog()
         dialog.setFixedSize(QSize(420, 125))
         dialog.setLabelText("Enter the new file's name:")
-        #dialog.setTextValue()
         ok = dialog.exec()
         new_name = dialog.textValue()
-
-
         if ok and new_name:
             b, msg = self._valid_new_file(new_name)
             if b is True:
@@ -723,7 +707,6 @@ $[*][ print("hello world") ]"""
             and not ( name.startswith(self.main.state.cwd) or name.startswith(f".{os.sep}") )
         ):
             return False, "File must be in or below the working directory"
-        print(f"_valid_new_file: name: {name}: {name.find('.', 1)}")
         if name.find(".", 1) == -1:
             return False, "File name must have an extension recognized by CsvPath"
         ext = name[name.rfind(".")+1:]
@@ -739,6 +722,10 @@ $[*][ print("hello world") ]"""
              and ext not in self.main.csvpath_config.csv_file_extensions
         ):
             return False, "File name must have an extension configured for csvpaths or data files"
+
+        if ext in self.main.csvpath_config.csv_file_extensions:
+            meut.message( title="Data file", msg="You are creating an empty data file that must be edited outside of FlightPath" )
+
         return True, "Ok"
 
     def _open_file_navigator_location(self):

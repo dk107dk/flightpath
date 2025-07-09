@@ -310,12 +310,17 @@ class JsonViewer(QWidget):
         item.value_type = type({})
         parent.appendChild(item)
         self.model.endResetModel()
+        #
+        # make the doc modified
+        #
+        self._set_modified(True)
 
     def _add_named_paths(self) -> None:
         invalid = self.context_menu_invalid
         index = self.view.currentIndex()
         parent = self.model.root if invalid else index.internalPointer()
         PickPathsDialog(main=self.main, tree=self.model, parent_item=parent)
+        self._set_modified(True)
 
     def _add_csvpath(self) -> None:
         index = self.view.currentIndex()
@@ -333,6 +338,7 @@ class JsonViewer(QWidget):
         item.value_type = type(str)
         parent.appendChild(item)
         self.model.endResetModel()
+        self._set_modified(True)
 
     def _add_template(self) -> None:
         index = self.view.currentIndex()
@@ -344,16 +350,19 @@ class JsonViewer(QWidget):
         item.value_type = type("")
         parent.appendChild(item)
         self.model.endResetModel()
+        self._set_modified(True)
 
     def _add_other(self) -> None:
         index = self.view.currentIndex()
         parent = index.internalPointer()
         AddConfigKeyDialog(main=self.main, tree=self.model, parent_item=parent)
+        self._set_modified(True)
 
     def _delete_item(self) -> None:
         index = self.view.currentIndex()
         item = index.internalPointer()
         self.model.remove(index)
+        self._set_modified(True)
 
     def open_file(self, *, path:str, data:str):
         self.path = path
@@ -366,14 +375,7 @@ class JsonViewer(QWidget):
             self.view.hide()
             return
         self.model.load(data)
-        """
-        if hasattr(self.parent, "show_now_or_later"):
-            self.parent.show_now_or_later(self.view)
-        else:
-            self.parent.main.show_now_or_later(self.view)
-        """
         self.main.show_now_or_later(self.view)
-        #self.view.show()
         self.view.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
         self.view.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.view.setAlternatingRowColors(True)

@@ -74,34 +74,32 @@ class LoggingForm(BlankForm):
         self.csvpath_level.clear()
         self.csvpath_level.addItem("debug")
         self.csvpath_level.addItem("info")
-        self.csvpath_level.addItem("warning")
+        self.csvpath_level.addItem("warn")
         self.csvpath_level.addItem("error")
         level = config.get(section="logging", name="csvpath", default="info")
         level = level.strip()
-        print(f"logging_form: populate: csvpath level: {level}")
         if level == "debug":
             self.csvpath_level.setCurrentText("debug")
         elif level == "info":
             self.csvpath_level.setCurrentText("info")
-        elif level == "warning":
-            self.csvpath_level.setCurrentText("warning")
+        elif level == "warn":
+            self.csvpath_level.setCurrentText("warn")
         else:
             self.csvpath_level.setCurrentText("error")
 
         self.csvpaths_level.clear()
         self.csvpaths_level.addItem("debug")
         self.csvpaths_level.addItem("info")
-        self.csvpaths_level.addItem("warning")
+        self.csvpaths_level.addItem("warn")
         self.csvpaths_level.addItem("error")
         level = config.get(section="logging", name="csvpaths", default="info")
         level = level.strip()
-        print(f"logging_form: populate: csvpaths level: {level}")
         if level == "debug":
             self.csvpaths_level.setCurrentText("debug")
         elif level == "info":
             self.csvpaths_level.setCurrentText("info")
-        elif level == "warning":
-            self.csvpaths_level.setCurrentText("warning")
+        elif level == "warn":
+            self.csvpaths_level.setCurrentText("warn")
         else:
             self.csvpaths_level.setCurrentText("error")
 
