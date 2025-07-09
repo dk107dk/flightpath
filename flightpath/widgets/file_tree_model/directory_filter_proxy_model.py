@@ -11,7 +11,8 @@ class DirectoryFilterProxyModel(QtCore.QSortFilterProxyModel):
         if not source_index.isValid():
             return
         file_info = self.sidebar.file_model.fileInfo(source_index)
-        return file_info.filePath()
+        path = file_info.filePath()
+        return path
 
     def filterAcceptsRow(self, source_row, source_parent):
         source_model = self.sourceModel()
@@ -36,12 +37,13 @@ class DirectoryFilterProxyModel(QtCore.QSortFilterProxyModel):
                 # Accept all non-directory files
                 return True
         except Exception as e:
-            print(f"Errorx!: e: {type(e)}: {e}: {source_model}")
+            print(f"Proxy model: filterAcceptsRow Error: e: {type(e)}: {e}: {source_model}")
             return False
 
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if not index.isValid():
             return None
-        return super().data(index, role)
+        data = super().data(index, role)
+        return data
 

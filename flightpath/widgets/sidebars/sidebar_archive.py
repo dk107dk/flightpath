@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QMenu,
     QMessageBox,
-    QInputDialog,
     QVBoxLayout
 )
 
@@ -72,7 +71,7 @@ class SidebarArchive(QWidget):
             header = self.view.header()
             header.setStretchLastSection(True)
             header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-            self.model = TreeModel(["Archive"], nos, self, title="Archive", sidebar=self)
+            self.model = TreeModel(["Archive"], nos, self, title="Archived results", sidebar=self)
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
             self.view.updateGeometries()

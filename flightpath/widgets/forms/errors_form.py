@@ -80,7 +80,6 @@ class ErrorsForm(BlankForm):
             csvpath_policy.append("fail")
         if self.csvpath_collect.isChecked():
             csvpath_policy.append("collect")
-        print(f"errorsform: add_to_config: csvpath_policy: {csvpath_policy}")
         config.csvpath_errors_policy = csvpath_policy
 
         csvpaths_policy = []

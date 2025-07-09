@@ -67,18 +67,29 @@ class GeneralDataWorker(QRunnable):
 
     @Slot()
     def run(self):
+        self.signals.messages.emit(QApplication.translate("DataWorker", "Reading file..."))
+        data = []
+        if self.sampling == DataToolbar.RANDOM_ALL and self.lines_to_take is None:
+            self.prep_sampling()
+        path = str(self.filepath)
+        lines:list[int] = []
+        lines_to_take = self.lines_to_take[:] if self.lines_to_take else None
+        t = 0
+        i = 0
         try:
-            self.signals.messages.emit(QApplication.translate("DataWorker", "Reading file..."))
-            data = []
-            if self.sampling == DataToolbar.RANDOM_ALL and self.lines_to_take is None:
-                self.prep_sampling()
-            path = str(self.filepath)
-            lines:list[int] = []
-            lines_to_take = self.lines_to_take[:] if self.lines_to_take else None
-            t = 0
-            i = 0
-            with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar ) as file:
-                max = self.sample_size
+            with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar, encoding="utf-8" ) as file:
+                for line in file.next():
+                    b = self.accept_line(i, line)
+                    i += 1
+                    if b is True:
+                        lines.append(i-1)
+                        t += 1
+                        data.append(line)
+                    elif b is None:
+                        break
+        except UnicodeDecodeError as u:
+            self.signals.messages.emit(f"  Encoding error. Trying 'windows-1252'.")
+            with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar, encoding="windows-1252" ) as file:
                 for line in file.next():
                     b = self.accept_line(i, line)
                     i += 1
@@ -89,6 +100,8 @@ class GeneralDataWorker(QRunnable):
                     elif b is None:
                         break
         except Exception as e:
+            import traceback
+            print(traceback.format_exc())
             print(f"Error: {type(e)}: {e}")
             self.signals.messages.emit(f"  Erroring opening {path}")
             self.signals.finished.emit((f"Error", e, None, None, None))

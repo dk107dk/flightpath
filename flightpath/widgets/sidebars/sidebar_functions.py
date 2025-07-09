@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QMenu,
     QMessageBox,
-    QInputDialog,
     QVBoxLayout
 )
 

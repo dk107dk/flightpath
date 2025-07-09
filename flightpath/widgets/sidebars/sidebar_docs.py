@@ -17,7 +17,6 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from csvpath.matching.functions.function import Function
 from csvpath.util.nos import Nos
-from csvpath.util.file_readers import DataFileReader
 
 from flightpath.util.functions.function_collector import FunctionCollector
 from flightpath.util.functions.function_parts import FunctionParts
