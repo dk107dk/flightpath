@@ -114,6 +114,13 @@ class SidebarDocs(QWidget):
         #
         #
         #
+        if path is None:
+            #
+            # if we have no path we should fail early. we fail silently because there are times
+            # when we don't have content to show, but don't want an error state. 
+            #
+            print(f"Warning: no path to content in HtmlGenerator.display_info")
+            return 
         raw = HtmlGenerator.load_and_transform(path, f)
         html = ""
         styles = ""
