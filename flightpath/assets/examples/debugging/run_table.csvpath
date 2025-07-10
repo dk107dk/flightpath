@@ -4,7 +4,8 @@ In FlightPath you will get the same information in the **What Am I Seeing** tab.
 
 The library that creates the formatted table is quite good, but the tables display 
 better or worse depending on the viewer application. Vim is very clean. Microsoft Word 
-also displays well, but you have to open the file as UTF-8 to get the best presentation.
+also displays well, but you have to open the file as UTF-8 to get the best presentation. 
+FlightPath relies on the Qt renderer, so what you see here is less than perfect.
 
 Note that this information is available in named-paths group runs in the meta.json file. 
 It can also be sent to some 3rd party systems using built-in integrations. That is a 
