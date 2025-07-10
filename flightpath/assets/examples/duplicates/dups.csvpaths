@@ -1,5 +1,6 @@
 ~
-   Find all the lines that don't at least one other year/location match out of a 5000 line sample.
+   Find all the lines that don't have at least one other 
+   year/location match out of a 5000 line sample.
 
    id: dup lines
    test-data: examples/duplicates/Alzheimers_Disease_and_Healthy_Aging_Data_sample.csv
@@ -15,7 +16,7 @@ $[*][
 
 ~
    Find the % of overlapping records for three headers.
-   id: 
+   name: 
    test-data: examples/duplicates/Alzheimers_Disease_and_Healthy_Aging_Data_sample.csv
 ~
 
@@ -45,7 +46,7 @@ $[1*][
 print("
 Duplicate found on line: $.csvpath.line_number:
 Category 1: $.headers.StratificationCategory1: $.headers.Stratification1
-Category 2: $.variables.cat2: $.headers.Stratification2
+Category 2: $.headers.StratificationCategory2: $.headers.Stratification2
 Location: $.headers.4
 Topic: $.headers.Topic
 ", fail_and_stop())

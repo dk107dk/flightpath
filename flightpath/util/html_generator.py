@@ -20,7 +20,6 @@ class HtmlGenerator:
 
     @classmethod
     def transform(self, *, template: str, tokens: dict[str, str] = None, path:str = None) -> str:
-        print(f"htmlgen:transform: path: {path}")
         #
         # leave these imports here. they are super slow.
         # so we don't want the latency in testing or ever
