@@ -44,7 +44,7 @@ class NewRunDialog(QDialog):
     def __init__(self, *, named_paths=None, named_file=None, parent):
         super().__init__(parent)
 
-        self.csvpaths = CsvPaths()
+        #self.csvpaths = CsvPaths()
         self.sidebar = parent
         self.setWindowTitle("Run data through a named-paths group")
 
@@ -156,6 +156,12 @@ class NewRunDialog(QDialog):
         self.on_names_change()
         main_layout.addLayout(buttons_layout)
 
+
+    @property
+    def csvpaths(self) -> CsvPaths:
+        return CsvPaths()
+
+
     def on_help_template(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("run/template.md")
         if md is None:
@@ -234,7 +240,7 @@ class NewRunDialog(QDialog):
         self.named_paths_name = self.named_paths_name_ctl.currentText()
         self.method = self.run_method_ctl.currentText()
 
-        paths = CsvPaths()
+        #paths = CsvPaths()
         has = False
         #
         # file manager doesn't like path separators. we could check for $ or sep.
@@ -244,7 +250,7 @@ class NewRunDialog(QDialog):
             nfn = self.named_file_name
             if nfn.startswith("$"):
                 nfn = nfn[1:nfn.find(".")]
-            has = paths.file_manager.has_named_file(nfn)
+            has = self.csvpaths.file_manager.has_named_file(nfn)
         except Exception as e:
             print(f"Error: {type(e)}: {e}")
         if not has:
@@ -263,7 +269,7 @@ class NewRunDialog(QDialog):
             npn = self.named_paths_name
             if npn.startswith("$"):
                 npn = npn[1:npn.find(".")]
-            has = paths.paths_manager.has_named_paths(npn)
+            has = self.csvpaths.paths_manager.has_named_paths(npn)
         except Exception as e:
             print(f"Error: {type(e)}: {e}")
         if not has:
@@ -278,17 +284,23 @@ class NewRunDialog(QDialog):
             msg_box.setStandardButtons(QMessageBox.Ok)
             msg_box.exec()
             return
-        self._do_run(paths=paths, template=template)
-
-
-    def _do_run(self, *, paths:CsvPaths, template:str) -> None:
         #
-        # clear any existing logs to .bak
+        # we may need to shut the paths CsvPath down to release the logger. not sure yet.
+        #
+        self._do_run(template=template)
+
+
+    def _do_run(self, template:str) -> None:
+        #
+        # clear any existing logs to .bak. we have to shutdown to be sure that the 
+        # file is released. that's not a problem because it is CsvPath logging, not
+        # FlightPath logging.
         #
         lout.rotate_log(self.sidebar.main.state.cwd, self.sidebar.main.csvpath_config)
         #
         # do run on paths
         #
+        paths = self.csvpaths
         a = getattr(paths, NewRunDialog.METHODS.get(self.method))
         if a is None:
             #

@@ -55,7 +55,6 @@ class LoadPathsDialog(QDialog):
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-        #self.setWindowModality(Qt.ApplicationModal)
 
         form_layout = QFormLayout()
         main_layout.addLayout(form_layout)

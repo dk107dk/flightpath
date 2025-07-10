@@ -23,6 +23,8 @@ $[*][
      increment.half(#trade == "Electrician", 2)
 
      @half_remainder = mod(@half, 2)
+	
+     last.nocontrib() -> print("See the Variables tab")
 ]
 
 

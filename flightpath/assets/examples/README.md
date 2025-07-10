@@ -8,8 +8,7 @@ than supporting first steps.
 
 ## To use these files:
 
-
-* Check out the README.mds
+* Check out the README.md markdown files
 * Click on the csvpath files to open them
 * Put your cursor in a csvpath and right-click, selecting **Run** or use the
   keyboard shortcut **control-r**

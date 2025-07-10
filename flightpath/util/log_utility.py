@@ -28,10 +28,18 @@ class LogUtility:
 
     @classmethod
     def rotate_log(cls, cwd:str, config:Config) -> None:
-        logfile = config.get(section="logging", name="log_file")
+        #
+        # clear any existing logs to .bak. we have to shutdown to be sure that the 
+        # file is released. that's not a problem because it is CsvPath logging, not
+        # FlightPath logging.
+        #
+        logging.shutdown()
+        logfile = config.get(section="logging", name="log_file")    
+        #
+        #
+        #
         bakdir = os.path.join( cwd, "logs_bak" )
         fiut.move_file_to_numbered( logfile, bakdir )
-
 
     #
     # setup a FP-specific logger
