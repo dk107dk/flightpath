@@ -6,7 +6,7 @@
    This csvpath prints an error message when it sees line 10. The message goes to the 
    Printouts tab and the Errors tab. You can see the other 999 lines in Matched.
 
-   If we didn't want to see the error in the print tab we could use no-raise. And if we 
+   If we didn't want to see the error in the print tab we could use no-print. And if we 
    didn't want to capture the error to the Errors tab we could use no-collect.
 
    id: errors example

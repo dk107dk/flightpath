@@ -1,5 +1,6 @@
 import os
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
 from csvpath import CsvPaths
@@ -17,7 +18,6 @@ class CsvpathLoader:
 
     def load_paths(self, path) -> None:
         self.load_dialog = LoadPathsDialog(path=path, parent=self.main.sidebar, loader=self)
-        #self.load_dialog.show_dialog()
         self.main.show_now_or_later(self.load_dialog)
 
     def do_append_named_paths_load(self) ->None:
@@ -42,9 +42,17 @@ class CsvpathLoader:
         print(f"loadertemplatex: template_ctl: {self.load_dialog.template_ctl}")
         if self.load_dialog.template_ctl:
             template = self.load_dialog.template_ctl.text()
-        template = template.strip() if template is not None else None
-        if template is not None and not template.endswith(":run_dir"):
+        if template is None:
+            ...
+        elif template.strip() == "":
+            template = None        
+        elif not template.endswith(":run_dir"):
+            self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+            #self.load_dialog.show()
             meut.message(title="Incorrect Template", msg="A named-path group template must end in :run_dir")
+            self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, True)
+            self.load_dialog.show()
+            #self.do_load_file(overwrite=overwrite)
             return
         named_paths_name = None
         if self.load_dialog.named_paths_name_ctl:
@@ -88,12 +96,18 @@ class CsvpathLoader:
     def do_load_json(self) -> None:
         paths = CsvPaths()
         #
-        # warn the user that they are overwriting any existing named-path to the group
+        # warn the user that they are overwriting any existing named-path to the group.
+        # this warning prompt must pop over the dialog, not under, or we get into problems.
         #
+        self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+        self.load_dialog.show()
+
         msg = "Ok to overwrite any existing named-paths groups referenced in your JSON?"
         confirm = QMessageBox.question( self.main, "Load Paths", msg, QMessageBox.Yes | QMessageBox.No)
         if confirm == QMessageBox.No:
             return
+
+
         name = self.load_dialog.path
         name = "" if not name else name.strip()
         ex = None
@@ -143,6 +157,8 @@ class CsvpathLoader:
         self._delete_load_dialog()
 
     def _check_ok_to_proceed(self, overwrite:bool) -> bool:
+        self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+        self.load_dialog.show()
         msg = (
                 "Are you sure you want to overwrite an existing named-paths group?"
                 if overwrite else
@@ -155,6 +171,8 @@ class CsvpathLoader:
             QMessageBox.Yes | QMessageBox.No,
         )
         confirm == QMessageBox.Yes
+        self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, True)
+        self.load_dialog.show()
         return confirm
 
     def _delete_load_dialog(self):
