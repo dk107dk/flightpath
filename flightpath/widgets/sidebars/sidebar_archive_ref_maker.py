@@ -40,7 +40,6 @@ class SidebarArchiveRefMaker:
         #
         #
         self.main.show_now_or_later(self.new_run_dialog)
-        #self.new_run_dialog.show()
 
     def _repeat_run(self):
         index = self.parent.view.currentIndex()

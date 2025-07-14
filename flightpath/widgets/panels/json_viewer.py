@@ -24,6 +24,7 @@ from flightpath.dialogs.add_config_key_dialog import AddConfigKeyDialog
 from flightpath.widgets.json_tree_model.json_tree_item import TreeItem
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.style_utils import StyleUtility as stut
+from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_collector import FileCollector
 from flightpath.editable import EditStates
 
@@ -39,6 +40,7 @@ class KeyableTreeView(QTreeView):
             save_shortcut_cmd_save = QShortcut(QKeySequence("Command+S"), self)
             save_shortcut_ctrl_save.activated.connect(self.save_callback)
             save_shortcut_cmd_save.activated.connect(self.save_callback)
+        print(f"KeyableTreeView: init: editable: {self.editable}")
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.key_callback:
@@ -61,6 +63,8 @@ class JsonViewer(QWidget):
         self.path = None
         self.main = main
         self.editable = editable
+        self._shown_no_edit_msg = None
+        print(f"JsonViewer: init: editable: {self.editable}")
         #
         # sets the font size
         #
@@ -72,9 +76,11 @@ class JsonViewer(QWidget):
         self.setLayout(layout)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.view = KeyableTreeView(key_callback=self.key_click, save_callback=self._save, editable=EditStates.EDITABLE)
+        self.view = KeyableTreeView(key_callback=self.key_click, save_callback=self._save, editable=self.editable)
         #
         # blocks double click to edit
+        # we want to enable edit in some cases to make copying easier. but if we aren't explicitly editable
+        # we must block saving.
         #
         if editable == EditStates.UNEDITABLE:
             self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -124,6 +130,12 @@ class JsonViewer(QWidget):
             if path[1] == "_config":
                 # just edit
                 return
+            if self.editable == EditStates.NO_SAVE_NO_CTX:
+                if self._shown_no_edit_msg is None:
+                    meut.message(title="Not Editable", msg="This file is not editable. Any changes you make will be discarded.")
+                    self._shown_no_edit_msg = True
+                # we can let them edit, but not save
+                return
             #
             # open a file dialog to find csvpaths
             #
@@ -136,6 +148,9 @@ class JsonViewer(QWidget):
             item.value = path
 
     def _set_modified(self, t:bool) -> None:
+        if self.editable == EditStates.NO_SAVE_NO_CTX:
+            self.modified = False
+            return
         self.modified = t
         tab = taut.find_tab(self.main.content.tab_widget, self.path)
         if tab is None:
@@ -145,7 +160,7 @@ class JsonViewer(QWidget):
         self.main.content.tab_widget.setTabText( tab[0], name)
 
     def key_click(self, event):
-        if editable == EditStates.UNEDITABLE:
+        if self.editable == EditStates.UNEDITABLE:
             return
         if event.key() in [Qt.Key_Down, Qt.Key_Up, Qt.Key_Left, Qt.Key_Right]:
             ...
