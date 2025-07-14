@@ -19,9 +19,12 @@ As you go through these examples use the `Language Helpers` tab in the right-han
 
 ### More examples
 
-
 You can see more CsvPath Framework how-tos and examples on
 <https://www.csvpath.org>
+
+### Taking notes
+
+You can edit the Markdown files as Markdown by clicking *ctrl-t* or using *Toggle Edit* in the context menu.
 
 
 

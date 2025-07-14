@@ -1,6 +1,18 @@
 ## Environment Vars
 
-This panel is for setting environment variables. Env vars are used by the storage backends. They are also available to any other configuration in CsvPaths Framework by setting an env var value in `ALL CAPS`. CsvPath Framework will replace those values with the value of the env var key named.
+This panel is for setting environment variables. Env vars are used by the storage backends and some of the integrations in the *listeners* config section.
+
+Env var values can be used in any configuration in CsvPaths Framework. To use an env var value in a config setting first name the env var in ALL CAPS. Then when you set an ALL CAPS config value, the Framework replaces it with the value of the same ALL CAPS env key.
+
+So if your SFTP password is found in an env var called *SFTP_PASSWD* you would set up your *[sftp]* section in config.ini with something like:
+
+[sftp]
+
+*username=Fred*
+
+*password=SFTP_PASSWD*
+
+<br/>
 
 FlightPath env vars are set here and saved in plain text JSON in the `.flightpath` config file in your home directory. This approach persists the env vars across multiple FlightPath sessions. You should be able to do all your work with env vars here, but if you run into trouble, you can always inspect and update `.flightpath` directly, then restart FlightPath.
 
