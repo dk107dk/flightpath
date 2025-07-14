@@ -34,7 +34,7 @@ from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.icon_packager import IconPackager
 from flightpath.widgets.panels.table_model import TableModel
 from flightpath.dialogs.find_file_name_one_context_menu import NameOneLineEdit
-from flightpath.dialogs.reference_files.reference_file_handler import ReferenceFileHandler
+
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.tabs_utility import TabsUtility as tabu
@@ -170,7 +170,6 @@ class FindFileByReferenceDialog(QDialog):
             row = index.row()
             context_menu = QMenu(self)
             open_file_action = QAction()
-            show_run_action = None
             #
             # if we're looking at named-results and specify data.csv or unmatched.csv
             # we'll open one of those. otherwise, if we're looking at a named-file's
@@ -178,40 +177,270 @@ class FindFileByReferenceDialog(QDialog):
             # the run_dir or an instance, we'll open the named-file that was the source
             # data. TBD if we'll deal with any source-mode preceding. probably not.
             #
-            self.reference_file_handler = ReferenceFileHandler(parent=self)
             if self.datatype.currentText() == "results":
                 if(
                     self.name_one.text().endswith(":data")
                     or self.name_one.text().endswith(":unmatched")
                 ):
-                    open_file_action.triggered.connect(lambda: self.reference_file_handler._open_results_file(row))
+                    open_file_action.triggered.connect(lambda: self._open_results_file(row))
                     open_file_action.setText("Open results data file")
                 else:
-                    #
-                    # WARN: rt-click on RESULT but showing named-file. could confuse the display code.
-                    #
-                    open_file_action.triggered.connect(lambda: self.reference_file_handler._open_origin_file(row))
+                    open_file_action.triggered.connect(lambda: self._open_files_file(row))
                     open_file_action.setText("Open source data file")
 
-                    show_run_action = QAction()
-                    show_run_action.triggered.connect(lambda: self.reference_file_handler._show_run_dir(row))
-                    show_run_action.setText("Show run")
+                    open_file_action.triggered.connect(lambda: self._open_run(row))
+                    open_file_action.setText("Show run")
             else:
                 open_file_action.setText("Open data file")
-                open_file_action.triggered.connect(lambda: self.reference_file_handler._open_files_file(row))
+                open_file_action.triggered.connect(lambda: self._open_files_file(row))
 
             show_metadata_action = QAction()
             show_metadata_action.setText("Show metadata")
-            show_metadata_action.triggered.connect(lambda: self.reference_file_handler._show_manifest(row))
-            #
-            #
-            #
-            if show_run_action is not None:
-                context_menu.addAction(show_run_action)
+            show_metadata_action.triggered.connect(lambda: self._show_metadata(row))
             context_menu.addAction(open_file_action)
             context_menu.addAction(show_metadata_action)
             context_menu.exec(global_pos)
 
+    def _show_metadata(self, row) -> None:
+        item_index = self.model.index(row, 0)
+        item = self.model.itemFromIndex(item_index)
+        t = item.text()
+        datatype = self.datatype.currentText()
+        if datatype == "files":
+            self._show_named_file_metadata(t)
+        elif datatype == "results":
+            self._show_results_metadata(t)
+
+    def _show_results_metadata(self, path) -> None:
+        self.selected_file_path = path
+        results_root = self.main.csvpath_config.get(section="results", name="archive")
+        if not path.startswith(results_root):
+            #
+            # this shouldn't happen, but what if it did?
+            #
+            raise ValueError("The selected file path does not match the archive root path")
+        sep = pathu.sep(results_root)
+        #
+        # :all:first.hello world:data
+        #
+        if path.endswith(f"{sep[0]}data.csv"):
+            path = path[0:len(path) - 9]
+        path = f"{path}{sep[0]}manifest.json"
+        nos = Nos(path)
+        if not nos.exists():
+            #
+            # this should never happen, unless files have been rotated, maybe?
+            #
+            raise ValueError(f"The named-results manifest is not found at {path}")
+        #
+        # can we open as editable, but not provide a save? that would give us the ability to
+        # click into values and copy them.
+        #
+        self.mpath = path
+        print(f"redvaldsp: path: {path}")
+        worker = self.main.read_validate_and_display_file_for_path(path, editable=EditStates.NO_SAVE_NO_CTX)
+        worker.signals.finished.connect(self.on_load_results_manifest)
+
+    def _show_named_file_metadata(self, path) -> None:
+        self.selected_file_path = path
+        files_root = self.main.csvpath_config.get(section="inputs", name="files")
+        if not path.startswith(files_root):
+            #
+            # this shouldn't happen, but what if it did?
+            #
+            raise ValueError("The selected file path does not match the named-files root path")
+        sep = pathu.sep(files_root)
+        self.named_file_name = path[len(files_root)+1:]
+        self.named_file_name = self.named_file_name[0:self.named_file_name.find(sep[0])]
+        self.mpath = self.paths.file_manager.named_file_home(self.named_file_name)
+        self.mpath = os.path.join(self.mpath, "manifest.json")
+        nos = Nos(self.mpath)
+        if not nos.exists():
+            #
+            # this should never happen, unless files have been rotated, maybe?
+            #
+            raise ValueError(f"The named-file manifest is not found at {self.mpath}")
+        #self.last_manifest_loaded = path
+        #
+        # can we open as editable, but not provide a save? that would give us the ability to
+        # click into values and copy them.
+        #
+        worker = self.main.read_validate_and_display_file_for_path(self.mpath, editable=EditStates.NO_SAVE_NO_CTX)
+        worker.signals.finished.connect(self.on_load_find_in_file)
+
+
+    def on_load_results_manifest(self) -> None:
+        mani = None
+        with DataFileReader(self.mpath) as file:
+            mani = json.load(file.source)
+        home = mani["run_home"]
+        self._show_run(home)
+        """
+        sidebar = self.main.sidebar_rt_bottom
+        view = sidebar.view
+        model = sidebar.model
+        home = mani["run_home"]
+        archive = self.main.csvpath_config.get(section="results", name="archive")
+        home = home[len(archive)+1:]
+        parts = pathu.parts(home)
+        item = sidebar.model.root_item
+        for part in parts:
+            for i, ii in enumerate(item.child_items):
+                data = ii.data(0)
+                if data.path.endswith(part):
+                    idx = model.createIndex(i, 0, ii)
+                    ""
+                    # we obviously never want this code in, but it may be helpful as an example in the future.
+                    _ = model.get_item(idx)
+                    assert _ == ii
+                    ""
+                    view.expand(idx)
+                    item = ii
+                    break
+        """
+
+    def on_load_find_in_file(self) -> None:
+        path = self.selected_file_path
+        #
+        # we're open. but we have no idea which doc we need.
+        #
+        mani = self.paths.file_manager.get_manifest(self.named_x_name.currentText())
+        fingerprint = os.path.basename(path)
+        fingerprint = fingerprint[0:fingerprint.rfind(".")]
+        i = 0
+        for i, entry in enumerate(mani):
+            if entry["fingerprint"] == fingerprint:
+                break
+        #
+        # find the tab showing the mani
+        #
+        w = tabu.find_tab(self.main.content.tab_widget, self.mpath)
+        if w is None:
+            raise RuntimeError("Unable to find manifest.json view")
+        #
+        # open the node that represents the entry
+        #
+        index = w[1].view.model().index(i, 0)
+        w[1].view.setCurrentIndex(index)
+        w[1].view.setExpanded(index, True)
+
+    def _open_result_source_file(self, row) -> None:
+        item_index = self.model.index(row, 0)
+        item = self.model.itemFromIndex(item_index)
+        t = item.text()
+
+    def _open_result_data_file(self, row) -> None:
+        item_index = self.model.index(row, 0)
+        item = self.model.itemFromIndex(item_index)
+        t = item.text()
+
+    def _open_run(self, row) -> None:
+        item_index = self.model.index(row, 0)
+        item = self.model.itemFromIndex(item_index)
+        t = item.text()
+        self._show_run(t)
+
+    def _show_run(self, path:str) -> None:
+        sidebar = self.main.sidebar_rt_bottom
+        view = sidebar.view
+        model = sidebar.model
+        archive = self.main.csvpath_config.get(section="results", name="archive")
+        path = path[len(archive)+1:]
+        parts = pathu.parts(path)
+        item = sidebar.model.root_item
+        for part in parts:
+            for i, ii in enumerate(item.child_items):
+                data = ii.data(0)
+                if data.path.endswith(part):
+                    idx = model.createIndex(i, 0, ii)
+                    view.expand(idx)
+                    item = ii
+                    break
+
+    def _open_results_file(self, row) -> None:
+        sidebar = self.main.sidebar_rt_bottom
+        archive = self.main.csvpath_config.get(section="results", name="archive")
+        self._open_file(sidebar=sidebar, prefix=archive, row=row)
+
+    def _open_files_file(self, row) -> None:
+        sidebar = self.main.sidebar_rt_top
+        inputs = self.main.csvpath_config.get(section="inputs", name="files")
+        self._open_file(sidebar=sidebar, prefix=inputs, row=row)
+
+    def _open_file(self, *, sidebar, prefix:str, row:str) -> None:
+        item_index = self.model.index(row, 0)
+        item = self.model.itemFromIndex(item_index)
+        t = item.text()
+        self._open_named_file(t)
+        view = sidebar.view
+        model = sidebar.model
+        t = t[len(prefix)+1:]
+        parts = pathu.parts(t)
+        item = sidebar.model.root_item
+        for part in parts:
+            for i, ii in enumerate(item.child_items):
+                data = ii.data(0)
+                if data.path.endswith(part):
+                    idx = model.createIndex(i, 0, ii)
+                    view.expand(idx)
+                    item = ii
+                    break
+
+    """
+    def _open_file(self, row) -> None:
+        item_index = self.model.index(row, 0)
+        item = self.model.itemFromIndex(item_index)
+        t = item.text()
+        datatype = self.datatype.currentText()
+        self._open_named_file(t)
+        #
+        # open the files window tree to the file
+        #
+        sidebar = self.main.sidebar_rt_top
+        view = sidebar.view
+        model = sidebar.model
+        inputs = self.main.csvpath_config.get(section="inputs", name="files")
+        t = t[len(inputs)+1:]
+        parts = pathu.parts(t)
+        item = sidebar.model.root_item
+        for part in parts:
+            for i, ii in enumerate(item.child_items):
+                data = ii.data(0)
+                if data.path.endswith(part):
+                    idx = model.createIndex(i, 0, ii)
+                    view.expand(idx)
+                    item = ii
+                    break
+    """
+
+
+
+
+    def _open_named_file(self, path, prefix:str=None) -> None:
+        #
+        # we don't want the main manifest because 1) it doesn't 100% always
+        # get created -- it is considered the "default" integration, so it can
+        # be turned off. and 2) it will grow fast and may be rotated more
+        # frequently.
+        #
+        #fileinputs = self.paths.file_manager.files_root_manifest_path
+        #mani = self.paths.file_manager.files_root_manifest
+        #
+        """
+        if prefix is None:
+            prefix = self.main.csvpath_config.get(section="inputs", name="files")
+        if not path.startswith(prefix):
+            #
+            # this shouldn't happen, but what if it did?
+            #
+            raise ValueError("The selected file path does not match the named-files root path")
+        """
+        self.main.read_validate_and_display_file_for_path(path, editable=EditStates.NO_SAVE_NO_CTX)
+        #
+        # open fileinputs in JSON view
+        #
+        # open the node representing the named-file staging that created path
+        #
 
     def add_data(self, data_list:list[str]) -> None:
         self.model.clear()

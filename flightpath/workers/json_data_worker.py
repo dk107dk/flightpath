@@ -1,4 +1,5 @@
 import json
+import traceback
 
 from PySide6.QtCore import Qt, QAbstractTableModel, QObject, Signal, Slot, QRunnable
 from PySide6.QtGui import QColor
@@ -8,12 +9,12 @@ from csvpath.util.file_readers import DataFileReader
 from csvpath import CsvPaths
 from csvpath.util.box import Box
 
-
+from flightpath.editable import EditStates
 from .data_worker_signals import DataWorkerSignals
 
 class JsonDataWorker(QRunnable):
 
-    def __init__(self, filepath, main, editable=True):
+    def __init__(self, filepath, main, editable=EditStates.EDITABLE):
         super().__init__()
         #
         #
@@ -25,7 +26,6 @@ class JsonDataWorker(QRunnable):
 
     @Slot()
     def run(self):
-        print(f"JsonDataWorker: run: reading {self.filepath}")
         self.signals.messages.emit("Reading file...")
         try:
             data = []
@@ -40,9 +40,7 @@ class JsonDataWorker(QRunnable):
             #
             with DataFileReader(str(self.filepath)) as file:
                 data = json.load(file.source)
-            print(f"JsonDataWorker: run: data: {len(data)}: {data}")
         except Exception as e:
-            import traceback
             print(traceback.format_exc())
             print(f"Error: {type(e)}: {e}")
             self.signals.messages.emit(f"  Erroring opening {self.filepath}")
@@ -51,6 +49,5 @@ class JsonDataWorker(QRunnable):
         self.signals.messages.emit(f" Opened {str(self.filepath)}")
         self.signals.finished.emit(( str(self.filepath), data, self.editable))
 
-        print(f"JsonDataWorker: run: done reading {self.filepath}. found: \n{json.dumps(data, indent=4)}")
 
 

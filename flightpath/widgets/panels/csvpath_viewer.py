@@ -27,6 +27,7 @@ from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.os_utility import OsUtility as osut
 
+from flightpath.editable import EditStates
 
 class CsvpathViewer(QWidget):
     CHAR_NAMES = {
@@ -53,7 +54,7 @@ class CsvpathViewer(QWidget):
         "tab":None
     }
 
-    def __init__(self, *, main, editable=True):
+    def __init__(self, *, main, editable=EditStates.EDITABLE):
         super().__init__()
         self.main = main
         self.editable = editable
@@ -74,7 +75,7 @@ class CsvpathViewer(QWidget):
         self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.text_edit = CsvPathTextEdit(main=main, parent=self, editable=self.editable)
         self.text_edit.setLineWrapMode(QPlainTextEdit.NoWrap)
-        self.text_edit.setReadOnly(not self.editable)
+        self.text_edit.setReadOnly(editable == EditStates.UNEDITABLE)
         self.text_edit.setFont(QFont("Courier, monospace"))
 
         layout.addWidget(self.label)
@@ -228,7 +229,7 @@ class CsvpathViewer(QWidget):
                 # open file so the user can create a sample
                 #
                 self.main.selected_file_path = path.scanner.filename
-                self.main.read_validate_and_display_file_for_path(path=path.scanner.filename, editable=True)
+                self.main.read_validate_and_display_file_for_path(path=path.scanner.filename, editable=main.EDITABLE)
                 return
             path.update_settings_from_metadata()
             path.ecoms = ErrorCommunications(csvpath=path)

@@ -14,9 +14,11 @@ from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.syntax.span_utility import SpanUtility as sput
 from flightpath.util.os_utility import OsUtility as osut
 
+from flightpath.editable import EditStates
+
 class CsvPathTextEdit(QPlainTextEdit):
 
-    def __init__(self, *, main, parent, editable=True) -> None:
+    def __init__(self, *, main, parent, editable=EditStates.EDITABLE) -> None:
         super().__init__()
         self.main = main
         self.parent = parent
@@ -56,7 +58,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         self.load_dialog = None
 
     def keyPressEvent(self, event: QKeyEvent):
-        if self.editable is False:
+        if self.editable == EditStates.UNEDITABLE:
             return
         super().keyPressEvent(event)
         t = event.text()
@@ -64,7 +66,7 @@ class CsvPathTextEdit(QPlainTextEdit):
             self.desaved()
 
     def desaved(self) -> bool:
-        if self.editable is False:
+        if self.editable == EditStates.UNEDITABLE:
             return False
         if self.parent.saved is True:
             path = self.parent.path
@@ -79,7 +81,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         return True
 
     def contextMenuEvent(self, event):
-        if self.editable is not True:
+        if self.editable == EditStates.UNEDITABLE:
             return
         menu = self.createStandardContextMenu()
         #
@@ -265,7 +267,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         # atm keeping it simple. to save as you first have to copy back
         # to the working directory.
         #
-        if self.editable is False:
+        if self.editable == EditStates.UNEDITABLE:
             return
         #
         # if we are in an inputs or archive we're going to want to
@@ -321,7 +323,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         # if the parent isn't editable we shouldn't get here, but if we did we need to
         # be sure to not save.
         #
-        if self.editable is False:
+        if self.editable == EditStates.UNEDITABLE:
             return
         path = self.parent.path
         ap = self.main.csvpath_config.archive_path
@@ -339,7 +341,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         self.parent.reset_saved()
 
     def on_run(self) -> None:
-        if self.editable is False:
+        if self.editable == EditStates.UNEDITABLE:
             return
         cursor = self.textCursor()
         position = cursor.position()
@@ -348,7 +350,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         self.parent.run_one_csvpath(text)
 
     def on_append(self) -> None:
-        if self.editable is False:
+        if self.editable == EditStates.UNEDITABLE:
             return
         text = self.toPlainText()
         text = f"{text}\n\n---- CSVPATH ----\n\n~\n   id: \n~\n\n$[*][ yes() ]\n"

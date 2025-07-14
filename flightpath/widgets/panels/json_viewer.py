@@ -25,15 +25,16 @@ from flightpath.widgets.json_tree_model.json_tree_item import TreeItem
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.file_collector import FileCollector
+from flightpath.editable import EditStates
 
 class KeyableTreeView(QTreeView):
 
-    def __init__(self, parent=None, *, key_callback=None, save_callback=None, editable=True):
+    def __init__(self, parent=None, *, key_callback=None, save_callback=None, editable=EditStates.EDITABLE):
         super().__init__(parent)
         self.key_callback = key_callback
         self.save_callback = save_callback
         self.editable = editable
-        if self.save_callback and editable:
+        if self.save_callback and editable == EditStates.EDITABLE:
             save_shortcut_ctrl_save = QShortcut(QKeySequence("Ctrl+S"), self)
             save_shortcut_cmd_save = QShortcut(QKeySequence("Command+S"), self)
             save_shortcut_ctrl_save.activated.connect(self.save_callback)
@@ -47,7 +48,7 @@ class KeyableTreeView(QTreeView):
 
 class JsonViewer(QWidget):
 
-    def __init__(self, main, editable=True, path:str=None):
+    def __init__(self, main, editable=EditStates.EDITABLE, path:str=None):
         super().__init__()
         #
         # for a left-hand side file the path cannot be None. we need to know
@@ -71,11 +72,11 @@ class JsonViewer(QWidget):
         self.setLayout(layout)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.view = KeyableTreeView(key_callback=self.key_click, save_callback=self._save, editable=editable)
+        self.view = KeyableTreeView(key_callback=self.key_click, save_callback=self._save, editable=EditStates.EDITABLE)
         #
         # blocks double click to edit
         #
-        if editable is False:
+        if editable == EditStates.UNEDITABLE:
             self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         #
         #
@@ -86,7 +87,7 @@ class JsonViewer(QWidget):
         #
         #
         self.context_menu = None
-        if self.editable:
+        if self.editable == EditStates.EDITABLE:
             self.view.setContextMenuPolicy(Qt.CustomContextMenu)
             self.view.customContextMenuRequested.connect(self._show_context_menu)
             self._setup_view_context_menu()
@@ -110,7 +111,7 @@ class JsonViewer(QWidget):
 
 
     def on_double_click(self, index):
-        if not self.editable:
+        if self.editable == EditStates.UNEDITABLE:
             return
         item = index.internalPointer()
         if not index.isValid():
@@ -144,7 +145,7 @@ class JsonViewer(QWidget):
         self.main.content.tab_widget.setTabText( tab[0], name)
 
     def key_click(self, event):
-        if not self.editable:
+        if editable == EditStates.UNEDITABLE:
             return
         if event.key() in [Qt.Key_Down, Qt.Key_Up, Qt.Key_Left, Qt.Key_Right]:
             ...
@@ -196,7 +197,7 @@ class JsonViewer(QWidget):
         self.context_menu.addAction(self.save_action)
 
     def _show_context_menu(self, position):
-        if not self.editable:
+        if self.editable == EditStates.UNEDITABLE:
             return
         index = self.view.indexAt(position)
         global_pos = self.view.viewport().mapToGlobal(position)
@@ -284,7 +285,7 @@ class JsonViewer(QWidget):
         return False
 
     def _save(self) -> None:
-        if not self.editable:
+        if self.editable == EditStates.UNEDITABLE:
             return
         if self.path is None:
             print("Error: cannot save json to file path None")
