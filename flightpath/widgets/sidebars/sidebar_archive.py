@@ -27,8 +27,10 @@ from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.file_utility import FileUtility as fiut
 from .sidebar_archive_ref_maker import SidebarArchiveRefMaker
+from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.util.message_utility import MessageUtility as meut
 
+from flightpath.editable import EditStates
 
 class SidebarArchive(QWidget):
 
@@ -111,7 +113,7 @@ class SidebarArchive(QWidget):
             ...
             #self._show_welcome_but_do_not_deselect()
         else:
-            self.main.read_validate_and_display_file(editable=False)
+            self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
 
@@ -144,6 +146,10 @@ class SidebarArchive(QWidget):
         self.repeat_run_action.setText(self.tr("Repeat run"))
         self.repeat_run_action.triggered.connect(self._repeat_run)
 
+        self.find_data_action = QAction()
+        self.find_data_action.setText("Find data")
+        self.find_data_action.triggered.connect(self._find_data)
+
         self.copy_action = QAction()
         self.copy_action.setText(self.tr("Copy to working dir"))
         self.copy_action.triggered.connect(self._copy_results_back_to_cwd)
@@ -154,6 +160,7 @@ class SidebarArchive(QWidget):
 
         self.context_menu.addAction(self.repeat_run_action)
         self.context_menu.addAction(self.new_run_action)
+        self.context_menu.addAction(self.find_data_action)
         self.context_menu.addAction(self.copy_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
@@ -172,17 +179,23 @@ class SidebarArchive(QWidget):
                 self.delete_action.setVisible(False)
                 self.new_run_action.setVisible(True)
                 self.repeat_run_action.setVisible(True)
+                self.find_data_action.setVisible(True)
                 self.copy_action.setVisible(True)
             else:
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
                 self.repeat_run_action.setVisible(True)
+                self.find_data_action.setVisible(True)
                 self.copy_action.setVisible(False)
         if path.endswith("manifest.json") or path.endswith(".db"):
             # we don't allow anything on manifests or sqlite files
             ...
         else:
             self.context_menu.exec(global_pos)
+
+    def _find_data(self):
+        find = FindFileByReferenceDialog(main=self.main)
+        self.main.show_now_or_later(find)
 
     def _copy_results_back_to_cwd(self) -> None:
         from_index = self.view.currentIndex()

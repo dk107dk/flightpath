@@ -9,9 +9,11 @@ from csvpath.util.nos import Nos
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.os_utility import OsUtility as osut
 
+from flightpath.editable import EditStates
+
 class MdTextEdit(QTextEdit):
 
-    def __init__(self, *, main, parent, editable=True) -> None:
+    def __init__(self, *, main, parent, editable=EditStates.EDITABLE) -> None:
         super().__init__()
         self.main = main
         self.parent = parent
@@ -34,7 +36,7 @@ class MdTextEdit(QTextEdit):
         self.short_seqs.append(toggle_shortcut_ctrl.key())
 
     def keyPressEvent(self, event: QKeyEvent):
-        if self.editable is False:
+        if self.editable == EditStates.UNEDITABLE:
             return
         super().keyPressEvent(event)
         t = event.text()
@@ -42,7 +44,7 @@ class MdTextEdit(QTextEdit):
             self.desaved()
 
     def desaved(self) -> bool:
-        if self.editable is False:
+        if self.editable == EditStates.UNEDITABLE:
             return False
         if self.parent.saved is True:
             path = self.parent.path
@@ -56,7 +58,7 @@ class MdTextEdit(QTextEdit):
         return True
 
     def contextMenuEvent(self, event):
-        if self.editable is not True:
+        if self.editable == EditStates.UNEDITABLE:
             return
         menu = self.createStandardContextMenu()
 
