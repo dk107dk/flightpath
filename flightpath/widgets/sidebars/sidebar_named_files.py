@@ -10,7 +10,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QVBoxLayout,
     QHBoxLayout,
-    QSizePolicy
+    QSizePolicy,
+    QApplication
 )
 
 from PySide6.QtGui import QPixmap, QIcon, QAction
@@ -114,7 +115,7 @@ class SidebarNamedFiles(QWidget):
             ...
             #self._show_welcome_but_do_not_deselect()
         else:
-            self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
+            self.main.read_validate_and_display_file(editable=EditStates.NO_SAVE_NO_CTX)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
     def refresh(self) -> None:
@@ -130,6 +131,10 @@ class SidebarNamedFiles(QWidget):
         self.new_run_action = QAction()
         self.new_run_action.setText("New run")
         self.new_run_action.triggered.connect(self._new_run)
+
+        self.copy_path_action = QAction()
+        self.copy_path_action.setText("Copy path")
+        self.copy_path_action.triggered.connect(self._copy_path)
 
         self.find_data_action = QAction()
         self.find_data_action.setText("Find data")
@@ -147,6 +152,7 @@ class SidebarNamedFiles(QWidget):
         # add to menu
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.find_data_action)
+        self.context_menu.addAction(self.copy_path_action)
         self.context_menu.addAction(self.copy_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
@@ -162,11 +168,13 @@ class SidebarNamedFiles(QWidget):
             # individual files may not be deleted, but we can allow dir deletes for cleanup
             #
             if nos.isfile():
+                self.copy_path_action.setVisible(True)
                 self.copy_action.setVisible(True)
                 self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(False)
                 self.new_run_action.setVisible(True)
             else:
+                self.copy_path_action.setVisible(True)
                 self.copy_action.setVisible(False)
                 self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(True)
@@ -176,6 +184,14 @@ class SidebarNamedFiles(QWidget):
             ...
         else:
             self.context_menu.exec(global_pos)
+
+
+    def _copy_path(self) -> None:
+        from_index = self.view.currentIndex()
+        if from_index.isValid():
+            path = self.model.filePath(from_index)
+            clipboard = QApplication.instance().clipboard()
+            clipboard.setText(path)
 
     def _copy_file_back_to_cwd(self) -> None:
         from_index = self.view.currentIndex()

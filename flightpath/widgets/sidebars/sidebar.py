@@ -199,10 +199,14 @@ class Sidebar(QWidget):
 
         exts = self.main.csvpath_config.csvpath_file_extensions + self.main.csvpath_config.csv_file_extensions
         exts = [f"*.{e}" for e in exts]
+        #
+        # we need json, of course. no reason to think it would be in csvpaths or csv extensions, but
+        # checking just in case. there is a flattened json-ish format that could maybe come into play.
+        #
         if "*.json" not in exts:
             exts.append("*.json")
         #
-        # added for md/other user created docs
+        # added for md/other user created docs. html is not a thing atm, but it could be coming.
         #
         if "*.html" not in exts:
             exts.append("*.html")
@@ -316,7 +320,7 @@ class Sidebar(QWidget):
             self.rename_action.setVisible(True)
             self.open_location_action.setVisible(True)
             self.open_project_dir_action.setVisible(False)
-            
+
             self.delete_action.setVisible(True)
             #
             # capture the location so we can create a new file or folder there
@@ -393,7 +397,7 @@ class Sidebar(QWidget):
 
             self.open_location_action.setVisible(False)
             self.open_project_dir_action.setVisible(True)
-            
+
             self.delete_action.setVisible(False)
             self.new_file_action.setVisible(True)
             self.new_folder_action.setVisible(True)
@@ -741,23 +745,20 @@ $[*][ print("hello world") ]"""
         index = self.file_navigator.currentIndex()
         #
         # if not valid we clicked on below-tree whitespace and get the
-        # current working directory. however, this doesn't seem to happen at least on windows. 
-        # today we're getting the current selection which is always something, so no longer 
+        # current working directory. however, this doesn't seem to happen at least on windows.
+        # today we're getting the current selection which is always something, so no longer
         # the expected behavior.
         #
         if index.isValid():
             path = self.proxy_model.filePath(index)
-            print(f"_open_file_navigator_location: index valid. path: {path}")
         else:
             path = self.main.state.cwd
-            print(f"_open_file_navigator_location: index invalid. path: {path}")
         path = pathu.resep(path)
         nos = Nos(path)
         if nos.isfile():
             path = os.path.dirname(path)
         o = osut.file_system_open_cmd()
         o = f'{o} "{path}"'
-        print(f"_open_file_navigator_location: o: {o}")
         os.system(o)
 
     def _open_project_dir(self):
