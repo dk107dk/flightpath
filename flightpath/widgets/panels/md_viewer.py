@@ -17,9 +17,11 @@ from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
 
+from flightpath.editable import EditStates
+
 class MdViewer(QWidget):
 
-    def __init__(self, *, main, editable:bool=True, displaying:bool=True):
+    def __init__(self, *, main, editable=EditStates.EDITABLE, displaying:bool=True):
         super().__init__()
         self.main = main
         self.editable = editable
@@ -49,7 +51,7 @@ class MdViewer(QWidget):
             self.text_edit = MdTextEdit(main=self.main, parent=self, editable=self.editable)
         else:
             self.text_edit = RawTextEdit(main=self.main, parent=self, editable=self.editable)
-        self.text_edit.setReadOnly(not self.editable)
+        self.text_edit.setReadOnly(self.editable == EditStates.UNEDITABLE)
         #
         # remove widget
         #
@@ -93,7 +95,6 @@ class MdViewer(QWidget):
             with DataFileReader(path) as file:
                 data = file.source.read()
         self.main.show_now_or_later(self.text_edit)
-        #self.text_edit.show()
         if info.suffix() == "md":
             #
             # we can allow editing MD. need a raw view for that.
@@ -110,7 +111,7 @@ class MdViewer(QWidget):
             # we don't allow editing HTML
             #
             self.text_edit.setHtml(data)
-            self.editable = False
+            self.editable = EditStates.UNEDITABLE
             self.text_edit.setReadOnly(True)
             self.text_edit.display = "rich"
         elif info.suffix() == "txt":
@@ -133,7 +134,7 @@ class MdViewer(QWidget):
 # =============================
 
     def on_save_as(self, switch_local=False) -> None:
-        if self.editable is False:
+        if self.editable == EditStates.UNEDITABLE:
             return
         thepath = self.text_edit.parent.path
         thepath = os.path.dirname(thepath)
@@ -166,7 +167,7 @@ class MdViewer(QWidget):
         self.reset_saved()
 
     def on_save(self) -> None:
-        if self.editable is False:
+        if self.editable == EditStates.UNEDITABLE:
             return
         self._save(path=self.path)
 
