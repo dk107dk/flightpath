@@ -206,10 +206,18 @@ class FindFileByReferenceDialog(QDialog):
             #
             #
             #
+            copy_path_action = QAction()
+            copy_path_action.setText("Copy path")
+            copy_path_action.triggered.connect(lambda: self.reference_file_handler._copy_path(row))
+
+            #
+            #
+            #
             if show_run_action is not None:
                 context_menu.addAction(show_run_action)
             context_menu.addAction(open_file_action)
             context_menu.addAction(show_metadata_action)
+            context_menu.addAction(copy_path_action)
             context_menu.exec(global_pos)
 
 

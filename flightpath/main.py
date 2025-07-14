@@ -1040,10 +1040,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             return None
 
     def open_config(self):
-        self.last_main = self.main_layout.currentIndex()
-        self.main_layout.setCurrentIndex(2)
-        self.cancel_config_changes()
-        self.config.show_help()
+        if self.main_layout.currentIndex() != 2:
+            self.last_main = self.main_layout.currentIndex()
+            self.main_layout.setCurrentIndex(2)
+            self.cancel_config_changes()
+            self.config.show_help()
 
     #
     # this needs to go back to whatever doc is selected, if one was. for now we

@@ -10,7 +10,8 @@ from PySide6.QtWidgets import (
     QComboBox,
     QMenu,
     QMessageBox,
-    QVBoxLayout
+    QVBoxLayout,
+    QApplication
 )
 
 from PySide6.QtGui import QAction
@@ -18,6 +19,7 @@ from PySide6.QtCore import Qt, QSize, QModelIndex
 from PySide6.QtWidgets import QTreeView, QAbstractItemView, QSizePolicy, QHeaderView
 
 from csvpath.util.nos import Nos
+from csvpath.util.path_util import PathUtility as pathu
 from csvpath.util.config import Config
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
@@ -150,6 +152,10 @@ class SidebarArchive(QWidget):
         self.find_data_action.setText("Find data")
         self.find_data_action.triggered.connect(self._find_data)
 
+        self.copy_path_action = QAction()
+        self.copy_path_action.setText("Copy path")
+        self.copy_path_action.triggered.connect(self._copy_path)
+
         self.copy_action = QAction()
         self.copy_action.setText(self.tr("Copy to working dir"))
         self.copy_action.triggered.connect(self._copy_results_back_to_cwd)
@@ -161,9 +167,60 @@ class SidebarArchive(QWidget):
         self.context_menu.addAction(self.repeat_run_action)
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.find_data_action)
+        self.context_menu.addAction(self.copy_path_action)
         self.context_menu.addAction(self.copy_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
+
+    def _copy_path(self) -> None:
+        from_index = self.view.currentIndex()
+        if from_index.isValid():
+            path = self.model.filePath(from_index)
+            clipboard = QApplication.instance().clipboard()
+            clipboard.setText(path)
+
+
+    def _results_mani_path_for_path(self, path:str) -> str:
+        if path is None:
+            raise ValueError("Path cannot be None")
+        parts = pathu.parts(path)
+        sep = pathu.sep(path)
+        maniparts = []
+        found = False
+        for part in parts:
+            m = re.search(r"^.*\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(?:_\d)?", part)
+            maniparts.append(part)
+            if m is not None:
+                found = True
+                break
+        if found is False:
+            self._find_manifest_below(maniparts, path)
+        else:
+            maniparts.append("manifest.json")
+        return sep[0].join(maniparts)
+
+    def _find_manifest_below(self, maniparts:list[str], path:str) -> None:
+        nos = Nos(path)
+        lst = nos.listdir(recurse=True, files_only=True)
+        mani = None
+        for _ in lst:
+            if _.endswith("manifest.json"):
+                if mani is None or len(_) < len(mani):
+                    mani = _
+        if mani is not None:
+            maniparts.clear()
+            maniparts.append(mani)
+        else:
+            raise ValueError(f"Cannot find manifest below {path}")
+
+    def _has_reference(self, path) -> bool:
+        manipath = self._results_mani_path_for_path(path)
+        mani = None
+        with DataFileReader(manipath) as file:
+            mani = json.load(file.source)
+        if "$" in mani["named_file_name"] or "$" in mani["named_paths_name"]:
+            return True
+        return False
 
     def _show_context_menu(self, position):
         index = self.view.indexAt(position)
@@ -178,14 +235,22 @@ class SidebarArchive(QWidget):
             if nos.isfile():
                 self.delete_action.setVisible(False)
                 self.new_run_action.setVisible(True)
-                self.repeat_run_action.setVisible(True)
+                if self._has_reference(path) is False:
+                    self.repeat_run_action.setVisible(True)
+                else:
+                    self.repeat_run_action.setVisible(False)
                 self.find_data_action.setVisible(True)
+                self.copy_path_action.setVisible(True)
                 self.copy_action.setVisible(True)
             else:
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
-                self.repeat_run_action.setVisible(True)
+                if self._has_reference(path) is False:
+                    self.repeat_run_action.setVisible(True)
+                else:
+                    self.repeat_run_action.setVisible(False)
                 self.find_data_action.setVisible(True)
+                self.copy_path_action.setVisible(True)
                 self.copy_action.setVisible(False)
         if path.endswith("manifest.json") or path.endswith(".db"):
             # we don't allow anything on manifests or sqlite files
