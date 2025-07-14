@@ -73,11 +73,13 @@ from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.state import State
 
+from flightpath.editable import EditStates
 
 class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     """ Main GUI component. Does much of the MVC controller lifting. """
 
     TITLE = "FlightPath • Data Preboarding Development and Operations"
+
 
     def __init__(self):
         super().__init__()
@@ -566,7 +568,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def update_json_views(self, worker_data):
         try:
             filepath, data, editable = worker_data   # pylint: disable=W0612
-            self.progress_dialog.close()
+            if self.progress_dialog:
+                self.progress_dialog.close()
             if isinstance( data, Exception ):
                 meut.message(icon=QMessageBox.Critical, title="File opening error", msg=f"Error: {data}")
                 return
@@ -596,7 +599,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @Slot(tuple)
     def update_md_views(self, worker_data):
         filepath, data, editable = worker_data # pylint: disable=W0612
-        self.progress_dialog.close()
+        if self.progress_dialog:
+            self.progress_dialog.close()
         if isinstance( data, Exception ):
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
@@ -616,7 +620,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         view = taut.find_tab(self.content.tab_widget, filepath)
         if view is None:
-            editable = editable if editable is not None else True
+            editable = editable if editable is not None else EditStates.EDITABLE
             view = MdViewer(main=self, editable=editable)
             view.setObjectName(filepath)
             #
@@ -632,7 +636,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.content.tab_widget.setTabToolTip(i[0], shortcuts)
         else:
             view = view[1]
-        view.editable = editable if editable else True
+        view.editable = editable if editable else EditStates.EDITABLE
         taut.select_tab(self.content.tab_widget, view)
         #
         # we show the right tabs because we may be showing
@@ -643,12 +647,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self._rt_tabs_show()
 
 
-
-
     @Slot(tuple)
     def update_csvpath_views(self, worker_data):
         filepath, data, editable = worker_data # pylint: disable=W0612
-        self.progress_dialog.close()
+        if self.progress_dialog:
+            self.progress_dialog.close()
         if isinstance( data, Exception ):
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
@@ -672,7 +675,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         csvpath_view = taut.find_tab(self.content.tab_widget, filepath)
         if csvpath_view is None:
-            editable = editable if editable is not None else True
+            editable = editable if editable is not None else EditStates.EDITABLE
             csvpath_view = CsvpathViewer(main=self, editable=editable)
             csvpath_view.setObjectName(filepath)
             csvpath_view.open_file(path=filepath, data=data)
@@ -686,7 +689,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
         else:
             csvpath_view = csvpath_view[1]
-        csvpath_view.editable = editable if editable else True
+        csvpath_view.editable = editable if editable else EditStates.EDITABLE
         taut.select_tab(self.content.tab_widget, csvpath_view)
         #
         # we show the right tabs in order to show the functions and docs
@@ -696,7 +699,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @Slot(tuple)
     def update_views(self, worker_data):
         msg, lines, filepath, data, lines_to_take = worker_data # pylint: disable=W0612
-        self.progress_dialog.close()
+        if self.progress_dialog:
+            self.progress_dialog.close()
         if isinstance( lines, Exception ):
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
@@ -769,15 +773,18 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.read_validate_and_display_file()
 
-    def read_validate_and_display_file(self, editable=True, *, finished_callback=None) -> QRunnable:
+    def read_validate_and_display_file(self, editable=EditStates.EDITABLE, *, finished_callback=None) -> QRunnable:
         return self.read_validate_and_display_file_for_path(self.selected_file_path, editable=editable, finished_callback=finished_callback)
 
-    def read_validate_and_display_file_for_path(self, path:str, editable=True, *, finished_callback=None) -> QRunnable:
+    def read_validate_and_display_file_for_path(self, path:str, editable=EditStates.EDITABLE, *, finished_callback=None) -> QRunnable:
+        #
+        # callbacks passed into this method should be watched closely. the find data by ref dialog
+        # had trouble getting them to behave correctly.
+        #
         info = QFileInfo(path)
         #
         # TODO: consolidate below
         #
-        # pylint thinks csv_file_extensions doesn't support membership tests but it is list[str]. :/
         worker = None
         nos = Nos(path)
         isfile = nos.isfile()
@@ -791,7 +798,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 quotechar=self.content.toolbar.quotechar_char()
             )
             worker.signals.finished.connect(self.update_views)
-            if finished_callback:
+            if finished_callback is not None:
                 worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
@@ -799,11 +806,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
-        # pylint thinks csvpath_file_extensions doesn't support membership tests but it is list[str]. :/
         elif isfile and info.suffix() in self.csvpath_config.csvpath_file_extensions: # pylint: disable=E1135
             worker = CsvpathFileWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_csvpath_views)
-            if finished_callback:
+            if finished_callback is not None:
                 worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
@@ -813,9 +819,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.threadpool.start(worker)
         elif isfile and info.suffix() == "json":
             worker = JsonDataWorker(path, self, editable=editable)
-            worker.signals.finished.connect(self.update_json_views)
-            if finished_callback:
+            if finished_callback is not None:
+                #
+                # this callback should work, but even when clearly wired right it
+                # doesn't seem to actually get called. no idea what's up. :/
+                #
                 worker.signals.finished.connect(finished_callback)
+            worker.signals.finished.connect(self.update_json_views)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
@@ -829,7 +839,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             #
             worker = MdWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_md_views)
-            if finished_callback:
+            if finished_callback is not None:
+                print(f"main: read val dis: setting callback: {finished_callback}")
                 worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
@@ -868,6 +879,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         info = QFileInfo(self.selected_file_path)
         editable = info.suffix() in self.csvpath_config.csvpath_file_extensions
         editable = editable or info.suffix() in ["json", "md", "txt"]
+        if editable is True:
+            editable = EditStates.EDITABLE
+        else:
+            editable = EditStates.UNEDITABLE
         self.read_validate_and_display_file(editable=editable)
         self.statusBar().showMessage(f"  {self.selected_file_path}")
         #
@@ -956,7 +971,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # set the file tree to highlight the new file
         #
         if path is not None:
-            self.read_validate_and_display_file_for_path(path=path, editable=True)
+            self.read_validate_and_display_file_for_path(path=path)
             #
             # i have a path str
             # i need the proxy model index at that path

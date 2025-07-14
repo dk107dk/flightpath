@@ -154,7 +154,7 @@ class Welcome(QWidget):
         #
         self.selected_file_path = csvpath
         self._run_one_time = csvpath
-        self.main.read_validate_and_display_file_for_path(path=csvpath, editable=True, finished_callback=self._on_run_one_load)
+        self.main.read_validate_and_display_file_for_path(path=csvpath, editable=self.main.EDITABLE, finished_callback=self._on_run_one_load)
 
     def _on_run_one_load(self) -> None:
         csvpath = self._run_one_time

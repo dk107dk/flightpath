@@ -29,6 +29,7 @@ from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.editable import EditStates
 
 class SidebarNamedPaths(QWidget):
 
@@ -107,7 +108,7 @@ class SidebarNamedPaths(QWidget):
             ...
             #self._show_welcome_but_do_not_deselect()
         else:
-            self.main.read_validate_and_display_file(editable=False)
+            self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
 

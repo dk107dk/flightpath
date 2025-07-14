@@ -5,11 +5,12 @@ from csvpath.util.file_readers import DataFileReader
 from csvpath.util.nos import Nos
 from pathlib import Path
 
+from flightpath.editable import EditStates
 from .data_worker_signals import DataWorkerSignals
 
 class CsvpathFileWorker(QRunnable):
 
-    def __init__(self, filepath, main, editable=True):
+    def __init__(self, filepath, main, editable=EditStates.EDITABLE):
         super().__init__()
         self.main = main
         self.filepath = str(filepath)
