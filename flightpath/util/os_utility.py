@@ -22,7 +22,7 @@ class OsUtility:
     @classmethod
     def file_system_open_cmd(cls) -> str:
         if cls.is_windows():
-            return 'explorer.exe'
+            return 'explorer'
         elif cls.is_mac():
             return 'open'
         else:

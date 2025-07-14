@@ -19,6 +19,7 @@ from PySide6.QtWidgets import QFileSystemModel
 
 from csvpath import CsvPaths
 from csvpath.util.nos import Nos
+from csvpath.util.path_util import PathUtility as pathu
 
 from flightpath.dialogs.stage_data_dialog import StageDataDialog
 from flightpath.widgets.help.plus_help import HelpIconPackager
@@ -250,6 +251,7 @@ class Sidebar(QWidget):
         self.context_menu = QMenu(self)
         self.rename_action = QAction()
         self.open_location_action = QAction()
+        self.open_project_dir_action = QAction()
         self.delete_action = QAction()
         self.new_file_action = QAction()
         self.save_file_action = QAction()
@@ -269,6 +271,7 @@ class Sidebar(QWidget):
         self.paste_action.setText("Paste")
         self.rename_action.setText("Rename")
         self.open_location_action.setText("Open directory")
+        self.open_project_dir_action.setText("Open project directory")
         self.delete_action.setText("Delete")
         self.new_file_action.setText("New file")
         self.save_file_action.setText("Save file")
@@ -278,6 +281,7 @@ class Sidebar(QWidget):
 
         self.rename_action.triggered.connect(self._rename_file_navigator_item)
         self.open_location_action.triggered.connect(self._open_file_navigator_location)
+        self.open_project_dir_action.triggered.connect(self._open_project_dir)
         self.delete_action.triggered.connect(self._delete_file_navigator_item)
         self.new_file_action.triggered.connect(self._new_file_navigator_item)
         self.save_file_action.triggered.connect(self._save_file_navigator_item)
@@ -291,6 +295,7 @@ class Sidebar(QWidget):
         self.context_menu.addAction(self.save_file_action)
         self.context_menu.addAction(self.rename_action)
         self.context_menu.addAction(self.open_location_action)
+        self.context_menu.addAction(self.open_project_dir_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.cut_action)
         self.context_menu.addAction(self.copy_action)
@@ -310,6 +315,8 @@ class Sidebar(QWidget):
         if index.isValid():
             self.rename_action.setVisible(True)
             self.open_location_action.setVisible(True)
+            self.open_project_dir_action.setVisible(False)
+            
             self.delete_action.setVisible(True)
             #
             # capture the location so we can create a new file or folder there
@@ -384,7 +391,9 @@ class Sidebar(QWidget):
             else:
                 self.paste_action.setEnabled(False)
 
-            self.open_location_action.setVisible(True)
+            self.open_location_action.setVisible(False)
+            self.open_project_dir_action.setVisible(True)
+            
             self.delete_action.setVisible(False)
             self.new_file_action.setVisible(True)
             self.new_folder_action.setVisible(True)
@@ -732,15 +741,32 @@ $[*][ print("hello world") ]"""
         index = self.file_navigator.currentIndex()
         #
         # if not valid we clicked on below-tree whitespace and get the
-        # current working directory
+        # current working directory. however, this doesn't seem to happen at least on windows. 
+        # today we're getting the current selection which is always something, so no longer 
+        # the expected behavior.
         #
         if index.isValid():
             path = self.proxy_model.filePath(index)
+            print(f"_open_file_navigator_location: index valid. path: {path}")
         else:
             path = self.main.state.cwd
-        folder = os.path.dirname(path)
+            print(f"_open_file_navigator_location: index invalid. path: {path}")
+        path = pathu.resep(path)
+        nos = Nos(path)
+        if nos.isfile():
+            path = os.path.dirname(path)
         o = osut.file_system_open_cmd()
-        os.system(f'{o} "{folder}"')
+        o = f'{o} "{path}"'
+        print(f"_open_file_navigator_location: o: {o}")
+        os.system(o)
+
+    def _open_project_dir(self):
+        path = self.main.state.cwd
+        path = pathu.resep(path)
+        o = osut.file_system_open_cmd()
+        o = f'{o} "{path}"'
+        print(f"_open_project_dir: o: {o}")
+        os.system(o)
 
     def _delete_file_navigator_item(self):
         index = self.file_navigator.currentIndex()
