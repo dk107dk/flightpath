@@ -3,6 +3,7 @@ import json
 
 from PySide6.QtGui import QClipboard, QStandardItemModel, QStandardItem, QAction
 from PySide6.QtCore import Qt,Slot # pylint: disable=E0611
+from PySide6.QtWidgets import QApplication
 
 from csvpath import CsvPaths
 from csvpath.util.path_util import PathUtility as pathu
@@ -108,6 +109,13 @@ class ReferenceFileHandler:
             print( traceback.format_exc())
             print(f"Error in _show_run_dir: {type(e)}: {e}")
 
+    #===== COPY PATH ================
+
+    def _copy_path(self, row) -> None:
+        t = self._item(row)
+        clipboard = QApplication.instance().clipboard()
+        clipboard.setText(t)
+
     #===== OPEN MANIFEST ================
 
     def _show_manifest(self, row) -> None:
@@ -173,8 +181,12 @@ class ReferenceFileHandler:
         from csvpath.util.file_readers import DataFileReader
         with DataFileReader(mpath) as file:
             mani = json.load(file.source)
-        file = mani["named_file_path"]
-        self.main.read_validate_and_display_file_for_path(file, editable=EditStates.NO_SAVE_NO_CTX)
+        if "actual_data_file" in mani:
+            file = mani["actual_data_file"]
+            self.main.read_validate_and_display_file_for_path(file, editable=EditStates.NO_SAVE_NO_CTX)
+        else:
+            file = mani["named_file_path"]
+            self.main.read_validate_and_display_file_for_path(file, editable=EditStates.NO_SAVE_NO_CTX)
 
     def _open_files_file(self, row) -> None:
         t = self._item(row)

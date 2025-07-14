@@ -240,7 +240,6 @@ class NewRunDialog(QDialog):
         self.named_paths_name = self.named_paths_name_ctl.currentText()
         self.method = self.run_method_ctl.currentText()
 
-        #paths = CsvPaths()
         has = False
         #
         # file manager doesn't like path separators. we could check for $ or sep.
@@ -292,7 +291,7 @@ class NewRunDialog(QDialog):
 
     def _do_run(self, template:str) -> None:
         #
-        # clear any existing logs to .bak. we have to shutdown to be sure that the 
+        # clear any existing logs to .bak. we have to shutdown to be sure that the
         # file is released. that's not a problem because it is CsvPath logging, not
         # FlightPath logging.
         #

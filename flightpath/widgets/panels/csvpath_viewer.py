@@ -229,7 +229,7 @@ class CsvpathViewer(QWidget):
                 # open file so the user can create a sample
                 #
                 self.main.selected_file_path = path.scanner.filename
-                self.main.read_validate_and_display_file_for_path(path=path.scanner.filename, editable=main.EDITABLE)
+                self.main.read_validate_and_display_file_for_path(path=path.scanner.filename, editable=EditStates.EDITABLE)
                 return
             path.update_settings_from_metadata()
             path.ecoms = ErrorCommunications(csvpath=path)
