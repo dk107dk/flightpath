@@ -2,9 +2,9 @@
 ---- CSVPATH ----
 
 ~
-   The collect() function selects headers to collect values from when lines match. 
- 
-   In this csvpath we are collecting three header values from two lines. Data from the 
+   The collect() function selects headers to collect values from when lines match.
+
+   In this csvpath we are collecting three header values from two lines. Data from the
    matched lines is visible in the Matches tab. We'll also print to the Printouts tab
    just to make the results extra visible.
 
@@ -16,7 +16,7 @@ $[*][
    #2 == "60 Kilmarnock Street"
 
    collect(#agency, #project_address, #period_ending)
- 
+
    print_line.onmatch()
 ]
 
@@ -25,17 +25,19 @@ $[*][
 
 ~
    This csvpath updates the "compliance_project_name" header when it sees a certain value.
-   Because we used the nocontrib qualifier the csvpath still returns all lines even though 
+   Because we used the nocontrib qualifier the csvpath still returns all lines even though
    we are selecting a subset.
- 
+
    id: replacing
 
    test-data:examples/headers/projects.csv
 ~
 
-$[*][ 
+$[*][
 	#compliance_project_name.nocontrib == "350 Boylston Street" ->
 	replace(#compliance_project_name, "New Co. Build")
+
+      last() -> print("See Matches tab for replacements")
 ]
 
 
@@ -44,13 +46,15 @@ $[*][
 ~
    This csvpath updates the test file data to have a processing date at the 0th header
    and a "modified by" header at the end of the line.
- 
+
    id: insert and append
 
    test-data:examples/headers/projects.csv
 ~
-$[*][ 
+$[*][
 
 	insert( 0, "processing date", now() )
          append( "modified by", "CsvPath", yes() )
+
+	last.nocontrib() -> print("See the Matches tab for the new column at the end of every line")
 ]

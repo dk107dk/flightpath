@@ -107,6 +107,10 @@ class CsvpathViewer(QWidget):
         mdata = {}
         if len(comment) > 0:
             mdata = self._get_metadata(comment)
+        #
+        # should we pathu.resep to make sure we're converting to \ if needed?
+        # has not shown up as a problem on Windows yet, tho.
+        #
         filepath = mdata.get("test-data")
         if filepath is None:
             return None
