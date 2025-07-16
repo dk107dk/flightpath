@@ -1,28 +1,42 @@
 ~
-   Find all the lines that don't have at least one other 
+   Find all the lines that don't have at least one other
    year/location match out of a 5000 line sample.
+
+   FlightPath will ask if you want to create a smaller sample file. This
+   example runs quickly as-is, but in general smaller samples are better
+   during iterative development. In particular, doing many printouts can
+   slow runs down.
+
+   To create a sample first click on the data file in the left-hand tree,
+   Alzheimers_Disease_and_Healthy_Aging_Data_sample.csv. Then look at the
+   top of FlightPath for the data toolbar and click the "Save sample as"
+   button. After creating the sample you need to change the "test-data"
+   path, below, so it points to your new sample file. Or, if you remove
+   "test-data", you will be prompted to pick a file each time you run this
+   csvpath.
 
    id: dup lines
    test-data: examples/duplicates/Alzheimers_Disease_and_Healthy_Aging_Data_sample.csv
 ~
 
-$[*][ 
+$[*][
 
    not( dup_lines( #YearStart, #LocationAbbr ) )
 
+   last.nocontrib() -> print("See the matches tab for the unique lines")
 ]
 
 ---- CSVPATH ----
 
 ~
    Find the % of overlapping records for three headers.
-   name: 
+   name:
    test-data: examples/duplicates/Alzheimers_Disease_and_Healthy_Aging_Data_sample.csv
 ~
 
-$[1*][ 
-   dup_lines(#Stratification1, #Stratification2, #LocationID) 
-   @p = percent("match") 
+$[1*][
+   dup_lines(#Stratification1, #Stratification2, #LocationID)
+   @p = percent("match")
    @p = multiply(@p, 100)
    @p = int(@p)
    last.nocontrib() -> print("Out of $.csvpath.line_number lines with $.csvpath.count_matches matches, $.variables.p% overlap on age, race, and location")
@@ -32,17 +46,17 @@ $[1*][
 ---- CSVPATH ----
 
 ~
-   This csvpath checks for duplicate lines. If it finds any it immediately stops 
-   and fails the file. Note that we're doing the fail and stop at the end of the printout. 
+   This csvpath checks for duplicate lines. If it finds any it immediately stops
+   and fails the file. Note that we're doing the fail and stop at the end of the printout.
    This is just a concise way of avoiding another when/do.
-   
-   id: 4-way dup check  
+
+   id: 4-way dup check
    test-data: examples/duplicates/Alzheimers_Disease_and_Healthy_Aging_Data_sample.csv
 ~
-$[1*][ 
-	@d = has_dups(#Stratification1, #Stratification2, #LocationID, #Topic) 
+$[1*][
+	@d = has_dups(#Stratification1, #Stratification2, #LocationID, #Topic)
 
-	@d.asbool -> 
+	@d.asbool ->
 print("
 Duplicate found on line: $.csvpath.line_number:
 Category 1: $.headers.StratificationCategory1: $.headers.Stratification1

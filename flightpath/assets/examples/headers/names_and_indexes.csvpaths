@@ -3,7 +3,7 @@
    id: header name
    test-data: examples/headers/projects.csv
 ~
-$[*][ 
+$[1*][
 
     @name = header_name(1)
 	@name == "compliance_project_name" -> print("Name is correct!")
@@ -17,32 +17,32 @@ $[*][
    id: header name
    test-data: examples/headers/projects.csv
 ~
-$[*][ 
+$[*][
 
     header_name("compliance_project_name") == 1 -> print("Position is correct!")
-
 ]
 
 ---- CSVPATH ----
 
 ~
-  We can check if a header is what we expect using the header_name() function 
-  by passing the expected name as a second argument. The result is true or false. 
+  We can check if a header is what we expect using the header_name() function
+  by passing the expected name as a second argument. The result is true or false.
 
   To add to the example, if we wanted to trigger an action based on the result
-  of header_name() we could use a when/do expression based on one of two things: 
+  of header_name() we could use a when/do expression based on one of two things:
     - A variable holding the value of header_name()
     - using header_name() in the when/do expression directly
 
-  While you wouldn't typically use a variable in such a simple case, if you did 
-  you would need to remember that a variable standing by itself is an existance 
-  test. That means a variable with the value False is still True in the sense 
-  that it exists. To make the boolean value of the variable be used as its match 
+  While you wouldn't typically use a variable in such a simple case, if you did
+  you would need to remember that a variable standing by itself is an existance
+  test. That means a variable with the value False is still True in the sense
+  that it exists. To make the boolean value of the variable be used as its match
   vote you have to add the asbool qualifier.
 
   test-data: examples/headers/projects.csv
 ~
-$[*][ 
+$[*][
+
     print("
 Line: $.csvpath.line_number")
 
@@ -54,28 +54,28 @@ Line: $.csvpath.line_number")
 
     header_name(1, "compliance_project_name") -> print("    Correct, no variable involved")
     not( header_name(1, "Compliance Project Name") ) -> print("    Also correct, still no variable involved")
-] 
+]
 
 ---- CSVPATH ----
-   
+
 ~
-  The end() function returns the value of the last header. If you pass it an int N it will 
+  The end() function returns the value of the last header. If you pass it an int N it will
   return the value of the header at the index: count_headers_in_line() - 1 - N. (The minus 1
   is because a count of the headers is 1-based; whereas, the index of a header is 0-based).
 
   To make the example a bit more interesting, we add the onchange qualifier to the variable
-  assignment. That makes this variable assignment contribute a vote to matching lines. The 
+  assignment. That makes this variable assignment contribute a vote to matching lines. The
   onchange qualifier's main function is to limit an action to when it sees new information.
- 
-  Because we put onchange on the variable the Matches tab shows 9 lines. We could alternatively 
+
+  Because we put onchange on the variable the Matches tab shows 9 lines. We could alternatively
   have put onchange on the print() function so we print only when the data changes, but still
   match every line.
-    
+
   id: last column
   test-data: examples/headers/projects.csv
 ~
 
-$[*][ 
+$[1*][
     @last_header_value.onchange = end(6)
 
     print.onmatch("$.variables.last_header_value")
