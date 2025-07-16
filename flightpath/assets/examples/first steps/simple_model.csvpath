@@ -2,27 +2,30 @@
  name: hello world data model :
 
  This is a trival document model for a trivial document.
- 
+
  The model specifies that the first header is a string that must
- be present. The second field is also a non-empty string. The last 
+ be present. The second field is also a non-empty string. The last
  header is a string that may be empty.
 
- Run this csvpath by placing your cursor in the csvpath and hitting 
- control-r (or command-r on a Mac) or right-clicking and selecting 
+ Run this csvpath by placing your cursor in the csvpath and hitting
+ control-r (or command-r on a Mac) or right-clicking and selecting
  Run.
 
- The asterisk indicates that the csvpath will check all rows against 
+ The asterisk indicates that the csvpath will check all rows against
  this model. There is no print output and we don't expect errors, so
  the Printouts tab will be empty. The Matches tab will show the lines
  that fit the model.
 
  test-data: examples/first steps/test.csv
 ~
-$[*][ 
+$[*][
       line(
           string.notnone(#firstname),
           string.notnone(#lastname, 30, 2),
           string(#say)
-      )]
+      )
+
+   last.nocontrib() -> print("See the Matches tab for the lines matching this schema")
+]
 
 

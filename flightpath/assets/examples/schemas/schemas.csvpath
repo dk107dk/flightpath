@@ -74,6 +74,8 @@ $[1*][
 		url(#linkedin),
 		string.cell(#phone)
 	)
+
+    last.nocontrib() -> print("See the Matches tab for valid lines")
  ]
 
 ---- CSVPATH ----
@@ -103,6 +105,8 @@ $[1*][
 		string.cell(#phone),
 		wildcard()
 	)
+
+    last.nocontrib() -> print("See the Matches tab for valid lines")
  ]
 
 ---- CSVPATH ----
@@ -135,6 +139,8 @@ $[1*][
 		string.cell(#phone),
 		wildcard()
 	)
+
+    last.nocontrib() -> print("See the Matches tab for valid lines")
  ]
 
 
