@@ -13,7 +13,7 @@ mkdir c:\dev\flightpath\packaging\dist\FlightPathData
 
 move c:\dev\flightpath\packaging\dist\FlightPathData.exe c:\dev\flightpath\packaging\dist\FlightPathData
 
-copy C:\dev\flightpath\packaging\assets\AppxManifestProd\AppxManifest.xml c:\dev\flightpath\packaging\dist\FlightPathData
+copy c:\dev\flightpath\packaging\assets\AppxManifest.xml c:\dev\flightpath\packaging\dist\FlightPathData
 copy c:\dev\flightpath\packaging\assets\logo44x44.png c:\dev\flightpath\packaging\dist\FlightPathData
 copy c:\dev\flightpath\packaging\assets\logo150x150.png c:\dev\flightpath\packaging\dist\FlightPathData
 copy c:\dev\flightpath\packaging\assets\logo.png c:\dev\flightpath\packaging\dist\FlightPathData

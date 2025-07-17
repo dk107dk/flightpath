@@ -2,7 +2,7 @@
 # if testing the installer build, run this script in powershell as administrator. 
 # only this step is needed for an app submission because Microsoft will sign it with their root CA
 #
-c:\dev\flightpath\packaging\create_windows_release.bat
+c:\dev\flightpath\packaging\create_windows_release_test.bat
 
 #
 # if working on a new machine or for another reason need to create and register a new certificate on this and/or an install test machine, uncomment these three lines.
