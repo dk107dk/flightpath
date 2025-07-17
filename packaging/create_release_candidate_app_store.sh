@@ -32,6 +32,11 @@ rm -Rf ./inputs
 # those artifacts. we switched to copying because we can reuse the app with the pkg version
 # if we want to.
 #
+# first check for quarantine attributes. we've had those and they don't work for Apple.
+# if there are problems with hard to read Transporter errors maybe try running this command
+# against the whole FP repo -- that was needed at one point.
+#
+xattr -dr com.apple.quarantine ./dist/FlightPath\ Data.app/*
 echo -e '\ncopying app to tmp for next steps\n'
 cp -R ./dist/FlightPath\ Data.app ./tmp/FlightPath\ Data.app
 
@@ -57,6 +62,9 @@ echo -e '\ncreating package...\n'
 #
 # ship to apple
 #
+echo -e '\nverifying .itmsp file with apple...\n'
+source ./transport_verify.sh
+
 echo -e '\ntransporting .itmsp file to apple...\n'
 source ./transport.sh
 

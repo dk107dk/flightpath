@@ -33,23 +33,5 @@ productbuild --product ./assets/product_definition.plist \
 
 #             --sign "3rd Party Mac Developer Installer: David Kershaw (Q6VE7XAQF3)" \
 
-#
-# Step 3: clean up
-#
-echo -e '\ncleaning up\n'
-rm ./pkg/component.pkg
-#
-# Step 4: prep for itmsp file
-#
-echo -e '\nprepping .itmsp file for update metadata.xml\n'
-mv ./6745823097.itmsp ./6745823097
-rm ./6745823097/FlightPath-Data.pkg
-rm ./6745823097/metadata.xml
-cp ./pkg/FlightPath-Data.pkg ./6745823097
-source ./calculate_metadata.sh
-#
-# Next:
-#   - update the metadata.xml
-#   - close the .itmsp
-#   - run transport.sh
-#
+. ./itmsp.sh
+
