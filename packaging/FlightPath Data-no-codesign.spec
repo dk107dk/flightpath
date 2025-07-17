@@ -72,7 +72,7 @@ app = BUNDLE(
     icon='../flightpath/assets/icons/icon.icns',
     bundle_identifier=None,
     info_plist={
-        'NSHumanReadableCopyright': 'Copyright 2025, David Kershaw',
+        'NSHumanReadableCopyright': 'Copyright 2025, CsvPath Maintainers; Atesta Analytics; David Kershaw',
         'NSPrincipalClass': 'NSApplication',
         'NSAppleScriptEnabled': False,
         'CFBundleDisplayName' :'FlightPath Data',
