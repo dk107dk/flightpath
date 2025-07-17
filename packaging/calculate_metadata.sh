@@ -29,11 +29,7 @@ xml="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
         </asset>
     </software_assets>
 </package>"
-echo "$xml" > ./6745823097/metadata.xml
+echo "$xml" > ./clean_itmsp/metadata.xml
 
-if [ -f "6745823097.itmsp" ]; then
-  echo ".itmsp exists."
-else
-  mv ./6745823097 ./6745823097.itmsp
-fi
+
 
