@@ -44,35 +44,38 @@ class State:
         # control what is there.
         #
         data = self.data
-        home = data.get("projects_home")
-        if home is None:
+        projs = data.get("projects_home")
+        if projs is None:
             print(f"state.project_home: no project home in state")
-            home = "FlightPath"
+            projs = "FlightPath"
             #
             # let's make sure projects home exists and the default project exists
             #
-            nos = Nos(os.path.join(self.home, home))
+            nos = Nos(os.path.join(self.home, projs))
             if not nos.exists():
                 nos.makedirs()
-            nos.path = os.path.join(home, self.DEFAULT_PROJECT_NAME)
+            nos.path = os.path.join(projs, self.DEFAULT_PROJECT_NAME)
             if not nos.exists():
                 nos.makedirs()
             #
             # save for later.
             #
             if data:
-                print(f"state.project_home: setting project home in state")
-                data["projects_home"] = home
+                print(f"state.project_home: setting project home name in state: {projs}")
+                data["projects_home"] = projs
                 #
                 # make the default project while we're at it.
                 #
-                nos = Nos(os.path.join(os.path.join(self.home, home), self.DEFAULT_PROJECT_NAME))
+                projs_home_path = os.path.join(self.home, projs)
+                print(f"state.project_home: projs home path: {projs_home_path}")
+
+                nos = Nos(os.path.join(projs_home_path, self.DEFAULT_PROJECT_NAME))
                 if not nos.exists():
                     nos.makedirs()
                 self.data = data
             else:
                 print(f"state.project_home: cannot set project home in state")
-        return home
+        return projs
 
     @projects_home.setter
     def projects_home(self, home:str) -> None:

@@ -223,7 +223,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @property
     def csvpath_config(self) -> CsvPathConfig:
         if self._csvpath_config is None:
-            self._csvpath_config = CsvPaths().config
+            print(f"main: no csvpath_config. our state: {self.state}. creating a new CsvPaths.")
+            paths = CsvPaths()
+            self._csvpath_config = paths.config
         return self._csvpath_config
 
     @property

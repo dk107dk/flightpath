@@ -2,6 +2,7 @@ import re
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QTextCharFormat, QFont, QSyntaxHighlighter
 from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QVBoxLayout, QWidget
+import darkdetect
 #
 # this class is all claude. take this comment out if/when we work on it.
 #
@@ -13,7 +14,7 @@ class CsvPathSyntaxHighlighter(QSyntaxHighlighter):
         self.highlighting_rules = []
 
         # Define text formats for different syntax elements
-        self.formats = {
+        self._formats = {
             'comment': self._create_format(QColor(128, 128, 128), italic=True),
             'string': self._create_format(QColor(163, 21, 21)),
             'regex': self._create_format(QColor(196, 26, 22)),
@@ -27,6 +28,23 @@ class CsvPathSyntaxHighlighter(QSyntaxHighlighter):
             'punctuation': self._create_format(QColor(0, 0, 0))
         }
 
+        # Define text formats for different syntax elements
+        self._formats_dark = {
+            'comment': self._create_format(QColor(128, 128, 128), italic=True),
+            'string': self._create_format(QColor(163, 121, 121)),
+            'regex': self._create_format(QColor(196, 126, 122)),
+            'header': self._create_format(QColor(125, 183, 124), bold=True),
+            'variable': self._create_format(QColor(9, 134, 88), bold=True),
+            'reference': self._create_format(QColor(136, 119, 145), bold=True),
+            'function': self._create_format(QColor(100, 200, 255)),
+            'number': self._create_format(QColor(0, 153, 153)),
+            'operator': self._create_format(QColor(255, 100, 80), bold=True),
+            'bracket': self._create_format(QColor(110, 110, 110), bold=True),
+            'punctuation': self._create_format(QColor(220, 220, 220))
+        }
+
+
+
         # Build highlighting rules based on the grammar
         self._build_rules()
 
@@ -39,6 +57,12 @@ class CsvPathSyntaxHighlighter(QSyntaxHighlighter):
         if italic:
             format.setFontItalic(True)
         return format
+
+    @property
+    def formats(self) -> dict:
+        if darkdetect.isDark():
+            return self._formats_dark
+        return self._formats
 
     def _build_rules(self):
         """Build the highlighting rules based on CsvPath grammar"""
