@@ -15,6 +15,8 @@ from flightpath.util.file_utility import FileUtility as fiut
 class State:
 
     DEFAULT_PROJECT_NAME = "Default"
+    DEFAULT_PROJECTS_DIR = "FlightPath"
+    STATE_FILE_NAME = ".flightpath"
 
     #
     # home is the path to user's home dir. not stored in state.
@@ -29,11 +31,15 @@ class State:
     @property
     def home(self) -> str:
         #
-        # the .flightpath file lives in the user's home dir (which may
+        # the state file lives in the user's home dir (which may
         # be a sandbox container home dir)
         #
         home = str(Path.home())
         return home
+
+    @property
+    def projects_home_path(self) -> str:
+        return os.path.join(self.home, self.projects_home)
 
     @property
     def projects_home(self) -> str:
@@ -47,15 +53,18 @@ class State:
         projs = data.get("projects_home")
         if projs is None:
             print(f"state.project_home: no project home in state")
-            projs = "FlightPath"
+            projs = self.DEFAULT_PROJECTS_DIR
             #
             # let's make sure projects home exists and the default project exists
             #
-            nos = Nos(os.path.join(self.home, projs))
+            projects_dir = os.path.join(self.home, projs)
+            nos = Nos(projects_dir)
             if not nos.exists():
+                print(f"state: projects_home: nos.path: project's dir - {nos.path} does not exist. making it.")
                 nos.makedirs()
-            nos.path = os.path.join(projs, self.DEFAULT_PROJECT_NAME)
+            nos.path = os.path.join(projects_dir, self.DEFAULT_PROJECT_NAME)
             if not nos.exists():
+                print(f"state: projects_home: default project name 1 - nos.path: {nos.path} does not exist. making it.")
                 nos.makedirs()
             #
             # save for later.
@@ -66,11 +75,10 @@ class State:
                 #
                 # make the default project while we're at it.
                 #
-                projs_home_path = os.path.join(self.home, projs)
-                print(f"state.project_home: projs home path: {projs_home_path}")
-
-                nos = Nos(os.path.join(projs_home_path, self.DEFAULT_PROJECT_NAME))
+                print(f"state.project_home: projs home path: {projects_dir}")
+                nos = Nos(os.path.join(projects_dir, self.DEFAULT_PROJECT_NAME))
                 if not nos.exists():
+                    print(f"state: projects_home: default project name 2 - nos.path: {nos.path} does not exist. making it.")
                     nos.makedirs()
                 self.data = data
             else:
@@ -91,8 +99,9 @@ class State:
         proj = self.data.get("current_project")
         if proj is None:
             proj = self.DEFAULT_PROJECT_NAME
-            nos = Nos(os.path.join(self.projects_home, proj))
+            nos = Nos(os.path.join(self.projects_home_path, proj))
             if not nos.exists():
+                print(f"state: current_project: default project dir - nos.path: {nos.path} does not exist. making it.")
                 nos.makedirs()
             self.current_project = proj
         elif proj.strip() == "":
@@ -110,11 +119,14 @@ class State:
     @property
     def state_path(self) -> str:
         #
-        # state path is the location of .flightpath
+        # state path is the location of the state file
         #
         if self._state_path is None:
-            self._state_path = os.path.join(self.home, ".flightpath")
+            self._state_path = os.path.join(self.home, self.STATE_FILE_NAME)
             if not os.path.exists(self._state_path):
+                import getpass
+                current_user = getpass.getuser()
+                print(f"state.state_path: creating state_path: {self._state_path} for current_user: {current_user}")
                 self._create_new_state_file(self._state_path)
         return self._state_path
 
@@ -206,7 +218,11 @@ class State:
     def load_state_and_cd(self, main) -> None:
         cwd = self.cwd
         nos = Nos(cwd)
+        #
+        # is this a problem? when would cwd not exist?
+        #
         if not nos.exists():
+            print(f"state: load_state_and_cd: cwd - nos.path: {nos.path} does not exist. making it.")
             nos.makedirs()
         os.chdir(cwd)
         configfile = f".{os.sep}config{os.sep}config.ini"
@@ -231,6 +247,7 @@ class State:
             if os.path.exists(examples):
                 ...
             else:
+                print(f"state: load_state_and_cd: examples - nos.path: {nos.path} does not exist. making it.")
                 os.makedirs(examples)
                 em = ExamplesMarshal(main)
                 em.add_examples(path=examples)
