@@ -31,7 +31,7 @@ class MessageUtility:
     def input(cls, *, msg:str, title:str="", width:int=420, height:int=125, text:str=None) -> tuple:
         dialog = QInputDialog()
         dialog.setFixedSize(QSize(420, 125))
-        dialog.setLabelText("Enter the new file's name:")
+        dialog.setLabelText(msg)
         dialog.setWindowTitle(title)
         if text is not None:
             dialog.setTextValue(text)
