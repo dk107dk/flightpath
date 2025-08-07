@@ -6,6 +6,7 @@
   <Identity Name="FlightPathData"
             Publisher="CN=AtestaAnalytics"
             Version="1.1.15.0" 
+	    ProcessorArchitecture="arm64" 
   />
   <Properties>
     <DisplayName>FlightPath Data</DisplayName>

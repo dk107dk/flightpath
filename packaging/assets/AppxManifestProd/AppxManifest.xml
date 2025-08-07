@@ -5,7 +5,8 @@
          IgnorableNamespaces="uap rescap">
   <Identity Name="AtestaAnalytics.FlightPathData"
             Publisher="CN=E95957FE-6131-4006-B006-8B5BDB2B3037"
-            Version="1.0.1.0" />
+            Version="1.1.15.0"
+  />
   <Properties>
     <DisplayName>FlightPath Data</DisplayName>
     <PublisherDisplayName>Atesta Analytics</PublisherDisplayName>
@@ -21,6 +22,8 @@
   </Resources>
   <Capabilities>
     <Capability Name="internetClient" />
+    <uap:Capability Name="documentsLibrary" />
+    <uap:Capability Name="removableStorage" />
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>
   <Applications>
@@ -30,7 +33,7 @@
       <uap:VisualElements DisplayName="FlightPath Data"
                           Square150x150Logo="logo150x150.png"
                           Square44x44Logo="logo44x44.png"
-                          Description="A flight data processing application"
+                          Description="A DataOps data processing application"
                           BackgroundColor="transparent"/>
     </Application>
   </Applications>

@@ -3,7 +3,7 @@ import os
 
 # -*- mode: python ; coding: utf-8 -*-
 
-assets_path = os.path.abspath('../flightpath/assets')  # Adjust this path to the correct location of your assets
+assets_path = os.path.abspath('../flightpath/assets')  
 datas = []
 datas.append((assets_path, 'assets'))
 
