@@ -116,7 +116,6 @@ class Welcome(QWidget):
         print(f"welcome: on_click_copy_in: path: {path}")
 
     def on_click_run(self) -> None:
-        #self.main.sidebar_rt_top._new_run()
         self._new_run()
 
     def _new_run(self) -> None:
