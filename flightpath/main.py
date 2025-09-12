@@ -75,6 +75,39 @@ from flightpath.util.state import State
 
 from flightpath.editable import EditStates
 
+
+def run():
+    #
+    # if --server-mode:
+    #    - check for server mode key
+    #    - if key found, start a FlightPath Server
+    #
+    from flightpath.util.gate_guard import GateGuard
+    mode = GateGuard.has_ticket()
+    if mode is True:
+        #
+        # start server here!
+        #
+        return
+    #
+    # otherwise continue to load FlightPath Data
+    #
+    app = QApplication(sys.argv)
+    app.setApplicationName(MainWindow.TITLE)
+    app.setStyle("Fusion")
+
+    window = MainWindow()
+    if window.please_close:
+        return
+    #
+    # careful, this was throwing an error at one point, but is currently
+    # commented mainly because a smaller window is easier for dev.
+    #
+    #window.showMaximized()
+    #window.show()
+    sys.exit(app.exec())
+
+
 class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     """ Main GUI component. Does much of the MVC controller lifting. """
 
@@ -1097,21 +1130,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             if not self.content.close_all_tabs():
                 event.ignore()
 
-def run():
-    app = QApplication(sys.argv)
-    app.setApplicationName(MainWindow.TITLE)
-    app.setStyle("Fusion")
-
-    window = MainWindow()
-    if window.please_close:
-        return
-    #
-    # careful, this was throwing an error at one point, but is currently
-    # commented mainly because a smaller window is easier for dev.
-    #
-    #window.showMaximized()
-    #window.show()
-    sys.exit(app.exec())
 
 if __name__ == "__main__":
     run()

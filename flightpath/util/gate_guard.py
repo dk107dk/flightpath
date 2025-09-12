@@ -1,0 +1,65 @@
+import hashlib
+import os
+import argparse
+from .state import State
+#
+# if GateGuard matches a UUID in the state file (~/.flightpath) to a hashed version
+# of same we allow server mode. this is a not a security measure, obviously! it is
+# just a way to have some control during FlightPath Server's early days. people will
+# request the key which will help us know it's being used and be able to standby to
+# help/learn.
+#
+class GateGuard:
+    TICKET_HASH = "0aca198ee7979a67105e1a1f69ddbff10f82c7d8d2f69a2a41a15d75ac2d1146"
+
+    TICKET_REQUIRED = f"""
+You need a valid --server-mode ticket to use FlightPath Server. There is no
+charge for a ticket. Please email info@csvpath.org to get yours.
+
+When you have a ticket enter it into your .flightpath configuration file.
+.flightpath is in your home directory. It is a simple dictionary structure. Add
+"server_mode_ticket":"ticket value" to it."""
+
+
+    @classmethod
+    def has_ticket(cls) -> bool|None:
+
+        parser = argparse.ArgumentParser(
+            description='FlightPath Server',
+            epilog=cls.TICKET_REQUIRED
+        )
+        parser.add_argument(
+            '--server-mode',
+            '-s',
+            default=False,
+            action='store_true',
+            help='run FlightPath in headless Server Mode'
+        )
+        args = parser.parse_args()
+
+        if args.server_mode is False:
+            return False
+
+        state = State()
+        data = state.data
+        key = data.get("server_mode_ticket")
+        key = str(key)
+        ret = False
+        #
+        # check for env var. hash key and check
+        #
+        try:
+            if key == key.upper():
+                key = str(os.getenv(key))
+            h = hashlib.sha256(key.encode()).hexdigest()
+            ret = h == GateGuard.TICKET_HASH
+        except Exception:
+            ...
+        if ret is False:
+            print(f"""{cls.TICKET_REQUIRED}
+
+""")
+        return ret
+
+
+
