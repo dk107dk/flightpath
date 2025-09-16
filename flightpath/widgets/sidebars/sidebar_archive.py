@@ -213,7 +213,26 @@ class SidebarArchive(QWidget):
         else:
             raise ValueError(f"Cannot find manifest below {path}")
 
+    def _is_archive_manifest(self, path:str) -> bool:
+        config = self.main.csvpath_config
+        archive = config.get(section="results", name="archive")
+        arcmani = f"{archive}{os.sep}manifest.json"
+        if path and path.strip() == arcmani:
+            return True
+        return False
+
+
     def _has_reference(self, path) -> bool:
+        if path is None:
+            raise ValueError("Path cannot be None")
+        #
+        # need to check if this is the archive/manifest.json. if it is return False
+        #
+        if self._is_archive_manifest(path):
+            return False
+        #
+        #
+        #
         manipath = self._results_mani_path_for_path(path)
         mani = None
         with DataFileReader(manipath) as file:
@@ -224,6 +243,7 @@ class SidebarArchive(QWidget):
 
     def _show_context_menu(self, position):
         index = self.view.indexAt(position)
+        path = None
         if index.isValid():
             global_pos = self.view.viewport().mapToGlobal(position)
             path = self.model.filePath(index)
@@ -252,11 +272,15 @@ class SidebarArchive(QWidget):
                 self.find_data_action.setVisible(True)
                 self.copy_path_action.setVisible(True)
                 self.copy_action.setVisible(False)
-        if path.endswith("manifest.json") or path.endswith(".db"):
-            # we don't allow anything on manifests or sqlite files
-            ...
-        else:
-            self.context_menu.exec(global_pos)
+            if path and ( path.endswith("manifest.json") or path.endswith(".db") ):
+                self.delete_action.setVisible(False)
+                self.new_run_action.setVisible(False)
+                self.repeat_run_action.setVisible(False)
+                self.find_data_action.setVisible(False)
+                self.copy_path_action.setVisible(False)
+                self.copy_action.setVisible(True)
+            if global_pos:
+                self.context_menu.exec(global_pos)
 
     def _find_data(self):
         find = FindFileByReferenceDialog(main=self.main)

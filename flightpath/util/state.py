@@ -52,7 +52,6 @@ class State:
         data = self.data
         projs = data.get("projects_home")
         if projs is None:
-            print(f"state.project_home: no project home in state")
             projs = self.DEFAULT_PROJECTS_DIR
             #
             # let's make sure projects home exists and the default project exists
@@ -60,29 +59,25 @@ class State:
             projects_dir = os.path.join(self.home, projs)
             nos = Nos(projects_dir)
             if not nos.exists():
-                print(f"state: projects_home: nos.path: project's dir - {nos.path} does not exist. making it.")
                 nos.makedirs()
             nos.path = os.path.join(projects_dir, self.DEFAULT_PROJECT_NAME)
             if not nos.exists():
-                print(f"state: projects_home: default project name 1 - nos.path: {nos.path} does not exist. making it.")
                 nos.makedirs()
             #
             # save for later.
             #
             if data:
-                print(f"state.project_home: setting project home name in state: {projs}")
                 data["projects_home"] = projs
                 #
                 # make the default project while we're at it.
                 #
-                print(f"state.project_home: projs home path: {projects_dir}")
                 nos = Nos(os.path.join(projects_dir, self.DEFAULT_PROJECT_NAME))
                 if not nos.exists():
-                    print(f"state: projects_home: default project name 2 - nos.path: {nos.path} does not exist. making it.")
                     nos.makedirs()
                 self.data = data
             else:
-                print(f"state.project_home: cannot set project home in state")
+                ...
+                #print(f"state.project_home: cannot set project home in state")
         return projs
 
     @projects_home.setter
@@ -101,7 +96,6 @@ class State:
             proj = self.DEFAULT_PROJECT_NAME
             nos = Nos(os.path.join(self.projects_home_path, proj))
             if not nos.exists():
-                print(f"state: current_project: default project dir - nos.path: {nos.path} does not exist. making it.")
                 nos.makedirs()
             self.current_project = proj
         elif proj.strip() == "":
@@ -126,7 +120,6 @@ class State:
             if not os.path.exists(self._state_path):
                 import getpass
                 current_user = getpass.getuser()
-                print(f"state.state_path: creating state_path: {self._state_path} for current_user: {current_user}")
                 self._create_new_state_file(self._state_path)
         return self._state_path
 
@@ -137,7 +130,7 @@ class State:
         # hard to change & disconnected.
         #
         state["integrations"] = [
-            "ckan", "default", "marquez", "scripts", "sftp", "sftpplus", "slack", "sql", "sqlite"
+            "ckan", "default", "openlineage", "scripts", "sftp", "sftpplus", "slack", "sql", "sqlite"
         ]
         #
         # not doing this here. likely to cause problems.
@@ -183,7 +176,6 @@ class State:
     @data.setter
     def data(self, state:dict) -> None:
         with open(self.state_path, mode="w", encoding="utf-8") as file:
-            #state = json.dump(state, file)
             json.dump(state, file, indent=4)
 
     def has_cwd(self) -> bool:
@@ -222,7 +214,6 @@ class State:
         # is this a problem? when would cwd not exist?
         #
         if not nos.exists():
-            print(f"state: load_state_and_cd: cwd - nos.path: {nos.path} does not exist. making it.")
             nos.makedirs()
         os.chdir(cwd)
         configfile = f".{os.sep}config{os.sep}config.ini"
@@ -247,7 +238,6 @@ class State:
             if os.path.exists(examples):
                 ...
             else:
-                print(f"state: load_state_and_cd: examples - nos.path: {nos.path} does not exist. making it.")
                 os.makedirs(examples)
                 em = ExamplesMarshal(main)
                 em.add_examples(path=examples)

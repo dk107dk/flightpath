@@ -209,6 +209,7 @@ class SidebarNamedPaths(QWidget):
 
     def _show_context_menu(self, position) -> None:
         index = self.view.indexAt(position)
+        path = None
         if index.isValid():
             global_pos = self.view.viewport().mapToGlobal(position)
             path = self.model.filePath(index)
@@ -225,11 +226,12 @@ class SidebarNamedPaths(QWidget):
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
                 self.copy_action.setVisible(False)
-        if path.endswith("manifest.json") or path.endswith(".db"):
-            # we don't allow anything on manifests or sqlite files
-            ...
-        else:
-            self.context_menu.exec(global_pos)
+            if path and ( path.endswith("manifest.json") or path.endswith(".db") ):
+                self.delete_action.setVisible(False)
+                self.new_run_action.setVisible(False)
+                self.copy_action.setVisible(True)
+            if global_pos:
+                self.context_menu.exec(global_pos)
 
     def _delete_file_navigator_item(self):
         index = self.view.currentIndex()

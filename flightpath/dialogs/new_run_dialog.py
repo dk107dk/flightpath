@@ -20,6 +20,7 @@ from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.workers.run_worker import RunWorker
 
 class NewRunDialog(QDialog):
     COLLECT_SERIAL = "collect serially"
@@ -95,6 +96,8 @@ class NewRunDialog(QDialog):
         )
         form_layout.addRow("Named-file name: ", box)
         if self.named_file_name is not None:
+            self.named_file_name = self._adjust_fingerprint_if(self.named_file_name)
+
             self.named_file_name_ctl.setEditText(self.named_file_name)
         #
         # named paths name
@@ -156,6 +159,29 @@ class NewRunDialog(QDialog):
         self.on_names_change()
         main_layout.addLayout(buttons_layout)
 
+
+    def _adjust_fingerprint_if(self, name:str) -> str:
+        #
+        # if we end in .csv check if the user rt-clicked a fingerprint file. i.e.
+        # a 64 char str + is hex number. if so, remove the .csv; otherwise, swap
+        # .csv for _csv
+        #
+        if name.endswith(".csv"):
+            _ = name[0:len(name) -4]
+            rdot = _.rfind(".")
+            if rdot > -1:
+                fname = _[rdot+1:]
+                if len(fname) == 64:
+                    try:
+                        int(fname, 16)
+                        name = name[0:len(name) -4]
+                    except ValueError:
+                        name = f"{name[0:len(name)-4]}_csv"
+                else:
+                    name = f"{name[0:len(name)-4]}_csv"
+            else:
+                name = f"{name[0:len(name)-4]}_csv"
+        return name
 
     @property
     def csvpaths(self) -> CsvPaths:
@@ -290,67 +316,12 @@ class NewRunDialog(QDialog):
 
 
     def _do_run(self, template:str) -> None:
-        #
-        # clear any existing logs to .bak. we have to shutdown to be sure that the
-        # file is released. that's not a problem because it is CsvPath logging, not
-        # FlightPath logging.
-        #
-        lout.rotate_log(self.sidebar.main.state.cwd, self.sidebar.main.csvpath_config)
-        #
-        # do run on paths
-        #
-        paths = self.csvpaths
-        a = getattr(paths, NewRunDialog.METHODS.get(self.method))
-        if a is None:
-            #
-            # not sure how this could happen
-            #
-            return
-        a(pathsname=self.named_paths_name, filename=self.named_file_name, template=template)
-        #
-        # TODO: we were recreating all trees. bad idea due to slow refresh from remote.
-        # but worked. refreshing named_files is probably fair, but that's
-        # also tricky because we'd want to recreate the opened/closed state of the folders
-        # and if we did that the refresh might slow down potentially a lot. so long-term,
-        # seems like we should capture what is registered and manually add it.
-        #
-        # this works, but only slightly better because tree still closed.  :(
-        #
-        self.sidebar.main.renew_sidebar_archive()
+        self.sidebar.main.run_paths(
+            method = NewRunDialog.METHODS.get(self.method),
+            named_paths_name = self.named_paths_name ,
+            named_file_name = self.named_file_name,
+            template = self.template
+        )
         self.close()
-        #
-        # display log
-        #
-        self._display_log(paths)
-
-    def _display_log(self, paths:CsvPaths) -> None:
-        log = QWidget()
-        log.setObjectName("Log")
-        self.sidebar.main.helper.help_and_feedback.addTab(log, "Log")
-        #
-        # the logs tab should be the first showing, at least unless/until
-        # we add more run results tabs.
-        #
-        i = self.sidebar.main.helper.help_and_feedback.count()
-        self.sidebar.main.helper.help_and_feedback.setCurrentIndex(i-1)
-
-        layout = QVBoxLayout()
-        log.setLayout(layout)
-        view = QPlainTextEdit()
-        log_lines = lout.get_log_content(self.sidebar.main.csvpath_config)
-        view.setPlainText(log_lines)
-        view.setReadOnly(True)
-        layout.addWidget(view)
-        layout.setContentsMargins(0, 0, 0, 0)
-        #
-        # clear the logging; basically remove the handler and recreate in csvpath.
-        #
-        lout.clear_logging(paths)
-        #
-        # show log. do this even if nothing much to show
-        #
-        if not self.sidebar.main.helper.is_showing_help():
-            self.sidebar.main.helper.on_click_help()
-
-
+        return
 

@@ -19,7 +19,7 @@ class CacheForm(BlankForm):
 
         self.cache_dir_path = QLineEdit()
         layout.addRow("Cache directory: ", self.cache_dir_path)
-        msg = QLabel("The default is cache")
+        msg = QLabel("The default is cache.")
         msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
         layout.addRow("", msg)
 
