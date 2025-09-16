@@ -23,7 +23,8 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
     QMessageBox,
     QTextEdit,
     QLabel,
-    QMenuBar
+    QMenuBar,
+    QPlainTextEdit
 )
 from PySide6.QtGui import QIcon, QAction # pylint: disable=E0611
 from PySide6.QtCore import ( # pylint: disable=E0611
@@ -72,9 +73,10 @@ from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.state import State
-
 from flightpath.editable import EditStates
+from flightpath_server.main import Main as ServerMain
 
+from flightpath.workers.run_worker import RunWorker
 
 def run():
     #
@@ -88,6 +90,9 @@ def run():
         #
         # start server here!
         #
+        print(GateGuard.ART)
+        main = ServerMain()
+        main.serve()
         return
     #
     # otherwise continue to load FlightPath Data
@@ -889,6 +894,75 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             print("Error: main.read_validate_and_display_file_for_path: cannot open file")
             self.clear_views()
         return worker
+
+
+    def run_paths(self, *,
+        method:str,
+        named_paths_name:str,
+        named_file_name:str,
+        template:str
+    ) -> None:
+        runner = RunWorker(
+            main=self,
+            method=method,
+            named_paths_name=named_paths_name,
+            named_file_name=named_file_name,
+            template=template
+        )
+        #
+        # clear any existing logs to .bak. we have to shutdown to be sure that the
+        # file is released. that's not a problem because it is CsvPath logging, not
+        # FlightPath logging.
+        #
+        lout.rotate_log(self.state.cwd, self.csvpath_config)
+        #
+        #
+        #
+        runner.signals.finished.connect(self._display_log)
+        runner.signals.messages.connect(self.statusBar().showMessage)
+        self.threadpool.start(runner)
+
+    @Slot(tuple)
+    def _display_log(self, t:tuple[str]) -> None:
+        log = QWidget()
+        log.setObjectName("Log")
+        self.helper.help_and_feedback.addTab(log, "Log")
+        #
+        # the logs tab should be the first showing, at least unless/until
+        # we add more run results tabs.
+        #
+        i = self.helper.help_and_feedback.count()
+        self.helper.help_and_feedback.setCurrentIndex(i-1)
+
+        layout = QVBoxLayout()
+        log.setLayout(layout)
+        view = QPlainTextEdit()
+        log_lines = lout.get_log_content(self.csvpath_config)
+        view.setPlainText(log_lines)
+        view.setReadOnly(True)
+        layout.addWidget(view)
+        layout.setContentsMargins(0, 0, 0, 0)
+        #
+        # clear the logging; basically remove the handler.
+        #
+        lout.clear_logging(t[1])
+        #
+        # show log. do this even if nothing much to show
+        #
+        if not self.helper.is_showing_help():
+            self.helper.on_click_help()
+        #
+        # update the sidebar so we can see the results
+        #
+        # TODO: we were recreating all trees. bad idea due to slow refresh from remote.
+        # but worked. refreshing named_files is probably fair, but that's
+        # also tricky because we'd want to recreate the opened/closed state of the folders
+        # and if we did that the refresh might slow down potentially a lot. so long-term,
+        # seems like we should capture what is registered and manually add it.
+        #
+        self.renew_sidebar_archive()
+
+
 
 
     @Slot(QModelIndex)

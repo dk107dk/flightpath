@@ -13,8 +13,8 @@ from PySide6.QtWidgets import (
     QSizePolicy
 )
 
-from PySide6.QtGui import QPixmap, QIcon, QAction
-from PySide6.QtCore import Qt, QSize, QModelIndex
+from PySide6.QtGui import QPixmap, QIcon, QAction, QGuiApplication
+from PySide6.QtCore import Qt, QSize, QModelIndex, QThreadPool
 from PySide6.QtWidgets import QFileSystemModel
 
 from csvpath import CsvPaths
@@ -34,6 +34,8 @@ from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
 
+from flightpath.workers.precache_worker import PreCacheWorker
+
 class Sidebar(QWidget):
     NEW_PROJECT = "Create new project"
 
@@ -41,13 +43,18 @@ class Sidebar(QWidget):
         super().__init__()
         self.main = main
         self.file_navigator = None
+        #
+        # we use the thread pool to run precache workers
+        #
+        self.threadpool = None
         self.setMinimumWidth(300)
         layout = QVBoxLayout()
         self.setLayout(layout)
         layout.setSpacing(0)
         layout.setContentsMargins(4, 3, 1, 3)
         self.icon_label = ClickableLabel()
-        pixmap = QPixmap(fiut.make_app_path(f"assets{os.sep}logo.svg"))
+        pixmap = QPixmap(fiut.make_app_path(f"assets{os.sep}logo-173x40.png"))
+        #pixmap = QPixmap(fiut.make_app_path(f"assets{os.sep}logo.svg"))
         self.icon_label.setPixmap(pixmap)
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(self.icon_label)
@@ -192,6 +199,13 @@ class Sidebar(QWidget):
             self.main.helper.on_click_help()
 
     def _setup_tree(self, *, replace=False) -> None:
+        #
+        # kickoff a precache worker to collect some info about files
+        #
+        worker = PreCacheWorker(self.main)
+        self.threadpool = QThreadPool()
+        self.threadpool.start(worker)
+
         old = self.file_navigator
         self.file_navigator = CustomTreeView()
         self.file_model = QFileSystemModel()
@@ -256,6 +270,8 @@ class Sidebar(QWidget):
         self.rename_action = QAction()
         self.open_location_action = QAction()
         self.open_project_dir_action = QAction()
+        self.copy_path_action = QAction()
+        self.copy_full_path_action = QAction()
         self.delete_action = QAction()
         self.new_file_action = QAction()
         self.save_file_action = QAction()
@@ -263,6 +279,10 @@ class Sidebar(QWidget):
         self.stage_data_action = QAction()
         self.load_paths_action = QAction()
         self.run_action = QAction()
+        #
+        #
+        #
+        self.line_number_action = QAction()
         #
         # cut and paste
         #
@@ -275,6 +295,8 @@ class Sidebar(QWidget):
         self.paste_action.setText("Paste")
         self.rename_action.setText("Rename")
         self.open_location_action.setText("Open directory")
+        self.copy_path_action.setText("Copy relative path")
+        self.copy_full_path_action.setText("Copy full path")
         self.open_project_dir_action.setText("Open project directory")
         self.delete_action.setText("Delete")
         self.new_file_action.setText("New file")
@@ -282,9 +304,15 @@ class Sidebar(QWidget):
         self.new_folder_action.setText("New folder")
         self.stage_data_action.setText("Stage data")
         self.load_paths_action.setText("Load csvpaths")
+        #
+        #
+        #
+        self.line_number_action.setText("line no")
 
         self.rename_action.triggered.connect(self._rename_file_navigator_item)
         self.open_location_action.triggered.connect(self._open_file_navigator_location)
+        self.copy_path_action.triggered.connect(self._copy_path)
+        self.copy_full_path_action.triggered.connect(self._copy_full_path)
         self.open_project_dir_action.triggered.connect(self._open_project_dir)
         self.delete_action.triggered.connect(self._delete_file_navigator_item)
         self.new_file_action.triggered.connect(self._new_file_navigator_item)
@@ -299,6 +327,8 @@ class Sidebar(QWidget):
         self.context_menu.addAction(self.save_file_action)
         self.context_menu.addAction(self.rename_action)
         self.context_menu.addAction(self.open_location_action)
+        self.context_menu.addAction(self.copy_path_action)
+        self.context_menu.addAction(self.copy_full_path_action)
         self.context_menu.addAction(self.open_project_dir_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.cut_action)
@@ -312,6 +342,8 @@ class Sidebar(QWidget):
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.stage_data_action)
         self.context_menu.addAction(self.load_paths_action)
+        self.context_menu.addSeparator()
+        self.context_menu.addAction(self.line_number_action)
 
     def _show_context_menu(self, position):
         index = self.file_navigator.indexAt(position)
@@ -319,8 +351,9 @@ class Sidebar(QWidget):
         if index.isValid():
             self.rename_action.setVisible(True)
             self.open_location_action.setVisible(True)
+            self.copy_path_action.setVisible(True)
+            self.copy_full_path_action.setVisible(True)
             self.open_project_dir_action.setVisible(False)
-
             self.delete_action.setVisible(True)
             #
             # capture the location so we can create a new file or folder there
@@ -367,7 +400,30 @@ class Sidebar(QWidget):
                     self.cut_action.setEnabled(False)
                     self.copy_action.setEnabled(False)
                     self.paste_action.setEnabled(False)
+                #
+                #
+                #
+                if path.endswith(".csv"):
+                    self.line_number_action.setVisible(True)
+                    self.line_number_action.setEnabled(False)
+                    csvpaths = CsvPaths()
+                    #
+                    # we aren't necessarily using cache -- tho in local projects, why not? so we
+                    # only set a path and use_cache temp. this whole operation is not super
+                    # efficient but it won't be noticable to the user and this settings shell game
+                    # doesn't add much. longer term a file info panel in rt-col or a floating label?
+                    #
+                    cdir = csvpaths.config.get(section="cache", name="path")
+                    cuse = csvpaths.config.get(section="cache", name="use_cache")
+                    csvpaths.config.set(section="cache", name="path", value=f"{self.main.state.cwd}{os.sep}cache")
+                    csvpaths.config.set(section="cache", name="use_cache", value=f"yes")
+                    c = csvpaths.file_manager.lines_and_headers_cacher.get_new_line_monitor(path).physical_end_line_count
+                    self.line_number_action.setText(f"{c} lines")
+                else:
+                    self.line_number_action.setVisible(False)
+
             else:
+                self.line_number_action.setVisible(False)
                 #
                 # paste only if dir and cutted. cut only if file.
                 #
@@ -396,6 +452,9 @@ class Sidebar(QWidget):
                 self.paste_action.setEnabled(False)
 
             self.open_location_action.setVisible(False)
+            self.copy_path_action.setVisible(False)
+            self.copy_full_path_action.setVisible(False)
+            self.copy_full_path_action.setVisible(False)
             self.open_project_dir_action.setVisible(True)
 
             self.delete_action.setVisible(False)
@@ -403,6 +462,11 @@ class Sidebar(QWidget):
             self.new_folder_action.setVisible(True)
             self.load_paths_action.setVisible(False)
             self.stage_data_action.setVisible(False)
+            #
+            #
+            #
+            self.line_number_action.setVisible(False)
+
             #
             # clear so we know to create new files or folders at the root
             #
@@ -514,6 +578,11 @@ class Sidebar(QWidget):
         name = self.stage_dialog.path
         nos = Nos(name)
         paths = CsvPaths()
+        #
+        # have to override the filesystem prohibit because it doesn't make sense
+        # here. we are all local file-based atm and also control config.
+        #
+        local = paths.config.set(section="inputs", name="allow_local_files", value=True)
         try:
             if nos.isfile():
                 paths.file_manager.add_named_file(name=named_file_name, path=name, template=template)
@@ -760,6 +829,30 @@ $[*][ print("hello world") ]"""
         o = osut.file_system_open_cmd()
         o = f'{o} "{path}"'
         os.system(o)
+
+    def _copy_path(self):
+        index = self.file_navigator.currentIndex()
+        if index.isValid():
+            path = self.proxy_model.filePath(index)
+        else:
+            raise RuntimeError("An item must be clicked to copy a relative path")
+        path = pathu.resep(path)
+        if path.startswith( self.main.state.cwd ):
+            path = path[len(self.main.state.cwd)+1:]
+        else:
+            raise ValueError(f"Path must start with {self.main.state.cwd}. {path} does not.")
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText(path)
+
+    def _copy_full_path(self):
+        index = self.file_navigator.currentIndex()
+        if index.isValid():
+            path = self.proxy_model.filePath(index)
+        else:
+            path = self.main.state.cwd
+        path = pathu.resep(path)
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText(path)
 
     def _open_project_dir(self):
         path = self.main.state.cwd
