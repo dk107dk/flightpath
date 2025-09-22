@@ -17,7 +17,7 @@ class MdWorker(QRunnable):
         self.editable = editable
         self.signals = DataWorkerSignals()
 
-    @Slot()
+    #@Slot()
     def run(self):
         try:
             nos = Nos(self.filepath)

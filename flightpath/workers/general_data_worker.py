@@ -65,7 +65,7 @@ class GeneralDataWorker(QRunnable):
                 return True
         return False
 
-    @Slot()
+    #@Slot()
     def run(self):
         self.signals.messages.emit(QApplication.translate("DataWorker", "Reading file..."))
         data = []

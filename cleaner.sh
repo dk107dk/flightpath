@@ -16,7 +16,7 @@ rm -R ./packaging/build/*
 mv ./packaging/6745823097.itmsp ./packaging/6745823097
 rm -R ./packaging/6745823097/*.pkg
 
-rm -R ~/FlightPath
-rm -R ~/.flightpath
+#rm -R ~/FlightPath
+#rm -R ~/.flightpath
 
 
