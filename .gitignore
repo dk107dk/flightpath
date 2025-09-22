@@ -136,3 +136,7 @@ dmypy.json
 .pypirc
 packaging/pkg/*.pkg
 packaging/tmp/*.msix
+packaging/package_archive
+packaging/dist
+packaging/dmg
+packaging/build
