@@ -21,7 +21,7 @@ class RunWorker(QRunnable):
         self.template = template
         self.signals = RunWorkerSignals()
 
-    @Slot()
+    #@Slot()
     def run(self):
         self.signals.messages.emit("Running file {self.named_file_name} against {self.named_paths_name}")
         #

@@ -12,7 +12,7 @@ class PreCacheWorker(QRunnable):
         self.cwd = cwd
         self.signals = PreCacheWorkerSignals()
 
-    @Slot()
+    #@Slot()
     def run(self):
         try:
             #

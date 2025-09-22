@@ -5,7 +5,7 @@ import traceback
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QTextEdit, QLabel, QMessageBox, QTableView
 from PySide6.QtGui import QFont
-from PySide6.QtCore import Qt, QFileInfo
+from PySide6.QtCore import Qt, QFileInfo, Slot
 
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.metadata_parser import MetadataParser
@@ -16,6 +16,7 @@ from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
 from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit
 from flightpath.widgets.panels.table_model import TableModel
+from flightpath.workers.test_run import TestRunWorker
 from flightpath.util.printer import CapturePrinter
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 from flightpath.util.run_info import RunInfo
@@ -242,12 +243,26 @@ class CsvpathViewer(QWidget):
             #
             capture = CapturePrinter()
             path.set_printers([capture])
-            lines = path.collect()
+            #
+            # hand off to the test_run worker
+            #
+            worker = TestRunWorker(csvpath=path, csvpath_str=csvpath, printer=capture)
+
+            #
+            # what are we updating here
+            #
+            worker.signals.finished.connect(self._on_test_run_complete)
+            worker.signals.messages.connect(self.main.statusBar().showMessage)
+            self.main.threadpool.start(worker)
+
+
+            #lines = path.collect()
         except Exception as e:
             estr = traceback.format_exc()
             self._display_stacktrace(estr)
             meut.message(title="Error", msg=f"Error: {e}")
             return
+        """
         #
         # shut down the logger. not sure this is needed, but ruling stuff out.
         #
@@ -256,6 +271,28 @@ class CsvpathViewer(QWidget):
         # display to the user in the lower panel
         #
         self._run_feedback(csvpath_str=csvpath, path=path, lines=lines, printer=capture)
+        #
+        # there's no absolute need to drop the metadata, but it seems prudent
+        #
+        self.mdata = None
+        """
+
+    @Slot(tuple)
+    def _on_test_run_complete(self, t:tuple) -> None:
+        path:CsvPath = t[0]
+        csvpath_str:str = t[1]
+        lines:list[list[str]] = t[2]
+        printer:CapturePrinter = t[3]
+        #
+        # same as before
+        #
+        # shut down the logger. not sure this is needed, but ruling stuff out.
+        #
+        lout.clear_logging(path)
+        #
+        # display to the user in the lower panel
+        #
+        self._run_feedback(csvpath_str=csvpath_str, path=path, lines=lines, printer=printer)
         #
         # there's no absolute need to drop the metadata, but it seems prudent
         #
