@@ -134,3 +134,5 @@ dmypy.json
 
 # PyPI configuration file
 .pypirc
+packaging/pkg/*.pkg
+packaging/tmp/*.msix
