@@ -34,7 +34,6 @@ from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
 
-from flightpath.workers.precache_worker import PreCacheWorker
 
 class Sidebar(QWidget):
     NEW_PROJECT = "Create new project"
@@ -109,7 +108,7 @@ class Sidebar(QWidget):
             #
             return
         if proj == self.NEW_PROJECT:
-            proj, ok = meut.input(title="New Project", msg="Enter the new project's name")
+            proj, ok = meut.input(title=self.NEW_PROJECT, msg="Enter the new project's name")
             if ok and proj and proj.strip() != "":
                 self.main.state.current_project = proj
                 self._set_project_from_state()
@@ -166,7 +165,7 @@ class Sidebar(QWidget):
             if p == proj:
                 self.projects.setCurrentText(p)
         self.projects.insertSeparator(self.projects.count())
-        self.projects.addItem("Create new project")
+        self.projects.addItem(Sidebar.NEW_PROJECT)
 
 
     @property
@@ -199,13 +198,6 @@ class Sidebar(QWidget):
             self.main.helper.on_click_help()
 
     def _setup_tree(self, *, replace=False) -> None:
-        #
-        # kickoff a precache worker to collect some info about files
-        #
-        worker = PreCacheWorker(self.main)
-        self.threadpool = QThreadPool()
-        self.threadpool.start(worker)
-
         old = self.file_navigator
         self.file_navigator = CustomTreeView()
         self.file_model = QFileSystemModel()

@@ -16,8 +16,16 @@ class MessageUtility:
         msg_box.setStandardButtons(QMessageBox.Ok)
         msg_box.exec()
 
+
+    @classmethod
+    def yes_no(cls, *, parent:QWidget, msg:str, title:str="") -> bool:
+        return cls.yesNo(parent=parent, msg=msg, title=title)
+
     @classmethod
     def yesNo(cls, *, parent:QWidget, msg:str, title:str="") -> bool:
+        #
+        # deprecated for camel-case sig. use yes_no()
+        #
         confirm = QMessageBox.question(
             parent,
             title,
@@ -26,6 +34,11 @@ class MessageUtility:
         )
         return confirm == QMessageBox.Yes
 
+    @classmethod
+    def warning(cls, *, parent:QWidget, msg:str, title:str) -> None:
+        if title is None:
+            title = "Warning"
+        QMessageBox.warning(parent, title, msg)
 
     @classmethod
     def input(cls, *, msg:str, title:str="", width:int=420, height:int=125, text:str=None) -> tuple:

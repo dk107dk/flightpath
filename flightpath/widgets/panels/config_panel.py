@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from flightpath.widgets.forms.blank_form import BlankForm
+from flightpath.widgets.forms.server_form import ServerForm
 from flightpath.widgets.forms.projects_form import ProjectsForm
 from flightpath.widgets.forms.env_form import EnvForm
 from flightpath.widgets.forms.cache_form import CacheForm
@@ -117,7 +118,8 @@ class ConfigPanel(QWidget):
             InputsForm(main=self.main),
             ListenersForm(main=self.main),
             LoggingForm(main=self.main),
-            ResultsForm(main=self.main)
+            ResultsForm(main=self.main),
+            ServerForm(main=self.main)
         ]
         for form in self.forms:
             self.forms_layout.addWidget(form)
@@ -174,6 +176,10 @@ class ConfigPanel(QWidget):
             self.main.config.show_help_for_form("results", fallback=fallback)
             self.forms_layout.setCurrentIndex(10)
             self.title.setText("results")
+        elif form == "server" or parent == "server":
+            self.main.config.show_help_for_form("server", fallback=fallback)
+            self.forms_layout.setCurrentIndex(11)
+            self.title.setText("server")
 
     @property
     def tree(self) -> QTreeWidget:
@@ -206,6 +212,19 @@ class ConfigPanel(QWidget):
         return integrations and section in integrations
 
     #
+    # everything not here is considered an "integration". (including
+    # [scripts] and the storage backends; they are integrations too)
+    #
+    def is_core_section(self, section) -> bool:
+        return section in self.core_sections
+
+    @property
+    def core_sections(self) -> list[str]:
+        return [
+            "config", "cache", "logging", "extensions", "errors", "functions", "results", "inputs", "listeners", "server"
+        ]
+
+    #
     # top sections are the sections in config.ini that are
     # not part of integrations. The integrations will be handled
     # differently
@@ -216,8 +235,9 @@ class ConfigPanel(QWidget):
             self._sections = []
             self._sections.append("projects")
             self._sections.append("env")
-            for s in self.config._config.sections():
-                if self.is_integration(s):
+            for s in self.core_sections:
+            #for s in self.config._config.sections():
+                if self.is_integration(s) or not self.is_core_section(s):
                     continue
                 #
                 # functions are not as easy to create these days. still doable
@@ -262,8 +282,10 @@ class ConfigPanel(QWidget):
         return self._configurables
 
     def save_all_forms(self) -> None: # , filepath: Path
+        print(f"confpanel: save_all_forms: configpath: {self.config.configpath}, cwd: {self.main.state.cwd}")
         named_files = self.config.get(section="inputs", name="files")
         print(f"cfgpanel: save_all_forms: named_files: {named_files}")
+
         named_paths = self.config.get(section="inputs", name="csvpaths")
         archive = self.config.get(section="results", name="archive")
         #

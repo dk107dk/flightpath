@@ -1,5 +1,8 @@
 import os
 import sys
+import subprocess
+import platform
+
 
 class OsUtility:
 
@@ -27,4 +30,17 @@ class OsUtility:
             return 'open'
         else:
             return 'xdg-open'
+
+    @classmethod
+    def open_file(cls, path) -> None:
+        osname = platform.system()
+        if osname == "Windows":
+            os.startfile(path)
+        elif osname == "Darwin":  # macOS
+            subprocess.run(["open", path])
+        elif osname == "Linux":
+            subprocess.run(["xdg-open", path])
+        else:
+            raise ValueError("Unknown OS: {osname}")
+
 

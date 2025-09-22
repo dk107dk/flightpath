@@ -127,6 +127,12 @@ class DataToolbar(QToolBar):
         self.addWidget(self.raw_source)
         self._add_help(self.on_help_raw_source_toolbar)
         #
+        # switch to raw source view
+        #
+        self.file_info = QPushButton("File info")
+        self.addWidget(self.file_info)
+        #self._add_help(self.on_help_raw_source_toolbar)
+        #
         # let it move
         #
         self.setFloatable(True)
@@ -211,6 +217,8 @@ class DataToolbar(QToolBar):
             self.quotechar.setEnabled(False)
         if self.raw_source:
             self.raw_source.setEnabled(False)
+        if self.file_info:
+            self.file_info.setEnabled(False)
 
     def enable(self) -> None:
         if self.sampling:
@@ -225,4 +233,6 @@ class DataToolbar(QToolBar):
             self.quotechar.setEnabled(True)
         if self.raw_source:
             self.raw_source.setEnabled(True)
+        if self.file_info:
+            self.file_info.setEnabled(True)
 

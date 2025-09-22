@@ -1,0 +1,24 @@
+{
+    "server_mode_ticket": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    "integrations": [
+        "ckan",
+        "default",
+        "marquez",
+        "scripts",
+        "sftp",
+        "sftpplus",
+        "slack",
+        "sql",
+        "sqlite"
+    ],
+    "projects_home": "FlightPath",
+    "current_project": "openobserve",
+    "env": {
+        "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:5080/api/default",
+        "OTEL_SERVICE_NAME": "FlightPath",
+        "ZO_ALLOW_USER_DEFINED_SCHEMAS": "true",
+        "OTEL_EXPORTER_OTLP_HEADERS": "Authorization=Basic ZGsxMDdka0Bob3RtYWlsLmNvbTpoYW5nemhvdQ==,stream-name=FlightPath",
+        "OTEL_EXPORTER_METRICS_TEMPORALITY_PREFERENCE": "DELTA"
+    }
+}

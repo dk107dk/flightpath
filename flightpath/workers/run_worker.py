@@ -8,14 +8,12 @@ from .run_worker_signals import RunWorkerSignals
 class RunWorker(QRunnable):
 
     def __init__(self, *,
-        main,
         method:str,
         named_paths_name:str,
         named_file_name:str,
         template:str
     ) -> None:
         super().__init__()
-        self.main = main
         self.csvpaths = CsvPaths()
         self.method = method
         self.named_paths_name = named_paths_name

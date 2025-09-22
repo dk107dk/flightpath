@@ -6,13 +6,11 @@ Env var values can be used in any configuration in CsvPaths Framework. To use an
 
 So if your SFTP password is found in an env var called *SFTP_PASSWD* you would set up your *[sftp]* section in config.ini with something like:
 
-[sftp]
-
-*username=Fred*
-
-*password=SFTP_PASSWD*
-
-<br/>
+````
+    [sftp]
+     username=Fred*
+     password=SFTP_PASSWD*
+````
 
 FlightPath env vars are set here and saved in plain text JSON in the `.flightpath` config file in your home directory. This approach persists the env vars across multiple FlightPath sessions. You should be able to do all your work with env vars here, but if you run into trouble, you can always inspect and update `.flightpath` directly, then restart FlightPath.
 

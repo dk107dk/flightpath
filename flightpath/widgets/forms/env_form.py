@@ -70,7 +70,6 @@ class EnvForm(BlankForm):
 
         add_form_layout.addRow("Add: ", add_form_inputs)
 
-
         self.refreshing = False
         self.refresh_table()
 

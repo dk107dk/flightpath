@@ -11,8 +11,9 @@ pyside6 = ">=6.8.3"
 pygments = "^2.19.1"
 darkdetect = "^0.8.0"
 #csvpath = "^0.0.553"
-csvpath = { path = "../csvpath/dist/csvpath-0.0.555.tar.gz" }
+csvpath = { path = "../csvpath/dist/csvpath-0.0.556.tar.gz" }
 flightpath_server = { path = "../flightpath_server/dist/flightpath_server-0.1.0.tar.gz" }
+httpx = "^0.28.1"
 
 [tool.poetry.scripts]
 flightpath = "flightpath.main:run"

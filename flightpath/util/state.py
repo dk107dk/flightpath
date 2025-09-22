@@ -130,7 +130,7 @@ class State:
         # hard to change & disconnected.
         #
         state["integrations"] = [
-            "ckan", "default", "openlineage", "scripts", "sftp", "sftpplus", "slack", "sql", "sqlite"
+            "ckan", "default", "openlineage", "scripts", "sftp", "slack", "sql", "sqlite"
         ]
         #
         # not doing this here. likely to cause problems.
@@ -233,7 +233,24 @@ class State:
             # we can assume main.py will create its own CsvPaths and config for
             # its long term use.
             #
-            CsvPaths().config
+            config = CsvPaths().config
+            #
+            # remember: setting configpath triggers a reload! not really a problem here, but
+            # it isn't what we're looking for.
+            #
+            config.configpath = os.path.join(cwd, "config", "config.ini")
+            config.set(section="config", name="path", value=os.path.join(cwd, "config", "config.ini") )
+            config.set(section="config", name="allow_var_sub", value="yes" )
+            config.set(section="config", name="var_sub_source", value=os.path.join(cwd, "config", "env.json") )
+            config.set(section="cache", name="path", value=os.path.join(cwd, "cache") )
+            config.set(section="logging", name="log_file", value=os.path.join(cwd, "logs", "csvpath.log") )
+            config.set(section="inputs", name="files", value=os.path.join(cwd, "inputs", "named_files") )
+            config.set(section="inputs", name="csvpaths", value=os.path.join(cwd, "inputs", "named_paths") )
+            config.set(section="results", name="archive", value=os.path.join(cwd, "archive") )
+            config.set(section="results", name="transfers", value=os.path.join(cwd, "transfers") )
+            config.set(section="sqlite", name="db", value=os.path.join(cwd, "archive", "csvpath.db") )
+            config.set(section="sql", name="connection_string", value="" )
+            config.save_config()
             examples = os.path.join(cwd, "examples")
             if os.path.exists(examples):
                 ...

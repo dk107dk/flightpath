@@ -20,7 +20,6 @@ from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.workers.run_worker import RunWorker
 
 class NewRunDialog(QDialog):
     COLLECT_SERIAL = "collect serially"

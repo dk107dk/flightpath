@@ -31,12 +31,14 @@ from PySide6.QtCore import ( # pylint: disable=E0611
     Qt,
     QFileInfo,
     QThreadPool,
+    QThread,
     Slot,
     QSize,
     QItemSelectionModel,
     QRunnable,
     QModelIndex,
-    QCoreApplication
+    QCoreApplication,
+    QTimer
 )
 
 from csvpath import CsvPaths
@@ -73,10 +75,13 @@ from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.state import State
+from flightpath.inspect.inspector import Inspector
+from flightpath.util.html_generator import HtmlGenerator
 from flightpath.editable import EditStates
 from flightpath_server.main import Main as ServerMain
 
 from flightpath.workers.run_worker import RunWorker
+from flightpath.workers.precache_worker import PreCacheWorker
 
 def run():
     #
@@ -197,6 +202,23 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if darkdetect.isDark():
             self.on_color_scheme_changed()
 
+        #
+        # kickoff a precache worker to collect some info about files
+        #
+        QTimer.singleShot(1000, self._run_precacher)
+
+
+    def _run_precacher(self) -> None:
+        try:
+            worker = PreCacheWorker(self.state.cwd)
+            if self.threadpool:
+                worker.signals.messages.connect(self.statusBar().showMessage)
+                self.threadpool.start(worker, priority=QThread.LowestPriority.value)
+        except Exception:
+            import traceback
+            print(traceback.format_exc())
+
+
     def show_now_or_later(self, showable) -> None:
         if not hasattr(showable, "show"):
             raise ValueError(f"Cannot show a {showable}")
@@ -266,6 +288,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self._csvpath_config = paths.config
         return self._csvpath_config
 
+    def clear_csvpath_config(self) -> None:
+        self._csvpath_config = None
+
     @property
     def selected_file_path(self) -> str:
         return self._selected_file_path
@@ -308,7 +333,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.setWindowTitle(MainWindow.TITLE)
         icon = QIcon(fiut.make_app_path(f"assets{os.sep}icons{os.sep}icon.ico"))
         self.setWindowIcon(icon)
-        self.threadpool = QThreadPool()
+        #
+        # would it be better to call globalInstance() to get the main thread pool?
+        #
+        #self.threadpool = QThreadPool()
+        self.threadpool = QThreadPool.globalInstance()
 
         #
         # this should be Path() not None?
@@ -504,6 +533,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.content.toolbar.delimiter.activated.connect(self.on_set_delimiter)
         self.content.toolbar.quotechar.activated.connect(self.on_set_quotechar)
         self.content.toolbar.raw_source.clicked.connect(self.on_raw_source)
+        self.content.toolbar.file_info.clicked.connect(self.on_file_info)
         #
         #
         #
@@ -903,7 +933,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         template:str
     ) -> None:
         runner = RunWorker(
-            main=self,
             method=method,
             named_paths_name=named_paths_name,
             named_file_name=named_file_name,
@@ -1048,6 +1077,35 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         index = self.content.tab_widget.currentIndex()
         t = self.content.tab_widget.widget(index)
         t.toggle_grid_raw()
+
+    def on_file_info(self) -> None:
+        index = self.content.tab_widget.currentIndex()
+        t = self.content.tab_widget.widget(index)
+        path = t.objectName()
+
+
+        inspector = Inspector(main=self, filepath=path)
+        inspector.sample_size=50
+        inspector.from_line=1
+
+        t = fiut.make_app_path(f"assets{os.sep}help{os.sep}templates{os.sep}file_details.html")
+        html = HtmlGenerator.load_and_transform(t, inspector.info)
+
+        info = taut.find_tab(self.helper.help_and_feedback, "File Info")
+        if info is None:
+            info = QWidget()
+            info.setObjectName("FileInfo")
+            self.helper.help_and_feedback.addTab(info, "File Info")
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        info.setLayout(layout)
+        te = QTextEdit()
+        layout.addWidget(te)
+        te.setText(html)
+        taut.select_tab_widget(self.helper.help_and_feedback, info)
+        self.config.show_help()
+
+
 
     def on_save_sample(self) -> None:
         index = self.content.tab_widget.currentIndex()

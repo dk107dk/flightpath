@@ -13,6 +13,7 @@ from csvpath.util.config import Config
 from flightpath.widgets.clickable_label import ClickableLabel
 from .blank_form import BlankForm
 from .tabs.ckan_tab import CkanTab
+from .tabs.otlp_tab import OtlpTab
 from .tabs.sql_tab import SqlTab
 from .tabs.marquez_tab import MarquezTab
 from .tabs.scripts_tab import ScriptsTab
@@ -59,7 +60,12 @@ class ListenersForm(BlankForm):
             self.groups.setText(",".join(nf) )
         else:
             self.groups.setText(nf)
-        for k, v in self._group_tabs.items():
+        #for k, v in self._group_tabs.items():
+        for i, k in enumerate(self._group_tabs):
+            #
+            # should we disable tabs of integrations that haven't been selected?
+            #
+            v = self._group_tabs.get(k)
             if v is None:
                 continue
             v.populate()
@@ -70,8 +76,8 @@ class ListenersForm(BlankForm):
             groups = {}
             groups["ckan"] = CkanTab(form=self)
             groups["default"] = None
-            groups["marquez"] = MarquezTab(form=self)
-            groups["otlp"] = None
+            groups["openlineage"] = MarquezTab(form=self)
+            groups["otlp"] = OtlpTab(form=self)
             groups["scripts"] = ScriptsTab(form=self)
             groups["sftp"] = SftpTab(form=self)
             groups["sftpplus"] = SftpPlusTab(form=self)
