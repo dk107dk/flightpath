@@ -39,6 +39,7 @@ class ServerForm(BlankForm):
 
         self.shut_down_server = QPushButton("Shutdown FlightPath Server")
         layout.addRow("Shutdown server: ", self.shut_down_server)
+        self._enable_server_if()
 
         self.response_msg = QLabel("")
         self.response_msg.setStyleSheet("QLabel { font-size: 14pt;color:#222222;}")
@@ -55,10 +56,29 @@ class ServerForm(BlankForm):
         key = self.key.text()
         config.add_to_config("server", "host", host )
         config.add_to_config("server", "api_key", key )
+        self._enable_server_if()
 
+    def _server_is_enabled(self) -> bool:
+        host = self.host.text()
+        key = self.key.text()
         e = True if host and host.strip() != "" else False
         e = True if e and key and key.strip() != "" else False
-        self.shut_down_server.setEnabled(self._enableable())
+        return e and self._enableable()
+
+    def _enable_server_if(self) -> None:
+        if self._server_is_enabled():
+            self._enable_shutdown_server()
+        else:
+            self._disable_shutdown_server()
+
+    def _disable_shutdown_server(self) -> None:
+        self.shut_down_server.setEnabled(False)
+        self.shut_down_server.setText("Server is not available")
+
+    def _enable_shutdown_server(self) -> None:
+        self.shut_down_server.setEnabled(True)
+        self.shut_down_server.setText("Shutdown FlightPath Server")
+
 
     def _setup(self) -> None:
         self.host.textChanged.connect(self.main.on_config_changed)
@@ -76,10 +96,9 @@ class ServerForm(BlankForm):
         if key:
             self.key.setText(key)
 
-        self.shut_down_server.setEnabled(self._enableable(host=host, key=key))
-        self.response_msg.setText("")
+        self._enable_server_if()
 
-        if key:
+        if self._server_is_enabled():
             self._update_project_list()
 
     @property
@@ -109,10 +128,12 @@ class ServerForm(BlankForm):
         return config_str
 
     def _update_project_list(self) -> None:
+        if not self._server_is_enabled():
+            return
         self.proj_list.clear()
         names = self._get_project_names()
         if names is None:
-            raise RuntimeError("Could not refresh projects")
+            raise ValueError("Project names list cannot be None")
         for name in names:
             self.proj_list.addItem(name)
         if len(names) > 0:
@@ -147,9 +168,8 @@ class ServerForm(BlankForm):
 # api calls
 #====================
 
-
     def _upload_env(self, name:str) -> bool:
-        if not self._enableable():
+        if not self._server_is_enabled():
             meut.warning(
                 parent=self,
                 msg=f"Cannot upload env JSON because the server is off or there is insufficient information to make the request")
@@ -203,7 +223,7 @@ class ServerForm(BlankForm):
 
 
     def _upload_config(self, name:str) -> bool:
-        if not self._enableable():
+        if not self._server_is_enabled():
             meut.warning(
                 parent=self,
                 msg=f"Cannot upload config because the server is off or there is insufficient information to make the request")
@@ -249,7 +269,7 @@ class ServerForm(BlankForm):
         new_key_dialog.show()
 
     def _do_shutdown(self) -> None:
-        if not self._enableable():
+        if not self._server_is_enabled():
             meut.warning(
                 parent=self,
                 msg=f"Cannot shutdown because the server is off or there is insufficient information to make the request")
@@ -267,7 +287,8 @@ class ServerForm(BlankForm):
                 print(f"shutting down server response: {json}")
                 msg = json["message"] if "message" in json else json["detail"]
                 msg = f"Response: {response.status_code}: {msg}"
-                self.shut_down_server.setEnabled(False)
+                self._enable_server_if()
+                #self.shut_down_server.setEnabled(False)
             except Exception as ex:
                 import traceback
                 print(traceback.format_exc())
@@ -275,7 +296,7 @@ class ServerForm(BlankForm):
             self.response_msg.setText(msg)
 
     def _download_log(self, name:str) -> bool:
-        if not self._enableable():
+        if not self._server_is_enabled():
             meut.warning(
                 parent=self,
                 msg=f"Cannot download log because the server is off or there is insufficient information to make the request")
@@ -308,7 +329,7 @@ class ServerForm(BlankForm):
                 return False
 
     def _download_config(self, name:str) -> bool:
-        if not self._enableable():
+        if not self._server_is_enabled():
             meut.warning(
                 parent=self,
                 msg=f"Cannot download config because the server is off or there is insufficient information to make the request")
@@ -341,7 +362,7 @@ class ServerForm(BlankForm):
                 return False
 
     def _download_env(self, name:str) -> bool:
-        if not self._enableable():
+        if not self._server_is_enabled():
             meut.warning(
                 parent=self,
                 msg=f"Cannot download env file because the server is off or there is insufficient information to make the request")
@@ -373,22 +394,28 @@ class ServerForm(BlankForm):
                 print(msg)
                 return False
 
+    def _is_on_top(self) -> bool:
+        if self.main.config:
+            i = self.main.config.config_panel.forms_layout.currentIndex()
+            return i == 11
+        return False
 
     def _get_project_names(self) -> list[str]:
-        if not self._enableable():
-            meut.warning(
-                parent=self,
-                msg=f"Cannot download get project names because the server is off or there is insufficient information to make the request")
-            return
+        from csvpath.util.log_utility import LogUtility as lout
+        lout.log_brief_trace()
+        if not self._server_is_enabled():
+            if self._is_on_top():
+                meut.warning(
+                    parent=self,
+                    msg=f"Cannot get project names because the server is off or the request is incomplete")
+            return []
         with httpx.Client() as client:
             msg = None
             response = None
             try:
                 url = f"{self.host.text()}/projects/get_project_names"
-                print(f"getting project names from: {url}")
                 response = client.post(url, headers=self._headers)
                 json = response.json()
-                print(f"getting project names response: {json}")
                 return json
             except Exception as ex:
                 import traceback
@@ -398,7 +425,7 @@ class ServerForm(BlankForm):
                 return []
 
     def _delete_project(self, name:str) -> bool:
-        if not self._enableable():
+        if not self._server_is_enabled():
             meut.warning(
                 parent=self,
                 msg=f"Cannot delete project because the server is off or there is insufficient information to make the request")
@@ -410,9 +437,7 @@ class ServerForm(BlankForm):
             response = None
             try:
                 url = f"{self.host.text()}/projects/delete_project"
-                print(f"deleting project with: {url}")
                 response = client.post(url, json={"name":name}, headers=self._headers)
-                print(f"deleting project response: {response}")
                 if response.status_code == 200:
                     self._update_project_list()
                     json = response.json()
@@ -433,7 +458,7 @@ class ServerForm(BlankForm):
                 return False
 
     def _create_project(self, name:str) -> bool:
-        if not self._enableable():
+        if not self._server_is_enabled():
             meut.warning(
                 parent=self,
                 msg=f"Cannot create project because the server is off or there is insufficient information to make the request")
@@ -445,9 +470,7 @@ class ServerForm(BlankForm):
                 config_str = self._create_config_str(name)
                 project_data = {"name": name, "config_str": config_str}
                 url = f"{self.host.text()}/projects/new_project"
-                print(f"creating project with: {url}")
                 response = client.post(url, json=project_data, headers=self._headers)
-                print(f"creating project response: {response}")
                 if response.status_code == 200:
                     self._update_project_list()
                     json = response.json()
@@ -468,16 +491,17 @@ class ServerForm(BlankForm):
                 return False
 
     def _ping(self) -> int:
+        if self.host.text() is None or self.host.text().strip() == "":
+            return 400
         with httpx.Client() as client:
             msg = None
             try:
                 url = f"{self.host.text()}/"
                 print(f"pinging server with: {url}")
                 response = client.get(url, headers=self._headers)
-                print(f"pinging server response: {response}")
                 return response.status_code
             except Exception as ex:
-                import traceback
-                print(traceback.format_exc())
+                #import traceback
+                #print(traceback.format_exc())
                 return 500
 

@@ -35,7 +35,7 @@ class MessageUtility:
         return confirm == QMessageBox.Yes
 
     @classmethod
-    def warning(cls, *, parent:QWidget, msg:str, title:str) -> None:
+    def warning(cls, *, parent:QWidget, msg:str, title:str="") -> None:
         if title is None:
             title = "Warning"
         QMessageBox.warning(parent, title, msg)

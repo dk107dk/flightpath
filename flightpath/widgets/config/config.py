@@ -41,7 +41,6 @@ class Config(QWidget):
         self.panels.setLayout(self.stacked_layout)
 
         self.config_panel = ConfigPanel(main=self.main)
-        self.config_panel.setup_forms()
         self.stacked_layout.addWidget(self.config_panel)
 
         layout.addWidget(self.panels)
