@@ -851,7 +851,6 @@ $[*][ print("hello world") ]"""
         path = pathu.resep(path)
         o = osut.file_system_open_cmd()
         o = f'{o} "{path}"'
-        print(f"_open_project_dir: o: {o}")
         os.system(o)
 
     def _delete_file_navigator_item(self):
