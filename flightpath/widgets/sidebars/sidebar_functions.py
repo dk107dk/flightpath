@@ -74,9 +74,7 @@ class SidebarFunctions(QWidget):
 
     @property
     def docs(self):
-        if self._docs is None:
-            self._docs = self.main.sidebar_docs
-        return self._docs
+        return self.main.sidebar_docs
 
     @property
     def functions(self) -> FunctionCollector:

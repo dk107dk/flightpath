@@ -33,8 +33,24 @@ class SidebarDocs(QWidget):
         self.context_menu = None
         self._function_collector = functions if functions is not None else FunctionCollector()
         self.setStyleSheet("font-size: 13px; padding: 0px;")
-        self.description = None
+        self._description = None
         self.setup()
+
+    @property
+    def description(self) -> QTextEdit:
+        if self._description is None:
+            self._description = QTextEdit()
+            self._description.setReadOnly(True)
+            self._description.setText("")
+            s = "QTextEdit {"
+            s = f"{s}background-color:#{'#494949' if darkdetect.isDark() else 'fff'}"
+            s = s + ";}"
+            self._description.setStyleSheet(s)
+        return self._description
+
+    @description.setter
+    def description(self, d:QTextEdit) -> QTextEdit:
+        self._description = d
 
     @property
     def functions_collector(self) -> FunctionCollector:
@@ -57,16 +73,6 @@ class SidebarDocs(QWidget):
                 border-bottom:1px solid #aaa;
                 font-weight:600;
         }""")
-        #
-        # the function's name
-        #
-        self.description = QTextEdit()
-        self.description.setReadOnly(True)
-        self.description.setText("")
-        s = "QTextEdit {"
-        s = f"{s}background-color:#{'#494949' if darkdetect.isDark() else 'fff'}"
-        s = s + ";}"
-        self.description.setStyleSheet(s)
         #
         # display all the parts
         #
@@ -117,10 +123,10 @@ class SidebarDocs(QWidget):
         if path is None:
             #
             # if we have no path we should fail early. we fail silently because there are times
-            # when we don't have content to show, but don't want an error state. 
+            # when we don't have content to show, but don't want an error state.
             #
             print(f"Warning: no path to content in HtmlGenerator.display_info")
-            return 
+            return
         raw = HtmlGenerator.load_and_transform(path, f)
         html = ""
         styles = ""

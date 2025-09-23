@@ -283,7 +283,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @property
     def csvpath_config(self) -> CsvPathConfig:
         if self._csvpath_config is None:
-            print(f"main: no csvpath_config. our state: {self.state}. creating a new CsvPaths.")
             paths = CsvPaths()
             self._csvpath_config = paths.config
         return self._csvpath_config
@@ -334,11 +333,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         icon = QIcon(fiut.make_app_path(f"assets{os.sep}icons{os.sep}icon.ico"))
         self.setWindowIcon(icon)
         #
-        # would it be better to call globalInstance() to get the main thread pool?
         #
-        #self.threadpool = QThreadPool()
         self.threadpool = QThreadPool.globalInstance()
-
         #
         # this should be Path() not None?
         #
@@ -351,15 +347,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         central_widget.setHandleWidth(3)
         central_widget.setStyleSheet("QSplitter::handle { background-color: #f3f3f3;  margin:1px; }")
         self.setCentralWidget(central_widget)
-
         self._setup_central_widget()
         #
         # tracks the most recent main_layout index so we can return
         # from config or wherever.
         #
         self.last_main = 0
-        #self.config.config_panel.setup_forms()
-        #self.show()
         self.statusBar().showMessage(f"  Working directory: {self.state.cwd}")
 
         build_number = fiut.read_string(fiut.make_app_path(f"assets{os.sep}build_number.txt")).strip()
@@ -384,12 +377,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.content = Content(main=self)
         self.config = Config(main=self)
         #
-        # we need to get the buttons in the right states. they
-        # potentially change during setup, so this is a good place
-        # to true-up.
         #
-        #self.reset_config_toolbar()
-
         self.main_layout.addWidget(self.welcome)
         self.main_layout.addWidget(self.content)
         self.main_layout.addWidget(self.config)
@@ -405,18 +393,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
         self.sidebar = Sidebar(main=self)
         cw.addWidget(self.sidebar)
+        #cw.addWidget(self.main)
         cw.addWidget(self.main)
-        #
-        # exp
-        #
-        cw.addWidget(self.main)
-
         #
         # put a tab widget into 3rd column of splitter.
         # 1st tab has the rt_col vert spliter with three file trees
         # 2nd tab has the functions, qualifiers, and maybe docs?
         # hide 2nd tab unless csvpath file is open
-        #
         #
         # box for right column of main splitter
         #
@@ -424,7 +407,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.rt_tab_box_layout = QVBoxLayout()
         self.rt_tab_box.setLayout(self.rt_tab_box_layout)
         self.rt_tab_box_layout.setContentsMargins(1, 3, 4, 3)
-
         #
         # add right column to splitter
         #
@@ -434,7 +416,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.rt_tab_widget = QTabWidget()
         self.rt_tab_box_layout.addWidget(self.rt_tab_widget)
-
         #
         # make functions and help splitter
         #
@@ -460,7 +441,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # functions and docs setup below in the tab displaying logic.
         #
-
         #
         # set size policies. this explicitness may not be strictly necessary.
         #
@@ -472,7 +452,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.sidebar_rt_top.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.sidebar_rt_mid.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.sidebar_rt_bottom.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-
         #
         # hide the tabs if the main_layout is pointed at Welcome or Config
         #
@@ -910,7 +889,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             worker = MdWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_md_views)
             if finished_callback is not None:
-                print(f"main: read val dis: setting callback: {finished_callback}")
                 worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
             self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
