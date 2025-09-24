@@ -849,7 +849,7 @@ uvicorn = ">=0.34.3,<0.35.0"
 
 [package.source]
 type = "file"
-url = "../flightpath_server/dist/flightpath_server-0.1.1.tar.gz"
+url = "assets/flightpath_server-0.1.1.tar.gz"
 
 [[package]]
 name = "google-api-core"
@@ -3465,4 +3465,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.10,<3.14"
-content-hash = "42767d909b5c447d6fc8b2ff9380b06af216f48f47a23fb69602864274df813a"
+content-hash = "eff4319160aae6a16c4df6dcae14fc958bb4b0f4677011388ae589d493a72fb8"

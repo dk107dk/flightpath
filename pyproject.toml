@@ -13,7 +13,7 @@ darkdetect = "^0.8.0"
 csvpath = "^0.0.557"
 #csvpath = { path = "../csvpath/dist/csvpath-0.0.556.tar.gz" }
 #flightpath_server = "^0.1.1"
-flightpath_server = { path = "../flightpath_server/dist/flightpath_server-0.1.1.tar.gz" }
+flightpath_server = { path = "./assets/flightpath_server-0.1.1.tar.gz" }
 httpx = "^0.28.1"
 
 [tool.poetry.scripts]
