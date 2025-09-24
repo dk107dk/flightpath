@@ -99,6 +99,18 @@ def run():
         main = ServerMain()
         main.serve()
         return
+    else:
+        print(
+"""
+Loading FlightPath Data.
+
+To start an instance of FlightPath Server:
+  - Add a server ticket to the .flightpath file in your home directory
+  - Pass --server-mode when you start FlightPath from the command line
+
+For more information about FlightPath Server see https://www.flightpathdata.com.
+"""
+        )
     #
     # otherwise continue to load FlightPath Data
     #

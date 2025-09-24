@@ -107,6 +107,7 @@ This requirement will be removed in a future release.
         )
         args = parser.parse_args()
 
+        print(f"GateGuard: args: {args}")
         if args.server_mode is False:
             return False
 
