@@ -11,14 +11,19 @@ from .state import State
 #
 class GateGuard:
     TICKET_HASH = "0aca198ee7979a67105e1a1f69ddbff10f82c7d8d2f69a2a41a15d75ac2d1146"
-
+    #
+    # ticket uuid is: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+    #
     TICKET_REQUIRED = f"""
 You need a valid --server-mode ticket to use FlightPath Server. There is no
 charge for a ticket. Please email info@csvpath.org to get yours.
 
 When you have a ticket enter it into your .flightpath configuration file.
 .flightpath is in your home directory. It is a simple dictionary structure. Add
-"server_mode_ticket":"ticket value" to it."""
+"server_mode_ticket":"ticket value" to it.
+
+This requirement will be removed in a future release.
+"""
 
 
     ART = """
