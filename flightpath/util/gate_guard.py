@@ -114,6 +114,7 @@ This requirement will be removed in a future release.
         state = State()
         data = state.data
         key = data.get("server_mode_ticket")
+        print(f"Found server ticket: {key}")
         key = str(key)
         ret = False
         #
@@ -123,9 +124,10 @@ This requirement will be removed in a future release.
             if key == key.upper():
                 key = str(os.getenv(key))
             h = hashlib.sha256(key.encode()).hexdigest()
+            print(f"Server ticket hash: {h}")
             ret = h == GateGuard.TICKET_HASH
-        except Exception:
-            ...
+        except Exception as ex:
+            print(f"Error: {type(ex)}: {ex}")
         if ret is False:
             print(f"""{cls.TICKET_REQUIRED}
 
