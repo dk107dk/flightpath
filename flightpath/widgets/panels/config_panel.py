@@ -266,7 +266,12 @@ class ConfigPanel(QWidget):
                 elif s in ["projects", "env"]:
                     items = []
                 else:
-                    for pair in self.config._config.items(s):
+                    pairs = []
+                    try:
+                        pairs = self.config._config.items(s)
+                    except Exception:
+                        ...
+                    for pair in pairs:
                         #
                         # knock out keys that are likely to be distracting more than helpful
                         # for most users. anyone can edit the ini directly if they want these
