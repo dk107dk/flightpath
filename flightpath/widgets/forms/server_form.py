@@ -497,7 +497,6 @@ class ServerForm(BlankForm):
             msg = None
             try:
                 url = f"{self.host.text()}/"
-                print(f"pinging server with: {url}")
                 response = client.get(url, headers=self._headers)
                 return response.status_code
             except Exception as ex:

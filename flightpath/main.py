@@ -104,9 +104,7 @@ def run():
 """
 Loading FlightPath Data.
 
-To start an instance of FlightPath Server:
-  - Add a server ticket to the .flightpath file in your home directory
-  - Pass --server-mode when you start FlightPath from the command line
+To start an instance of FlightPath Server, pass --server-mode when you start FlightPath from the command line
 
 For more information about FlightPath Server see https://www.flightpathdata.com.
 """
@@ -114,6 +112,8 @@ For more information about FlightPath Server see https://www.flightpathdata.com.
     #
     # otherwise continue to load FlightPath Data
     #
+    from flightpath.hidden import Hidden
+    Hidden()
     app = QApplication(sys.argv)
     app.setApplicationName(MainWindow.TITLE)
     app.setStyle("Fusion")
@@ -274,7 +274,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def state_check(self) -> bool:
         self.state = State()
-        print(f"State is: {self.state}")
         if self.state.has_cwd():
             ...
         else:

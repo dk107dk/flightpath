@@ -93,7 +93,6 @@ This requirement will be removed in a future release.
 
     @classmethod
     def has_ticket(cls) -> bool|None:
-        print("\n")
         parser = argparse.ArgumentParser(
             description='FlightPath Server',
             epilog=cls.TICKET_REQUIRED
@@ -110,7 +109,17 @@ This requirement will be removed in a future release.
         print(f"GateGuard: running server-mode: {args.server_mode}")
         if args.server_mode is False:
             return False
-
+        #
+        # for now I'm removing the gate guard. i still think it is a good idea, but
+        # for first release I'm more worried about adding even a little friction.
+        # if we get indications that people are using the server we probably should
+        # add it back in to try get some engagement so we can be more sure they're on
+        # the right track, but first lets just get some usage.
+        #
+        return True
+        #
+        # the below works fine in testing. just not using atm.
+        #
         state = State()
         data = state.data
         key = data.get("server_mode_ticket")
