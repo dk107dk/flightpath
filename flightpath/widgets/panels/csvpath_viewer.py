@@ -16,7 +16,7 @@ from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
 from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit
 from flightpath.widgets.panels.table_model import TableModel
-from flightpath.workers.test_run import TestRunWorker
+from flightpath.workers.one_off_run import OneOffRunWorker
 from flightpath.util.printer import CapturePrinter
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 from flightpath.util.run_info import RunInfo
@@ -246,7 +246,7 @@ class CsvpathViewer(QWidget):
             #
             # hand off to the test_run worker
             #
-            worker = TestRunWorker(csvpath=path, csvpath_str=csvpath, printer=capture)
+            worker = OneOffRunWorker(csvpath=path, csvpath_str=csvpath, printer=capture)
 
             #
             # what are we updating here

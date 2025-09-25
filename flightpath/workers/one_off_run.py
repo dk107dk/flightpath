@@ -10,7 +10,7 @@ from .run_worker_signals import RunWorkerSignals
 # it is different from run worker because it uses CsvPath, not CsvPaths.
 # the assumption is that it is for dev/test work before deploy to prod.
 #
-class TestRunWorker(QRunnable):
+class OneOffRunWorker(QRunnable):
 
     def __init__(self, *,
         csvpath:CsvPath,
