@@ -117,6 +117,7 @@ class State:
         #
         if self._state_path is None:
             self._state_path = os.path.join(self.home, self.STATE_FILE_NAME)
+            print(f"State file path: {self._state_path}")
             if not os.path.exists(self._state_path):
                 import getpass
                 current_user = getpass.getuser()
@@ -145,6 +146,7 @@ class State:
 
     @state_path.setter
     def state_path(self, state_path:str) -> None:
+        print(f"Setting state path to {state_path}")
         self._state_path = state_path
 
     @property

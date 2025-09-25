@@ -274,6 +274,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def state_check(self) -> bool:
         self.state = State()
+        print(f"State is: {self.state}")
         if self.state.has_cwd():
             ...
         else:
