@@ -3,15 +3,13 @@ import traceback
 
 #
 # these files need to be referenced so they are found by PyInstaller
+# we do it with hiddenimports in the spec file too, but it has been a
+# challenge. very possibly we can take the backends out of this class
+# but it's not certain and now isn't the time to dig more.
 #
 class Hidden:
 
     def __init__(self, skip=True) -> None:
-        #if skip:
-        #    return
-        #
-        # external backends
-        #
         try:
             import paramiko
             import boto3
