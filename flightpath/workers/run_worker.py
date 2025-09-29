@@ -23,7 +23,7 @@ class RunWorker(QRunnable):
 
     #@Slot()
     def run(self):
-        self.signals.messages.emit("Running file {self.named_file_name} against {self.named_paths_name}")
+        self.signals.messages.emit(f"Running file {self.named_file_name} against {self.named_paths_name}")
         #
         # do run on paths
         #

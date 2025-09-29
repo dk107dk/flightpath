@@ -75,9 +75,15 @@ class CsvpathViewer(QWidget):
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.text_edit = CsvPathTextEdit(main=main, parent=self, editable=self.editable)
+        #
+        # consistent naming for stut
+        #
+        self.content_view = self.text_edit
+
         self.text_edit.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.text_edit.setReadOnly(editable == EditStates.UNEDITABLE)
         self.text_edit.setFont(QFont("Courier, monospace"))
+        stut.set_editable_background(self.text_edit)
 
         layout.addWidget(self.label)
         layout.addWidget(self.text_edit)
@@ -435,7 +441,7 @@ path = CsvPath(
              '''{csvpath_str}''')
 lines = path.collect()
 #
-# or
+# or do:
 #
 # path.fast-forward()
 #
@@ -443,6 +449,7 @@ lines = path.collect()
 #
 # for line in path.next():
 #    print(line)
+#
 #
 """
         layout = QVBoxLayout()

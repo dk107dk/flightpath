@@ -29,7 +29,7 @@ class ServerForm(BlankForm):
         layout = QFormLayout()
 
         self.host = QLineEdit()
-        layout.addRow("host with port: ", self.host)
+        layout.addRow("Host with port: ", self.host)
 
         self.key = QLineEdit()
         layout.addRow("API key: ", self.key)
@@ -401,8 +401,8 @@ class ServerForm(BlankForm):
         return False
 
     def _get_project_names(self) -> list[str]:
-        from csvpath.util.log_utility import LogUtility as lout
-        lout.log_brief_trace()
+        #from csvpath.util.log_utility import LogUtility as lout
+        #lout.log_brief_trace()
         if not self._server_is_enabled():
             if self._is_on_top():
                 meut.warning(

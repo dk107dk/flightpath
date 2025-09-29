@@ -485,6 +485,7 @@ class Sidebar(QWidget):
             self.stage_dialog = StageDataDialog(path=path, parent=self)
             self.stage_dialog.show_dialog()
         else:
+            print("invalid index in _stage_data")
             ... # should never happen, but what if it did?
 
     def _cut(self) -> None:
@@ -534,6 +535,7 @@ class Sidebar(QWidget):
             loader.load_paths(path)
 
     def _run_paths(self) -> None:
+        print(f"_run_paths called. not doing anything about it")
         ...
 
     def _renew_sidebars(self) -> None:

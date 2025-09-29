@@ -10,6 +10,16 @@ class TabsUtility:
                 return (i, widget)
         return None
 
+
+    @classmethod
+    def tabs(self, tabs) -> list[QWidget]:
+        ts = []
+        for i in range(tabs.count()):
+            widget = tabs.widget(i)
+            ts.append(widget)
+        return ts
+
+
     @classmethod
     def has_type(self, tabs, cls) -> bool:
         for i in range(tabs.count()):

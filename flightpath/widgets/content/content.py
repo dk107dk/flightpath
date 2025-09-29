@@ -76,6 +76,7 @@ class Content(ClosingTabsHolder):
         return True
 
     def close_all_tabs(self):
+        print("content: close all tabs!")
         #
         # if we're in a csvpath file that has changes we need to confirm we're discarding the changes
         #

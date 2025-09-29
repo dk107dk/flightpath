@@ -8,7 +8,7 @@
         <i>validation-mode</i> determines how errors are handled. It is crucial to getting the validation results you are looking for.
         </p>
         <p>
-            Validation mode overlays the config file's global errors settings on a csvpath-by-csvpath basis. In <i>config.ini</i> the settings are in the <i>[errors]</i> section under the <i>csvpath</i> and <i>csvpaths</i> keys.
+            Validation mode overlays the config file's global errors settings on a csvpath-by-csvpath basis. In <i>config.ini</i> the settings are in the <i>[errors]</i> section under the <i>csvpath</i> and <i>csvpaths</i> keys. Because validation mode is an overlay, you should use the negative form when you don't want an action to happen on error. You can create the negative form by prefixing with `no-`, as in `no-raise`.
         </p>
         <p>
             There are a number of options for <i>validation-mode</i>. You may select multiple of them using commas.
@@ -91,7 +91,7 @@
                 </td>
                 <td class='value border-ltr '>
 <code>
-    ~ validation-mode:print, fail ~
+    ~ validation-mode:print, fail, no-raise ~
     $[*][
        @a = 5
        random(1,3) == 2 -> @a = "five"
@@ -114,7 +114,7 @@
                 </td>
                 <td class='value border-ltr border-bottom code'>
 <code>
-    ~ files-mode: raise ~
+    ~ validation-mode: raise ~
     $[*][ line( wildcard(1000) ) ]
 </code>
                 </td>

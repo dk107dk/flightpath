@@ -115,7 +115,8 @@ class SidebarNamedFiles(QWidget):
             ...
             #self._show_welcome_but_do_not_deselect()
         else:
-            self.main.read_validate_and_display_file(editable=EditStates.NO_SAVE_NO_CTX)
+            self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
+            #self.main.read_validate_and_display_file(editable=EditStates.NO_SAVE_NO_CTX)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
     def refresh(self) -> None:

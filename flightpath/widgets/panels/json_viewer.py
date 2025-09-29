@@ -25,6 +25,7 @@ from flightpath.widgets.json_tree_model.json_tree_item import TreeItem
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.file_collector import FileCollector
 from flightpath.editable import EditStates
 
@@ -32,15 +33,20 @@ class KeyableTreeView(QTreeView):
 
     def __init__(self, parent=None, *, key_callback=None, save_callback=None, editable=EditStates.EDITABLE):
         super().__init__(parent)
-        self.key_callback = key_callback
-        self.save_callback = save_callback
-        self.editable = editable
-        if self.save_callback and editable == EditStates.EDITABLE:
-            save_shortcut_ctrl_save = QShortcut(QKeySequence("Ctrl+S"), self)
-            save_shortcut_cmd_save = QShortcut(QKeySequence("Command+S"), self)
-            save_shortcut_ctrl_save.activated.connect(self.save_callback)
-            save_shortcut_cmd_save.activated.connect(self.save_callback)
-        print(f"KeyableTreeView: init: editable: {self.editable}")
+        try:
+            self.key_callback = key_callback
+            self.save_callback = save_callback
+            self.editable = editable
+            if self.save_callback and editable == EditStates.EDITABLE:
+                save_shortcut_ctrl_save = QShortcut(QKeySequence("Ctrl+S"), self)
+                save_shortcut_cmd_save = QShortcut(QKeySequence("Command+S"), self)
+                save_shortcut_ctrl_save.activated.connect(self.save_callback)
+                save_shortcut_cmd_save.activated.connect(self.save_callback)
+            print(f"KeyableTreeView: init: editable: {self.editable}")
+            stut.set_editable_background(self)
+        except Exception:
+            import traceback
+            print(traceback.format_exc())
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.key_callback:
@@ -77,6 +83,8 @@ class JsonViewer(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.view = KeyableTreeView(key_callback=self.key_click, save_callback=self._save, editable=self.editable)
+        self.content_view = self.view
+
         #
         # blocks double click to edit
         # we want to enable edit in some cases to make copying easier. but if we aren't explicitly editable
@@ -93,10 +101,10 @@ class JsonViewer(QWidget):
         #
         #
         self.context_menu = None
-        if self.editable == EditStates.EDITABLE:
-            self.view.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.view.customContextMenuRequested.connect(self._show_context_menu)
-            self._setup_view_context_menu()
+        #if self.editable == EditStates.EDITABLE:
+        self.view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.view.customContextMenuRequested.connect(self._show_context_menu)
+        self._setup_view_context_menu()
         #
         # catch attempts to edit
         #
@@ -211,8 +219,24 @@ class JsonViewer(QWidget):
         self.save_action.triggered.connect(self._save)
         self.context_menu.addAction(self.save_action)
 
+    def _copy_back_question(self) -> None:
+        yes = meut.yesNo( parent=self, msg="You can't edit here. Copy back to project?", title="Copy file to project?")
+        if yes is True:
+            try:
+                name = self.objectName()
+                to_path = fiut.copy_results_back_to_cwd(main=self.main, from_path=name)
+                self.main.read_validate_and_display_file_for_path(to_path)
+                self.main.content.tab_widget.close_tab(name)
+            except Exception:
+                import traceback
+                print(traceback.format_exc())
+
     def _show_context_menu(self, position):
         if self.editable == EditStates.UNEDITABLE:
+            #
+            # if we aren't editable we need to ask the user if they want to copy back to the project.
+            #
+            self._copy_back_question()
             return
         index = self.view.indexAt(position)
         global_pos = self.view.viewport().mapToGlobal(position)

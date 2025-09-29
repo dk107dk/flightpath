@@ -82,6 +82,7 @@ class CsvPathTextEdit(QPlainTextEdit):
 
     def contextMenuEvent(self, event):
         if self.editable == EditStates.UNEDITABLE:
+            self._copy_back_question()
             return
         menu = self.createStandardContextMenu()
         #
@@ -157,10 +158,6 @@ class CsvPathTextEdit(QPlainTextEdit):
         submenu.addAction(logic_action)
         logic_action.triggered.connect(self.on_logic)
 
-        match_action = QAction("Match", self)
-        submenu.addAction(match_action)
-        match_action.triggered.connect(self.on_match)
-
         print_action = QAction("Print", self)
         submenu.addAction(print_action)
         print_action.triggered.connect(self.on_print)
@@ -213,7 +210,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         self.desaved()
 
     def on_test_data(self) -> None:
-        self._insert_mode("test-data:")
+        self._insert_mode("test-data: relative/path/to/file")
 
     def on_test_delimiter(self) -> None:
         self._insert_mode("test-delimiter:")
@@ -222,7 +219,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         self._insert_mode("test-quotechar:")
 
     def on_error(self) -> None:
-        self._insert_mode("error-mode:")
+        self._insert_mode("error-mode: full")
 
     def on_explain(self) -> None:
         self._insert_mode("explain-mode:")
@@ -231,16 +228,13 @@ class CsvPathTextEdit(QPlainTextEdit):
         self._insert_mode("files-mode:")
 
     def on_logic(self) -> None:
-       self._insert_mode("logic-mode:")
-
-    def on_match(self) -> None:
-       self._insert_mode("match-mode:")
+       self._insert_mode("logic-mode: AND")
 
     def on_print(self) -> None:
        self._insert_mode("print-mode:")
 
     def on_return(self) -> None:
-       self._insert_mode("return-mode:")
+       self._insert_mode("return-mode: matches")
 
     def on_run_mode(self) -> None:
        self._insert_mode("run-mode:")
@@ -252,10 +246,10 @@ class CsvPathTextEdit(QPlainTextEdit):
        self._insert_mode("transfer-mode:")
 
     def on_unmatched(self) -> None:
-       self._insert_mode("unmatched-mode:")
+       self._insert_mode("unmatched-mode: no-keep")
 
     def on_validation(self) -> None:
-       self._insert_mode("validation-mode:")
+       self._insert_mode("validation-mode: print, no-raise")
 
     def on_load(self) -> None:
         loader = CsvpathLoader(self.parent.main)
@@ -316,6 +310,19 @@ class CsvPathTextEdit(QPlainTextEdit):
             self.parent.open_file(path=path, data=None)
             self.parent.reset_saved()
 
+    def _copy_back_question(self, action="edit") -> None:
+        yes = meut.yesNo( parent=self, msg=f"You can't {action} here. Copy back to project?", title="Copy file to project?")
+        if yes is True:
+            try:
+                name = self.parent.objectName()
+                to_path = fiut.copy_results_back_to_cwd(main=self.main, from_path=name)
+                self.main.read_validate_and_display_file_for_path(to_path)
+                self.main.content.tab_widget.close_tab(name)
+            except Exception:
+                import traceback
+                print(traceback.format_exc())
+
+
     def on_save(self) -> None:
         #
         # if the path is under the inputs or archive we have to save-as, not just save
@@ -324,6 +331,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         # be sure to not save.
         #
         if self.editable == EditStates.UNEDITABLE:
+            self._copy_back_question()
             return
         path = self.parent.path
         ap = self.main.csvpath_config.archive_path
@@ -342,6 +350,7 @@ class CsvPathTextEdit(QPlainTextEdit):
 
     def on_run(self) -> None:
         if self.editable == EditStates.UNEDITABLE:
+            self._copy_back_question("run")
             return
         cursor = self.textCursor()
         position = cursor.position()
@@ -351,6 +360,7 @@ class CsvPathTextEdit(QPlainTextEdit):
 
     def on_append(self) -> None:
         if self.editable == EditStates.UNEDITABLE:
+            self._copy_back_question()
             return
         text = self.toPlainText()
         text = f"{text}\n\n---- CSVPATH ----\n\n~\n   id: \n~\n\n$[*][ yes() ]\n"

@@ -287,6 +287,9 @@ class SidebarArchive(QWidget):
         self.main.show_now_or_later(find)
 
     def _copy_results_back_to_cwd(self) -> None:
+        #
+        # TODO: this has been generalized in Fiut. switch to that.
+        #
         from_index = self.view.currentIndex()
         if from_index.isValid():
             from_path = self.model.filePath(from_index)

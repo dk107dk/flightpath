@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QMessageBox, QWidget, QInputDialog
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, Qt
 
 class MessageUtility:
 
@@ -23,16 +23,24 @@ class MessageUtility:
 
     @classmethod
     def yesNo(cls, *, parent:QWidget, msg:str, title:str="") -> bool:
+        box = QMessageBox(parent)
+        box.setText(title)
+        box.setInformativeText(msg)
+        box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        box.setDefaultButton(QMessageBox.No)
         #
-        # deprecated for camel-case sig. use yes_no()
+        # this line fixed what seems to have been a modality problem. it unblocks the
+        # ui but also gives yet another (3rd?) slightly different style of input/message
+        # dialog. also shadows the whole of FlightPath in a way we don't do elsewhere.
         #
-        confirm = QMessageBox.question(
-            parent,
-            title,
-            msg,
-            QMessageBox.Yes | QMessageBox.No,
-        )
-        return confirm == QMessageBox.Yes
+        # TODO: long-term we should figure out how to be consistent.
+        # it would also be nice to know why we had the problem. There's more information
+        # and suggestions to try re: the bug in Copilot from 29 sept 2025.
+        #
+        box.setWindowModality(Qt.WindowModal)
+        ret = box.exec()
+        ret = ret == QMessageBox.Yes
+        return ret
 
     @classmethod
     def warning(cls, *, parent:QWidget, msg:str, title:str="") -> None:

@@ -12,6 +12,7 @@ from PySide6.QtGui import QPixmap, QPainter
 from PySide6.QtSvg import QSvgRenderer
 
 from flightpath.util.style_utils import StyleUtility as stut
+from flightpath.editable import EditStates
 
 from .raw_viewer import RawViewer
 
@@ -32,8 +33,16 @@ class DataViewer(QWidget):
         self.main_layout = QStackedLayout()
         self.setLayout(self.main_layout)
         self.table_view = QTableView()
+        self.content_view = self.table_view
+
+        self.editable = EditStates.UNEDITABLE
+        self.table_view.editable = self.editable
+        stut.set_editable_background(self.table_view)
+
         self.table_view.hide()
         self.raw_view = RawViewer(self.main)
+        stut.set_editable_background(self.raw_view)
+
         self.main_layout.addWidget(self.table_view)
         self.main_layout.addWidget(self.raw_view)
         self.main_layout.setContentsMargins(0, 0, 0, 0)

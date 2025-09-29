@@ -3,11 +3,30 @@ from pathlib import Path
 
 from csvpath.util.nos import Nos
 from csvpath.util.file_readers import DataFileReader
+from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.path_util import PathUtility as pathu
 from .os_utility import OsUtility as osut
 
 class FileUtility:
     APP_PATH = None
+
+    @classmethod
+    def copy_results_back_to_cwd(self, *, main, from_path:str) -> str:
+        to_index = main.sidebar.file_navigator.currentIndex()
+        to_path = None
+        if to_index.isValid():
+            to_path = main.sidebar.proxy_model.filePath(to_index)
+        else:
+            to_path = main.state.cwd
+        to_nos = Nos(to_path)
+        if to_nos.isfile():
+            to_path = os.path.dirname(to_path)
+        to_path = FileUtility.deconflicted_path(to_path, f"{os.path.basename(from_path)}")
+        to_nos.path = to_path
+        with DataFileReader(from_path) as ffrom:
+            with DataFileWriter(path=to_path) as tto:
+                tto.write(ffrom.read())
+        return to_path
 
     @classmethod
     def read_string(cls, path) -> str:

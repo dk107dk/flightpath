@@ -42,6 +42,8 @@ class MdViewer(QWidget):
         self.saved = True
         self.path = None
         self.text_edit = None
+        self.content_view = None
+
         self._make_editor()
         layout.addWidget(self.text_edit)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -52,6 +54,7 @@ class MdViewer(QWidget):
         else:
             self.text_edit = RawTextEdit(main=self.main, parent=self, editable=self.editable)
         self.text_edit.setReadOnly(self.editable == EditStates.UNEDITABLE)
+        self.content_view = self.text_edit
         #
         # remove widget
         #

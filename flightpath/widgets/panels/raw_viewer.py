@@ -9,6 +9,7 @@ from csvpath.util.nos import Nos
 
 from flightpath.util.style_utils import StyleUtility as stut
 
+from flightpath.editable import EditStates
 
 class RawViewer(QWidget):
 
@@ -31,6 +32,11 @@ class RawViewer(QWidget):
         self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         self.text_edit = QPlainTextEdit(self)
+        self.content_view = self.text_edit
+        self.editable = EditStates.UNEDITABLE
+        self.text_edit.editable = self.editable
+        stut.set_editable_background(self.text_edit)
+
         self.text_edit.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.text_edit.setReadOnly(True)
         layout.addWidget(self.label)

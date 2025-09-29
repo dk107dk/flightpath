@@ -74,6 +74,8 @@ from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.util.style_utils import StyleUtility as stut
+
 from flightpath.util.state import State
 from flightpath.inspect.inspector import Inspector
 from flightpath.util.html_generator import HtmlGenerator
@@ -270,7 +272,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.sidebar_rt_top.update_style()
         self.sidebar_rt_mid.update_style()
         self.sidebar_rt_bottom.update_style()
-
+        #
+        # walk through the open files
+        #
+        for t in taut.tabs(self.content.tab_widget):
+            print(f"on_color_scheme_changed: t: {t}: {t.styleSheet()}")
+            stut.set_editable_background(t)
 
     def state_check(self) -> bool:
         self.state = State()
@@ -574,6 +581,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.statusBar().showMessage(self.state.cwd)
 
     def _on_rt_tab_changed(self) -> None:
+        print(f"rt_tab_changed. not doing anything about it.")
         ...
 
     def _rt_tabs_hide(self) -> None:
@@ -627,6 +635,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     @Slot(tuple)
     def update_json_views(self, worker_data):
+        print(f"main: update_json_views: {worker_data}, tabs: {self.content.tab_widget}")
         try:
             filepath, data, editable = worker_data   # pylint: disable=W0612
             if self.progress_dialog:
@@ -654,7 +663,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self._rt_tabs_hide()
         except Exception as e:
             print(f"Error opening json: {type(e)}: {e}")
-
+        print(f"main: done with update_json_views, tabs: {self.content.tab_widget}")
+        print(f"main: done with update_json_views, tabs: {self.content.tab_widget.count()}")
+        print(f"main: done with update_json_views, main_layout: {self.main_layout}")
+        print(f"main: done with update_json_views, main_layout index: {self.main_layout.currentIndex()}")
 
 
     @Slot(tuple)
@@ -838,6 +850,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         return self.read_validate_and_display_file_for_path(self.selected_file_path, editable=editable, finished_callback=finished_callback)
 
     def read_validate_and_display_file_for_path(self, path:str, editable=EditStates.EDITABLE, *, finished_callback=None) -> QRunnable:
+        print(f"read_validate_and_display_file_for_path 1")
         #
         # callbacks passed into this method should be watched closely. the find data by ref dialog
         # had trouble getting them to behave correctly.
@@ -879,6 +892,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         elif isfile and info.suffix() == "json":
+            print(f"main: opening a json file")
             worker = JsonDataWorker(path, self, editable=editable)
             if finished_callback is not None:
                 #
@@ -893,6 +907,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
+            print(f"main: started a json file worker")
         elif isfile and info.suffix() in ["md", "html", "txt"]:
             #
             # txt could be set in csv extensions. probably not, but possible. we
@@ -913,6 +928,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         else:
             print("Error: main.read_validate_and_display_file_for_path: cannot open file")
             self.clear_views()
+        print(f"read_validate_and_display_file_for_path 2")
         return worker
 
 
