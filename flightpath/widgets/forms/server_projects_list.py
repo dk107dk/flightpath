@@ -13,6 +13,8 @@ class ServerProjectsList(QListWidget):
         global_pos = self.mapToGlobal(pos)
 
         menu = QMenu(self)
+        refresh = menu.addAction("Refresh")
+        menu.addSeparator()
         download_config = menu.addAction("Download config")
         download_env = menu.addAction("Download env")
         download_log = menu.addAction("Download log")
@@ -25,6 +27,7 @@ class ServerProjectsList(QListWidget):
         delete_proj = menu.addAction("Delete project")
 
         # Connect actions to slots (functions)
+        refresh.triggered.connect(lambda: self.handle_action("refresh"))
         download_config.triggered.connect(lambda: self.handle_action("download_config"))
         download_env.triggered.connect(lambda: self.handle_action("download_env"))
         download_log.triggered.connect(lambda: self.handle_action("download_log"))
@@ -49,7 +52,12 @@ class ServerProjectsList(QListWidget):
             self.upload_config()
         elif action == "upload_env":
             self.upload_env()
+        elif action == "refresh":
+            self.refresh()
 
+
+    def refresh(self) -> None:
+        self.parent.populate()
 
 
     def select_item_by_name(self, name):

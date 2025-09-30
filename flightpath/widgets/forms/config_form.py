@@ -83,7 +83,7 @@ class ConfigForm(BlankForm):
         if not os.path.exists(path):
             Nos(os.path.dirname(path)).makedirs()
             with open(path, "w") as file:
-                json.dump({}, file)
+                json.dump({}, file, indent=2)
 
     def populate(self):
         config = self.config

@@ -1261,6 +1261,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def save_config_changes(self):
         try:
             self.config.config_panel.save_all_forms()
+            self.config.config_panel.populate_all_forms()
             self.reset_config_toolbar()
         except Exception as e:
             meut.message(title="Error saving config", msg=f"Error saving config: {e}")

@@ -114,6 +114,7 @@ class ServerForm(BlankForm):
         self.host.textChanged.connect(self.main.on_config_changed)
         self.key.textChanged.connect(self.main.on_config_changed)
         self.key.textChanged.connect(self._set_projects_path)
+        self.key.textChanged.connect(self._update_project_list)
         self.shut_down_server.clicked.connect(self._do_shutdown)
         self.create_new_key.clicked.connect(self._create_key)
 
@@ -454,7 +455,12 @@ class ServerForm(BlankForm):
                 url = f"{self.host.text()}/projects/get_project_names"
                 response = client.post(url, headers=self._headers)
                 json = response.json()
-                return json["names"]
+                if "names" in json:
+                    return json["names"]
+                elif "detail" in json:
+                    meut.warning( parent=self, msg=json["detail"], title="Error")
+                else:
+                    meut.warning( parent=self, msg=f"Could not complete the request: {json}", title="Error")
             except Exception as ex:
                 import traceback
                 print(traceback.format_exc())
