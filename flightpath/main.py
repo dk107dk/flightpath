@@ -592,6 +592,22 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.show_now_or_later(self.rt_tab_widget.tabBar())
         #self.rt_tab_widget.tabBar().show()
 
+    def question_config_close(self) -> None:
+        if (
+            self.config and
+            self.config.ready is True and
+            self.config.toolbar._button_save.isEnabled()
+        ):
+            save = QMessageBox.question(
+                self,
+                "Config changed",
+                "Save config changes?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if save == QMessageBox.Yes:
+                self.save_config_changes()
+            self.reset_config_toolbar()
+
     def _on_stack_change(self) ->None:
         i = self.main_layout.currentIndex()
         #
@@ -600,6 +616,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # ok.
         #
         if i != 2:
+            self.question_config_close()
+            """
             if (
                 self.config and
                 self.config.ready is True and
@@ -614,7 +632,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 if save == QMessageBox.Yes:
                     self.save_config_changes()
                 self.reset_config_toolbar()
-
+            """
         if i in [0, 2]:
             self._rt_tabs_hide()
         else:

@@ -94,9 +94,10 @@ class NewKeyDialog(QDialog):
                     key = response.json().get("api_key")
                 else:
                     msg = response.json().get("detail")
-                    msg = f"Cannot upload env. Server response: {response.status_code}: {msg}"
+                    msg = f"Cannot create a key. Server response: {response.status_code}: {msg}"
                     meut.warning(parent=self, title="Cannot create new API key", msg=msg)
                     self.reject()
+                    return
             except Exception as ex:
                 import traceback
                 print(traceback.format_exc())

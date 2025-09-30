@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from csvpath.util.config import Config
+from csvpath.util.box import Box
 from csvpath.util.nos import Nos
 from flightpath.util.os_utility import OsUtility as osut
 from .blank_form import BlankForm
@@ -68,11 +69,29 @@ class EnvForm(BlankForm):
         add_form_inputs_layout.addWidget(button)
         button.clicked.connect(self._on_click_add)
 
+        button = QPushButton("Reload file trees")
+        add_form_inputs_layout.addWidget(button)
+        button.clicked.connect(self._on_click_reload_helpers)
+
         add_form_layout.addRow("Add: ", add_form_inputs)
 
         self.refreshing = False
         self.refresh_table()
 
+    def _on_click_reload_helpers(self) -> None:
+        #
+        # we need to reload env vars, then reset stuff, esp. the right-side file trees
+        # to do that we have to clear the clients out of box so when the trees reload
+        # any clients needed have the right vars. and we need to prompt the user to save
+        # if they have changed any config.
+        #
+        # load_state_and_cd is a heavy operation because it repopulates the rt-side
+        # trees. can't think of a way around. we don't know any env vars impact the
+        # trees so we can't be more discriminating about what we reload.
+        #
+        self.main.question_config_close()
+        Box().empty_my_stuff()
+        self.main.load_state_and_cd()
 
     def refresh_table(self) -> None:
         self.refreshing = True

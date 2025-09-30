@@ -41,6 +41,7 @@ class SidebarArchive(QWidget):
         self.role = role
         self.main = main
         self.config = config
+        self.archive_path = None
         self.setMinimumWidth(300)
         self.context_menu = None
         self.view = None
@@ -55,8 +56,8 @@ class SidebarArchive(QWidget):
             layout.setSpacing(0)
             layout.setContentsMargins(1, 1, 1, 1)
 
-            archive_path = self.config.get(section="results", name="archive")
-            nos = Nos(archive_path)
+            self.archive_path = self.config.get(section="results", name="archive")
+            nos = Nos(self.archive_path)
             if not nos.dir_exists():
                 #
                 #
@@ -183,10 +184,19 @@ class SidebarArchive(QWidget):
     def _results_mani_path_for_path(self, path:str) -> str:
         if path is None:
             raise ValueError("Path cannot be None")
-        parts = pathu.parts(path)
+        print(f"sidebar arch: _results_mani_path_for_path: path: {path}")
+        #
+        # we need the archive path as one thing; otherwise, we're likely to have trouble with the protocol.
+        #
+
+        apath = path[len(self.archive_path)+1:]
+
+        parts = pathu.parts(apath)
+        parts = [self.archive_path] + parts
         sep = pathu.sep(path)
         maniparts = []
         found = False
+        print(f"sidebar arch: _results_mani_path_for_path: parts: {parts}")
         for part in parts:
             m = re.search(r"^.*\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(?:_\d)?", part)
             maniparts.append(part)
@@ -194,10 +204,14 @@ class SidebarArchive(QWidget):
                 found = True
                 break
         if found is False:
+            print(f"sidebar arch: not found: path: {path}, {maniparts}")
             self._find_manifest_below(maniparts, path)
+            print(f"sidebar arch: below?: path: {path}, {maniparts}")
         else:
             maniparts.append("manifest.json")
-        return sep[0].join(maniparts)
+        ret = sep[0].join(maniparts)
+        print(f"sidebar arch: done: {ret}, {maniparts}")
+        return ret
 
     def _find_manifest_below(self, maniparts:list[str], path:str) -> None:
         nos = Nos(path)
@@ -223,6 +237,7 @@ class SidebarArchive(QWidget):
 
 
     def _has_reference(self, path) -> bool:
+        print(f"sidebar arch: _has_reference: path 1: {path}")
         if path is None:
             raise ValueError("Path cannot be None")
         #
@@ -233,7 +248,9 @@ class SidebarArchive(QWidget):
         #
         #
         #
+        print(f"sidebar arch: _has_reference: path 2: {path}")
         manipath = self._results_mani_path_for_path(path)
+        print(f"sidebar arch: _has_reference: manipath: {manipath}")
         mani = None
         with DataFileReader(manipath) as file:
             mani = json.load(file.source)
@@ -247,6 +264,7 @@ class SidebarArchive(QWidget):
         if index.isValid():
             global_pos = self.view.viewport().mapToGlobal(position)
             path = self.model.filePath(index)
+            print(f"sidebar arch: _show_context_menu: path from index: {path}")
             self._last_path = path
             nos = Nos(path)
             #
@@ -265,6 +283,7 @@ class SidebarArchive(QWidget):
             else:
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
+                print(f"sidebar arch: _show_context_menu: path before _has_ref: {path}")
                 if self._has_reference(path) is False:
                     self.repeat_run_action.setVisible(True)
                 else:

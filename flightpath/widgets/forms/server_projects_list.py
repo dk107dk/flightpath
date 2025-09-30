@@ -52,7 +52,11 @@ class ServerProjectsList(QListWidget):
 
 
 
-
+    def select_item_by_name(self, name):
+        found_items = self.findItems(name, Qt.MatchExactly)
+        if found_items:
+            item_to_select = found_items[0]
+            self.setCurrentItem(item_to_select)
 
     def upload_config(self) -> None:
         proj = self.currentItem()
@@ -63,9 +67,6 @@ class ServerProjectsList(QListWidget):
         else:
             meut.message(msg="Please select a project", title="Select project")
 
-
-
-
     def upload_env(self) -> None:
         proj = self.currentItem()
         if proj:
@@ -74,13 +75,6 @@ class ServerProjectsList(QListWidget):
             self.parent._upload_env(name)
         else:
             meut.message(msg="Please select a project", title="Select project")
-
-
-
-
-
-
-
 
     def download_log(self) -> None:
         proj = self.currentItem()
