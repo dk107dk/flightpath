@@ -1,6 +1,8 @@
 import io
 import base64
 import httpx
+import hashlib
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
@@ -8,6 +10,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QPushButton,
     QLabel,
+    QScrollArea,
     QListWidget
 )
 from csvpath.util.config import Config
@@ -48,8 +51,35 @@ class ServerForm(BlankForm):
         self.proj_list = ServerProjectsList(self)
         layout.addRow("Projects for key: ", self.proj_list)
 
+        self.projects_path_area = QScrollArea()
+        self.projects_path_area.setWidgetResizable(True)
+        self.projects_path_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.projects_path_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.projects_path_area.setFixedHeight(33)
+        self.projects_path_area.setFixedWidth(384)
+        self.projects_path = QLabel()
+        self.projects_path.setText("")
+        self.projects_path.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.projects_path_area.setWidget(self.projects_path)
+
+        layout.addRow("Key directory: ", self.projects_path_area)
+
         self.setLayout(layout)
         self._setup()
+
+
+    def _set_projects_path(self) -> None:
+        key = self.key.text()
+        if key is None:
+            self.projects_path.setText("")
+            return
+        key = key.strip()
+        if key == "":
+            self.projects_path.setText("")
+            return
+        hashstr = hashlib.sha256(key.encode()).hexdigest()
+        self.projects_path.setText(hashstr)
+
 
     def add_to_config(self, config) -> None:
         host = self.host.text()
@@ -83,6 +113,7 @@ class ServerForm(BlankForm):
     def _setup(self) -> None:
         self.host.textChanged.connect(self.main.on_config_changed)
         self.key.textChanged.connect(self.main.on_config_changed)
+        self.key.textChanged.connect(self._set_projects_path)
         self.shut_down_server.clicked.connect(self._do_shutdown)
         self.create_new_key.clicked.connect(self._create_key)
 
@@ -95,6 +126,7 @@ class ServerForm(BlankForm):
         key = config.get(section="server", name="api_key")
         if key:
             self.key.setText(key)
+            self._set_projects_path()
 
         self._enable_server_if()
 
@@ -127,19 +159,22 @@ class ServerForm(BlankForm):
         #
         return config_str
 
-    def _update_project_list(self) -> None:
+    def _update_project_list(self, name=None) -> None:
         if not self._server_is_enabled():
             return
         self.proj_list.clear()
         names = self._get_project_names()
         if names is None:
             raise ValueError("Project names list cannot be None")
-        for name in names:
-            self.proj_list.addItem(name)
+        for n in names:
+            self.proj_list.addItem(n)
         if len(names) > 0:
-            item = self.proj_list.item(0)
-            if item:
-                self.proj_list.setCurrentItem(item)
+            if name is not None:
+                self.proj_list.select_item_by_name(name)
+            else:
+                item = self.proj_list.item(0)
+                if item:
+                    self.proj_list.setCurrentItem(item)
 
     def _write_to(self, name:str, content:str) -> None:
         to_index = self.main.sidebar.file_navigator.currentIndex()
@@ -210,7 +245,10 @@ class ServerForm(BlankForm):
                 if response.status_code == 200:
                     return True
                 else:
-                    msg = response.json()["detail"]
+                    msg = response.json()
+                    print(f"_upload_env: msg 1: {msg}")
+                    msg = ["detail"]
+                    print(f"_upload_env: msg 2: {msg}")
                     msg = f"Cannot upload env. Server response: {response.status_code}: {msg}"
                     meut.warning(parent=self, title="Cannot upload env JSON", msg=msg)
             except Exception as ex:
@@ -416,7 +454,7 @@ class ServerForm(BlankForm):
                 url = f"{self.host.text()}/projects/get_project_names"
                 response = client.post(url, headers=self._headers)
                 json = response.json()
-                return json
+                return json["names"]
             except Exception as ex:
                 import traceback
                 print(traceback.format_exc())
@@ -472,7 +510,7 @@ class ServerForm(BlankForm):
                 url = f"{self.host.text()}/projects/new_project"
                 response = client.post(url, json=project_data, headers=self._headers)
                 if response.status_code == 200:
-                    self._update_project_list()
+                    self._update_project_list(name)
                     json = response.json()
                     meut.message(msg=json.get('message'), title="Created project")
                     return True
