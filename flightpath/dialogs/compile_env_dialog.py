@@ -175,7 +175,7 @@ class CompileEnvDialog(QDialog):
             n = self.table_of_sending.item(row, 0)
             v = self.table_of_sending.item(row, 1)
             _[n.text()] = v.text()
-        s = json.dumps(_)
+        s = json.dumps(_, indent=2)
         self.config_str = s
         self.accept()
 
