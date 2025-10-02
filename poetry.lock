@@ -652,14 +652,14 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "csvpath"
-version = "0.0.559"
+version = "0.0.560"
 description = "A data preboarding framework for managing and validating CSV, Excel, and other tabular data files using a Collect, Store, Validate, Publish pattern to create a trusted publisher for downstream data consumers."
 optional = false
 python-versions = "<4.0,>3.10"
 groups = ["main"]
 files = [
-    {file = "csvpath-0.0.559-py3-none-any.whl", hash = "sha256:4cc1b01a7002abc7cce39aa8777e36322b635ba40012b96be2aa4ec700f6c4d1"},
-    {file = "csvpath-0.0.559.tar.gz", hash = "sha256:05943e5e913b3c82e24d5e11ca5002b2f1b0062d66715e2a874d6b10b0e43c5f"},
+    {file = "csvpath-0.0.560-py3-none-any.whl", hash = "sha256:cced95c708655853698d7550877918685013fbf1975e4aea65ff46ac967ab444"},
+    {file = "csvpath-0.0.560.tar.gz", hash = "sha256:01ef098cd76d663fe41bc941bdaf6ebbb8542f4ff10d4b487b9adcaaa0465fa0"},
 ]
 
 [package.dependencies]
@@ -844,24 +844,24 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "htt
 
 [[package]]
 name = "flightpath-server"
-version = "0.1.3"
+version = "0.1.4"
 description = "A DataOps server for FlightPath"
 optional = false
 python-versions = ">3.10,<3.14"
 groups = ["main"]
 files = [
-    {file = "flightpath_server-0.1.3.tar.gz", hash = "sha256:96ca160498f1ef58f545882872c02459c6c7b7c6a941fcae35a3d67745902c54"},
+    {file = "flightpath_server-0.1.4.tar.gz", hash = "sha256:a69cedfd82529892ae3e64778972d18d6caf6e61e46f95bd33efc30bf8e87bf1"},
 ]
 
 [package.dependencies]
-csvpath = ">=0.0.559,<0.0.560"
+csvpath = ">=0.0.560,<0.0.561"
 fastapi = ">=0.115.13,<0.116.0"
 python-json-logger = ">=3.3.0,<4.0.0"
 uvicorn = ">=0.34.3,<0.35.0"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_server-0.1.3.tar.gz"
+url = "assets/flightpath_server-0.1.4.tar.gz"
 
 [[package]]
 name = "google-api-core"
@@ -3530,4 +3530,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.10,<3.14"
-content-hash = "af30f48f3c0980906eff0dcb018990298aade8fff3e3aa5bb3220b09ade1f292"
+content-hash = "d9fdf294ca72fc96f7bac29899646627b31a9442aef87676d3afeaa958253ea9"
