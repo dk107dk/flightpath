@@ -249,18 +249,18 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.40.43"
+version = "1.40.44"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "boto3-1.40.43-py3-none-any.whl", hash = "sha256:c5d64ba2fb2d90c33c3969f3751869c45746d5efb5136e4cc619e3630ece89a3"},
-    {file = "boto3-1.40.43.tar.gz", hash = "sha256:9ad9190672ce8736898bec2d94875aea6ae1ead2ac6d158e01d820f3ff9c23e0"},
+    {file = "boto3-1.40.44-py3-none-any.whl", hash = "sha256:281ddf688951773a98161ccb34c54c6376b2ecc7028ab99d77483df5990b448c"},
+    {file = "boto3-1.40.44.tar.gz", hash = "sha256:84ade2a253e5445902d2cb2064f48aedf9ba83d6f863244266c2e36c2f190cec"},
 ]
 
 [package.dependencies]
-botocore = ">=1.40.43,<1.41.0"
+botocore = ">=1.40.44,<1.41.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.14.0,<0.15.0"
 
@@ -269,14 +269,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.40.43"
+version = "1.40.44"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "botocore-1.40.43-py3-none-any.whl", hash = "sha256:1639f38999fc0cf42c92c5c83c5fbe189a4857a86f55b842be868e3283c6d3bb"},
-    {file = "botocore-1.40.43.tar.gz", hash = "sha256:d87412dc1ea785df156f412627d3417c9f9eb45601fd0846d8fe96fe3c78b630"},
+    {file = "botocore-1.40.44-py3-none-any.whl", hash = "sha256:6fa7274cdb69be7c7b3ce6ff46a7c3e35e270f259dd77ee3f8ad8c584352262b"},
+    {file = "botocore-1.40.44.tar.gz", hash = "sha256:8f6f96ef053dcdfe79c14dfee303c0d381608c111696862fafc6e38402ccf8fe"},
 ]
 
 [package.dependencies]
@@ -652,14 +652,14 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "csvpath"
-version = "0.0.560"
+version = "0.0.561"
 description = "A data preboarding framework for managing and validating CSV, Excel, and other tabular data files using a Collect, Store, Validate, Publish pattern to create a trusted publisher for downstream data consumers."
 optional = false
 python-versions = "<4.0,>3.10"
 groups = ["main"]
 files = [
-    {file = "csvpath-0.0.560-py3-none-any.whl", hash = "sha256:cced95c708655853698d7550877918685013fbf1975e4aea65ff46ac967ab444"},
-    {file = "csvpath-0.0.560.tar.gz", hash = "sha256:01ef098cd76d663fe41bc941bdaf6ebbb8542f4ff10d4b487b9adcaaa0465fa0"},
+    {file = "csvpath-0.0.561-py3-none-any.whl", hash = "sha256:99540130ceba0fedc387ba3edbe2a0940e55354b091687e4a9ad6e7781fbb044"},
+    {file = "csvpath-0.0.561.tar.gz", hash = "sha256:27af0a6c496efcab4606b6540b3c58ec3bb721bc463de4ca7758b4d914e3db3e"},
 ]
 
 [package.dependencies]
@@ -689,6 +689,9 @@ smart-open = ">=7.1.0,<8.0.0"
 sqlalchemy = ">=2.0.38,<3.0.0"
 tabulate = ">=0.9.0,<0.10.0"
 validators = ">=0.34.0,<0.35.0"
+
+[package.extras]
+pandas = ["pandas (>=2.2.2,<3.0.0)"]
 
 [[package]]
 name = "darkdetect"
@@ -844,35 +847,35 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "htt
 
 [[package]]
 name = "flightpath-server"
-version = "0.1.4"
+version = "0.1.5"
 description = "A DataOps server for FlightPath"
 optional = false
 python-versions = ">3.10,<3.14"
 groups = ["main"]
 files = [
-    {file = "flightpath_server-0.1.4.tar.gz", hash = "sha256:a69cedfd82529892ae3e64778972d18d6caf6e61e46f95bd33efc30bf8e87bf1"},
+    {file = "flightpath_server-0.1.5.tar.gz", hash = "sha256:b1d18ffc05da47b5d3ee93295127c978d0c79935f8dedb74cd216c8fa507f777"},
 ]
 
 [package.dependencies]
-csvpath = ">=0.0.560,<0.0.561"
+csvpath = ">=0.0.561,<0.0.562"
 fastapi = ">=0.115.13,<0.116.0"
 python-json-logger = ">=3.3.0,<4.0.0"
 uvicorn = ">=0.34.3,<0.35.0"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_server-0.1.4.tar.gz"
+url = "assets/flightpath_server-0.1.5.tar.gz"
 
 [[package]]
 name = "google-api-core"
-version = "2.25.1"
+version = "2.25.2"
 description = "Google API client core library"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "google_api_core-2.25.1-py3-none-any.whl", hash = "sha256:8a2a56c1fef82987a524371f99f3bd0143702fecc670c72e600c1cda6bf8dbb7"},
-    {file = "google_api_core-2.25.1.tar.gz", hash = "sha256:d2aaa0b13c78c61cb3f4282c464c046e45fbd75755683c9c525e6e8f7ed0a5e8"},
+    {file = "google_api_core-2.25.2-py3-none-any.whl", hash = "sha256:e9a8f62d363dc8424a8497f4c2a47d6bcda6c16514c935629c257ab5d10210e7"},
+    {file = "google_api_core-2.25.2.tar.gz", hash = "sha256:1c63aa6af0d0d5e37966f157a77f9396d820fba59f9e43e9415bc3dc5baff300"},
 ]
 
 [package.dependencies]
@@ -3530,4 +3533,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.10,<3.14"
-content-hash = "d9fdf294ca72fc96f7bac29899646627b31a9442aef87676d3afeaa958253ea9"
+content-hash = "19b28fe4b0862ee83ab3dcc751aeb1c2a608eaa8fe1ca299ed01059a8ccabf0a"
