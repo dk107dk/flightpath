@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+import traceback
 
 from pathlib import Path
 from PySide6.QtCore import Qt, QModelIndex
@@ -311,7 +312,6 @@ class ConfigPanel(QWidget):
             try:
                 form.add_to_config(self.config) #self.metadata)
             except:
-                import traceback
                 print(traceback.format_exc())
         print(f"configpanel: saving config: {self.config.configpath}")
         self.config.save_config()

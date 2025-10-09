@@ -68,6 +68,12 @@ class MdViewer(QWidget):
             w.setParent(None)
             w.deleteLater()
         #
+        # printouts.txt is never editable. other .txt, .md, .html always are because
+        # they never to to the right
+        #
+        stut.set_editable_background(self.text_edit)
+
+        #
         # add and show
         #
         self.layout().addWidget(self.text_edit)

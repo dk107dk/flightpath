@@ -1,3 +1,4 @@
+import os
 import io
 import base64
 import httpx
@@ -186,12 +187,12 @@ class ServerForm(BlankForm):
             to_path = self.main.state.cwd
         to_nos = Nos(to_path)
         if to_nos.isfile():
-            to_nos.path = os.path.dirname(to_path)
+            to_path = os.path.dirname(to_path)
+            to_nos = Nos(to_path)
         to_path = fiut.deconflicted_path(to_path, name)
         to_nos.path = to_path
         if to_nos.exists():
             raise RuntimeError(f"Path cannot exist: {to_nos.path}")
-        print(f"writing to: {to_path}")
         with DataFileWriter(path=to_path) as tto:
             tto.write(content)
         return to_path
@@ -518,7 +519,6 @@ class ServerForm(BlankForm):
                 if response.status_code == 200:
                     self._update_project_list(name)
                     json = response.json()
-                    meut.message(msg=json.get('message'), title="Created project")
                     return True
                 else:
                     meut.message(msg=f"Could not create project. Return code: {response.status_code}", title="Could not create project")

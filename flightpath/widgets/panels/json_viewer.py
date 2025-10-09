@@ -42,7 +42,6 @@ class KeyableTreeView(QTreeView):
                 save_shortcut_cmd_save = QShortcut(QKeySequence("Command+S"), self)
                 save_shortcut_ctrl_save.activated.connect(self.save_callback)
                 save_shortcut_cmd_save.activated.connect(self.save_callback)
-            print(f"KeyableTreeView: init: editable: {self.editable}")
             stut.set_editable_background(self)
         except Exception:
             import traceback
@@ -70,7 +69,6 @@ class JsonViewer(QWidget):
         self.main = main
         self.editable = editable
         self._shown_no_edit_msg = None
-        print(f"JsonViewer: init: editable: {self.editable}")
         #
         # sets the font size
         #

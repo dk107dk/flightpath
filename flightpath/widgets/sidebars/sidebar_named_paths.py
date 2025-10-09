@@ -121,7 +121,8 @@ class SidebarNamedPaths(QWidget):
     def refresh(self) -> None:
         if self.view:
             layout = self.layout()  # Get the existing layout
-            layout.removeWidget(self.view)
+            if layout:
+                layout.removeWidget(self.view)
             self.view.deleteLater()  # Delete the old widget
             self.setup()
 

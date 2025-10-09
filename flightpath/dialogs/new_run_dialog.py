@@ -319,7 +319,7 @@ class NewRunDialog(QDialog):
             method = NewRunDialog.METHODS.get(self.method),
             named_paths_name = self.named_paths_name ,
             named_file_name = self.named_file_name,
-            template = self.template
+            template = template
         )
         self.close()
         return

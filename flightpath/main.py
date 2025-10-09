@@ -276,7 +276,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # walk through the open files
         #
         for t in taut.tabs(self.content.tab_widget):
-            print(f"on_color_scheme_changed: t: {t}: {t.styleSheet()}")
             stut.set_editable_background(t)
 
     def state_check(self) -> bool:
@@ -581,7 +580,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.statusBar().showMessage(self.state.cwd)
 
     def _on_rt_tab_changed(self) -> None:
-        print(f"rt_tab_changed. not doing anything about it.")
+        print(f"rt_tab_changed. not reacting.")
         ...
 
     def _rt_tabs_hide(self) -> None:
@@ -653,7 +652,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     @Slot(tuple)
     def update_json_views(self, worker_data):
-        print(f"main: update_json_views: {worker_data}, tabs: {self.content.tab_widget}")
         try:
             filepath, data, editable = worker_data   # pylint: disable=W0612
             if self.progress_dialog:
@@ -712,7 +710,21 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         view = taut.find_tab(self.content.tab_widget, filepath)
         if view is None:
             editable = editable if editable is not None else EditStates.EDITABLE
-            view = MdViewer(main=self, editable=editable)
+            #
+            # the displaying:bool argument determines if .md or .txt. odd, but workable.
+            # it doesn't affect the editability of the file.
+            #
+            displaying = True
+            #
+            # being over careful because this is just a fix, not new work
+            #
+            try:
+                _, ext = os.path.splitext(filepath)
+                if ext == "txt":
+                    displaying = False
+            except Exception:
+                ...
+            view = MdViewer(main=self, editable=editable, displaying=displaying)
             view.setObjectName(filepath)
             #
             # TODO: oddly, we use the worker to open and then just open again
@@ -910,7 +922,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         elif isfile and info.suffix() == "json":
-            print(f"main: opening a json file")
             worker = JsonDataWorker(path, self, editable=editable)
             if finished_callback is not None:
                 #
@@ -925,7 +936,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
-            print(f"main: started a json file worker")
         elif isfile and info.suffix() in ["md", "html", "txt"]:
             #
             # txt could be set in csv extensions. probably not, but possible. we
@@ -946,7 +956,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         else:
             print("Error: main.read_validate_and_display_file_for_path: cannot open file")
             self.clear_views()
-        print(f"read_validate_and_display_file_for_path 2")
         return worker
 
 
@@ -1106,7 +1115,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         index = self.content.tab_widget.currentIndex()
         t = self.content.tab_widget.widget(index)
         path = t.objectName()
-
 
         inspector = Inspector(main=self, filepath=path)
         inspector.sample_size=50

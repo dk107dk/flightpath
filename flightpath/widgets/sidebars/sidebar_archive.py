@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import re
+import traceback
 from pathlib import Path
 
 from PySide6.QtWidgets import (
@@ -126,11 +127,13 @@ class SidebarArchive(QWidget):
             self.model.set_style(self.view.style())
         except Exception as e:
             print(f"{type(e)} error in archive: {e}")
+            print(traceback.format_exc())
 
     def refresh(self) -> None:
         if self.view:
             layout = self.layout()  # Get the existing layout
-            layout.removeWidget(self.view)
+            if layout:
+                layout.removeWidget(self.view)
             self.view.deleteLater()  # Delete the old widget
             self.setup()
 

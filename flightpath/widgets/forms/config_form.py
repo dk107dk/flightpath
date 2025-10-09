@@ -42,12 +42,17 @@ class ConfigForm(BlankForm):
 
     def add_to_config(self, config) -> None:
         path = self.config_dir_path.text()
+        if path is None or path.strip() == "":
+            path = f"config{os.sep}config.ini"
+        elif not path.endswith(f"{os.sep}config.ini"):
+            path = f"{path}{os.sep}config.ini"
         self.config.add_to_config("config", "path", path )
         self.config.add_to_config("config", "allow_var_sub", self.allow_var_sub.currentText() )
         path = self.var_sub_source.text()
-        path = ConfigForm.make_path(path=path, cwd=self.main.state.cwd, current_project=self.main.state.current_project)
-        if path and path.strip() not in ["", "env"]:
-            self.assure_env_path(path)
+        path = "env" if path is None or path.strip() == "" else path
+        if path != "env":
+            path = ConfigForm.make_path(path=path, cwd=self.main.state.cwd, current_project=self.main.state.current_project)
+            path = self.assure_env_path(path)
         self.config.add_to_config("config", "var_sub_source", path )
         path = self.var_sub_source.setText(path)
 
@@ -79,11 +84,21 @@ class ConfigForm(BlankForm):
             path = f"{cwd}{os.sep}config{os.sep}{path}"
         return path
 
-    def assure_env_path(self, path:str) -> None:
+    def assure_env_path(self, path:str) -> str:
+        if path is None:
+            path = f"config{os.sep}env.json"
+        if path.endswith(f"{os.sep}config.ini"):
+            path = f"config{os.sep}env.json"
+        if not path.endswith(".json"):
+            path = f"{path}.json"
+            self.var_sub_source.setText(path)
         if not os.path.exists(path):
-            Nos(os.path.dirname(path)).makedirs()
+            d = os.path.dirname(path)
+            if not os.path.exists(d):
+                Nos(d).makedirs()
             with open(path, "w") as file:
                 json.dump({}, file, indent=2)
+        return path
 
     def populate(self):
         config = self.config
