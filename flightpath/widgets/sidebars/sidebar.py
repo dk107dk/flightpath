@@ -21,6 +21,7 @@ from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 from csvpath.util.path_util import PathUtility as pathu
 
+from flightpath.widgets.config.config import Config
 from flightpath.dialogs.stage_data_dialog import StageDataDialog
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.clickable_label import ClickableLabel
@@ -122,6 +123,11 @@ class Sidebar(QWidget):
             return
         self.main.state.current_project = proj
         self._set_project_from_state()
+        #
+        # reset the csvpaths config and our config panel
+        #
+        self.main.clear_csvpath_config()
+        self.main.cancel_config_changes()
 
     def _set_project_from_state(self) -> None:
         self.main.load_state_and_cd()

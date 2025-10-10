@@ -3,6 +3,7 @@ import time
 import darkdetect
 from csvpath import CsvPath
 from csvpath import CsvPaths
+from csvpath.util.file_readers import DataFileReader
 
 class Inspector:
 
@@ -133,6 +134,15 @@ class Inspector:
     def compile_scan(self) -> str:
         s = None
         if self._from_line:
+            if self._from_line == 1 and self.filepath is not None:
+                with DataFileReader(self.filepath) as file:
+                    i = 0
+                    self._from_line = 0
+                    for line in file.source:
+                        if i > 0 and line.strip() != "":
+                            self._from_line = 1
+                            break
+                        i += 1
             s = self._from_line
         if self._sample_size:
             if s is None:
@@ -209,7 +219,7 @@ ${filepath}[{scan}][
         return self.path.variables.get(f"{i}_types")
 
     def is_distinct(self, i:int, header) -> int:
-        if self.sample_size is None:
+        if self.data_lines < self.sample_size or self.sample_size is None:
             return self.path.variables.get(f"{i}_uniques") == self.data_lines
         else:
             return self.path.variables.get(f"{i}_uniques") == self.sample_size
@@ -228,7 +238,10 @@ ${filepath}[{scan}][
         return ""
 
     def max_val(self, i:int, header) -> int|float:
-        if "decimal" in self.header_types(i, header) or "integer" in self.header_types(i, header):
+        _ = self.header_types(i, header)
+        if not _:
+            return ""
+        if "decimal" in _ or "integer" in _:
             i = self.path.variables.get(f"{i}_max")
             if not i:
                 return ""
@@ -239,6 +252,8 @@ ${filepath}[{scan}][
 
     def is_not_none(self, i:int, header) -> bool:
         t = self.path.variables.get(f"{i}_types")
+        if t is None:
+            return False
         return "none" not in t
 
 

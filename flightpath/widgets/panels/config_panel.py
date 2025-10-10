@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+import traceback
 
 from pathlib import Path
 from PySide6.QtCore import Qt, QModelIndex
@@ -164,10 +165,11 @@ class ConfigPanel(QWidget):
             self.main.config.show_help_for_form("inputs", fallback=fallback)
             self.forms_layout.setCurrentIndex(7)
             self.title.setText("Inputs")
-        elif form == "listeners" or parent == "listeners":
+        elif form in ["integrations", "listeners"] or parent in ["integrations", "listeners"]:
             self.main.config.show_help_for_form("listeners", fallback=fallback)
             self.forms_layout.setCurrentIndex(8)
-            self.title.setText("Listeners")
+            self.title.setText("Integrations")
+            #self.title.setText("Listeners")
         elif form == "logging" or parent == "logging":
             self.main.config.show_help_for_form("logging", fallback=fallback)
             self.forms_layout.setCurrentIndex(9)
@@ -191,7 +193,10 @@ class ConfigPanel(QWidget):
             tree.setIndentation(8)
             items = []
             for key, values in self.configurables.items():
+                if key == "listeners":
+                    key = "integrations"
                 item = QTreeWidgetItem([key])
+
                 for value in values:
                     child = QTreeWidgetItem([value])
                     item.addChild(child)
@@ -311,7 +316,6 @@ class ConfigPanel(QWidget):
             try:
                 form.add_to_config(self.config) #self.metadata)
             except:
-                import traceback
                 print(traceback.format_exc())
         print(f"configpanel: saving config: {self.config.configpath}")
         self.config.save_config()

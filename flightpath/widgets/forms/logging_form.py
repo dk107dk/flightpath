@@ -39,9 +39,8 @@ class LoggingForm(BlankForm):
         config.add_to_config("logging", "log_file_size", self.log_file_size.text() )
         config.add_to_config("logging", "log_files_to_keep", self.log_files_to_keep.text() )
         config.add_to_config("logging", "log_file", self.path.text() )
-
-        self.config.add_to_config("logging", "csvpath", self.csvpath_level.currentText() )
-        self.config.add_to_config("logging", "csvpaths", self.csvpaths_level.currentText() )
+        config.add_to_config("logging", "csvpath", self.csvpath_level.currentText() )
+        config.add_to_config("logging", "csvpaths", self.csvpaths_level.currentText() )
 
 
     def _setup(self) -> None:

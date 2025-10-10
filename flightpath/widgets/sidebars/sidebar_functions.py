@@ -205,7 +205,8 @@ class SidebarFunctions(QWidget):
     def refresh(self) -> None:
         if self.view:
             layout = self.layout()
-            layout.removeWidget(self.view)
+            if layout:
+                layout.removeWidget(self.view)
             self.view.deleteLater()
             self.setup()
 

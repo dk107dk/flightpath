@@ -32,8 +32,9 @@ class CacheForm(BlankForm):
 
     def add_to_config(self, config) -> None:
         path = self.cache_dir_path.text()
-        self.config.add_to_config("cache", "path", path )
-        self.config.add_to_config("cache", "use_cache", self.use_cache.currentText() )
+        usecache = self.use_cache.currentText()
+        config.add_to_config("cache", "path", path )
+        config.add_to_config("cache", "use_cache", usecache)
 
     def populate(self):
         config = self.config
@@ -43,12 +44,12 @@ class CacheForm(BlankForm):
         self.use_cache.addItem("yes")
         self.use_cache.addItem("no")
         use = config.get(section="cache", name="use_cache", default="yes")
-        use = use.strip()
+        use = use.strip().lower()
         #
         # no is correct, but we'll take false because it's a reasonable guess.
         # everything else indicates yes.
         #
-        if use == "no" or use == "false":
+        if use in ["no", "false"]:
             self.use_cache.setCurrentText("no")
         else:
             self.use_cache.setCurrentText("yes")

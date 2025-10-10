@@ -23,6 +23,7 @@ from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReference
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.dialogs.new_run_dialog import NewRunDialog
+from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.tabs_utility import TabsUtility as taut
@@ -229,10 +230,14 @@ class Welcome(QWidget):
 
     def update_run_button(self) -> None:
         paths = CsvPaths()
-        if paths.file_manager.named_files_count == 0 or paths.paths_manager.total_named_paths == 0:
-            self.button_run.setEnabled(False)
-        else:
-            self.button_run.setEnabled(True)
+        try:
+            if paths.file_manager.named_files_count == 0 or paths.paths_manager.total_named_paths == 0:
+                self.button_run.setEnabled(False)
+            else:
+                self.button_run.setEnabled(True)
+        except Exception as ex:
+            msg = f"Error during setup: {ex}"
+            meut.warning(parent=self, msg=msg, title="Error")
 
     def _find_data_button(self, *, on_click, on_help) -> QWidget:
         self.button_find_data = QPushButton()
