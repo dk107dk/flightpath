@@ -2,7 +2,8 @@ from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
     QFormLayout,
-    QComboBox
+    QComboBox,
+    QLabel
 )
 
 from csvpath.util.config import Config
@@ -17,6 +18,10 @@ class InputsForm(BlankForm):
 
         self.named_paths = QLineEdit()
         layout.addRow("Named-paths path or URL: ", self.named_paths)
+        msg = QLabel("If using a non-local backend remember to update the configuration in integrations or env.")
+        msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
+        msg.setWordWrap(True)
+        layout.addRow("", msg)
 
         self.setLayout(layout)
         self._setup()

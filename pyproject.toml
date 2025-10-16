@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "flightpath"
-version = "0.1.19"
+version = "0.1.20"
 description = ""
-authors = ["David Kershaw <dkershaw@atestaanalytics.com>"]
+authors = ["Atesta Analytics <support@atestaanalytics.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -10,10 +10,10 @@ python = ">3.10,<3.14"
 pyside6 = ">=6.8.3"
 pygments = "^2.19.1"
 darkdetect = "^0.8.0"
-csvpath = "^0.0.570"
+csvpath = "^0.0.572"
 #csvpath = { path = "../csvpath/builds/csvpath-0.0.556.tar.gz" }
 #flightpath_server = "^0.1.1"
-flightpath_server = { path = "./assets/flightpath_server-0.1.7.tar.gz" }
+flightpath_server = { path = "./assets/flightpath_server-0.1.10.tar.gz" }
 httpx = "^0.28.1"
 
 [tool.poetry.scripts]

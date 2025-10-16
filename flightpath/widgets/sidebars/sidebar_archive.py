@@ -333,11 +333,12 @@ class SidebarArchive(QWidget):
                 # this won't realistically happen
                 #
                 print(f"ERROR: {to_nos} exists")
-            #from_nos.copy(to_nos.path)
-            with DataFileReader(from_path) as ffrom:
-                with DataFileWriter(path=to_path) as tto:
-                    tto.write(ffrom.read())
-
+            try:
+                with DataFileReader(from_path) as ffrom:
+                    with DataFileWriter(path=to_path) as tto:
+                        tto.write(ffrom.read())
+            except NotADirectoryError:
+                QMessageBox.warning(self, "Error", "Cannot copy item over another file")
         else:
             QMessageBox.warning(self, "Error", "Cannot copy item")
 

@@ -312,12 +312,10 @@ class ConfigPanel(QWidget):
         # self.config.reload()
         #
         for form in self.forms:
-            print(f"configpanel: saving form: {form}")
             try:
                 form.add_to_config(self.config) #self.metadata)
             except:
                 print(traceback.format_exc())
-        print(f"configpanel: saving config: {self.config.configpath}")
         self.config.save_config()
         #
         # note that some non-config.ini values must/will be saved when add_to_config() is

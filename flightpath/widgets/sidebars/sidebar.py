@@ -209,7 +209,12 @@ class Sidebar(QWidget):
         self.file_model = QFileSystemModel()
         self.file_model.setRootPath(self.main.state.cwd)
 
-        exts = self.main.csvpath_config.csvpath_file_extensions + self.main.csvpath_config.csv_file_extensions
+        pathses = self.main.csvpath_config.get(section="extensions", name="csvpath_files")
+        fileses = self.main.csvpath_config.get(section="extensions", name="csv_files")
+        pathses = pathses if isinstance(pathses, list) else [pathses]
+        fileses = fileses if isinstance(fileses, list) else [fileses]
+        exts = fileses + pathses
+
         exts = [f"*.{e}" for e in exts]
         #
         # we need json, of course. no reason to think it would be in csvpaths or csv extensions, but
@@ -369,13 +374,13 @@ class Sidebar(QWidget):
                 self.save_file_action.setVisible(False)
                 self.load_paths_action.setVisible(False)
                 self.stage_data_action.setVisible(False)
-                if ext in self.main.csvpath_config.csvpath_file_extensions or ext.lower() == "json":
+                if ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files") or ext.lower() == "json":
                     self.load_paths_action.setVisible(True)
-                elif ext in self.main.csvpath_config.csv_file_extensions:
+                elif ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
                     self.stage_data_action.setVisible(True)
                 if(
-                   ext in self.main.csvpath_config.csvpath_file_extensions
-                   or ext in self.main.csvpath_config.csv_file_extensions
+                   ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files")
+                   or ext in self.main.csvpath_config.get(section="extensions", name="csv_files")
                    or ext in ["md", "json", "txt"]
                 ):
                     #
@@ -735,7 +740,7 @@ class Sidebar(QWidget):
                     content = """# Title
 *(hit control-t to toggle to raw markdown editing)*
                     """
-                elif ns[1] in self.main.csvpath_config.csvpath_file_extensions:
+                elif ns[1] in self.main.csvpath_config.get(section="extensions", name="csvpath_files"):
                     testdata = ""
                     _ = os.path.join(self.main.state.cwd, "examples/test.csv")
                     if Nos(_).exists():
@@ -800,12 +805,12 @@ $[*][ print("hello world") ]"""
         #
         if ext in ["md", "txt"]:
             return True, "Ok"
-        if ( ext not in self.main.csvpath_config.csvpath_file_extensions
-             and ext not in self.main.csvpath_config.csv_file_extensions
+        if ( ext not in self.main.csvpath_config.get(section="extensions", name="csvpath_files")
+             and ext not in self.main.csvpath_config.get(section="extensions", name="csv_files")
         ):
             return False, "File name must have an extension configured for csvpaths or data files"
 
-        if ext in self.main.csvpath_config.csv_file_extensions:
+        if ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
             meut.message( title="Data file", msg="You are creating an empty data file that must be edited outside of FlightPath" )
 
         return True, "Ok"

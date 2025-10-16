@@ -19,7 +19,7 @@ class FileCollector:
 
     @classmethod
     def csvpaths_filter(cls, cfg:Config) -> str:
-        exts = cfg.csvpath_file_extensions
+        exts = cfg.get(section="extensions", name="csvpath_files")
         ext_str = ""
         for e in exts:
             ext_str = f"{ext_str} *.{e}"
@@ -27,7 +27,7 @@ class FileCollector:
 
     @classmethod
     def csvs_filter(cls, cfg) -> str:
-        exts = cfg.csv_file_extensions
+        exts = cfg.get(section="extensions", name="csv_files")
         ext_str = ""
         for e in exts:
             ext_str = f"{ext_str} *.{e}"

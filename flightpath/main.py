@@ -892,7 +892,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         worker = None
         nos = Nos(path)
         isfile = nos.isfile()
-        if isfile and info.suffix() in self.csvpath_config.csv_file_extensions: # pylint: disable=E1135
+        if isfile and info.suffix() in self.csvpath_config.get(section="extensions", name="csv_files"): # pylint: disable=E1135
             worker = GeneralDataWorker(
                 path,
                 self,
@@ -910,7 +910,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.progress_dialog.setValue(0)
             self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
-        elif isfile and info.suffix() in self.csvpath_config.csvpath_file_extensions: # pylint: disable=E1135
+        elif isfile and info.suffix() in self.csvpath_config.get(section="extensions", name="csvpath_files"): # pylint: disable=E1135
             worker = CsvpathFileWorker(path, self, editable=editable)
             worker.signals.finished.connect(self.update_csvpath_views)
             if finished_callback is not None:
@@ -1048,7 +1048,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if not nos.isfile():
             return
         info = QFileInfo(self.selected_file_path)
-        editable = info.suffix() in self.csvpath_config.csvpath_file_extensions
+        editable = info.suffix() in self.csvpath_config.get(section="extensions", name="csvpath_files")
         editable = editable or info.suffix() in ["json", "md", "txt"]
         if editable is True:
             editable = EditStates.EDITABLE

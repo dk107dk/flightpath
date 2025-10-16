@@ -62,7 +62,6 @@ class CsvpathLoader:
         #
         # if the named-paths name exists, warn the user that they are adding a named-path to the group
         #
-        print(f"loading 65")
         try:
             if paths.paths_manager.has_named_paths(named_paths_name):
                 if not self._check_ok_to_proceed(overwrite):
@@ -70,11 +69,9 @@ class CsvpathLoader:
                     return
             name = self.load_dialog.path
             name = "" if not name else name.strip()
-            print(f"loading 70")
             if Nos(name).isfile():
                 ext = name[name.rfind(".")+1:]
-                print(f"loading 75: {ext}")
-                if ext in self.main.csvpath_config.csvpath_file_extensions:
+                if ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files"):
                     #
                     # added append=(not overwrite) to do an append when the form requires.
                     # however, atm, the append is only available on add_named_files(). the
@@ -94,18 +91,14 @@ class CsvpathLoader:
                         template=template,
                         append=(not overwrite)
                     )
-                    print(f"loading 90: ret: {ret}")
                 else:
                     raise ValueError(f"Unknown file type: {name}")
-            print(f"loading 95")
             self.main.sidebar._renew_sidebars()
             self._delete_load_dialog()
-            print(f"loading 100")
         except Exception as e:
             import traceback
             print(traceback.format_exc())
             meut.message(title="Error", msg=f"Cannot load named-paths group: {e}")
-        print(f"loading 105")
 
     def do_load_json(self) -> None:
         paths = CsvPaths()

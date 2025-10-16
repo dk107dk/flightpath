@@ -150,6 +150,7 @@ class ServerForm(BlankForm):
         return e
 
     def _create_config_str(self, name:str) -> str:
+        self.main.save_config_changes()
         config = self.main.csvpath_config
         config = config._config
         string_buffer = io.StringIO()
@@ -459,6 +460,7 @@ class ServerForm(BlankForm):
                 if "names" in json:
                     return json["names"]
                 elif "detail" in json:
+                    print(f"463")
                     meut.warning( parent=self, msg=json["detail"], title="Error")
                 else:
                     meut.warning( parent=self, msg=f"Could not complete the request: {json}", title="Error")
@@ -467,7 +469,7 @@ class ServerForm(BlankForm):
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 print(msg)
-                return []
+        return []
 
     def _delete_project(self, name:str) -> bool:
         if not self._server_is_enabled():

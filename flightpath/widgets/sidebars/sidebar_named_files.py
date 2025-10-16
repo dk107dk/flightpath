@@ -235,9 +235,13 @@ class SidebarNamedFiles(QWidget):
             #
             #from_nos.copy(to_nos.path)
             #
-            with DataFileReader(from_path) as ffrom:
-                with DataFileWriter(path=to_path) as tto:
-                    tto.write(ffrom.read())
+            try:
+                with DataFileReader(from_path) as ffrom:
+                    with DataFileWriter(path=to_path, mode="wb") as tto:
+                        tto.write(ffrom.read())
+            except NotADirectoryError:
+                QMessageBox.warning(self, "Error", "Cannot copy item over another file")
+
         else:
             QMessageBox.warning(self, "Error", "Cannot copy item")
 

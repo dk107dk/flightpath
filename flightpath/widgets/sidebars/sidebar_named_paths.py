@@ -160,9 +160,9 @@ class SidebarNamedPaths(QWidget):
                 to_path = self.main.state.cwd
 
             to_nos = Nos(to_path)
-            if to_nos.isfile():
-                QMessageBox.warning(self, "Error", f"Cannot copy file to {to_nos.path}")
-                return
+            #if to_nos.isfile():
+            #    QMessageBox.warning(self, "Error", f"Cannot copy file to {to_nos.path}")
+            #    return
             to_path = fiut.deconflicted_path(to_path, f"{os.path.basename(from_path)}")
             to_nos.path = to_path
             if to_nos.exists():
@@ -176,9 +176,12 @@ class SidebarNamedPaths(QWidget):
             # nos copy only works if we're copying to the same backend, which we won't always be.
             # so we use reader/writers. leaving as a reminder.
             #
-            with DataFileReader(from_path) as ffrom:
-                with DataFileWriter(path=to_path) as tto:
-                    tto.write(ffrom.read())
+            try:
+                with DataFileReader(from_path) as ffrom:
+                    with DataFileWriter(path=to_path) as tto:
+                        tto.write(ffrom.read())
+            except NotADirectoryError:
+                QMessageBox.warning(self, "Error", "Cannot copy item over another file")
         else:
             QMessageBox.warning(self, "Error", "Cannot copy item")
 

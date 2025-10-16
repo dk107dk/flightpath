@@ -24,7 +24,14 @@ class ExtensionsForm(BlankForm):
 
     def add_to_config(self, config) -> None:
         config.add_to_config("extensions", "csv_files", self.csvs.text() )
-        config.add_to_config("extensions", "csvpath_files", self.csvpaths.text() )
+        #
+        #
+        #
+        paths = self.csvpaths.text()
+        config.add_to_config("extensions", "csvpath_files", paths )
+        #
+        #
+        #
 
     def _setup(self) -> None:
         self.csvs.textChanged.connect(self.main.on_config_changed)
@@ -32,9 +39,9 @@ class ExtensionsForm(BlankForm):
 
     def populate(self):
         config = self.config
-        csvs = config.csv_file_extensions
+        csvs = config.get(section="extensions", name="csv_files")
         self.csvs.setText(", ".join(csvs))
-        csvpaths = config.csvpath_file_extensions
+        csvpaths = config.get(section="extensions", name="csvpath_files")
         self.csvpaths.setText(", ".join(csvpaths))
 
 
