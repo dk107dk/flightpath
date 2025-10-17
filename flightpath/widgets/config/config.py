@@ -14,6 +14,10 @@ class Config(QWidget):
     def __init__(self, main):
         super().__init__()
         self.main = main
+        self.ready = False
+        self.start()
+
+    def start(self) -> None:
         #
         # a reload is quick and assures there is a config file. that
         # shouldn't be a concern, given that we have a handle to a
@@ -59,7 +63,6 @@ class Config(QWidget):
         self.toolbar.button_close.setEnabled(True)
         self.toolbar.button_cancel_changes.setEnabled(False)
         self.toolbar.disable_save()
-
 
     def show_help_for_form(self, name:str, fallback=None) -> None:
         md = HelpFinder(main=self.main).help(f"config/{name}.md", fallback=fallback)

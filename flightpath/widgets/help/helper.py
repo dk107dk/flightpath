@@ -85,6 +85,7 @@ class Helper(ClosingTabsHolder):
     """
         why are these three event handlers here. where are others. consolidate?
     """
+
     def on_click_named_files_help(self) -> None:
         md = HelpFinder(main=self.main).help("named_files/about.md")
         self.get_help_tab().setMarkdown(md)

@@ -257,6 +257,15 @@ class Welcome(QWidget):
         return box
 
     def on_click(self) -> None:
+        #
+        # if we don't have help showing we should show welcome.md
+        #
+        md = self.main.helper.get_help_tab().toPlainText()
+        if md is None or md.strip() == "":
+            md = HelpFinder(main=self.main).help("welcome/welcome.md")
+            self.main.helper.get_help_tab().setMarkdown(md)
+
+
         ss = self.main.main.sizes()
         if ss[1] > 0:
             self.main.main.setSizes([1, 0])

@@ -70,8 +70,7 @@ class ConfigPanel(QWidget):
         self.main = main
         #
         # state is a json file called ./.state. it is just a ui state
-        # persistence tool with some configuration. not sure if it's a
-        # keeper but needed today
+        # persistence tool with some configuration.
         #
         self._sections = None
         self._configurables = None
@@ -88,8 +87,14 @@ class ConfigPanel(QWidget):
         #
         self.forms_layout = QStackedLayout()
         self.forms = None
-        self.setup_forms()
-
+        #
+        # what if we did setup forms only when the config first view?
+        #
+        #self.setup_forms()
+        self.ready = False
+        #
+        #
+        #
         self.h_layout = QHBoxLayout()
         self.layout = QVBoxLayout()
         self.h_layout.addWidget(self.tree)
@@ -126,8 +131,12 @@ class ConfigPanel(QWidget):
             self.forms_layout.addWidget(form)
             form.config = self.config
             form.populate()
+        self.ready = True
+
 
     def populate_all_forms(self) -> None:
+        if self.ready is False:
+            self.setup_forms()
         for form in self.forms:
             form.populate()
 

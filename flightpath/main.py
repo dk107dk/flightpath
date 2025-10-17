@@ -380,6 +380,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.build_number.setStyleSheet("QLabel {font-size:10px;color:#999}")
             self.statusBar().addPermanentWidget(self.build_number, 0)
         self.build_number.setText(build_number)
+        from flightpath.util.help_finder import HelpFinder
+        md = HelpFinder(main=self.main).help("welcome/welcome.md")
+        self.helper.get_help_tab().setMarkdown(md)
 
     def _setup_central_widget(self) -> None:
         """ central widget is a vert splitter with left & right
@@ -406,13 +409,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
         self.main.addWidget(self.main_top)
         self.main.addWidget(self.helper.help_and_feedback)
-        self.main.setSizes( [1, 0] )
+        self.main.setSizes( [5, 1] )
         self.helper.assure_help_tab()
-
+        #
+        # left side tree
+        #
         self.sidebar = Sidebar(main=self)
-        cw.addWidget(self.sidebar)
-        #cw.addWidget(self.main)
-        cw.addWidget(self.main)
         #
         # put a tab widget into 3rd column of splitter.
         # 1st tab has the rt_col vert spliter with three file trees
@@ -426,9 +428,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.rt_tab_box.setLayout(self.rt_tab_box_layout)
         self.rt_tab_box_layout.setContentsMargins(1, 3, 4, 3)
         #
-        # add right column to splitter
+        # add columns to splitter
         #
+        cw.addWidget(self.sidebar)
+        cw.addWidget(self.main)
         cw.addWidget(self.rt_tab_box)
+
         #
         # add tabs within right column box
         #
@@ -475,6 +480,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.hide_rt_tabs()
         #
+        # set the default relative sizes
+        #
+        cw.setSizes([100, 1400, 100])
+        #
         #
         #
         self._connects()
@@ -520,6 +529,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
         self.rt_tab_widget.currentChanged.connect(self._on_rt_tab_changed)
         self.main_layout.currentChanged.connect(self._on_stack_change)
+        #
+        # this toggles help. if no help is showing welcome.md should be shown.
+        #
         self.welcome.clicked.connect(self.welcome.on_click)
         #
         # data_view's sampling toolbar
@@ -609,6 +621,14 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def _on_stack_change(self) ->None:
         i = self.main_layout.currentIndex()
+
+        if i == 2:
+            #
+            # if config and config hasn't been setup yet we need get on that.
+            #
+            if self.main_layout.widget(i).ready is False:
+                self.main_layout.widget(i).config_panel.setup_forms()
+
         #
         # if i == 2 (Config) we have to check if the config has changed. if it has
         # and we switch away work could be lost. we need to confirm w/user that is
@@ -616,22 +636,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         if i != 2:
             self.question_config_close()
-            """
-            if (
-                self.config and
-                self.config.ready is True and
-                self.config.toolbar._button_save.isEnabled()
-            ):
-                save = QMessageBox.question(
-                    self,
-                    "Config changed",
-                    "Save config changes?",
-                    QMessageBox.Yes | QMessageBox.No,
-                )
-                if save == QMessageBox.Yes:
-                    self.save_config_changes()
-                self.reset_config_toolbar()
-            """
         if i in [0, 2]:
             self._rt_tabs_hide()
         else:
