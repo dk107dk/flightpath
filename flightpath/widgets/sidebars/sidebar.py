@@ -108,6 +108,9 @@ class Sidebar(QWidget):
             # no change
             #
             return
+        #
+        # we need to clear the Config panel and reload it or let it lazy load
+        #
         if proj == self.NEW_PROJECT:
             proj, ok = meut.input(title=self.NEW_PROJECT, msg="Enter the new project's name")
             if ok and proj and proj.strip() != "":
@@ -128,6 +131,7 @@ class Sidebar(QWidget):
         #
         self.main.clear_csvpath_config()
         self.main.cancel_config_changes()
+        self.main.state.load_state_and_cd(self.main)
 
     def _set_project_from_state(self) -> None:
         self.main.load_state_and_cd()
