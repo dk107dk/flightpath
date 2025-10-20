@@ -14,7 +14,7 @@ class InputsForm(BlankForm):
         super().__init__(*args, **kwargs)
         layout = QFormLayout()
         self.named_files = QLineEdit()
-        layout.addRow("Named-files path or URL: ", self.named_files)
+        layout.addRow(f"Named-files path or URL: ", self.named_files)
 
         self.named_paths = QLineEdit()
         layout.addRow("Named-paths path or URL: ", self.named_paths)
@@ -30,11 +30,9 @@ class InputsForm(BlankForm):
         self.named_paths.textChanged.connect(self.main.on_config_changed)
         self.named_files.textChanged.connect(self.main.on_config_changed)
 
-
     def add_to_config(self, config) -> None:
         config.add_to_config("inputs", "files", self.named_files.text() )
         config.add_to_config("inputs", "csvpaths", self.named_paths.text() )
-
 
     def populate(self):
         config = self.config
@@ -42,6 +40,5 @@ class InputsForm(BlankForm):
         self.named_files.setText(nf)
         np = config.get(section="inputs", name="csvpaths")
         self.named_paths.setText(np)
-
 
 
