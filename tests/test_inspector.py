@@ -27,6 +27,6 @@ class TestInspector(unittest.TestCase):
         csvpath_str = inspector.csvpath_str
         inspector.sample_size=50
         scan = inspector.compile_scan()
-        assert scan == "1-51"
+        assert scan == "0-50"
 
 

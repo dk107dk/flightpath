@@ -677,14 +677,14 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "csvpath"
-version = "0.0.572"
+version = "0.0.573"
 description = "A data preboarding framework for ingesting, managing, and validating CSV, Excel, and other tabular data files using a Collect, Store, Validate, Publish architecture to create a trusted publisher for downstream data consumers."
 optional = false
 python-versions = "<4.0,>3.10"
 groups = ["main"]
 files = [
-    {file = "csvpath-0.0.572-py3-none-any.whl", hash = "sha256:fba5f150b388b149cdf02cc59846a3a4ec5244bb8c2df9af80927ee6996af418"},
-    {file = "csvpath-0.0.572.tar.gz", hash = "sha256:6afc0695942f281c164f0c84f641e49d1c6f1da0182608e1832e9f538c6e718e"},
+    {file = "csvpath-0.0.573-py3-none-any.whl", hash = "sha256:53d927765312d362ff1541b1eee8b4d7afd7ebd6fd524c2c0fef43dbde50362a"},
+    {file = "csvpath-0.0.573.tar.gz", hash = "sha256:5d332b216a10efc0f30978a3404ee49ac42121c5f75376a0461b0bd4a3a2dd08"},
 ]
 
 [package.dependencies]
@@ -872,24 +872,24 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "htt
 
 [[package]]
 name = "flightpath-server"
-version = "0.1.10"
+version = "0.1.12"
 description = "A DataOps data ingestion preboarding automation server for FlightPath and CsvPath Framework"
 optional = false
 python-versions = ">3.10,<3.14"
 groups = ["main"]
 files = [
-    {file = "flightpath_server-0.1.10.tar.gz", hash = "sha256:b78347f022ece81e82d5b01dc0504c1a3a0afb0a28410a03b490b1b422288beb"},
+    {file = "flightpath_server-0.1.12.tar.gz", hash = "sha256:a4707c15fc88c6b910f0dd77c7504d21487d2eac27bd1a1f8315b7f9ee3c9559"},
 ]
 
 [package.dependencies]
-csvpath = ">=0.0.572,<0.0.573"
+csvpath = ">=0.0.573,<0.0.574"
 fastapi = ">=0.115.13,<0.116.0"
 python-json-logger = ">=3.3.0,<4.0.0"
 uvicorn = ">=0.34.3,<0.35.0"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_server-0.1.10.tar.gz"
+url = "assets/flightpath_server-0.1.12.tar.gz"
 
 [[package]]
 name = "google-api-core"
@@ -1057,14 +1057,14 @@ requests = ["requests (>=2.18.0,<3.0.0dev)"]
 
 [[package]]
 name = "googleapis-common-protos"
-version = "1.70.0"
+version = "1.71.0"
 description = "Common protobufs used in Google APIs"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "googleapis_common_protos-1.70.0-py3-none-any.whl", hash = "sha256:b8bfcca8c25a2bb253e0e0b0adaf8c00773e5e6af6fd92397576680b807e0fd8"},
-    {file = "googleapis_common_protos-1.70.0.tar.gz", hash = "sha256:0e1b44e0ea153e6594f9f394fef15193a68aaaea2d843f83e2742717ca753257"},
+    {file = "googleapis_common_protos-1.71.0-py3-none-any.whl", hash = "sha256:59034a1d849dc4d18971997a72ac56246570afdd17f9369a0ff68218d50ab78c"},
+    {file = "googleapis_common_protos-1.71.0.tar.gz", hash = "sha256:1aec01e574e29da63c80ba9f7bbf1ccfaacf1da877f23609fe236ca7c72a2e2e"},
 ]
 
 [package.dependencies]
@@ -1343,14 +1343,14 @@ type = ["pytest-mypy"]
 
 [[package]]
 name = "iniconfig"
-version = "2.1.0"
+version = "2.3.0"
 description = "brain-dead simple config-ini parsing"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 groups = ["main", "dev"]
 files = [
-    {file = "iniconfig-2.1.0-py3-none-any.whl", hash = "sha256:9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760"},
-    {file = "iniconfig-2.1.0.tar.gz", hash = "sha256:3abbd2e30b36733fee78f9c7f7308f2d0050e88f0087fd25c2645f63c773e1c7"},
+    {file = "iniconfig-2.3.0-py3-none-any.whl", hash = "sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12"},
+    {file = "iniconfig-2.3.0.tar.gz", hash = "sha256:c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730"},
 ]
 
 [[package]]
@@ -3110,14 +3110,14 @@ files = [
 
 [[package]]
 name = "smart-open"
-version = "7.3.1"
+version = "7.4.0"
 description = "Utils for streaming large files (S3, HDFS, GCS, SFTP, Azure Blob Storage, gzip, bz2, zst...)"
 optional = false
-python-versions = "<4.0,>=3.8"
+python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "smart_open-7.3.1-py3-none-any.whl", hash = "sha256:e243b2e7f69d6c0c96dd763d6fbbedbb4e0e4fc6d74aa007acc5b018d523858c"},
-    {file = "smart_open-7.3.1.tar.gz", hash = "sha256:b33fee8dffd206f189d5e704106a8723afb4210d2ff47e0e1f7fbe436187a990"},
+    {file = "smart_open-7.4.0-py3-none-any.whl", hash = "sha256:ff75c536bc3c534fca8e8fbebe1f0e22cafecc1a398d096924720c995d71f34a"},
+    {file = "smart_open-7.4.0.tar.gz", hash = "sha256:cb989a38db774c5aadc416020dff21da6cea11059309f50e237d6520d6636247"},
 ]
 
 [package.dependencies]
@@ -3130,9 +3130,9 @@ gcs = ["google-cloud-storage (>=2.6.0)"]
 http = ["requests"]
 s3 = ["boto3"]
 ssh = ["paramiko"]
-test = ["awscli", "moto[server]", "numpy", "pyopenssl", "pytest", "pytest-rerunfailures", "pytest_benchmark", "responses", "smart_open[all]"]
+test = ["awscli", "flake8", "moto[server]", "numpy", "pyopenssl", "pytest", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist[psutil]", "pytest_benchmark", "responses", "smart_open[all]"]
 webhdfs = ["requests"]
-zst = ["zstandard"]
+zst = ["backports.zstd (>=1.0.0) ; python_version < \"3.14\""]
 
 [[package]]
 name = "sniffio"
@@ -3573,4 +3573,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.10,<3.14"
-content-hash = "31719a521411e4624eea88d0794e9c485eed6eb917c2d40951f00d8ddafa7395"
+content-hash = "279ee5bef46e63250c3bf9f1db6e2f391e0548c62e42214c76f92b55831b4c10"
