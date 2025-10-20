@@ -46,7 +46,7 @@ class EnvForm(BlankForm):
         header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
         self.table.itemChanged.connect(self._on_item_changed)
-        self.main.show_now_or_later(self.table)
+        #self.main.show_now_or_later(self.table)
         #self.table.show()
         self.layout.addWidget(self.table)
 
@@ -77,6 +77,7 @@ class EnvForm(BlankForm):
 
         self.refreshing = False
         self.refresh_table()
+        self.main.show_now_or_later(self.table)
 
     def _on_click_reload_helpers(self) -> None:
         #

@@ -302,6 +302,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def csvpath_config(self) -> CsvPathConfig:
         if self._csvpath_config is None:
             paths = CsvPaths()
+            #
+            # feels like we need to set the new config to our current project's config here.
+            # however, in practice it has happend elsewhere. not sure that's ideal.
+            #
             self._csvpath_config = paths.config
         return self._csvpath_config
 
@@ -628,6 +632,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             #
             if self.main_layout.widget(i).ready is False:
                 self.main_layout.widget(i).config_panel.setup_forms()
+            #
+            # make sure we show the right info from the new csvpath_config. sidebar
+            # will have made/triggered the update to csvpath_config of the current proj
+            #
+            self.config.config_panel.ready = False
+            self.config.config_panel.populate_all_forms()
 
         #
         # if i == 2 (Config) we have to check if the config has changed. if it has
