@@ -30,6 +30,9 @@ from .blank_form import BlankForm
 class ServerForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        #
+        # we want to only update the projects list when there is a change that hasn't caused an update AND we're in view
+        #
         layout = QFormLayout()
 
         self.host = QLineEdit()
@@ -67,6 +70,21 @@ class ServerForm(BlankForm):
 
         self.setLayout(layout)
         self._setup()
+
+        self.server_unchanged = False
+
+        self.main.config.config_panel.forms_layout.currentChanged.connect(self.on_widget_changed)
+
+    def on_widget_changed(self) -> None:
+        #
+        # watches for when a new form becomes visibile. if it is us, we want to check the
+        # projects list
+        #
+        if self.main.config.config_panel.forms_layout.currentWidget() == self:
+            self.populate()
+            self._update_project_list()
+            self.server_unchanged = True
+
 
 
     def _set_projects_path(self) -> None:
@@ -113,27 +131,39 @@ class ServerForm(BlankForm):
 
     def _setup(self) -> None:
         self.host.textChanged.connect(self.main.on_config_changed)
+        self.host.textChanged.connect(self._update_project_list_new_host)
+
         self.key.textChanged.connect(self.main.on_config_changed)
         self.key.textChanged.connect(self._set_projects_path)
-        self.key.textChanged.connect(self._update_project_list)
+        self.key.textChanged.connect(self._update_project_list_new_key)
+
         self.shut_down_server.clicked.connect(self._do_shutdown)
         self.create_new_key.clicked.connect(self._create_key)
 
     def populate(self):
+        if self.main.config.config_panel.forms_layout.currentWidget() != self:
+            print(f"not populating because not on top: {self._is_on_top} ")
+            return
+        if self.server_unchanged is True:
+            print(f"not updaing projects because unchanged: {self.server_unchanged}")
+            return
+
+        en = self.main.config.toolbar.button_close.isEnabled()
+
         config = self.config
-
         host = config.get(section="server", name="host")
-        if host:
+        if host and self.host.text() != host:
             self.host.setText(host)
+            self.server_unchanged = False
         key = config.get(section="server", name="api_key")
-        if key:
+        if key and self.key.text() != key:
             self.key.setText(key)
-            self._set_projects_path()
-
+            self.server_unchanged = False
         self._enable_server_if()
 
-        if self._server_is_enabled():
-            self._update_project_list()
+        if en:
+            self.main.config.reset_config_toolbar()
+
 
     @property
     def _headers(self) -> str:
@@ -162,10 +192,50 @@ class ServerForm(BlankForm):
         #
         return config_str
 
+    def _update_project_list_new_host(self) -> None:
+        text = self.host.text()
+        if text and text.strip() == "":
+            self.proj_list.clear()
+        else:
+            self.server_unchanged = False
+            self._update_project_list()
+
+    def _update_project_list_new_key(self) -> None:
+        text = self.key.text()
+        if text and text.strip() == "":
+            self.proj_list.clear()
+        else:
+            self.server_unchanged = False
+            self._update_project_list()
+
+
     def _update_project_list(self, name=None) -> None:
-        if not self._server_is_enabled():
+        key = self.key.text().strip() if self.key.text() else None
+        host = self.host.text().strip() if self.host.text() else None
+        if key in [None, ""] or host in ["", None]:
+            print(f"clearing proj list and returning")
+            self.proj_list.clear()
+            self.server_unchanged = False
             return
+
+        #
+        # repopulate only if we're visible. we'll repopulate each time we become visible.
+        #
+        if self.main.config.config_panel.forms_layout.currentWidget() != self:
+            print(f"not updaing projects because not on top: {self._is_on_top} ")
+            return
+
+        if self.server_unchanged is True:
+            print(f"not updaing projects because unchanged: {self.server_unchanged}")
+            return
+
+        if not self._server_is_enabled():
+            print(f"not updaing projects because no server: {self._server_is_enabled()}")
+            return
+
+
         self.proj_list.clear()
+        print(f"rebuilding proj list")
         names = self._get_project_names()
         if names is None:
             raise ValueError("Project names list cannot be None")
@@ -178,6 +248,9 @@ class ServerForm(BlankForm):
                 item = self.proj_list.item(0)
                 if item:
                     self.proj_list.setCurrentItem(item)
+
+        self.server_unchanged = True
+
 
     def _write_to(self, name:str, content:str) -> None:
         to_index = self.main.sidebar.file_navigator.currentIndex()
@@ -442,8 +515,6 @@ class ServerForm(BlankForm):
         return False
 
     def _get_project_names(self) -> list[str]:
-        #from csvpath.util.log_utility import LogUtility as lout
-        #lout.log_brief_trace()
         if not self._server_is_enabled():
             if self._is_on_top():
                 meut.warning(
@@ -477,7 +548,7 @@ class ServerForm(BlankForm):
                 parent=self,
                 msg=f"Cannot delete project because the server is off or there is insufficient information to make the request")
             return
-        yn = meut.yesNo(parent=self, msg=f"Permanently delete project {name}?", title="Permanently delete?")
+        yn = meut.yesNo(parent=self, msg=f"Permanently delete project {name}?", title="")
         if yn is False:
             return False
         with httpx.Client() as client:
@@ -486,9 +557,14 @@ class ServerForm(BlankForm):
                 url = f"{self.host.text()}/projects/delete_project"
                 response = client.post(url, json={"name":name}, headers=self._headers)
                 if response.status_code == 200:
-                    self._update_project_list()
                     json = response.json()
-                    meut.message(msg=f"Project {name} has been deleted", title="Deleted project")
+                    self.server_unchanged = False
+                    print(f"upadating projects list")
+                    self._update_project_list()
+                    #
+                    # the project list has to update and that should be enough
+                    #
+                    #meut.message(msg=f"Project {name} has been deleted", title="Deleted project")
                     return True
                 else:
                     meut.message(msg=f"Could not delete project {name}. Return code: {response.status_code}", title="Could not delete project")
@@ -519,6 +595,7 @@ class ServerForm(BlankForm):
                 url = f"{self.host.text()}/projects/new_project"
                 response = client.post(url, json=project_data, headers=self._headers)
                 if response.status_code == 200:
+                    self.server_unchanged = False
                     self._update_project_list(name)
                     json = response.json()
                     return True

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import traceback
 from PySide6.QtGui import QIcon, QFont, QFontMetrics
 from PySide6.QtCore import QModelIndex, Qt, QAbstractItemModel, QSize
 from PySide6.QtWidgets import QStyle, QApplication
@@ -96,16 +97,23 @@ class TreeModel(QAbstractItemModel):
         return self.root_item
 
     def index(self, row: int, column: int, parent: QModelIndex = QModelIndex()) -> QModelIndex:
-        if parent.isValid() and parent.column() != 0:
+        #
+        # if there are contents of an sftp dir that were not registered through csvpath framework
+        # we may blow-up. however, life goes on, so we just catch and drop.
+        #
+        try: 
+            if parent.isValid() and parent.column() != 0:
+                return QModelIndex()
+            parent_item: TreeItem = self.get_item(parent)
+            if not parent_item:
+                return QModelIndex()
+            child_item: TreeItem = parent_item.child(row)
+            if child_item:
+                return self.createIndex(row, column, child_item)
             return QModelIndex()
-        parent_item: TreeItem = self.get_item(parent)
-        if not parent_item:
-            return QModelIndex()
-        child_item: TreeItem = parent_item.child(row)
-        if child_item:
-            return self.createIndex(row, column, child_item)
-        return QModelIndex()
-
+        except Exception:
+            print(traceback.format_exc())
+        
     def parent(self, index: QModelIndex = QModelIndex()) -> QModelIndex:
         if not index.isValid():
             return QModelIndex()

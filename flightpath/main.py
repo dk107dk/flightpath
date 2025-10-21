@@ -46,6 +46,9 @@ from csvpath.util.config import Config as CsvPathConfig
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 
+from flightpath.hidden import Hidden
+
+from flightpath.util.gate_guard import GateGuard
 from flightpath.workers.md_worker import MdWorker
 from flightpath.workers.csvpath_file_worker import CsvpathFileWorker
 from flightpath.workers.general_data_worker import GeneralDataWorker
@@ -91,7 +94,6 @@ def run():
     #    - check for server mode key
     #    - if key found, start a FlightPath Server
     #
-    from flightpath.util.gate_guard import GateGuard
     mode = GateGuard.has_ticket()
     if mode is True:
         #
@@ -114,7 +116,6 @@ For more information about FlightPath Server see https://www.flightpathdata.com.
     #
     # otherwise continue to load FlightPath Data
     #
-    from flightpath.hidden import Hidden
     Hidden()
     app = QApplication(sys.argv)
     app.setApplicationName(MainWindow.TITLE)
@@ -1258,6 +1259,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.main_layout.setCurrentIndex(2)
             self.cancel_config_changes()
             self.config.show_help()
+            #
+            # we should make the currently showing form selected and
+            # when the current form is BlankForm we should deselect all;
+            # for first release we're letting it ride.
+            #
+
 
     #
     # this needs to go back to whatever doc is selected, if one was. for now we
@@ -1282,9 +1289,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def save_config_changes(self):
         try:
+            print(f"save_config_changes: saving all forms")
             self.config.config_panel.save_all_forms()
+            print(f"save_config_changes: populating all forms")
             self.config.config_panel.populate_all_forms()
+            print(f"save_config_changes: resetting toolbar")
             self.reset_config_toolbar()
+            print(f"save_config_changes: done")
         except Exception as e:
             meut.message(title="Error saving config", msg=f"Error saving config: {e}")
 
