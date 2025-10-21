@@ -1,6 +1,5 @@
 import traceback
-
-
+    
 #
 # these files need to be referenced so they are found by PyInstaller
 # we do it with hiddenimports in the spec file too, but it has been a

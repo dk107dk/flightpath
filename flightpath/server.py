@@ -3,8 +3,14 @@ import os
 
 from flightpath.util.gate_guard import GateGuard
 from flightpath_server.main import Main as ServerMain
+from flightpath.hidden import Hidden
+
 
 def server_main():
+    #
+    # hidden is just a pointer to help PyInstaller find the needful.
+    #
+    Hidden()
     #
     # we use this function to start FlightPath Server. this lives
     # in FlightPath Data so we can create a separate 2nd exe for
