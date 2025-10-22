@@ -188,19 +188,17 @@ class SidebarArchive(SidebarRightBase):
     def _results_mani_path_for_path(self, path:str) -> str:
         if path is None:
             raise ValueError("Path cannot be None")
-        print(f"sidebar arch: _results_mani_path_for_path: path: {path}")
+        print(f"sidebar arch: _resultx_mani_path_for_path: path: {path}")
         #
         # we need the archive path as one thing; otherwise, we're likely to have trouble with the protocol.
         #
-
         apath = path[len(self.archive_path)+1:]
-
         parts = pathu.parts(apath)
         parts = [self.archive_path] + parts
         sep = pathu.sep(path)
         maniparts = []
         found = False
-        print(f"sidebar arch: _results_mani_path_for_path: parts: {parts}")
+        print(f"sidebar arch: _resultx_mani_path_for_path: parts: {parts}")
         for part in parts:
             m = re.search(r"^.*\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(?:_\d)?", part)
             maniparts.append(part)
@@ -244,23 +242,34 @@ class SidebarArchive(SidebarRightBase):
         print(f"sidebar arch: _has_reference: path 1: {path}")
         if path is None:
             raise ValueError("Path cannot be None")
-        #
-        # need to check if this is the archive/manifest.json. if it is return False
-        #
-        if self._is_archive_manifest(path):
+        try:
+            #
+            # need to check if this is the archive/manifest.json. if it is return False
+            #
+            if self._is_archive_manifest(path):
+                return False
+            #
+            #
+            #
+            print(f"sidebar arch: _has_reference: path 2: {path}")
+            manipath = self._results_mani_path_for_path(path)
+            print(f"sidebar arch: _has_reference: manipath 1: {manipath}")
+            mani = None
+            with DataFileReader(manipath) as file:
+                mani = json.load(file.source)
+            if "$" in mani["named_file_name"] or "$" in mani["named_paths_name"]:
+                return True
             return False
-        #
-        #
-        #
-        print(f"sidebar arch: _has_reference: path 2: {path}")
-        manipath = self._results_mani_path_for_path(path)
-        print(f"sidebar arch: _has_reference: manipath: {manipath}")
-        mani = None
-        with DataFileReader(manipath) as file:
-            mani = json.load(file.source)
-        if "$" in mani["named_file_name"] or "$" in mani["named_paths_name"]:
-            return True
-        return False
+        except Exception as e:
+            #
+            # if we're in the middle of a template, not on a specific result, we don't want a repeat run.
+            # however, we can't say if there is a refrence or not because we're not on a run we can check.
+            # in that case we throw an exception rather than being more perceptive about it. which is
+            # fineish. therefore this isn't a binary, it's a ternary, which kind of sucks, but we get the
+            # 3rd state by returning None.
+            #
+            print(f"No reference found because {type(e)}: {e}. This is probably fine.")
+            return None
 
     def _show_context_menu(self, position):
         index = self.view.indexAt(position)
