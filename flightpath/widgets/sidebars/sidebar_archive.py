@@ -34,8 +34,9 @@ from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReference
 from flightpath.util.message_utility import MessageUtility as meut
 
 from flightpath.editable import EditStates
+from .sidebar_right_base import SidebarRightBase
 
-class SidebarArchive(QWidget):
+class SidebarArchive(SidebarRightBase):
 
     def __init__(self, *, role=1, main, config:Config):
         super().__init__()
@@ -77,7 +78,7 @@ class SidebarArchive(QWidget):
             header = self.view.header()
             header.setStretchLastSection(True)
             header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-            self.model = TreeModel(["Archive"], nos, self, title="Archived results", sidebar=self)
+            self.model = TreeModel(headers=["Archive"], data=nos, parent=self, title="Archived results", sidebar=self)
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
             self.view.updateGeometries()
@@ -162,7 +163,7 @@ class SidebarArchive(QWidget):
 
         self.copy_action = QAction()
         self.copy_action.setText(self.tr("Copy to working dir"))
-        self.copy_action.triggered.connect(self._copy_results_back_to_cwd)
+        self.copy_action.triggered.connect(self._copy_back_to_cwd)
 
         self.delete_action = QAction()
         self.delete_action.setText(self.tr("Permanent delete"))
@@ -308,6 +309,7 @@ class SidebarArchive(QWidget):
         find = FindFileByReferenceDialog(main=self.main)
         self.main.show_now_or_later(find)
 
+    """
     def _copy_results_back_to_cwd(self) -> None:
         #
         # TODO: this has been generalized in Fiut. switch to that.
@@ -341,6 +343,7 @@ class SidebarArchive(QWidget):
                 QMessageBox.warning(self, "Error", "Cannot copy item over another file")
         else:
             QMessageBox.warning(self, "Error", "Cannot copy item")
+    """
 
     def _new_run(self) -> None:
         maker = SidebarArchiveRefMaker(main=self.main, parent=self)

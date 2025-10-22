@@ -12,7 +12,7 @@ from .treeitem import TreeItem
 
 class TreeModel(QAbstractItemModel):
 
-    def __init__(self, headers: list, data:Nos, parent=None, title:str="", sidebar=None):
+    def __init__(self, *, headers: list, data:Nos, parent, title:str="", sidebar=None):
         super().__init__(parent)
         self.root_data = [title]
         self.setHeaderData(value=title)
@@ -96,14 +96,17 @@ class TreeModel(QAbstractItemModel):
                 return item
         return self.root_item
 
-    def index(self, row: int, column: int, parent: QModelIndex = QModelIndex()) -> QModelIndex:
+    def index(self, row: int, column: int, parent: QModelIndex = None) -> QModelIndex:
         #
         # if there are contents of an sftp dir that were not registered through csvpath framework
         # we may blow-up. however, life goes on, so we just catch and drop.
         #
-        try: 
-            if parent.isValid() and parent.column() != 0:
+        try:
+            if parent is None:
                 return QModelIndex()
+            if parent.isValid():
+                if parent.column() != 0:
+                    return QModelIndex()
             parent_item: TreeItem = self.get_item(parent)
             if not parent_item:
                 return QModelIndex()
@@ -113,8 +116,10 @@ class TreeModel(QAbstractItemModel):
             return QModelIndex()
         except Exception:
             print(traceback.format_exc())
-        
+            return QModelIndex()
+
     def parent(self, index: QModelIndex = QModelIndex()) -> QModelIndex:
+        #print("TreeModel.parent called")
         if not index.isValid():
             return QModelIndex()
         child_item: TreeItem = self.get_item(index)

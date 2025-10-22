@@ -30,8 +30,9 @@ from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.editable import EditStates
+from .sidebar_right_base import SidebarRightBase
 
-class SidebarNamedPaths(QWidget):
+class SidebarNamedPaths(SidebarRightBase):
 
     def __init__(self, *, main, role=1, config:Config):
         super().__init__()
@@ -71,7 +72,7 @@ class SidebarNamedPaths(QWidget):
             header = self.view.header()
             header.setStretchLastSection(True)
             header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-            self.model = TreeModel(["Csvpath groups"], nos, self, title="Loaded named-paths groups", sidebar=self)
+            self.model = TreeModel(headers=["Csvpath groups"], data=nos, parent=self, title="Loaded named-paths groups", sidebar=self)
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
             self.view.updateGeometries()
@@ -137,7 +138,7 @@ class SidebarNamedPaths(QWidget):
         self.delete_action.setText(self.tr("Permanent delete"))
 
         self.new_run_action.triggered.connect(self._new_run)
-        self.copy_action.triggered.connect(self._copy_paths_back_to_cwd)
+        self.copy_action.triggered.connect(self._copy_back_to_cwd)
         self.delete_action.triggered.connect(self._delete_file_navigator_item)
 
         self.context_menu.addAction(self.new_run_action)
@@ -145,45 +146,38 @@ class SidebarNamedPaths(QWidget):
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
 
-
+    """
     def _copy_paths_back_to_cwd(self) -> None:
         from_index = self.view.currentIndex()
         if from_index.isValid():
             from_path = self.model.filePath(from_index)
-            #from_nos = Nos(from_path)
             to_index = self.main.sidebar.file_navigator.currentIndex()
-
             to_path = None
             if to_index.isValid():
                 to_path = self.main.sidebar.proxy_model.filePath(to_index)
             else:
                 to_path = self.main.state.cwd
-
             to_nos = Nos(to_path)
-            #if to_nos.isfile():
-            #    QMessageBox.warning(self, "Error", f"Cannot copy file to {to_nos.path}")
-            #    return
-            to_path = fiut.deconflicted_path(to_path, f"{os.path.basename(from_path)}")
-            to_nos.path = to_path
+            if to_nos.isfile():
+                to_path = os.path.dirname(to_nos.path)
+            to_dir = to_path
+            from_name = os.path.basename(from_path)
+            to_nos.path = os.path.join(to_dir, from_name)
             if to_nos.exists():
-                #
-                # this won't realistically happen
-                #
+                to_path = fiut.deconflicted_path(to_dir, from_name)
+                to_nos.path = to_path
+            if to_nos.exists():
                 QMessageBox.warning(self, "Error", f"Cannot copy file to {to_nos.path}")
-            #
-            #from_nos.copy(to_nos.path)
-            #
-            # nos copy only works if we're copying to the same backend, which we won't always be.
-            # so we use reader/writers. leaving as a reminder.
-            #
+                return
             try:
                 with DataFileReader(from_path) as ffrom:
-                    with DataFileWriter(path=to_path) as tto:
+                    with DataFileWriter(path=to_nos.path) as tto:
                         tto.write(ffrom.read())
             except NotADirectoryError:
                 QMessageBox.warning(self, "Error", "Cannot copy item over another file")
         else:
             QMessageBox.warning(self, "Error", "Cannot copy item")
+    """
 
     @property
     def _paths_root(self) -> str:
