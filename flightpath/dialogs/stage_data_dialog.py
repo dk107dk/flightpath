@@ -203,7 +203,8 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
             return
         cursor_pos = self.template_ctl.cursorPosition()
         parts = pathu.parts(self.path)
-        parts.remove("")
+        if "" in parts:
+            parts.remove("")
         i = 0
         print(f"stage_data_dialog: _source_path_click: parts: {parts}")
         try:
@@ -234,7 +235,8 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         if gen_path is None:
             gen_path = self.template_ctl.text()
         parts = pathu.parts(self.path)
-        parts.remove("")
+        if "" in parts:
+            parts.remove("")
         for i, p in enumerate(parts):
             gen_path = gen_path.replace(f":{i}", p)
         gen_path = gen_path.replace(":filename", parts[len(parts)-1])

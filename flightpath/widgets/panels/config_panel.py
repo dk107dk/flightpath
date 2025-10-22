@@ -105,7 +105,7 @@ class ConfigPanel(QWidget):
         self.title.setStyleSheet("font-weight: bold;")
 
     def setup_forms(self, populate=True) -> None:
-        print(f"config_panel: setup_forms starting")
+        #print(f"config_panel: setup_forms starting")
         if self.forms and len(self.forms):
             #
             # clear the forms. this happens when the working dir changes.
@@ -114,7 +114,7 @@ class ConfigPanel(QWidget):
                 self.forms_layout.removeWidget(form)
                 form.deleteLater()
 
-        print(f"config_panel: setup_forms: creating forms")
+        #print(f"config_panel: setup_forms: creating forms")
         self.forms = [
             BlankForm(main=self.main),
             ProjectsForm(main=self.main),
@@ -130,7 +130,7 @@ class ConfigPanel(QWidget):
             ServerForm(main=self.main)
         ]
         for form in self.forms:
-            print(f"config_panel: setup_forms: adding form widget: {form}")
+            #print(f"config_panel: setup_forms: adding form widget: {form}")
             self.forms_layout.addWidget(form)
             form.config = self.config
             if populate is True:
@@ -139,19 +139,19 @@ class ConfigPanel(QWidget):
 
 
     def populate_all_forms(self) -> None:
-        print("config_panel: populate_all_forms starting")
+        #print("config_panel: populate_all_forms starting")
         if self.ready is False or self.forms is None:
-            print("config_panel: populate_all_forms: setting up forms")
+            #print("config_panel: populate_all_forms: setting up forms")
             #
             # we ended up calling populate() twice on each form. for now we're just going to not do the work twice.
             # in a future refactor we can detangle this further.
             #
             self.setup_forms(populate=False)
-        print("config_panel: populate_all_forms: iterating forms")
+        #print("config_panel: populate_all_forms: iterating forms")
         for form in self.forms:
-            print(f"config_panel: populate_all_forms: starting form: {form}")
+            #print(f"config_panel: populate_all_forms: starting form: {form}")
             form.populate()
-            print(f"config_panel: populate_all_forms: done with form: {form}")
+            #print(f"config_panel: populate_all_forms: done with form: {form}")
 
     def switch_form(self, index:QModelIndex):
         form = index.data()

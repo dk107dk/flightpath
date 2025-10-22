@@ -35,8 +35,9 @@ from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
 
 from flightpath.editable import EditStates
+from .sidebar_right_base import SidebarRightBase
 
-class SidebarNamedFiles(QWidget):
+class SidebarNamedFiles(SidebarRightBase):
 
     def __init__(self, *, main, role=1, config:Config):
         super().__init__()
@@ -66,6 +67,7 @@ class SidebarNamedFiles(QWidget):
             except Exception as ex:
                 msg = f"Error during named-files inputs setup: {ex}"
                 meut.warning(parent=self, msg=msg, title="Error")
+                return
 
             self.view = QTreeView()
             self.view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
@@ -77,9 +79,12 @@ class SidebarNamedFiles(QWidget):
             self.view.setAutoScroll(True)
             self.view.setIndentation(20)
             self.view.setColumnWidth(0, 250)
-            self.model = TreeModel(["Staged files"], nos, self, title="Staged named-files", sidebar=self)
+            self.model = TreeModel(headers=["Staged files"], data=nos, parent=self, title="Staged named-files", sidebar=self)
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
+            #
+            #
+            #
             self.view.updateGeometries()
             layout.addWidget(self.view)
             self.view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -98,6 +103,7 @@ class SidebarNamedFiles(QWidget):
             #
             self.view.clicked.connect(self.on_named_file_tree_click)
             self.setLayout(layout)
+
         except Exception as e:
             import traceback
             print(traceback.format_exc())
@@ -153,7 +159,8 @@ class SidebarNamedFiles(QWidget):
 
         self.copy_action = QAction()
         self.copy_action.setText(self.tr("Copy to working dir"))
-        self.copy_action.triggered.connect(self._copy_file_back_to_cwd)
+        self.copy_action.triggered.connect(self._copy_back_to_cwd)
+        #self.copy_action.triggered.connect(self._copy_file_back_to_cwd)
 
         # setup callbacks
         # add to menu
@@ -204,6 +211,7 @@ class SidebarNamedFiles(QWidget):
             clipboard = QApplication.instance().clipboard()
             clipboard.setText(path)
 
+    """
     def _copy_file_back_to_cwd(self) -> None:
         from_index = self.view.currentIndex()
         if from_index.isValid():
@@ -244,6 +252,7 @@ class SidebarNamedFiles(QWidget):
 
         else:
             QMessageBox.warning(self, "Error", "Cannot copy item")
+        """
 
     def _new_run(self):
         maker = SidebarFileRefMaker(parent=self, main=self.main)

@@ -15,14 +15,17 @@ class TreeItem:
             cs = []
             data = self.item_data
             if not data.isfile():
-                n2 = Nos(os.path.join(os.getcwd(), data.path))
-                lst = data.listdir()
-                lst.sort()
-                for c in lst:
-                    if c.startswith("."):
-                        continue
-                    item = TreeItem( Nos( os.path.join( data.path, c ) ), self)
-                    cs.append(item)
+                try:
+                    n2 = Nos(os.path.join(os.getcwd(), data.path))
+                    lst = data.listdir()
+                    lst.sort()
+                    for c in lst:
+                        if c.startswith("."):
+                            continue
+                        item = TreeItem( Nos( os.path.join( data.path, c ) ), self)
+                        cs.append(item)
+                except Exception as e:
+                    print(f"error: {e}: {self.item_data} in {self.parent_item}")
             self._child_items = cs
         return self._child_items
 

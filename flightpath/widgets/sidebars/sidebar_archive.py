@@ -34,8 +34,9 @@ from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReference
 from flightpath.util.message_utility import MessageUtility as meut
 
 from flightpath.editable import EditStates
+from .sidebar_right_base import SidebarRightBase
 
-class SidebarArchive(QWidget):
+class SidebarArchive(SidebarRightBase):
 
     def __init__(self, *, role=1, main, config:Config):
         super().__init__()
@@ -77,7 +78,7 @@ class SidebarArchive(QWidget):
             header = self.view.header()
             header.setStretchLastSection(True)
             header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-            self.model = TreeModel(["Archive"], nos, self, title="Archived results", sidebar=self)
+            self.model = TreeModel(headers=["Archive"], data=nos, parent=self, title="Archived results", sidebar=self)
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
             self.view.updateGeometries()
@@ -162,7 +163,7 @@ class SidebarArchive(QWidget):
 
         self.copy_action = QAction()
         self.copy_action.setText(self.tr("Copy to working dir"))
-        self.copy_action.triggered.connect(self._copy_results_back_to_cwd)
+        self.copy_action.triggered.connect(self._copy_back_to_cwd)
 
         self.delete_action = QAction()
         self.delete_action.setText(self.tr("Permanent delete"))
@@ -187,19 +188,17 @@ class SidebarArchive(QWidget):
     def _results_mani_path_for_path(self, path:str) -> str:
         if path is None:
             raise ValueError("Path cannot be None")
-        print(f"sidebar arch: _results_mani_path_for_path: path: {path}")
+        print(f"sidebar arch: _resultx_mani_path_for_path: path: {path}")
         #
         # we need the archive path as one thing; otherwise, we're likely to have trouble with the protocol.
         #
-
         apath = path[len(self.archive_path)+1:]
-
         parts = pathu.parts(apath)
         parts = [self.archive_path] + parts
         sep = pathu.sep(path)
         maniparts = []
         found = False
-        print(f"sidebar arch: _results_mani_path_for_path: parts: {parts}")
+        print(f"sidebar arch: _resultx_mani_path_for_path: parts: {parts}")
         for part in parts:
             m = re.search(r"^.*\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(?:_\d)?", part)
             maniparts.append(part)
@@ -243,23 +242,34 @@ class SidebarArchive(QWidget):
         print(f"sidebar arch: _has_reference: path 1: {path}")
         if path is None:
             raise ValueError("Path cannot be None")
-        #
-        # need to check if this is the archive/manifest.json. if it is return False
-        #
-        if self._is_archive_manifest(path):
+        try:
+            #
+            # need to check if this is the archive/manifest.json. if it is return False
+            #
+            if self._is_archive_manifest(path):
+                return False
+            #
+            #
+            #
+            print(f"sidebar arch: _has_reference: path 2: {path}")
+            manipath = self._results_mani_path_for_path(path)
+            print(f"sidebar arch: _has_reference: manipath 1: {manipath}")
+            mani = None
+            with DataFileReader(manipath) as file:
+                mani = json.load(file.source)
+            if "$" in mani["named_file_name"] or "$" in mani["named_paths_name"]:
+                return True
             return False
-        #
-        #
-        #
-        print(f"sidebar arch: _has_reference: path 2: {path}")
-        manipath = self._results_mani_path_for_path(path)
-        print(f"sidebar arch: _has_reference: manipath: {manipath}")
-        mani = None
-        with DataFileReader(manipath) as file:
-            mani = json.load(file.source)
-        if "$" in mani["named_file_name"] or "$" in mani["named_paths_name"]:
-            return True
-        return False
+        except Exception as e:
+            #
+            # if we're in the middle of a template, not on a specific result, we don't want a repeat run.
+            # however, we can't say if there is a refrence or not because we're not on a run we can check.
+            # in that case we throw an exception rather than being more perceptive about it. which is
+            # fineish. therefore this isn't a binary, it's a ternary, which kind of sucks, but we get the
+            # 3rd state by returning None.
+            #
+            print(f"No reference found because {type(e)}: {e}. This is probably fine.")
+            return None
 
     def _show_context_menu(self, position):
         index = self.view.indexAt(position)
@@ -308,6 +318,7 @@ class SidebarArchive(QWidget):
         find = FindFileByReferenceDialog(main=self.main)
         self.main.show_now_or_later(find)
 
+    """
     def _copy_results_back_to_cwd(self) -> None:
         #
         # TODO: this has been generalized in Fiut. switch to that.
@@ -341,6 +352,7 @@ class SidebarArchive(QWidget):
                 QMessageBox.warning(self, "Error", "Cannot copy item over another file")
         else:
             QMessageBox.warning(self, "Error", "Cannot copy item")
+    """
 
     def _new_run(self) -> None:
         maker = SidebarArchiveRefMaker(main=self.main, parent=self)
