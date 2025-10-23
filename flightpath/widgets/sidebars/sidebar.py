@@ -44,6 +44,11 @@ class Sidebar(QWidget):
         self.main = main
         self.file_navigator = None
         #
+        # cutted holds any cut-n-paste source path
+        #
+        self.cutted = None
+        self.copied = None
+        #
         # we use the thread pool to run precache workers
         #
         self.threadpool = None
@@ -59,17 +64,11 @@ class Sidebar(QWidget):
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(self.icon_label)
         self.icon_label.setStyleSheet("background-color: #ffffff;border:1px solid #c9c9c9;")
-        #
-        # cutted holds any cut-n-paste source path
-        #
-        self.cutted = None
-        self.copied = None
 
         self.projects = QComboBox()
         size = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.projects.setSizePolicy(size)
 
-        self._build_combo()
         self.projects.activated.connect(self.on_project_changed)
         self.projects.setStyleSheet("QComboBox { margin:1px; height:23px; padding-left:5px;}")
         #
@@ -84,7 +83,9 @@ class Sidebar(QWidget):
         #
         #
         #
-        self._setup_tree()
+        #self._setup_tree()
+        self._set_project_from_state()
+
 
         self.open_config_box = self._help_button(
             text="Open config",
@@ -115,7 +116,8 @@ class Sidebar(QWidget):
             proj, ok = meut.input(title=self.NEW_PROJECT, msg="Enter the new project's name")
             if ok and proj and proj.strip() != "":
                 self.main.state.current_project = proj
-                self._set_project_from_state()
+                self.main.load_state_and_cd()
+                self.main.cancel_config_changes()
             else:
                 #
                 # reset the combobox back to the current project
@@ -125,28 +127,16 @@ class Sidebar(QWidget):
                     self.projects.setCurrentIndex(index)
             return
         self.main.state.current_project = proj
-        self._set_project_from_state()
-        #
-        # reset the csvpaths config and our config panel
-        #
-        self.main.clear_csvpath_config()
+        self.main.load_state_and_cd()
         self.main.cancel_config_changes()
-        self.main.state.load_state_and_cd(self.main)
 
     def _set_project_from_state(self) -> None:
-        self.main.load_state_and_cd()
+        #
         #
         # recreate all UI parts
         #
-        self.main._csvpath_config = None
         self._setup_tree(replace=True)
         self._build_combo()
-        #
-        # reload everything on the right
-        #
-        self.main.renew_sidebar_archive()
-        self.main.renew_sidebar_named_paths()
-        self.main.renew_sidebar_named_files()
         #
         # sometimes it gets confused about the l&f
         #

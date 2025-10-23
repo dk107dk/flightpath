@@ -23,8 +23,9 @@ class State:
     # projects_home is a dirname
     # current_project is a dirname
     #
-    # to find a project you stackup all three: f"{home}{projects_home}{current_project}
+    # to find a project you stackup all three: {home}{projects_home}{current_project}
     #
+
     def __init__(self):
         self._state_path = None
 
@@ -210,6 +211,14 @@ class State:
         self.data = data
 
     def load_state_and_cd(self, main) -> None:
+        #
+        # we have been loading the .flightpath env vars at startup and project change.
+        # it's quick and fine. most often won't be needed.
+        #
+        self.load_env()
+        #
+        #
+        #
         cwd = self.cwd
         nos = Nos(cwd)
         #
@@ -221,6 +230,29 @@ class State:
         configfile = f".{os.sep}config{os.sep}config.ini"
         new_project = not os.path.exists(configfile)
         #
+        #
+        #
+        config = CsvPaths().config
+        #
+        # we were not doing this, but it seems like the right place and time.
+        #
+        main.csvpath_config = config
+        """
+        #
+        # invalidate the config form so it will rebuild
+        #
+        if main.main_layout:
+            main.main_layout.widget(2).ready = False
+        if main.config:
+            main.config.config_panel.ready = False
+            #main.config.config_panel.populate_all_forms()
+        """
+
+        #
+        # remember: setting config.configpath triggers a reload.
+        #
+        config.configpath = os.path.join(cwd, "config", "config.ini")
+        #
         # if the dir has no config it is a new project. CsvPath Framework
         # will generate a config file. We need to add an examples folder
         # to help people get started. CsvPath Framework does not offer
@@ -228,19 +260,10 @@ class State:
         #
         if new_project:
             #
-            # ffr: we don't need this because Config creates a relative path by default
-            #os.environ[CsvPath_Config.CSVPATH_CONFIG_FILE_ENV] = cwd
-            #
             # this line is principlly to get the project dirs and files created
             # we can assume main.py will create its own CsvPaths and config for
             # its long term use.
             #
-            config = CsvPaths().config
-            #
-            # remember: setting configpath triggers a reload! not really a problem here, but
-            # it isn't what we're looking for.
-            #
-            config.configpath = os.path.join(cwd, "config", "config.ini")
             config.set(section="config", name="path", value=os.path.join(cwd, "config", "config.ini") )
             config.set(section="config", name="allow_var_sub", value="yes" )
             config.set(section="config", name="var_sub_source", value=os.path.join(cwd, "config", "env.json") )
@@ -260,8 +283,7 @@ class State:
                 os.makedirs(examples)
                 em = ExamplesMarshal(main)
                 em.add_examples(path=examples)
-        else:
-            ...
+
 
 
 

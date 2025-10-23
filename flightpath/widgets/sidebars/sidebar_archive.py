@@ -42,7 +42,7 @@ class SidebarArchive(SidebarRightBase):
         super().__init__()
         self.role = role
         self.main = main
-        self.config = config
+        #self.config = config
         self.archive_path = None
         self.setMinimumWidth(300)
         self.context_menu = None
@@ -58,7 +58,7 @@ class SidebarArchive(SidebarRightBase):
             layout.setSpacing(0)
             layout.setContentsMargins(1, 1, 1, 1)
 
-            self.archive_path = self.config.get(section="results", name="archive")
+            self.archive_path = self.main.csvpath_config.get(section="results", name="archive")
             nos = Nos(self.archive_path)
             if not nos.dir_exists():
                 #

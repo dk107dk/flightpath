@@ -37,7 +37,7 @@ class SidebarNamedPaths(SidebarRightBase):
     def __init__(self, *, main, role=1, config:Config):
         super().__init__()
         self.main = main
-        self.config = config
+        #self.config = config
         self.setMinimumWidth(300)
         self.new_run_action = None
         self.copy_action = None
@@ -47,7 +47,7 @@ class SidebarNamedPaths(SidebarRightBase):
 
     def setup(self) -> None:
         try:
-            named_paths_path = self.config.get(section="inputs", name="csvpaths")
+            named_paths_path = self.main.csvpath_config.get(section="inputs", name="csvpaths")
             nos = Nos(named_paths_path)
             layout = self.layout()
             if layout is None:

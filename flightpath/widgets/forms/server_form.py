@@ -181,8 +181,7 @@ class ServerForm(BlankForm):
 
     def _create_config_str(self, name:str) -> str:
         self.main.save_config_changes()
-        config = self.main.csvpath_config
-        config = config._config
+        config = self.main.csvpath_config._config
         string_buffer = io.StringIO()
         config.write(string_buffer)
         config_str = string_buffer.getvalue()

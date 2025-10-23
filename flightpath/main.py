@@ -195,7 +195,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
         if not self.state_check():
             return
-        self.load_state_and_cd()
+        # state_check does this
+        #self.load_state_and_cd()
         #
         # after this we show the other first shows()
         #
@@ -251,33 +252,43 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if darkdetect.isDark():
             s = "QSplitter::handle { background-color: #535353;  margin:1px; }"
             self.centralWidget().setStyleSheet(s)
-            self.rt_col_helpers.setStyleSheet(s)
-            self.rt_col.setStyleSheet(s)
+            if self.rt_col_helpers:
+                self.rt_col_helpers.setStyleSheet(s)
+            if self.rt_col:
+                self.rt_col.setStyleSheet(s)
             self.main.setStyleSheet(s)
         if darkdetect.isLight():
             s = "QSplitter::handle { background-color: #f3f3f3;  margin:1px; }"
             self.centralWidget().setStyleSheet(s)
-            self.rt_col_helpers.setStyleSheet(s)
-            self.rt_col.setStyleSheet(s)
+            if self.rt_col_helpers:
+                self.rt_col_helpers.setStyleSheet(s)
+            if self.rt_col:
+                self.rt_col.setStyleSheet(s)
             self.main.setStyleSheet(s)
         #
         # schedule an update for the splitters
         #
-        self.rt_col_helpers.update()
-        self.rt_col.update()
+        if self.rt_col_helpers:
+            self.rt_col_helpers.update()
+        if self.rt_col:
+            self.rt_col.update()
         self.main.update()
         self.centralWidget().update()
         #
         # handle the file trees specially. there is probably a better way.
         #
-        self.sidebar_rt_top.update_style()
-        self.sidebar_rt_mid.update_style()
-        self.sidebar_rt_bottom.update_style()
+        if self.sidebar_rt_top:
+            self.sidebar_rt_top.update_style()
+        if self.sidebar_rt_mid:
+            self.sidebar_rt_mid.update_style()
+        if self.sidebar_rt_bottom:
+            self.sidebar_rt_bottom.update_style()
         #
         # walk through the open files
         #
-        for t in taut.tabs(self.content.tab_widget):
-            stut.set_editable_background(t)
+        if self.content and self.content.tab_widget:
+            for t in taut.tabs(self.content.tab_widget):
+                stut.set_editable_background(t)
 
     def state_check(self) -> bool:
         self.state = State()
@@ -302,13 +313,20 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @property
     def csvpath_config(self) -> CsvPathConfig:
         if self._csvpath_config is None:
+            raise RuntimeError("csvpath config should not be None if we have a selected project and have cded into it")
+            """
             paths = CsvPaths()
             #
             # feels like we need to set the new config to our current project's config here.
             # however, in practice it has happend elsewhere. not sure that's ideal.
             #
             self._csvpath_config = paths.config
+            """
         return self._csvpath_config
+
+    @csvpath_config.setter
+    def csvpath_config(self, config:CsvPathConfig) -> None:
+        self._csvpath_config = config
 
     def clear_csvpath_config(self) -> None:
         self._csvpath_config = None
@@ -331,12 +349,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.logger.debug(msg)
 
     def load_state_and_cd(self) -> None:
+        self.clear_csvpath_config()
         """ sets the project directory into .flightpath file, cds to project dir, and reloads UI. """
         self.state.load_state_and_cd(self)
         #
         # if we have env vars set them for this process
         #
-        self.state.load_env()
+        #self.state.load_env()
         self.startup()
 
     def startup(self) -> None:
@@ -631,15 +650,14 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             #
             # if config and config hasn't been setup yet we need get on that.
             #
-            if self.main_layout.widget(i).ready is False:
-                self.main_layout.widget(i).config_panel.setup_forms()
+            if self.main_layout.widget(2).ready is False:
+                self.main_layout.widget(2).config_panel.setup_forms()
             #
             # make sure we show the right info from the new csvpath_config. sidebar
             # will have made/triggered the update to csvpath_config of the current proj
             #
             self.config.config_panel.ready = False
             self.config.config_panel.populate_all_forms()
-
         #
         # if i == 2 (Config) we have to check if the config has changed. if it has
         # and we switch away work could be lost. we need to confirm w/user that is

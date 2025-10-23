@@ -66,7 +66,6 @@ class ConfigPanel(QWidget):
         # for now we'll just stick with local config/config.ini and
         # figure the rest out later.
         #
-        self.config = main.csvpath_config
         self.main = main
         #
         # state is a json file called ./.state. it is just a ui state
@@ -116,7 +115,7 @@ class ConfigPanel(QWidget):
 
         #print(f"config_panel: setup_forms: creating forms")
         self.forms = [
-            BlankForm(main=self.main),
+            BlankForm(main=self.main).show_blank(),
             ProjectsForm(main=self.main),
             EnvForm(main=self.main),
             CacheForm(main=self.main),
@@ -132,7 +131,7 @@ class ConfigPanel(QWidget):
         for form in self.forms:
             #print(f"config_panel: setup_forms: adding form widget: {form}")
             self.forms_layout.addWidget(form)
-            form.config = self.config
+            form.config = self.main.csvpath_config
             if populate is True:
                 form.populate()
         self.ready = True
@@ -263,7 +262,6 @@ class ConfigPanel(QWidget):
             self._sections.append("projects")
             self._sections.append("env")
             for s in self.core_sections:
-            #for s in self.config._config.sections():
                 if self.is_integration(s) or not self.is_core_section(s):
                     continue
                 #
@@ -295,7 +293,7 @@ class ConfigPanel(QWidget):
                 else:
                     pairs = []
                     try:
-                        pairs = self.config._config.items(s)
+                        pairs = self.main.csvpath_config._config.items(s)
                     except Exception:
                         ...
                     for pair in pairs:
@@ -314,31 +312,24 @@ class ConfigPanel(QWidget):
         return self._configurables
 
     def save_all_forms(self) -> None: # , filepath: Path
-        print(f"confpanel: save_all_forms: configpath: {self.config.configpath}, cwd: {self.main.state.cwd}")
-        named_files = self.config.get(section="inputs", name="files")
+        print(f"confpanel: save_all_forms: configpath: {self.main.csvpath_config.configpath}, cwd: {self.main.state.cwd}")
+        named_files = self.main.csvpath_config.get(section="inputs", name="files")
         print(f"cfgpanel: save_all_forms: named_files: {named_files}")
 
-        named_paths = self.config.get(section="inputs", name="csvpaths")
-        archive = self.config.get(section="results", name="archive")
+        named_paths = self.main.csvpath_config.get(section="inputs", name="csvpaths")
+        archive = self.main.csvpath_config.get(section="results", name="archive")
         #
         # TODO: using reload to assure config exists. if not a default
         # will be generated and loaded. which is fine because the forms
         # have all their changes still. in theory. this should change
         # in csvpath lib to better support the use case. :/
         #
-        #
-        # doing this at the initalization of the Config panel. if we have
-        # a user editing config.ini and also at the same time using the UI
-        # to edit config that's a level of unusual we can ignore.
-        #
-        # self.config.reload()
-        #
         for form in self.forms:
             try:
-                form.add_to_config(self.config) #self.metadata)
+                form.add_to_config(self.main.csvpath_config)
             except:
                 print(traceback.format_exc())
-        self.config.save_config()
+        self.main.csvpath_config.save_config()
         #
         # note that some non-config.ini values must/will be saved when add_to_config() is
         # called on their forms. e.g. projects.
@@ -350,11 +341,11 @@ class ConfigPanel(QWidget):
         #
         # TODO: or the extensions could have changed. check that too.
         #
-        if named_files != self.config.get(section="inputs", name="files"):
+        if named_files != self.main.csvpath_config.get(section="inputs", name="files"):
             self.main.sidebar_rt_top.refresh()
-        if named_paths != self.config.get(section="inputs", name="csvpaths"):
+        if named_paths != self.main.csvpath_config.get(section="inputs", name="csvpaths"):
             self.main.sidebar_rt_mid.refresh()
-        if archive != self.config.get(section="results", name="archive"):
+        if archive != self.main.csvpath_config.get(section="results", name="archive"):
             self.main.sidebar_rt_bottom.refresh()
 
 

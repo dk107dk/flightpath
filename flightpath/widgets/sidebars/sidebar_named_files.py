@@ -42,7 +42,7 @@ class SidebarNamedFiles(SidebarRightBase):
     def __init__(self, *, main, role=1, config:Config):
         super().__init__()
         self.role = role
-        self.config = config
+        #self.config = config
         self.setMinimumWidth(300)
         self.main = main
         self.view = None
@@ -56,7 +56,7 @@ class SidebarNamedFiles(SidebarRightBase):
             layout.setSpacing(0)
             layout.setContentsMargins(1, 1, 1, 1)
 
-            named_files_path = self.config.get(section="inputs", name="files")
+            named_files_path = self.main.csvpath_config.get(section="inputs", name="files")
             nos = Nos(named_files_path)
             try:
                 if not nos.dir_exists():
