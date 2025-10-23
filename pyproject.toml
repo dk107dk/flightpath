@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "flightpath"
-version = "0.1.22"
+version = "0.1.23"
 description = ""
 authors = ["Atesta Analytics <support@atestaanalytics.com>"]
 readme = "README.md"
@@ -15,8 +15,8 @@ csvpath = "^0.0.575"
 #flightpath_server = "^0.1.1"
 flightpath_server = { path = "./assets/flightpath_server-0.1.13.tar.gz" }
 #
-# having troubles (suddenly?!) getting sftp to work in smart-open. this 
-# didn't help. all dependencies are already present, as you'd think since 
+# having troubles (suddenly?!) getting sftp to work in smart-open. this
+# didn't help. all dependencies are already present, as you'd think since
 # it was working.
 #
 #smart-open = {extras = ["all"], version = "^7.1.0"}
