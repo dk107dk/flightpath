@@ -4,6 +4,10 @@ counting/increment_counter_every.csvpaths
 counting/projects.csv
 counting/README.md
 counting/tally_and_subtotal.csvpaths
+counting/temps.txt
+counting/temps.csvpath
+counting/thresholds.csvpath
+counting/summing.csvpath
 
 debugging/error.csvpath
 debugging/README.md
@@ -31,6 +35,7 @@ headers/README.md
 math/Automobiles_Annual_Imports_and_Exports_Port_Authority_of_NY.csv
 math/math.csvpaths
 math/min_max_average_percents.csvpaths
+math/above_average.csvpaths
 math/README.md
 
 named-paths groups/my_named_paths.json
@@ -40,3 +45,5 @@ schemas/people.csv
 schemas/person.sql.txt
 schemas/README.md
 schemas/schemas.csvpath
+schemas/shipping.csv
+schemas/intersection.csvpath

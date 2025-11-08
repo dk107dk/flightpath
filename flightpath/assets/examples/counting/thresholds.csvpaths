@@ -1,0 +1,29 @@
+~
+ This csvpath finds all the new high-value thresholds in a CSV file.
+ It gives the same output as this SQL:
+
+    SELECT
+       id,
+       worker_hours_this_period
+    FROM(
+       SELECT
+          id,
+          worker_hours_this_period,
+          MAX(worker_hours_this_period)
+  	 OVER (ORDER BY id ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS max_prev_value
+       FROM
+          projects
+     ) AS subquery
+    WHERE
+       worker_hours_this_period > max_prev_value OR max_prev_value IS NULL;
+
+ id: New high value
+ test-data: examples/headers/projects_with_reset.csv
+~
+$[1*][
+    @hours.onchange.increase = float(#worker_hours_this_period)
+
+    print.onmatch("line: $.csvpath.line_number: $.variables.hours")
+]
+
+

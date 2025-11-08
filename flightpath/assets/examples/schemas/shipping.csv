@@ -1,0 +1,11 @@
+order_id,addressee,unit,street, city,state,zip,payee,unit,street,city,state,zip
+1,john,124,Oak Lane,York, MO,13421,john,124,Oak Lane,York, MO,13421
+2,joe,8R,Main Street,Fall River,CA,88123,joe,8R,Main Street,Fall River,CA,88123
+3,jacob,,Via Voce, Capa Town,TX,45324,manny,,Straightthru Ave,Della City, TX, 73792
+4,jeff,2,Bouimy Blvd.,Bridgeport,WA,03310,jeff,,,,,
+5,james,,Washington Ct.,Blue Rise, VA,61787,jimmy,,Washington Ct.,Blue Rise, VA,61787
+6,ann,M,Back Street,The Ledges,ME,33434,ann,M,Back Street,The Ledges,ME,33434
+7,alice,PO Box 91,Railroad Ave.,Valley South,TN,08915,alice,PO Box 91,Railroad Ave.,Valley South,TN,08915
+8,audrey,,Fellside Way,Freeton,KS,45281,marge,,Fellside Way,Freeton,KS,45281
+9,alex,,South St.,Judy Sint Cay,LA,11539,mary,Top Fl.,Aribine Ave,Concordia Falls,VT,19291
+10,abigale,41,Summer Street,Beckerwood,CA,87154,abigale,41,Summer Street,Beckerwood,CA,87154

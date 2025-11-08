@@ -1,0 +1,45 @@
+
+---- CSVPATH ----
+
+~
+  This csvpath finds the average temp for all days sampled in each month.
+  The result is a "month_ave" dictionary with an average temp keyed by
+  each observed month number.
+
+  I.e. for the first three months of the year you might see:
+	{'01': 27.25, '02': 34.25, '03': 39.65}
+
+  While this kind of pivot may be useful, it's worth pointing out that
+  CsvPath Framework's goal is to assess the validity of data and upgrade
+  it, if needed, to ideal-form raw data. Analysis and reporting are
+  valuable, but ancillary.
+
+  test-data: temps.txt
+~
+$[1*][
+	~ find the month number ~
+	@month = regex(/[0-9]{4}-([0-9]{1,2})/, #0, 1)
+
+	~ count the number of samples we have for the month ~
+	tally.month_obs(@month)
+
+	~ get a subtotal of the month's temps ~
+	@sub = subtotal.month_temp(@month, #temp)
+
+	~ get the count of observations in month ~
+	@obs = get("month_obs_month",@month)
+
+	~ get the average for the month ~
+	@ave = divide(@sub, @obs)
+
+	~ store the average ~
+	put("month_ave", @month, @ave)
+
+print("
+   temp: $.headers.temp
+   obs: $.variables.obs
+   average: $.variables.ave
+   month_temp: $.variables.month_temp
+   month_ave: $.variables.month_ave
+")
+]

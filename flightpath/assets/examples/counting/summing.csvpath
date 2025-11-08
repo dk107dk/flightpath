@@ -1,0 +1,29 @@
+~
+   This csvpath sums up two header values in a similar way to this SQL.
+	SELECT
+	  SUM (CASE
+	    WHEN neighborhood IN ('Roxbury','South Boston')
+	    THEN worker_hours_this_period
+	    ELSE 0 END) AS roxbury_south_boston_hours,
+	  SUM (CASE
+	    WHEN trade IN ('Iron Worker','Pipefitter')
+	    THEN worker_hours_this_period
+	    ELSE 0 END) AS iron_worker_pipefitter_hours
+	FROM projects
+
+   id: hello world
+   test-data: examples/counting/projects.csv
+~
+
+$[1*][
+	subtotal.neighborhood(#neighborhood, #worker_hours_this_period)
+	subtotal.trade(#trade, #worker_hours_this_period)
+
+	@trade_hours = add( get("neighborhood", "Roxbury"), get("neighborhood", "South Boston") )
+	@neighborhood_hours = add( get("trade", "Iron Worker"), get("trade", "Pipefitter") )
+
+	last() -> replace( #neighborhood, @neighborhood_hours )
+	last() -> replace( #trade, @trade_hours )
+	last() -> collect( "neighborhood", "trade" )
+	last() -> print("Check out the matches tab")
+]
