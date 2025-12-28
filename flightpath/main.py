@@ -310,6 +310,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.statusBar().showMessage(f"  Project changed to: {self.state.cwd}")
         return True
 
+
+    @property
+    def has_csvpath_config(self) -> CsvPathConfig:
+        return self._csvpath_config is not None
+
     @property
     def csvpath_config(self) -> CsvPathConfig:
         if self._csvpath_config is None:
@@ -834,7 +839,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     @Slot(tuple)
     def update_views(self, worker_data):
-        msg, lines, filepath, data, lines_to_take = worker_data # pylint: disable=W0612
+        msg, lines, filepath, data, lines_to_take, editable = worker_data # pylint: disable=W0612
+        print(f"update_viewsx: editable: {editable}")
         if self.progress_dialog:
             self.progress_dialog.close()
         if isinstance( lines, Exception ):
@@ -845,7 +851,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             msg_box.setStandardButtons(QMessageBox.Ok)
             msg_box.exec()
             return
-        table_model = TableModel(data)
+        table_model = TableModel(data=data, editable=(editable == EditStates.EDITABLE))
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(1)
         #
@@ -855,7 +861,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         obj_name = filepath
         data_view = taut.find_tab(self.content.tab_widget, filepath)
         if data_view is None:
-            data_view = DataViewer(parent=self.content)
+            data_view = DataViewer(parent=self.content, editable=editable)
             data_view.setObjectName(obj_name)
             #
             # make sure we have the lines so the raw_viewer can take the same
@@ -868,6 +874,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             # find_tab -> (index, widget)
             #
             data_view = data_view[1]
+        table_model.signals.edit_made.connect( data_view.on_edit_made )
+        table_model.signals.columns_inserted.connect( data_view.on_row_or_column_edit )
+        table_model.signals.columns_deleted.connect( data_view.on_row_or_column_edit )
+        table_model.signals.rows_inserted.connect( data_view.on_row_or_column_edit )
+        table_model.signals.rows_deleted.connect( data_view.on_row_or_column_edit )
+
         data_view.display_data(table_model)
         #
         # when  data _view is visible we show the sample tool bar
@@ -913,7 +925,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         return self.read_validate_and_display_file_for_path(self.selected_file_path, editable=editable, finished_callback=finished_callback)
 
     def read_validate_and_display_file_for_path(self, path:str, editable=EditStates.EDITABLE, *, finished_callback=None) -> QRunnable:
-        print(f"read_validate_and_display_file_for_path 1")
+        print(f"read_validate_and_display_file_for_path 1: {path}: {editable}")
         #
         # callbacks passed into this method should be watched closely. the find data by ref dialog
         # had trouble getting them to behave correctly.
@@ -926,13 +938,15 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         nos = Nos(path)
         isfile = nos.isfile()
         if isfile and info.suffix() in self.csvpath_config.get(section="extensions", name="csv_files"): # pylint: disable=E1135
+            #print(f"read_validate_and_display_file_for_path 2: {path}: {editable}")
             worker = GeneralDataWorker(
                 path,
                 self,
                 rows=self.content.toolbar.rows.currentText(),
                 sampling=self.content.toolbar.sampling.currentText(),
                 delimiter=self.content.toolbar.delimiter_char(),
-                quotechar=self.content.toolbar.quotechar_char()
+                quotechar=self.content.toolbar.quotechar_char(),
+                editable = editable
             )
             worker.signals.finished.connect(self.update_views)
             if finished_callback is not None:
@@ -1082,6 +1096,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             return
         info = QFileInfo(self.selected_file_path)
         editable = info.suffix() in self.csvpath_config.get(section="extensions", name="csvpath_files")
+        editable = editable or info.suffix() in self.csvpath_config.get(section="extensions", name="csv_files")
         editable = editable or info.suffix() in ["json", "md", "txt"]
         if editable is True:
             editable = EditStates.EDITABLE
@@ -1307,13 +1322,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def save_config_changes(self):
         try:
-            print(f"save_config_changes: saving all forms")
             self.config.config_panel.save_all_forms()
-            print(f"save_config_changes: populating all forms")
             self.config.config_panel.populate_all_forms()
-            print(f"save_config_changes: resetting toolbar")
             self.reset_config_toolbar()
-            print(f"save_config_changes: done")
         except Exception as e:
             meut.message(title="Error saving config", msg=f"Error saving config: {e}")
 

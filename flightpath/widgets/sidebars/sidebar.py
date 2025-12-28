@@ -59,7 +59,6 @@ class Sidebar(QWidget):
         layout.setContentsMargins(4, 3, 1, 3)
         self.icon_label = ClickableLabel()
         pixmap = QPixmap(fiut.make_app_path(f"assets{os.sep}logo-173x40.png"))
-        #pixmap = QPixmap(fiut.make_app_path(f"assets{os.sep}logo.svg"))
         self.icon_label.setPixmap(pixmap)
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(self.icon_label)

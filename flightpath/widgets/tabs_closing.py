@@ -75,7 +75,6 @@ class ClosingTabs(QTabWidget):
 
     @Slot(str)
     def close_tab(self, name:str) -> bool:
-        print(f"close_tab: name: {name} in {self}")
         #
         # we find tabs by name because the indexes change
         # using our own tab close icon made the changing
@@ -119,7 +118,6 @@ class ClosingTabs(QTabWidget):
         return False
 
     def _configure_tabs(self) -> None:
-        print(f"tabs_closing: _configure_tabs 1: {self}: {self.count()}")
         #
         # show and hides
         #
@@ -138,7 +136,6 @@ class ClosingTabs(QTabWidget):
             self.main.main_layout.setCurrentIndex(0)
         elif self.count() == 0 and hasattr(self.parent, "close_help"):
             self.parent.close_help()
-        print(f"tabs_closing: _configure_tabs 2: {self.count()}")
         return True
 
 

@@ -19,6 +19,8 @@ debugging/World_Port_Index_sample.csv
 duplicates/Alzheimers_Disease_and_Healthy_Aging_Data_sample.csv
 duplicates/dups.csvpaths
 duplicates/README.md
+duplicates/sales.csvpaths
+duplicates/sales.csv
 
 first steps/Hello World.csvpath
 first steps/README.md
@@ -47,3 +49,11 @@ schemas/README.md
 schemas/schemas.csvpath
 schemas/shipping.csv
 schemas/intersection.csvpath
+
+lookups/Boundaries_US_Zip_Codes.csv
+lookups/index_zipcodes.csvpaths
+lookups/README.md
+lookups/zipcode_lookup.csvpaths
+
+
+

@@ -1,30 +1,30 @@
 ~
    This csvpath is roughly equal to this SQL:
-	SELECT 
-	  street, 
-	  city 
+	SELECT
+	  street,
+	  city
 	FROM shipping_address
 	INTERSECT
-	SELECT 
-	  street, 
-	  city 
+	SELECT
+	  street,
+	  city
 	FROM billing_address
 
-   We set up the schemas for the shipping address and billing address, just 
-   for clarity; whereas, the SQL query only tests for street and city being  
-   equal. 
+   We set up the schemas for the shipping address and billing address, just
+   for clarity; whereas, the SQL query only tests for street and city being
+   equal.
 
-   To be more equivalent, the csvpath would just be: 
+   To be more equivalent, the csvpath would just be:
 	#3 == #9
 	#4 == #10
 	collect(#street, #city)
 
-   Regardless, it is not a very realistic case, but it is interesting to look 
+   Regardless, it is not a very realistic case, but it is interesting to look
    at the similarities to SQL.
 
-   In the second line() definition we use the header indexes rather than the 
-   names. That is because we have conflicting header names. Header names are 
-   found by searching left to right, so we're fine with the first line() 
+   In the second line() definition we use the header indexes rather than the
+   names. That is because we have conflicting header names. Header names are
+   found by searching left to right, so we're fine with the first line()
    definition. But the second line()'s headers would not be found if we used
    the header names. This is exactly the kind of thing index references are
    for. Because we can do this, our csvpath finds a number of schema violations
@@ -33,16 +33,22 @@
    Notice that we are naming the schema fields, rather than just leaving them
    to be understood from the header names. This is partly because of the index
    header references. But it is more valuable because we will have errors on
-   the second line() in line 4 because of the not-nones. The error messages 
-   will be easier to understand if we add the names to the string()s. It is 
+   the second line() in line 4 because of the not-nones. The error messages
+   will be easier to understand if we add the names to the string()s. It is
    optional, but definitely helps in some cases, like this one.
+
+   Note that for this to be a useful example we need validation-mode to be set
+   to no-raise, so the full run happens despite errors. And we gain easier
+   debugging errors messages and make the schemas self documenting by adding
+   the names shipping and billing to the line() functions.
 
    id: addresses
    test-data: examples/schemas/shipping.csv
+   validation-mode:print, no-raise
 ~
 
 $[1*][
-	line(
+	line.shipping(
 	   blank(#0),
 	   string.notnone.addressee(#1),
 	   string.unit(#unit),
@@ -52,7 +58,7 @@ $[1*][
             integer.notnone.postcode(#zip),
 	   wildcard()
 	)
-	line(
+	line.billing(
 	   wildcard(7),
 	   string.notnone.payee(#payee),
 	   string.unit(#unit),

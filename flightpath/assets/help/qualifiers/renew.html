@@ -5,7 +5,9 @@
             Qualifier: renew
         </h2>
         <p>
-        <i>renew</i> resets a <i>latch</i>ed match component.
+        <i>renew</i> resets a variable match component at the start of each line.
+        You can add the renew qualifier to any one use of the variable and have the same
+        effect of clearing the variable before the line starts.
         </p>
         <h3 style="margin-top:25px;">
             Availability
@@ -48,9 +50,9 @@
                         <p>
                         As a simple analogy,
                         CsvPath Language variables are like HTTP session
-                        variables, in that they last across all lines in the whole
+                        variables, in that they last for the duration of a run, across all lines in the whole
                         document. However, the <i>renew</i> qualifier makes a variable act
-                        like a request-scoped variable, resetting after every line.
+                        like a request-scoped variable, resetting for every line.
                         </p>
                 </td>
                 <td class='value border-ltr border-bottom code'>

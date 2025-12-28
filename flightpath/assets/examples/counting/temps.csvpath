@@ -1,45 +1,37 @@
-
 ---- CSVPATH ----
 
 ~
-  This csvpath finds the average temp for all days sampled in each month.
-  The result is a "month_ave" dictionary with an average temp keyed by
-  each observed month number.
-
-  I.e. for the first three months of the year you might see:
-	{'01': 27.25, '02': 34.25, '03': 39.65}
-
-  While this kind of pivot may be useful, it's worth pointing out that
-  CsvPath Framework's goal is to assess the validity of data and upgrade
-  it, if needed, to ideal-form raw data. Analysis and reporting are
-  valuable, but ancillary.
-
-  test-data: temps.txt
+  This csvpath finds the average temp for all days sampled in each month. if the
+  average is too high or low it registers an error.
+  id: average temps
+  validation-mode:print, no-raise
+  test-data: examples/counting/temps.txt
 ~
 $[1*][
-	~ find the month number ~
-	@month = regex(/[0-9]{4}-([0-9]{1,2})/, #0, 1)
 
-	~ count the number of samples we have for the month ~
-	tally.month_obs(@month)
+   ~ find the month number ~
+   @month = month(#0)
 
-	~ get a subtotal of the month's temps ~
-	@sub = subtotal.month_temp(@month, #temp)
+   ~ get a subtotal of the month's temp samples ~
+   @sub = subtotal(@month, #temp)
 
-	~ get the count of observations in month ~
-	@obs = get("month_obs_month",@month)
+   ~ count the number of samples for the month ~
+   tally.obs(@month)
 
-	~ get the average for the month ~
-	@ave = divide(@sub, @obs)
+   ~ get the count of observations in month ~
+   @obs = get("obs_month", @month)
 
-	~ store the average ~
-	put("month_ave", @month, @ave)
+   ~ get the average for the month ~
+   @ave = divide(@sub, @obs)
 
-print("
-   temp: $.headers.temp
-   obs: $.variables.obs
-   average: $.variables.ave
-   month_temp: $.variables.month_temp
-   month_ave: $.variables.month_ave
-")
+   ~ print running average in a table just for checking our work ~
+   put("Temperature Data", "Observation", #0)
+   put("Temperature Data", "Temp", #temp)
+   put("Temperature Data", "Number of observations in month", @obs)
+   put("Temperature Data", "Average", format(@ave, ".2f"))
+   var_table("Temperature Data")
+
+   ~ the validation rule ~
+   above(@ave, 40) -> error("Average temp in $.variables.month is too high: $.variables.ave")
+   below(@ave, 30) -> error("Average temp in $.variables.month is too low: $.variables.ave ")
 ]

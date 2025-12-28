@@ -9,6 +9,7 @@ from PySide6.QtCore import Slot
 
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.json_viewer import JsonViewer
+from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.tab_overlay import TabWidgetOverlayButton
 from flightpath.widgets.tabs_closing import ClosingTabs
@@ -49,15 +50,34 @@ class Content(ClosingTabsHolder):
                 return False
         return True
 
+    def data_files_are_saved(self) -> bool:
+        for i in range(self.tab_widget.count()):
+            widget = self.tab_widget.widget(i)
+            if isinstance(widget, DataViewer):
+                #
+                # if it is not an editable file we skip ahead as if it were saved, regardless
+                #
+                if widget.editable == EditStates.UNEDITABLE:
+                    continue
+                if widget.saved is True:
+                    continue
+                return False
+        return True
+
     def all_files_are_saved(self) -> bool:
-        return self.csvpath_files_are_saved() and self.json_files_are_saved()
+        return (
+            self.csvpath_files_are_saved()
+            and self.json_files_are_saved()
+            and self.data_files_are_saved()
+        )
 
     def do_i_close(self, i:int) -> bool:
         widget = self.tab_widget.widget(i)
         cmod = isinstance(widget, CsvpathViewer) and not widget.saved
         jmod = isinstance(widget, JsonViewer) and widget.modified
         mmod = isinstance(widget, MdViewer) and not widget.saved
-        mod = cmod or jmod or mmod
+        dmod = isinstance(widget, DataViewer) and not widget.saved
+        mod = cmod or jmod or mmod or dmod
         if mod:
             #
             # bring tab into view
@@ -76,7 +96,6 @@ class Content(ClosingTabsHolder):
         return True
 
     def close_all_tabs(self):
-        print("content: close all tabs!")
         #
         # if we're in a csvpath file that has changes we need to confirm we're discarding the changes
         #
