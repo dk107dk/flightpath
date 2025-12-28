@@ -3,7 +3,8 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QTabWidget,
-    QMessageBox
+    QMessageBox,
+    QToolBar
 )
 from PySide6.QtCore import Slot
 
@@ -34,7 +35,14 @@ class Content(ClosingTabsHolder):
 
         self.setLayout(layout)
 
-        self.toolbar = DataToolbar(parent=main)
+        ts = self.main.findChildren(QToolBar)
+        if len( ts ) == 0:
+            self.toolbar = DataToolbar(parent=main)
+        elif len( ts ) > 1:
+            raise RuntimeError("Cannot have {len(ts)} toolbar instances")
+        else:
+            self.toolbar = ts[0]
+            self.toolbar.parent = self
 
     def csvpath_files_are_saved(self) -> bool:
         for i in range(self.tab_widget.count()):

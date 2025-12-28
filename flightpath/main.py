@@ -840,7 +840,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @Slot(tuple)
     def update_views(self, worker_data):
         msg, lines, filepath, data, lines_to_take, editable = worker_data # pylint: disable=W0612
-        print(f"update_viewsx: editable: {editable}")
         if self.progress_dialog:
             self.progress_dialog.close()
         if isinstance( lines, Exception ):
