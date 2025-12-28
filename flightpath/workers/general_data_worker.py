@@ -9,12 +9,22 @@ from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.toolbars.data_toolbar import DataToolbar
-
+from flightpath.editable import EditStates
 from .data_worker_signals import DataWorkerSignals
 
 class GeneralDataWorker(QRunnable):
 
-    def __init__(self, filepath, main, *, rows:str, sampling:str, delimiter=None, quotechar=None):
+    def __init__(
+        self,
+        filepath,
+        main,
+        *,
+        rows:str,
+        sampling:str,
+        delimiter:str=None,
+        quotechar:str=None,
+        editable:bool=False
+    ):
         super().__init__()
         self.main = main
         self.filepath = filepath
@@ -25,6 +35,8 @@ class GeneralDataWorker(QRunnable):
         self.lines_to_take:list[int] = None
         self.delimiter = delimiter
         self.quotechar = quotechar
+        self.editable = editable
+        print(f"GeneralDataWorker 1: {filepath}: {self.editable}")
 
     def _rows(self, s) -> int:
         if s == "All lines":
@@ -107,7 +119,7 @@ class GeneralDataWorker(QRunnable):
             self.signals.finished.emit((f"Error", e, None, None, None))
             return
         self.signals.messages.emit(f"  Opened {path}")
-        self.signals.finished.emit((f"Took {t} lines out of {i} seen", lines, path, data, lines_to_take))
+        self.signals.finished.emit((f"Took {t} lines out of {i} seen", lines, path, data, lines_to_take, self.editable))
 
 
     def prep_sampling(self) -> None:

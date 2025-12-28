@@ -42,7 +42,6 @@ class SidebarNamedFiles(SidebarRightBase):
     def __init__(self, *, main, role=1, config:Config):
         super().__init__()
         self.role = role
-        #self.config = config
         self.setMinimumWidth(300)
         self.main = main
         self.view = None

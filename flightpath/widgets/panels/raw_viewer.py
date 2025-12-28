@@ -64,13 +64,11 @@ class RawViewer(QWidget):
                 return
         self.label.hide()
         self.main.show_now_or_later(self.text_edit)
-        #self.text_edit.show()
         self.text_edit.setPlainText(content)
         self.loaded = True
 
     def clear(self):
         self.main.show_now_or_later(self.text_edit)
-        #self.label.show()
         self.text_edit.hide()
 
 

@@ -4,7 +4,7 @@ import os
 import traceback
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QTextEdit, QLabel, QMessageBox, QTableView
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtCore import Qt, QFileInfo, Slot
 
 from csvpath.util.file_readers import DataFileReader
@@ -360,6 +360,14 @@ class CsvpathViewer(QWidget):
             print_layout = QVBoxLayout()
             default.setLayout(print_layout)
             print_view = QPlainTextEdit()
+            #
+            # exp! fixed width font fixes the output from the table functions.
+            #
+            fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+            print_view.setFont(fixed_font)
+            #
+            #
+            #
             printout = printer.to_string(name)
             print_view.setPlainText(printout)
             print_view.setReadOnly(True)
@@ -426,7 +434,7 @@ class CsvpathViewer(QWidget):
         layout = QVBoxLayout()
         matches.setLayout(layout)
         matches_view = QTableView()
-        model = TableModel(lines)
+        model = TableModel(data=lines)
         matches_view.setModel(model)
         layout.addWidget(matches_view)
         layout.setContentsMargins(0, 0, 0, 0)

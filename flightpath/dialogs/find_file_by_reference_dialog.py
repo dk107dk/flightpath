@@ -32,7 +32,6 @@ from csvpath.util.nos import Nos
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.icon_packager import IconPackager
-from flightpath.widgets.panels.table_model import TableModel
 from flightpath.dialogs.find_file_name_one_context_menu import NameOneLineEdit
 from flightpath.dialogs.reference_files.reference_file_handler import ReferenceFileHandler
 from flightpath.util.help_finder import HelpFinder

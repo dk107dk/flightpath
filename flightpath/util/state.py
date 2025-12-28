@@ -1,4 +1,4 @@
-
+import sys
 import os
 import json
 from pathlib import Path
@@ -234,6 +234,12 @@ class State:
         #
         config = CsvPaths().config
         #
+        # we need to remove any functions path from the last project
+        # and add our new project's function path, if any.
+        #
+        cc = main.csvpath_config if main.has_csvpath_config else None
+        self._change_function_path(old_config=cc, new_config=config)
+        #
         # we were not doing this, but it seems like the right place and time.
         #
         main.csvpath_config = config
@@ -275,6 +281,11 @@ class State:
             config.set(section="results", name="transfers", value=os.path.join(cwd, "transfers") )
             config.set(section="sqlite", name="db", value=os.path.join(cwd, "archive", "csvpath.db") )
             config.set(section="sql", name="connection_string", value="" )
+            fun = os.path.join(cwd, "config", "functions.imports" )
+            config.set(section="functions", name="imports", value=fun)
+            if not os.path.exists(fun):
+                with open(fun, "w") as file:
+                    file.write("")
             config.save_config()
             examples = os.path.join(cwd, "examples")
             if os.path.exists(examples):
@@ -285,6 +296,24 @@ class State:
                 em.add_examples(path=examples)
 
 
+    def _change_function_path(self, *, old_config:CsvPath_Config=None, new_config:CsvPath_Config) -> None:
+        if new_config is None:
+            raise ValueError("New config cannot be None")
+        if old_config:
+            path = old_config.get(section="functions", name="imports")
+            path = "" if not path else path.strip()
+            if path != "":
+                dirpath = os.path.dirname(path)
+                sys.path.remove(dirpath)
+        path = new_config.get(section="functions", name="imports")
+        path = "" if not path else path.strip()
+        if path != "":
+            dirpath = os.path.dirname(path)
+            print(f"adding {dirpath} to sys.path for proj ")
+            sys.path.append(dirpath)
+        print(f"paths in sys.path for proj: ")
+        for _ in sys.path:
+            print(f"_: {_}")
 
 
 

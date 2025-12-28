@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from flightpath.widgets.forms.blank_form import BlankForm
 from flightpath.widgets.forms.server_form import ServerForm
 from flightpath.widgets.forms.projects_form import ProjectsForm
+from flightpath.widgets.forms.functions_form import FunctionsForm
 from flightpath.widgets.forms.env_form import EnvForm
 from flightpath.widgets.forms.cache_form import CacheForm
 from flightpath.widgets.forms.config_form import ConfigForm
@@ -126,7 +127,8 @@ class ConfigPanel(QWidget):
             ListenersForm(main=self.main),
             LoggingForm(main=self.main),
             ResultsForm(main=self.main),
-            ServerForm(main=self.main)
+            ServerForm(main=self.main),
+            FunctionsForm(main=self.main)
         ]
         for form in self.forms:
             #print(f"config_panel: setup_forms: adding form widget: {form}")
@@ -190,7 +192,6 @@ class ConfigPanel(QWidget):
             self.main.config.show_help_for_form("listeners", fallback=fallback)
             self.forms_layout.setCurrentIndex(8)
             self.title.setText("Integrations")
-            #self.title.setText("Listeners")
         elif form == "logging" or parent == "logging":
             self.main.config.show_help_for_form("logging", fallback=fallback)
             self.forms_layout.setCurrentIndex(9)
@@ -203,6 +204,10 @@ class ConfigPanel(QWidget):
             self.main.config.show_help_for_form("server", fallback=fallback)
             self.forms_layout.setCurrentIndex(11)
             self.title.setText("server")
+        if form == "functions" or parent == "functions":
+            self.main.config.show_help_for_form("functions", fallback=fallback)
+            self.forms_layout.setCurrentIndex(12)
+            self.title.setText("Functions")
 
     @property
     def tree(self) -> QTreeWidget:
@@ -223,7 +228,6 @@ class ConfigPanel(QWidget):
                     item.addChild(child)
                 items.append(item)
             tree.insertTopLevelItems(0, items)
-            #tree.expandAll()
             tree.clicked.connect(self.switch_form)
             tree.setStyleSheet(ConfigPanel.TREE_STYLE)
             self._tree = tree
@@ -263,13 +267,6 @@ class ConfigPanel(QWidget):
             self._sections.append("env")
             for s in self.core_sections:
                 if self.is_integration(s) or not self.is_core_section(s):
-                    continue
-                #
-                # functions are not as easy to create these days. still doable
-                # but not well documented. we don't need to call it out as a useful
-                # thing for most people.
-                #
-                elif s == "functions":
                     continue
                 if s == "csv_files" or s == "csvpath_files":
                     if "extensions" not in self._sections:
