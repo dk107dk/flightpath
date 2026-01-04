@@ -21,20 +21,31 @@ class CkanTab(QWidget):
         self.server.textChanged.connect(self.form.main.on_config_changed)
         self.api_token.textChanged.connect(self.form.main.on_config_changed)
 
+    @property
+    def section(self) -> str:
+        return "ckan"
+
+    @property
+    def server_fields(self) -> list[str]:
+        return ["server", "api_token"]
+
+    @property
+    def server_fields_count(self) -> int:
+        return len(self.server_fields)
 
     def add_to_config(self, config) -> None:
         server = self.server.text()
-        self.form.config.add_to_config("ckan", "server", server )
+        self.form.config.add_to_config(self.section, "server", server )
 
         api_token = self.api_token.text()
-        self.form.config.add_to_config("ckan", "api_token", api_token )
+        self.form.config.add_to_config(self.section, "api_token", api_token )
 
     def populate(self):
         config = self.form.config
-        server = config.get(section="ckan", name="server", default="localhost:8443")
+        server = config.get(section=self.section, name="server", default="localhost:8443")
         self.server.setText(server)
 
-        api_token = config.get(section="ckan", name="api_token", default="")
+        api_token = config.get(section=self.section, name="api_token", default="")
         self.api_token.setText(api_token)
 
 

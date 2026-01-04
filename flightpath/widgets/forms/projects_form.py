@@ -83,4 +83,19 @@ class ProjectsForm(BlankForm):
         self.original_projects_home = self.main.state.projects_home
         self.project_dir.setText(self.main.state.projects_home)
 
+    @property
+    def fields(self) -> list[str]:
+        return []
+
+    @property
+    def server_fields(self) -> list[str]:
+        return []
+
+    @property
+    def section(self) -> str:
+        return ""
+
+    @property
+    def tabs(self) -> list[str]:
+        return []
 

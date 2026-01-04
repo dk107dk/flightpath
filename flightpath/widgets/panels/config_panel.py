@@ -2,6 +2,7 @@ import os
 import json
 import sys
 import traceback
+from typing import Type
 
 from pathlib import Path
 from PySide6.QtCore import Qt, QModelIndex
@@ -105,7 +106,6 @@ class ConfigPanel(QWidget):
         self.title.setStyleSheet("font-weight: bold;")
 
     def setup_forms(self, populate=True) -> None:
-        #print(f"config_panel: setup_forms starting")
         if self.forms and len(self.forms):
             #
             # clear the forms. this happens when the working dir changes.
@@ -114,7 +114,6 @@ class ConfigPanel(QWidget):
                 self.forms_layout.removeWidget(form)
                 form.deleteLater()
 
-        #print(f"config_panel: setup_forms: creating forms")
         self.forms = [
             BlankForm(main=self.main).show_blank(),
             ProjectsForm(main=self.main),
@@ -131,7 +130,6 @@ class ConfigPanel(QWidget):
             FunctionsForm(main=self.main)
         ]
         for form in self.forms:
-            #print(f"config_panel: setup_forms: adding form widget: {form}")
             self.forms_layout.addWidget(form)
             form.config = self.main.csvpath_config
             if populate is True:
@@ -140,19 +138,14 @@ class ConfigPanel(QWidget):
 
 
     def populate_all_forms(self) -> None:
-        #print("config_panel: populate_all_forms starting")
         if self.ready is False or self.forms is None:
-            #print("config_panel: populate_all_forms: setting up forms")
             #
             # we ended up calling populate() twice on each form. for now we're just going to not do the work twice.
             # in a future refactor we can detangle this further.
             #
             self.setup_forms(populate=False)
-        #print("config_panel: populate_all_forms: iterating forms")
         for form in self.forms:
-            #print(f"config_panel: populate_all_forms: starting form: {form}")
             form.populate()
-            #print(f"config_panel: populate_all_forms: done with form: {form}")
 
     def switch_form(self, index:QModelIndex):
         form = index.data()
@@ -254,6 +247,34 @@ class ConfigPanel(QWidget):
             "config", "cache", "logging", "extensions", "errors", "functions", "results", "inputs", "listeners", "server"
         ]
 
+    @property
+    def total_fields(self) -> int:
+        forms = self.forms
+        t = sum(len(form.fields) for form in forms)
+        return t
+
+    @property
+    def total_server_fields(self) -> int:
+        forms = self.forms
+        t = sum(form.server_fields_count for form in forms)
+        return t
+
+    def get_form(self, cls:str) -> BlankForm:
+        for _ in self.forms:
+            if str(type(_)).find(cls) > -1:
+                return _
+            elif _.section == cls:
+                return _
+        return None
+
+    @property
+    def forms_by_section(self) -> list:
+        forms = self.forms
+        formnames = {form.section:form for form in forms}
+        formnames = dict(sorted(formnames.items()))
+        forms = [formnames[name] for name in formnames]
+        return forms
+
     #
     # top sections are the sections in config.ini that are
     # not part of integrations. The integrations will be handled
@@ -309,9 +330,7 @@ class ConfigPanel(QWidget):
         return self._configurables
 
     def save_all_forms(self) -> None: # , filepath: Path
-        print(f"confpanel: save_all_forms: configpath: {self.main.csvpath_config.configpath}, cwd: {self.main.state.cwd}")
         named_files = self.main.csvpath_config.get(section="inputs", name="files")
-        print(f"cfgpanel: save_all_forms: named_files: {named_files}")
 
         named_paths = self.main.csvpath_config.get(section="inputs", name="csvpaths")
         archive = self.main.csvpath_config.get(section="results", name="archive")

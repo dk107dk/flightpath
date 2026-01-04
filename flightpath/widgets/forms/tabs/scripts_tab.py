@@ -21,20 +21,31 @@ class ScriptsTab(QWidget):
         self.run_scripts.textChanged.connect(self.form.main.on_config_changed)
         self.shell.textChanged.connect(self.form.main.on_config_changed)
 
+    @property
+    def section(self) -> str:
+        return "scripts"
+
+    @property
+    def server_fields(self) -> list[str]:
+        return []
+
+    @property
+    def server_fields_count(self) -> int:
+        return len(self.server_fields)
 
     def add_to_config(self, config) -> None:
         run_scripts = self.run_scripts.text()
-        self.form.config.add_to_config("scripts", "run_scripts", run_scripts )
+        self.form.config.add_to_config(self.section, "run_scripts", run_scripts )
 
         shell = self.shell.text()
-        self.form.config.add_to_config("scripts", "shell", shell )
+        self.form.config.add_to_config(self.section, "shell", shell )
 
     def populate(self):
         config = self.form.config
-        run_scripts = config.get(section="scripts", name="run_scripts", default="no")
+        run_scripts = config.get(section=self.section, name="run_scripts", default="no")
         self.run_scripts.setText(run_scripts)
 
-        shell = config.get(section="scripts", name="shell", default="/bin/bash")
+        shell = config.get(section=self.section, name="shell", default="/bin/bash")
         self.shell.setText(shell)
 
 

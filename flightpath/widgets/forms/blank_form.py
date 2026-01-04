@@ -42,4 +42,28 @@ class BlankForm(QWidget):
     def populate(self):
         ...
 
+    @property
+    def server_fields_count(self) -> int:
+        i = len(self.server_fields)
+        return i + sum( t.server_fields_count for t in self.tabs if t is not None )
+
+    @property
+    def fields(self) -> list[str]:
+        return []
+
+    @property
+    def server_fields(self) -> list[str]:
+        return []
+
+    @property
+    def section(self) -> str:
+        return ""
+
+    @property
+    def tabs(self) -> list[str]:
+        return []
+
+    def value(self, field:str) -> str:
+        return self.config.get(section=self.section, name=field)
+
 

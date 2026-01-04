@@ -145,4 +145,19 @@ class ErrorsForm(BlankForm):
             self.csvpaths_fail.setChecked("fail" in csvpaths_errors)
             self.csvpaths_collect.setChecked("collect" in csvpaths_errors)
 
+    @property
+    def fields(self) -> list[str]:
+        return ["csvpath", "csvpaths", "pattern", "use_format"]
+
+    @property
+    def server_fields(self) -> list[str]:
+        return self.fields
+
+    @property
+    def section(self) -> str:
+        return "errors"
+
+    @property
+    def tabs(self) -> list[str]:
+        return []
 

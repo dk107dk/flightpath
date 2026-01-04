@@ -17,14 +17,26 @@ class SqliteTab(QWidget):
 
         self.db.textChanged.connect(self.form.main.on_config_changed)
 
+    @property
+    def section(self) -> str:
+        return "sqlite"
+
+    @property
+    def server_fields(self) -> list[str]:
+        return ["db"]
+
+    @property
+    def server_fields_count(self) -> int:
+        return len(self.server_fields)
+
 
     def add_to_config(self, config) -> None:
         db = self.db.text()
-        self.form.config.add_to_config("sqlite", "db", db )
+        self.form.config.add_to_config(self.section, "db", db )
 
     def populate(self):
         config = self.form.config
-        db = config.get(section="sqlite", name="db", default="")
+        db = config.get(section=self.section, name="db", default="")
         self.db.setText(db)
 
 

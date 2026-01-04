@@ -50,63 +50,73 @@ class SftpPlusTab(QWidget):
         self.server.textChanged.connect(self.form.main.on_config_changed)
         self.port.textChanged.connect(self.form.main.on_config_changed)
 
+    @property
+    def section(self) -> str:
+        return "sftpplus"
+
+    @property
+    def server_fields(self) -> list[str]:
+        return []
+
+    @property
+    def server_fields_count(self) -> int:
+        return len(self.server_fields)
 
     def add_to_config(self, config) -> None:
         admin_username = self.admin_username.text()
-        self.form.config.add_to_config("sftpplus", "admin_username", admin_username)
+        self.form.config.add_to_config(self.section, "admin_username", admin_username)
 
         admin_password = self.admin_password.text()
-        self.form.config.add_to_config("sftpplus", "admin_password", admin_password )
+        self.form.config.add_to_config(self.section, "admin_password", admin_password )
 
         api_url = self.api_url.text()
-        self.form.config.add_to_config("sftpplus", "api_url", api_url )
+        self.form.config.add_to_config(self.section, "api_url", api_url )
 
         scripts_dir = self.scripts_dir.text()
-        self.form.config.add_to_config("sftpplus", "scripts_dir", scripts_dir )
-
+        self.form.config.add_to_config(self.section, "scripts_dir", scripts_dir )
 
         execute_timeout = self.execute_timeout.text()
-        self.form.config.add_to_config("sftpplus", "execute_timeout", execute_timeout)
+        self.form.config.add_to_config(self.section, "execute_timeout", execute_timeout)
 
         mailbox_user = self.mailbox_user.text()
-        self.form.config.add_to_config("sftpplus", "mailbox_user", mailbox_user )
+        self.form.config.add_to_config(self.section, "mailbox_user", mailbox_user )
 
         mailbox_password = self.mailbox_password.text()
-        self.form.config.add_to_config("sftpplus", "mailbox_password", mailbox_password )
+        self.form.config.add_to_config(self.section, "mailbox_password", mailbox_password )
 
         server = self.server.text()
-        self.form.config.add_to_config("sftpplus", "server", server )
+        self.form.config.add_to_config(self.section, "server", server )
 
         port = self.port.text()
-        self.form.config.add_to_config("sftpplus", "port", port )
+        self.form.config.add_to_config(self.section, "port", port )
 
     def populate(self):
         config = self.form.config
-        admin_username = config.get(section="sftpplus", name="admin_username", default="SFTPPLUS_ADMIN_USERNAME")
+        admin_username = config.get(section=self.section, name="admin_username", default="SFTPPLUS_ADMIN_USERNAME")
         self.admin_username.setText(admin_username)
 
-        admin_password = config.get(section="sftpplus", name="admin_password", default="SFTPPLUS_ADMIN_PASSWORD")
+        admin_password = config.get(section=self.section, name="admin_password", default="SFTPPLUS_ADMIN_PASSWORD")
         self.admin_password.setText(admin_password)
 
-        api_url = config.get(section="sftpplus", name="api_url", default="https://localhost:10020/json")
+        api_url = config.get(section=self.section, name="api_url", default="https://localhost:10020/json")
         self.api_url.setText(api_url)
 
-        scripts_dir = config.get(section="sftpplus", name="scripts_dir", default="")
+        scripts_dir = config.get(section=self.section, name="scripts_dir", default="")
         self.scripts_dir.setText(scripts_dir)
 
-        execute_timeout = config.get(section="sftpplus", name="execute_timeout", default="300")
+        execute_timeout = config.get(section=self.section, name="execute_timeout", default="300")
         self.execute_timeout.setText(execute_timeout)
 
-        mailbox_user = config.get(section="sftpplus", name="mailbox_user", default="mailbox")
+        mailbox_user = config.get(section=self.section, name="mailbox_user", default="mailbox")
         self.mailbox_user.setText(mailbox_user)
 
-        mailbox_password = config.get(section="sftpplus", name="mailbox_password", default="SFTPPLUS_MAILBOX_PASSWORD")
+        mailbox_password = config.get(section=self.section, name="mailbox_password", default="SFTPPLUS_MAILBOX_PASSWORD")
         self.mailbox_password.setText(mailbox_password)
 
-        server = config.get(section="sftpplus", name="server", default="SFTPPLUS_SERVER")
+        server = config.get(section=self.section, name="server", default="SFTPPLUS_SERVER")
         self.server.setText(server)
 
-        port = config.get(section="sftpplus", name="port", default="SFTPPLUS_PORT")
+        port = config.get(section=self.section, name="port", default="SFTPPLUS_PORT")
         self.port.setText(port)
 
 

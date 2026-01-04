@@ -63,6 +63,8 @@ class SidebarFunctions(QWidget):
             names["test-data"] = "test_data"
             names["test-delimiter"] = "test_delimiter"
             names["test-quotechar"] = "test_quotechar"
+            names["use-delimiter"] = "use_delimiter"
+            names["use-quotechar"] = "use_quotechar"
 
         self.setMinimumWidth(300)
         self.context_menu = None

@@ -1,0 +1,78 @@
+<html>
+    {% include "templates/styles.html" %}
+   <body>
+        <h2>
+        Keyword: use-quotechar
+        </h2>
+        <p>
+            <i>use-quotechar</i> tells CsvPath Framework that the current csvpath uses a certain quotechar. This is a CsvPath Framework feature, rather than a FlightPath-specific feature.
+        </p>
+        <p>
+            To use <i>use-quotechar</i> create a metadata comment above your csvpath.
+            In it, add the field with <i>use-quotechar:quotechar-word</i>, where
+            <i>quotechar-word</i> is one of the words in the left-hand column, mapping
+            the character on the right:
+
+            <style>
+                table { margin:5px 0 0 10px; border-bottom:1px solid #494949; }
+                table td {border-top:1px solid #494949; border-top:1px solid #494949; border-right:1px solid #494949;}
+                table td.left {background-color:#494949; color:#fff}
+                table td.right {background-color:#fff; color:#000}
+            </style>
+            <table cellspacing="0" cellpadding="5" >
+                <tr>
+                    <td class="about border-ltr">
+                            quotes</td>
+                    <td class='value border-ltr code'>
+                            "</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            quote</td>
+                    <td class='value border-ltr code'>
+                            "</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            single-quote</td>
+                    <td class='value border-ltr code'>
+                            '</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr">
+                            singlequote</td>
+                    <td class='value border-ltr code'>
+                            '</td>
+                </tr>
+                <tr>
+                    <td class="about border-ltr border-bottom">
+                            tick</td>
+                    <td class='value border-ltr border-bottom code'>
+                            `</td>
+                </tr>
+            </table>
+        </p>
+        <p>
+            This metadata instruction does not give all the options that are available programmatically; however, these common quote chars will satisfy the large majority of cases.
+        </p>
+        <h3 >
+           Usage
+        </h3>
+        <table cellspacing="0" cellpadding="2" width="900">
+            <tr>
+                <td width="300"  class="about border-ltr border-bottom">
+              This csvpath will always run within FlightPath using the identified
+              file when you right-click and select <i>Run</i> or hit <i>ctrl-r</i>.
+                </td>
+                <td class='value border-ltr border-bottom code'>
+<code>
+~ use-quotechar: singlequotes
+$[0][
+    yes()
+]
+</code>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>
