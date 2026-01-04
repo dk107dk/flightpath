@@ -20,6 +20,7 @@ class ServerProjectsList(QListWidget):
         download_log = menu.addAction("Download log")
         menu.addSeparator()
         overwrite_config = menu.addAction("Upload config")
+        sync_config = menu.addAction("Sync config")
         overwrite_env = menu.addAction("Upload env")
         menu.addSeparator()
         new_proj = menu.addAction("New project")
@@ -32,6 +33,7 @@ class ServerProjectsList(QListWidget):
         download_env.triggered.connect(lambda: self.handle_action("download_env"))
         download_log.triggered.connect(lambda: self.handle_action("download_log"))
         overwrite_config.triggered.connect(lambda: self.handle_action("upload_config"))
+        sync_config.triggered.connect(lambda: self.handle_action("sync_config"))
         overwrite_env.triggered.connect(lambda: self.handle_action("upload_env"))
         delete_proj.triggered.connect(self.delete_project)
         new_proj.triggered.connect(self.new_project)
@@ -50,6 +52,8 @@ class ServerProjectsList(QListWidget):
             self.download_env()
         elif action == "upload_config":
             self.upload_config()
+        elif action == "sync_config":
+            self.sync_config()
         elif action == "upload_env":
             self.upload_env()
         elif action == "refresh":
@@ -72,6 +76,15 @@ class ServerProjectsList(QListWidget):
             name = proj.text()
             print(f"set config for project named: {name}")
             self.parent._upload_config(name)
+        else:
+            meut.message(msg="Please select a project", title="Select project")
+
+    def sync_config(self) -> None:
+        proj = self.currentItem()
+        if proj:
+            name = proj.text()
+            print(f"Sync config for project named: {name}")
+            self.parent._sync_config(name)
         else:
             meut.message(msg="Please select a project", title="Select project")
 

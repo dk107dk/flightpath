@@ -41,4 +41,19 @@ class InputsForm(BlankForm):
         np = config.get(section="inputs", name="csvpaths")
         self.named_paths.setText(np)
 
+    @property
+    def fields(self) -> list[str]:
+        return ["files", "csvpaths"]
+
+    @property
+    def server_fields(self) -> list[str]:
+        return self.fields
+
+    @property
+    def section(self) -> str:
+        return "inputs"
+
+    @property
+    def tabs(self) -> list[str]:
+        return []
 

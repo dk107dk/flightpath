@@ -54,5 +54,18 @@ class CacheForm(BlankForm):
         else:
             self.use_cache.setCurrentText("yes")
 
+    @property
+    def fields(self) -> list[str]:
+        return ["path", "use_cache"]
 
+    @property
+    def server_fields(self) -> list[str]:
+        return []
 
+    @property
+    def section(self) -> str:
+        return "cache"
+
+    @property
+    def tabs(self) -> list[str]:
+        return []

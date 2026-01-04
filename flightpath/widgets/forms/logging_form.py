@@ -43,6 +43,7 @@ class LoggingForm(BlankForm):
         config.add_to_config("logging", "csvpaths", self.csvpaths_level.currentText() )
 
 
+
     def _setup(self) -> None:
         self.path.textChanged.connect(self.main.on_config_changed)
         self.log_files_to_keep.textChanged.connect(self.main.on_config_changed)
@@ -103,5 +104,20 @@ class LoggingForm(BlankForm):
             self.csvpaths_level.setCurrentText("error")
 
 
+    @property
+    def fields(self) -> list[str]:
+        return ["handler","log_file_size","log_files_to_keep","log_file","csvpath","csvpaths"]
+
+    @property
+    def server_fields(self) -> list[str]:
+        return ["handler","log_file_size","log_files_to_keep","csvpath","csvpaths"]
+
+    @property
+    def section(self) -> str:
+        return "logging"
+
+    @property
+    def tabs(self) -> list[str]:
+        return []
 
 

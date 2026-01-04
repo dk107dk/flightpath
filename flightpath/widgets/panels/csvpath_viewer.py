@@ -224,9 +224,18 @@ class CsvpathViewer(QWidget):
         quotechar = self._get_quotechar()
         delimiter = self._get_delimiter()
         #
+        # this will blowup until the next CsvPaths release
+        #
+        #path = CsvPath(quotechar=quotechar, delimiter=delimiter)
+        path = CsvPath(
+            quotechar=quotechar,
+            delimiter=delimiter,
+            project=self.main.state.current_project,
+            project_context="FlightPath Data"
+        )
         #
         #
-        path = CsvPath(quotechar=quotechar, delimiter=delimiter)
+        #
         p = path.config.get(section='cache', name='path')
         uc = path.config.get(section='cache', name='use_cache')
         lines = []

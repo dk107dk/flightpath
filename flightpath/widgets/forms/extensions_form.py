@@ -44,5 +44,19 @@ class ExtensionsForm(BlankForm):
         csvpaths = config.get(section="extensions", name="csvpath_files")
         self.csvpaths.setText(", ".join(csvpaths))
 
+    @property
+    def fields(self) -> list[str]:
+        return ["csv_files", "csvpath_files"]
 
+    @property
+    def server_fields(self) -> list[str]:
+        return self.fields
+
+    @property
+    def section(self) -> str:
+        return "extensions"
+
+    @property
+    def tabs(self) -> list[str]:
+        return []
 

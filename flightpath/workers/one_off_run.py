@@ -26,13 +26,14 @@ class OneOffRunWorker(QRunnable):
     def run(self):
         self.signals.messages.emit("Doing test run")
         path = self.csvpath
+        lines = None
+
         try:
             lines = path.collect()
-            self.signals.messages.emit(f"Completed test run")
-            self.signals.finished.emit( (self.csvpath, self.csvpath_str, lines, self.printer ) )
         except Exception as ex:
             import traceback
             print( traceback.format_exc())
             self.csvpath.logger.error(ex)
-
+        self.signals.messages.emit(f"Test run failed")
+        self.signals.finished.emit( (self.csvpath, self.csvpath_str, lines, self.printer ) )
 

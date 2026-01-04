@@ -18,14 +18,26 @@ class SlackTab(QWidget):
 
         self.webhook_url.textChanged.connect(self.form.main.on_config_changed)
 
+    @property
+    def section(self) -> str:
+        return "slack"
+
+    @property
+    def server_fields(self) -> list[str]:
+        return ["webhook_url"]
+
+    @property
+    def server_fields_count(self) -> int:
+        return len(self.server_fields)
+
 
     def add_to_config(self, config) -> None:
         webhook_url = self.webhook_url.text()
-        self.form.config.add_to_config("slack", "webhook_url", webhook_url )
+        self.form.config.add_to_config(self.section, "webhook_url", webhook_url )
 
     def populate(self):
         config = self.form.config
-        webhook_url = config.get(section="slack", name="webhook_url", default="")
+        webhook_url = config.get(section=self.section, name="webhook_url", default="")
         self.webhook_url.setText(webhook_url)
 
 

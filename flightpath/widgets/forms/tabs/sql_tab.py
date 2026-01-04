@@ -21,20 +21,32 @@ class SqlTab(QWidget):
         self.dialect.textChanged.connect(self.form.main.on_config_changed)
         self.connection_string.textChanged.connect(self.form.main.on_config_changed)
 
+    @property
+    def section(self) -> str:
+        return "sql"
+
+    @property
+    def server_fields(self) -> list[str]:
+        return ["dialect", "connection_string"]
+
+    @property
+    def server_fields_count(self) -> int:
+        return len(self.server_fields)
+
 
     def add_to_config(self, config) -> None:
         dialect = self.dialect.text()
-        self.form.config.add_to_config("sql", "dialect", dialect )
+        self.form.config.add_to_config(self.section, "dialect", dialect )
 
         connection_string = self.connection_string.text()
-        self.form.config.add_to_config("sql", "connection_string", connection_string )
+        self.form.config.add_to_config(self.section, "connection_string", connection_string )
 
     def populate(self):
         config = self.form.config
-        dialect = config.get(section="sql", name="dialect", default="sqlite")
+        dialect = config.get(section=self.section, name="dialect", default="sqlite")
         self.dialect.setText(dialect)
 
-        connection_string = config.get(section="sql", name="connection_string", default="sqlite:///archive/csvpath-sqlite.db")
+        connection_string = config.get(section=self.section, name="connection_string", default="sqlite:///archive/csvpath-sqlite.db")
         self.connection_string.setText(connection_string)
 
 

@@ -319,18 +319,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def csvpath_config(self) -> CsvPathConfig:
         if self._csvpath_config is None:
             raise RuntimeError("csvpath config should not be None if we have a selected project and have cded into it")
-            """
-            paths = CsvPaths()
-            #
-            # feels like we need to set the new config to our current project's config here.
-            # however, in practice it has happend elsewhere. not sure that's ideal.
-            #
-            self._csvpath_config = paths.config
-            """
         return self._csvpath_config
 
     @csvpath_config.setter
     def csvpath_config(self, config:CsvPathConfig) -> None:
+        if config:
+            config.project_context = self.state.current_project
         self._csvpath_config = config
 
     def clear_csvpath_config(self) -> None:

@@ -163,3 +163,20 @@ class EnvForm(BlankForm):
     def populate(self):
         ...
 
+
+    @property
+    def fields(self) -> list[str]:
+        return []
+
+    @property
+    def server_fields(self) -> list[str]:
+        return []
+
+    @property
+    def section(self) -> str:
+        return ""
+
+    @property
+    def tabs(self) -> list[str]:
+        return []
+

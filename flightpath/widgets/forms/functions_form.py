@@ -31,4 +31,19 @@ class FunctionsForm(BlankForm):
         self.imports_dir_path.setText(imports_path)
 
 
+    @property
+    def fields(self) -> list[str]:
+        return ["imports"]
+
+    @property
+    def server_fields(self) -> list[str]:
+        return []
+
+    @property
+    def section(self) -> str:
+        return "functions"
+
+    @property
+    def tabs(self) -> list[str]:
+        return []
 

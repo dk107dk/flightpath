@@ -122,4 +122,19 @@ class ConfigForm(BlankForm):
         env_path = config.get(section="config", name="var_sub_source", default="env")
         self.var_sub_source.setText(env_path)
 
+    @property
+    def fields(self) -> list[str]:
+        return ["path", "allow_var_sub", "var_sub_source"]
+
+    @property
+    def server_fields(self) -> list[str]:
+        return []
+
+    @property
+    def section(self) -> str:
+        return "config"
+
+    @property
+    def tabs(self) -> list[str]:
+        return []
 

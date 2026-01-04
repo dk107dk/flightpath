@@ -33,6 +33,20 @@ class OtlpTab(QWidget):
         self.headers.textChanged.connect(self.form.main.on_config_changed)
         self.endpoint.textChanged.connect(self.form.main.on_config_changed)
 
+    @property
+    def section(self) -> str:
+        return "otlp"
+
+    @property
+    def server_fields(self) -> list[str]:
+        return []
+
+    @property
+    def server_fields_count(self) -> int:
+        return len(self.server_fields)
+
+
+
     def add_to_config(self, config) -> None:
         #
         # we don't set values in ConfigEnv in FlightPath. FlightPath Server

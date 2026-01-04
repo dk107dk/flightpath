@@ -44,3 +44,20 @@ class ResultsForm(BlankForm):
         self.transfers.setText(transfers)
 
 
+    @property
+    def fields(self) -> list[str]:
+        return ["archive","transfers"]
+
+    @property
+    def server_fields(self) -> list[str]:
+        return self.fields
+
+    @property
+    def section(self) -> str:
+        return "results"
+
+    @property
+    def tabs(self) -> list[str]:
+        return []
+
+

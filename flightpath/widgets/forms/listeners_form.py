@@ -28,7 +28,6 @@ class ListenersForm(BlankForm):
         super().__init__(*args, **kwargs)
         self.area = None
         self.area_box = None
-        self.tabs = None
         self._group_tabs = None
         self._setup_area()
         self._setup_tabs()
@@ -36,7 +35,7 @@ class ListenersForm(BlankForm):
         self.groups = QLineEdit()
         layout.addRow("Active listener groups: ", self.groups)
         layout.addRow(self.area_box)
-        layout.addRow(self.tabs)
+        layout.addRow(self.my_tabs)
         self.setLayout(layout)
         self._setup()
 
@@ -95,15 +94,15 @@ class ListenersForm(BlankForm):
         return self._group_tabs
 
     def _setup_tabs(self) -> None:
-        self.tabs = QTabWidget()
-        self.tabs.setFixedHeight(420)
+        self.my_tabs = QTabWidget()
+        self.my_tabs.setFixedHeight(420)
 
         groups = self.group_names
         for group in groups:
             t = self.tab_groups.get(group)
             if t is None:
                 continue
-            self.tabs.addTab(t, group)
+            self.my_tabs.addTab(t, group)
 
     def _setup_area(self) -> None:
         self.area = QScrollArea()
@@ -180,5 +179,23 @@ class ListenersForm(BlankForm):
         c = ', ' if t != '' else ''
         nt = f"{t}{c}{text}"
         self.groups.setText( nt )
+
+
+    @property
+    def fields(self) -> list[str]:
+        return ["groups"]
+
+    @property
+    def server_fields(self) -> list[str]:
+        return ["groups"]
+
+    @property
+    def section(self) -> str:
+        return "listeners"
+
+    @property
+    def tabs(self) -> list[str]:
+        print(f"tasxt:: {self._group_tabs}")
+        return self._group_tabs.values()
 
 

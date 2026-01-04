@@ -3,6 +3,7 @@ import io
 import base64
 import httpx
 import hashlib
+import traceback
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
@@ -23,6 +24,7 @@ from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.deploy_utility import DeployUtility as deut
 
 from flightpath.dialogs.compile_env_dialog import CompileEnvDialog
+from flightpath.dialogs.sync_config_dialog import SyncConfigDialog
 from flightpath.dialogs.new_key_dialog import NewKeyDialog
 from .server_projects_list import ServerProjectsList
 from .blank_form import BlankForm
@@ -142,10 +144,8 @@ class ServerForm(BlankForm):
 
     def populate(self):
         if self.main.config.config_panel.forms_layout.currentWidget() != self:
-            print(f"not populating because not on top: {self._is_on_top} ")
             return
         if self.server_unchanged is True:
-            print(f"not updaing projects because unchanged: {self.server_unchanged}")
             return
 
         en = self.main.config.toolbar.button_close.isEnabled()
@@ -212,7 +212,6 @@ class ServerForm(BlankForm):
         key = self.key.text().strip() if self.key.text() else None
         host = self.host.text().strip() if self.host.text() else None
         if key in [None, ""] or host in ["", None]:
-            print(f"clearing proj list and returning")
             self.proj_list.clear()
             self.server_unchanged = False
             return
@@ -221,20 +220,16 @@ class ServerForm(BlankForm):
         # repopulate only if we're visible. we'll repopulate each time we become visible.
         #
         if self.main.config.config_panel.forms_layout.currentWidget() != self:
-            print(f"not updaing projects because not on top: {self._is_on_top} ")
             return
 
         if self.server_unchanged is True:
-            print(f"not updaing projects because unchanged: {self.server_unchanged}")
             return
 
         if not self._server_is_enabled():
-            print(f"not updaing projects because no server: {self._server_is_enabled()}")
             return
 
 
         self.proj_list.clear()
-        print(f"rebuilding proj list")
         names = self._get_project_names()
         if names is None:
             raise ValueError("Project names list cannot be None")
@@ -293,7 +288,6 @@ class ServerForm(BlankForm):
         #
         # open a dialog to collect the env vars
         #
-        print(f"opening CompileEnvDialog")
         env_dialog = CompileEnvDialog(parent=self, name=name)
         env_dialog.show_dialog()
         env_str = env_dialog.config_str
@@ -313,46 +307,55 @@ class ServerForm(BlankForm):
             # the server environment.
             #
             request = {"name":name, "env_str": env_str}
-            print(f"setting to: {url}")
             try:
                 response = client.post(url, json=request, headers=self._headers)
-                print(f"response: {response}")
                 if response.status_code == 200:
                     return True
                 else:
                     msg = response.json()
-                    print(f"_upload_env: msg 1: {msg}")
                     msg = ["detail"]
-                    print(f"_upload_env: msg 2: {msg}")
                     msg = f"Cannot upload env. Server response: {response.status_code}: {msg}"
                     meut.warning(parent=self, title="Cannot upload env JSON", msg=msg)
             except Exception as ex:
-                import traceback
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 print(msg)
                 return False
 
 
+    def _sync_config(self, name:str) -> None:
+        d = SyncConfigDialog(name=name, parent=self)
+        d.show_dialog()
 
-    def _upload_config(self, name:str) -> bool:
+    def _upload_config(self, name:str, config_str:str=None, *, prompt:bool=True) -> bool:
         if not self._server_is_enabled():
             meut.warning(
                 parent=self,
                 msg=f"Cannot upload config because the server is off or there is insufficient information to make the request")
             return
-        if meut.yes_no(
-            parent=self,
-            title="Overwrite project config?",
-            msg=f"Permanently overwrite the {name} project's config?"
-        ) is False:
+        #
+        # for uploads, mainly, we want to prompt. with syncs there is less of a need
+        # to prompt because the process is more visual and under the control of the
+        # user.
+        #
+        ok = True
+        if prompt:
+            ok = meut.yes_no(
+                parent=self,
+                title="Overwrite project config?",
+                msg=f"Permanently overwrite the {name} project's config?"
+            )
+        if ok is False:
             return
         with httpx.Client() as client:
             msg = None
             response = None
             url = f"{self.host.text()}/projects/set_project_config"
-            config_str = self._create_config_str(name)
-            config_str = deut.make_deployable(config_str)
+            if config_str is None:
+                config_str = self._create_config_str(name)
+
+            cs = deut.make_deployable(config_str)
+            config_str = cs
             #
             # create a server-safeish config str here. this isn't a full cleaning. the
             # server needs to also work on the paths and check the sensitive settings
@@ -360,10 +363,8 @@ class ServerForm(BlankForm):
             # the server environment.
             #
             request = {"name":name, "config_str": config_str}
-            print(f"setting to: {url}")
             try:
                 response = client.post(url, json=request, headers=self._headers)
-                print(f"response: {response}")
                 if response.status_code == 200:
                     return True
                 else:
@@ -371,11 +372,26 @@ class ServerForm(BlankForm):
                     msg = f"Cannot upload config. Server response: {response.status_code}: {msg}"
                     meut.warning(parent=self, title="Cannot upload config", msg=msg)
             except Exception as ex:
-                import traceback
-                print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
-                print(msg)
                 return False
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def _create_key(self) -> None:
         new_key_dialog = NewKeyDialog(self)
@@ -394,17 +410,13 @@ class ServerForm(BlankForm):
             msg = None
             try:
                 url = f"{self.host.text()}/admin/shutdown"
-                print(f"shutting down server with: {url}")
                 response = client.get(url, headers=self._headers)
                 json = response.json()
-                print(f"shutting down server response: {json}")
                 msg = json["message"] if "message" in json else json["detail"]
                 msg = f"Response: {response.status_code}: {msg}"
                 self._enable_server_if()
                 #self.shut_down_server.setEnabled(False)
             except Exception as ex:
-                import traceback
-                print(traceback.format_exc())
                 msg = f"Error sending request: {ex}"
             self.response_msg.setText(msg)
 
@@ -420,7 +432,6 @@ class ServerForm(BlankForm):
             try:
                 url = f"{self.host.text()}/projects/get_file"
                 request = {"name":name, "file_path":"logs/csvpath.log"}
-                print(f"getting log from: {url}")
                 response = client.post(url, json=request, headers=self._headers)
                 json = response.json()
                 if response.status_code == 200:
@@ -435,7 +446,6 @@ class ServerForm(BlankForm):
                     msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
                     meut.warning(parent=self, title="Cannot download log", msg=msg)
             except Exception as ex:
-                import traceback
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 print(msg)
@@ -453,11 +463,8 @@ class ServerForm(BlankForm):
             try:
                 url = f"{self.host.text()}/projects/get_project_config"
                 request = {"name":name}
-                print(f"getting from: {url}")
                 response = client.post(url, json=request, headers=self._headers)
-                print(f"response: {response}")
                 content = response.json()
-                print(f"content: {content}")
                 if response.status_code == 200:
                     local_path = self._write_to("config.ini", content)
                     self.main.statusBar().showMessage(f"Saved to {local_path}")
@@ -468,7 +475,6 @@ class ServerForm(BlankForm):
                     msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
                     meut.warning(parent=self, title="Cannot download log", msg=msg)
             except Exception as ex:
-                import traceback
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 print(msg)
@@ -486,11 +492,8 @@ class ServerForm(BlankForm):
             try:
                 url = f"{self.host.text()}/projects/get_env_file"
                 request = {"name":name}
-                print(f"getting from: {url}")
                 response = client.post(url, json=request, headers=self._headers)
-                print(f"response: {response}")
                 content = response.json()
-                print(f"content: {content}")
                 if response.status_code == 200:
                     local_path = self._write_to("env.json", content)
                     self.main.statusBar().showMessage(f"Saved to {local_path}")
@@ -501,7 +504,6 @@ class ServerForm(BlankForm):
                     msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
                     meut.warning(parent=self, title="Cannot download env", msg=msg)
             except Exception as ex:
-                import traceback
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 print(msg)
@@ -530,12 +532,10 @@ class ServerForm(BlankForm):
                 if "names" in json:
                     return json["names"]
                 elif "detail" in json:
-                    print(f"463")
                     meut.warning( parent=self, msg=json["detail"], title="Error")
                 else:
                     meut.warning( parent=self, msg=f"Could not complete the request: {json}", title="Error")
             except Exception as ex:
-                import traceback
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 print(msg)
@@ -558,7 +558,6 @@ class ServerForm(BlankForm):
                 if response.status_code == 200:
                     json = response.json()
                     self.server_unchanged = False
-                    print(f"upadating projects list")
                     self._update_project_list()
                     #
                     # the project list has to update and that should be enough
@@ -569,7 +568,6 @@ class ServerForm(BlankForm):
                     meut.message(msg=f"Could not delete project {name}. Return code: {response.status_code}", title="Could not delete project")
                     return False
             except Exception as ex:
-                import traceback
                 print(traceback.format_exc())
                 msg = "Error sending request"
                 if response:
@@ -602,7 +600,6 @@ class ServerForm(BlankForm):
                     meut.message(msg=f"Could not create project. Return code: {response.status_code}", title="Could not create project")
                     return False
             except Exception as ex:
-                import traceback
                 print(traceback.format_exc())
                 msg = "Error sending request"
                 if response:
@@ -622,7 +619,5 @@ class ServerForm(BlankForm):
                 response = client.get(url, headers=self._headers)
                 return response.status_code
             except Exception as ex:
-                #import traceback
-                #print(traceback.format_exc())
                 return 500
 
