@@ -39,7 +39,17 @@ class JsonDataWorker(QRunnable):
             #
             #
             with DataFileReader(str(self.filepath)) as file:
-                data = json.load(file.source)
+                try:
+                    data = json.load(file.source)
+                except json.decoder.JSONDecodeError as e:
+                    #
+                    # we swallow the error. the json editor will open fine.
+                    # the grid view will receive None and the user will have to
+                    # fix in editor view.
+                    #
+                    print(f"Error in JSON parsing: {e}")
+
+
         except Exception as e:
             print(traceback.format_exc())
             print(f"Error: {type(e)}: {e}")

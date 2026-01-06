@@ -14,6 +14,40 @@ class CsvPathSyntaxHighlighter(QSyntaxHighlighter):
         self.highlighting_rules = []
 
         # Define text formats for different syntax elements
+        self.colors = {
+            'comment': QColor(128, 128, 128),
+            'string':QColor(163, 21, 21),
+            'regex': QColor(196, 26, 22),
+            'header': QColor(25, 23, 124),
+            'none': QColor(25, 23, 124),
+            'variable': QColor(9, 134, 88),
+            'bool': QColor(9, 134, 88),
+            'reference': QColor(136, 19, 145),
+            'function': QColor(0, 0, 255),
+            'number': QColor(0, 153, 153),
+            'operator': QColor(255, 0, 0),
+            'bracket': QColor(0, 0, 0),
+            'punctuation': QColor(0, 0, 0)
+        }
+
+        self.dark_colors = {
+            'comment': QColor(128, 128, 128),
+            'string': QColor(163, 121, 121),
+            'regex': QColor(196, 126, 122),
+            'header': QColor(125, 183, 124),
+            'none': QColor(125, 183, 124),
+            'variable': QColor(9, 134, 88),
+            'bool': QColor(9, 134, 88),
+            'reference': QColor(136, 119, 145),
+            'function': QColor(100, 200, 255),
+            'number': QColor(0, 153, 153),
+            'operator': QColor(255, 100, 80),
+            'bracket': QColor(110, 110, 110),
+            'punctuation': QColor(220, 220, 220)
+        }
+
+
+
         self._formats = {
             'comment': self._create_format(QColor(128, 128, 128), italic=True),
             'string': self._create_format(QColor(163, 21, 21)),

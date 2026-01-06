@@ -80,6 +80,9 @@ class CsvPathTextEdit(QPlainTextEdit):
             self.parent.saved = False
         return True
 
+    def background_changed(self) -> None:
+        CsvPathSyntaxHighlighter(self.document())
+
     def contextMenuEvent(self, event):
         if self.editable == EditStates.UNEDITABLE:
             self._copy_back_question()
