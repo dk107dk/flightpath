@@ -9,7 +9,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Slot
 
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
-from flightpath.widgets.panels.json_viewer import JsonViewer
+from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
+#from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.tab_overlay import TabWidgetOverlayButton
@@ -54,7 +55,7 @@ class Content(ClosingTabsHolder):
     def json_files_are_saved(self) -> bool:
         for i in range(self.tab_widget.count()):
             widget = self.tab_widget.widget(i)
-            if isinstance(widget, JsonViewer) and widget.modified:
+            if isinstance(widget, JsonViewer2) and widget.modified:
                 return False
         return True
 
@@ -82,7 +83,7 @@ class Content(ClosingTabsHolder):
     def do_i_close(self, i:int) -> bool:
         widget = self.tab_widget.widget(i)
         cmod = isinstance(widget, CsvpathViewer) and not widget.saved
-        jmod = isinstance(widget, JsonViewer) and widget.modified
+        jmod = isinstance(widget, JsonViewer2) and widget.modified
         mmod = isinstance(widget, MdViewer) and not widget.saved
         dmod = isinstance(widget, DataViewer) and not widget.saved
         mod = cmod or jmod or mmod or dmod

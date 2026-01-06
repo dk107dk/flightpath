@@ -56,7 +56,8 @@ from flightpath.workers.json_data_worker import JsonDataWorker
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
-from flightpath.widgets.panels.json_viewer import JsonViewer
+#from flightpath.widgets.panels.json_viewer import JsonViewer
+from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
 from flightpath.widgets.panels.table_model import TableModel
 
 from flightpath.widgets.sidebars.sidebar import Sidebar
@@ -701,7 +702,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             #
             json_view = taut.find_tab(self.content.tab_widget, filepath)
             if json_view is None:
-                json_view = JsonViewer(self, editable)
+                json_view = JsonViewer2(self, editable)
                 json_view.open_file(path=filepath, data=data)
                 json_view.setObjectName(filepath)
                 self.content.tab_widget.addTab(json_view, os.path.basename(filepath) )

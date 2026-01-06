@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 import darkdetect
 from flightpath.editable import EditStates
 from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit
-from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
+#from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 from flightpath.widgets.raw_text_edit import RawTextEdit
 from flightpath.widgets.md_text_edit import MdTextEdit
 
@@ -19,7 +19,9 @@ class StyleUtility:
     #
 
     NOT_EDITABLE = "#f8fff8"
+    NOT_EDITABLE_2 = "#d8ddd8"
     NOT_EDITABLE_DARK = "#332a33"
+    NOT_EDITABLE_DARK_2 = "#554c55"
 
     @staticmethod
     def set_common_style(widget):
@@ -46,7 +48,24 @@ class StyleUtility:
         else:
             if hasattr( widget, "content_view"):
                 widget = widget.content_view
+            elif hasattr( widget, "view"):
+                widget = widget.view
             cls._set_editable_background(widget)
+
+    @classmethod
+    def get_not_editable_color(cls) -> str:
+        color = StyleUtility.NOT_EDITABLE_DARK if darkdetect.isDark() else StyleUtility.NOT_EDITABLE
+        return color
+
+    @classmethod
+    def get_not_editable_color_2(cls) -> str:
+        color = StyleUtility.NOT_EDITABLE_DARK_2 if darkdetect.isDark() else StyleUtility.NOT_EDITABLE_2
+        return color
+
+    @classmethod
+    def get_highlight_text(cls) -> str:
+        color = StyleUtility.NOT_EDITABLE_DARK_2 if darkdetect.isDark() else StyleUtility.NOT_EDITABLE_2
+        return color
 
     @classmethod
     def _set_editable_background(cls, widget) -> None:
@@ -54,11 +73,17 @@ class StyleUtility:
         name = cls._name(widget)
         inst = inst or name == "KeyableTreeView"
         if inst:
-            color = StyleUtility.NOT_EDITABLE_DARK if darkdetect.isDark() else StyleUtility.NOT_EDITABLE
+            color = StyleUtility.get_not_editable_color()
+            #color = StyleUtility.NOT_EDITABLE_DARK if darkdetect.isDark() else StyleUtility.NOT_EDITABLE
             if not widget.editable == EditStates.EDITABLE:
                 widget.setStyleSheet(f"{name} {{ background-color: {color}; }}")
-            if isinstance( widget, CsvPathTextEdit ):
-                CsvPathSyntaxHighlighter(widget.document())
+            #if isinstance( widget, CsvPathTextEdit ):
+            #    CsvPathSyntaxHighlighter(widget.document())
         else:
             print(f"Unknown widget type: {widget.__class__.__name__}. Cannot determine editability for style.")
+        #
+        # csvpath and json text editors need to know we're changing the background
+        #
+        if hasattr(widget, "background_changed"):
+            widget.background_changed()
 
