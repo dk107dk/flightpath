@@ -71,13 +71,11 @@ class GeneralDataWorker(QRunnable):
             return False
         elif self.sampling == DataToolbar.RANDOM_ALL:
             if line_num == self.lines_to_take[len(self.lines_to_take)-1]:
-            #if line_num in self.lines_to_take:
                 self.line_take += 1
                 removed = self.lines_to_take.pop()
                 return True
         return False
 
-    #@Slot()
     def run(self):
         self.signals.messages.emit(QApplication.translate("DataWorker", "Reading file..."))
         data = []
@@ -90,7 +88,9 @@ class GeneralDataWorker(QRunnable):
         i = 0
         try:
             with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar, encoding="utf-8" ) as file:
+                print(f"GDW: file: {file}")
                 for line in file.next():
+                    print(f"GDW: line: {line}")
                     b = self.accept_line(i, line)
                     i += 1
                     if b is True:
@@ -100,6 +100,7 @@ class GeneralDataWorker(QRunnable):
                     elif b is None:
                         break
         except UnicodeDecodeError as u:
+            print(f"GDW: uni excepted")
             self.signals.messages.emit(f"  Encoding error. Trying 'windows-1252'.")
             with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar, encoding="windows-1252" ) as file:
                 for line in file.next():
@@ -118,12 +119,12 @@ class GeneralDataWorker(QRunnable):
             self.signals.messages.emit(f"  Erroring opening {path}")
             self.signals.finished.emit((f"Error", e, None, None, None))
             return
+        print(f"GDW: file: done with reading file")
         self.signals.messages.emit(f"  Opened {path}")
         self.signals.finished.emit((f"Took {t} lines out of {i} seen", lines, path, data, lines_to_take, self.editable))
 
 
     def prep_sampling(self) -> None:
-        # find lines:
         needed = 0
         with DataFileReader( str(self.filepath) ) as file:
             for line in file.source:

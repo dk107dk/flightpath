@@ -932,7 +932,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         nos = Nos(path)
         isfile = nos.isfile()
         if isfile and info.suffix() in self.csvpath_config.get(section="extensions", name="csv_files"): # pylint: disable=E1135
-            #print(f"read_validate_and_display_file_for_path 2: {path}: {editable}")
             worker = GeneralDataWorker(
                 path,
                 self,
