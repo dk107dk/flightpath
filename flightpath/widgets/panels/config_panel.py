@@ -342,6 +342,7 @@ class ConfigPanel(QWidget):
         #
         for form in self.forms:
             try:
+                print(f"saving formx: {form}")
                 form.add_to_config(self.main.csvpath_config)
             except:
                 print(traceback.format_exc())

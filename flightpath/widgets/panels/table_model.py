@@ -74,17 +74,6 @@ class TableModel(QAbstractTableModel):
         # self.dataModified.emit() # Optional: signal for save state
         return True
 
-
-
-
-    """
-    def _get_row_count(self):
-        try:
-            return len(self._data)
-        except:
-            return 0
-    """
-
     def _get_column_count(self):
         try:
             return max(map(len, self._data))
@@ -109,16 +98,12 @@ class TableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.EditRole:
             try:
                 value = self._data[index.row()][index.column()]
+                if isinstance(value, (list, tuple, dict)):
+                    value = str(value)
             except IndexError:
                 return None
             return value
 
-    """
-    def flags(self, index):
-        if not index.isValid():
-            return Qt.ItemFlag.NoItemFlags
-        return super().flags(index) | Qt.ItemFlag.ItemIsEditable
-    """
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         default_flags = super().flags(index)
         if not index.isValid():
@@ -151,7 +136,4 @@ class TableModel(QAbstractTableModel):
             self.signals.edit_made.emit((index.row(), index.column(), currentValue, value))
             return True
         return False
-
-
-
 

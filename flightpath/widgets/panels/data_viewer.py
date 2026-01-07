@@ -338,7 +338,6 @@ class DataViewer(QWidget):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         key = event.key()
         key_text = event.text()
-        #print(f"keyPressEventx: {key_text}: {key}")
         if self.is_editable and (key == Qt.Key.Key_Delete or key == Qt.Key_Backspace):
             self.delete_selected_cells()
         #

@@ -29,7 +29,7 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
     SET_TO_FILES_NAME = "  ... Set file's name ..."
 
     def __init__(self, *, path, parent):
-        super().__init__(parent)
+        super().__init__(None)
         self.sidebar = parent
 
         self.setWindowTitle("Stage source data files")
@@ -42,12 +42,15 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         self.area = None
         self.t_gen_area = None
 
+        self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.NonModal)
+
+
         self.setFixedHeight(250)
         self.setFixedWidth(650)
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-        self.setWindowModality(Qt.ApplicationModal)
 
         form_layout = QFormLayout()
         main_layout.addLayout(form_layout)
@@ -245,4 +248,4 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         self.t_lab.adjustSize()
 
     def show_dialog(self) -> None:
-        self.exec()
+        self.show()

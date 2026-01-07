@@ -1,4 +1,5 @@
 import os
+import traceback
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
@@ -47,11 +48,9 @@ class CsvpathLoader:
             template = None
         elif not template.endswith(":run_dir"):
             self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
-            #self.load_dialog.show()
             meut.message(title="Incorrect Template", msg="A named-path group template must end in :run_dir")
             self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, True)
             self.load_dialog.show()
-            #self.do_load_file(overwrite=overwrite)
             return
         named_paths_name = None
         if self.load_dialog.named_paths_name_ctl:
@@ -96,7 +95,6 @@ class CsvpathLoader:
             self.main.sidebar._renew_sidebars()
             self._delete_load_dialog()
         except Exception as e:
-            import traceback
             print(traceback.format_exc())
             meut.message(title="Error", msg=f"Cannot load named-paths group: {e}")
 
@@ -121,6 +119,7 @@ class CsvpathLoader:
         try:
             paths.paths_manager.add_named_paths_from_json(file_path=name)
         except Exception as e:
+            print(traceback.format_exc())
             ex = e
         if paths.has_errors():
             if ex is not None:

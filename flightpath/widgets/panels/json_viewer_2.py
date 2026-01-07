@@ -76,11 +76,8 @@ class JsonViewer2(QWidget):
         #
         save_shortcut_ctrl_save = QShortcut(QKeySequence("Ctrl+S"), self)
         save_shortcut_cmd_save = QShortcut(QKeySequence("Command+S"), self)
-        #copy_shortcut_cmd_copy = QShortcut(QKeySequence("Command+C"), self)
         save_shortcut_ctrl_save.activated.connect(self._save)
         save_shortcut_cmd_save.activated.connect(self._save)
-        #copy_shortcut_cmd_copy.activated.connect(self._save)
-
 
         self.context_menu = None
         self.view.setContextMenuPolicy(Qt.CustomContextMenu)
