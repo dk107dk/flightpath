@@ -36,7 +36,6 @@ class GeneralDataWorker(QRunnable):
         self.delimiter = delimiter
         self.quotechar = quotechar
         self.editable = editable
-        print(f"GeneralDataWorker 1: {filepath}: {self.editable}")
 
     def _rows(self, s) -> int:
         if s == "All lines":
@@ -88,9 +87,7 @@ class GeneralDataWorker(QRunnable):
         i = 0
         try:
             with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar, encoding="utf-8" ) as file:
-                print(f"GDW: file: {file}")
                 for line in file.next():
-                    print(f"GDW: line: {line}")
                     b = self.accept_line(i, line)
                     i += 1
                     if b is True:
@@ -100,7 +97,6 @@ class GeneralDataWorker(QRunnable):
                     elif b is None:
                         break
         except UnicodeDecodeError as u:
-            print(f"GDW: uni excepted")
             self.signals.messages.emit(f"  Encoding error. Trying 'windows-1252'.")
             with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar, encoding="windows-1252" ) as file:
                 for line in file.next():
@@ -119,7 +115,6 @@ class GeneralDataWorker(QRunnable):
             self.signals.messages.emit(f"  Erroring opening {path}")
             self.signals.finished.emit((f"Error", e, None, None, None))
             return
-        print(f"GDW: file: done with reading file")
         self.signals.messages.emit(f"  Opened {path}")
         self.signals.finished.emit((f"Took {t} lines out of {i} seen", lines, path, data, lines_to_take, self.editable))
 

@@ -86,15 +86,6 @@ class DataViewer(QWidget):
             self.setContextMenuPolicy(Qt.CustomContextMenu)
             self.customContextMenuRequested.connect(self._show_context_menu)
 
-        # no good fix.
-        #self.table_view.viewport().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        #self.table_view.viewport().customContextMenuRequested.connect(self._show_context_menu)
-        #
-        # this is a hack that needs to go away after the next csvpath release
-        #
-        self._my_temp_hack_path = None
-
-
     @property
     def is_editable(self) -> bool:
         return self.editable == EditStates.EDITABLE
@@ -249,10 +240,7 @@ class DataViewer(QWidget):
             for column in range(clow,chigh+1):
                 line.append(self._from_coord(row, column))
 
-        lines = CsvLineSpooler(None) # we don't use a Result
-        self._my_temp_hack_path = path
-        lines._instance_data_file_path = self.__instance_data_file_path_hack # we don't need a Result, but we need a path
-        lines.result = "" # just in case of an exception, so we don't get an other exception on top.
+        lines = CsvLineSpooler(None, path=path)
         for _ in lst:
             lines.append(_)
         lines.close()
@@ -309,13 +297,7 @@ class DataViewer(QWidget):
         i = model.columnCount()
         line = ["" for _ in range(i) ]
         model.insertRows( at, 1, line )
-        #
-        # I don't think this is needed, but maybe?
-        #new_index = self.table_view.model().index(row_number + 1, 0)
-        #self.table_view.scrollTo(new_index)
-        #
         self.mark_unsaved()
-
 
     @Slot(int)
     def _insert_header_right(self, at:int) -> None:
@@ -514,9 +496,6 @@ class DataViewer(QWidget):
             path = fiut.deconflicted_path( thepath, name )
             self._save(path)
 
-    def __instance_data_file_path_hack(self) -> str:
-        return self._my_temp_hack_path
-
     @Slot()
     def on_save(self) -> None:
         #
@@ -536,7 +515,6 @@ class DataViewer(QWidget):
         self._save(self.path)
 
     def _save(self, path:str) -> None:
-        self._my_temp_hack_path = path
         #
         # get a line spooler. it uses a DataFileWriter to get a file-like
         # smart-open behind the scenes and then uses the native csv module
@@ -544,28 +522,7 @@ class DataViewer(QWidget):
         # does it, in order to allow for both lists in memory and files,
         # with files being in any of the backends.
         #
-        #
-        # hack because CsvLineSpooler was written for Results to write their
-        # output. this will be fixed in next release so we'll need to remove
-        # the hack.
-        #
-        lines = CsvLineSpooler(None) # we don't use a Result
-        lines._instance_data_file_path = self.__instance_data_file_path_hack # we don't need a Result, but we need a path
-        lines.result = "" # just in case of an exception, so we don't get an other exception on top.
-
-        #
-        # got a CsvLineSpooler which uses a DataFileWriter, making this
-        # local write the same as if we wanted to allow for writing to any
-        # backend.
-        #
-        # now write headers, then line by line
-        #
-        #headers = [
-        #    self.table_view.model().headerData(i, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole)
-        #    for i in range(self.table_view.model().columnCount())
-        #]
-        #lines.append(headers)
-        #
+        lines = CsvLineSpooler(None, path=path) # we don't use a Result
         for _ in range(self.table_view.model().rowCount()):
             line = [
                 self.table_view.model().data(self.table_view.model().index(_, col), Qt.ItemDataRole.DisplayRole)
@@ -578,28 +535,16 @@ class DataViewer(QWidget):
         #
         self.main.statusBar().showMessage(f"  Saved to: {self.path}")
         self.reset_saved()
-        #
-        # this needs to go away, but until CsvPath is refactored it can't
-        #
-        self._my_temp_hack_path = None
-
 
     def _write_to_string(self) -> str:
         buffer = io.StringIO(newline="")
         writer = csv.writer(buffer)
-
-        #headers = [
-        #    self.table_view.model().headerData(i, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole)
-        #    for i in range(self.table_view.model().columnCount())
-        #]
-        #writer.writerow(headers)
         for _ in range(self.table_view.model().rowCount()):
             line = [
                 self.table_view.model().data(self.table_view.model().index(_, col), Qt.ItemDataRole.DisplayRole)
                 for col in range(self.table_view.model().columnCount())
             ]
             writer.writerow(line)
-
         cstr = buffer.getvalue()
         buffer.close()
         return cstr
@@ -650,7 +595,6 @@ class DataViewer(QWidget):
         if name[0] != "+":
             name = f"+{name}"
             self.main.content.tab_widget.setTabText(i, name )
-
 
     def display_data(self, model):
         self.table_view.setModel(model)
