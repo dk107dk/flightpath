@@ -5,10 +5,12 @@ from paramiko import SSHClient
 import boto3
 import botocore
 import azure.storage.blob
-import azure.core.exceptions    
+import azure.core.exceptions
 import google.cloud.storage
 import google.cloud.exceptions
 import google.auth.transport.requests
+from csvpath.util.json.json_data_reader import JsonDataReader
+from csvpath.util.json.json_reader_helper import JsonReaderHelper
 from csvpath.util.s3.s3_nos import S3Do
 from csvpath.util.s3.s3_data_reader import S3DataReader
 from csvpath.util.s3.s3_data_writer import S3DataWriter
@@ -57,12 +59,12 @@ from csvpath.managers.integrations.ol.result_listener_ol import OpenLineageResul
 from csvpath.managers.integrations.ol.results_listener_ol import OpenLineageResultsListener
 from csvpath.managers.integrations.slack.sender import SlackSender
 
-    
+
 #
 # these packages need to be referenced so they are found by PyInstaller
 # we do it with hiddenimports in the spec file too, but it has been a
 # challenge. very possibly we can take the backends out of this class
-# but it's not certain and now isn't the time to dig more. 
+# but it's not certain and now isn't the time to dig more.
 #
 # oct 2025: the .spec hidden imports of smart_open.ssh, etc. are crucial and effective.
 # not clear how much of the above is helpful, but some of it seems to be. but for smart-open
