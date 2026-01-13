@@ -13,6 +13,7 @@ from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.syntax.span_utility import SpanUtility as sput
 from flightpath.util.os_utility import OsUtility as osut
+from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 
 from flightpath.editable import EditStates
 
