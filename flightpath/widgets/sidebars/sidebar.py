@@ -31,9 +31,11 @@ from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.file_tree_model.directory_filter_proxy_model import DirectoryFilterProxyModel
 from flightpath.util.csvpath_loader import CsvpathLoader
 from flightpath.util.help_finder import HelpFinder
+from flightpath.editable import EditStates
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.util.tabs_utility import TabsUtility as taut
 
 
 class Sidebar(QWidget):
@@ -279,6 +281,7 @@ class Sidebar(QWidget):
         #
         #
         self.line_number_action = QAction()
+        self.edit_jsonl_action = QAction()
         #
         # cut and paste
         #
@@ -300,6 +303,7 @@ class Sidebar(QWidget):
         self.new_folder_action.setText("New folder")
         self.stage_data_action.setText("Stage data")
         self.load_paths_action.setText("Load csvpaths")
+        self.edit_jsonl_action.setText("Edit as JSON")
         #
         #
         #
@@ -319,6 +323,11 @@ class Sidebar(QWidget):
         self.cut_action.triggered.connect(self._cut)
         self.copy_action.triggered.connect(self._copy)
         self.paste_action.triggered.connect(self._paste)
+        self.edit_jsonl_action.triggered.connect(self._edit_as_json)
+
+
+        self.context_menu.addAction(self.edit_jsonl_action)
+        self.context_menu.addSeparator()
 
         self.context_menu.addAction(self.save_file_action)
         self.context_menu.addAction(self.rename_action)
@@ -417,9 +426,17 @@ class Sidebar(QWidget):
                     self.line_number_action.setText(f"{c} lines")
                 else:
                     self.line_number_action.setVisible(False)
-
+                if(
+                   path.endswith(".jsonl") or
+                   path.endswith(".ndjson") or
+                   path.endswith(".jsonlines")
+                ):
+                    self.edit_jsonl_action.setVisible(True)
+                else:
+                    self.edit_jsonl_action.setVisible(False)
             else:
                 self.line_number_action.setVisible(False)
+                self.edit_jsonl_action.setVisible(False)
                 #
                 # paste only if dir and cutted. cut only if file.
                 #
@@ -462,7 +479,7 @@ class Sidebar(QWidget):
             #
             #
             self.line_number_action.setVisible(False)
-
+            self.edit_jsonl_action.setVisible(False)
             #
             # clear so we know to create new files or folders at the root
             #
@@ -710,6 +727,34 @@ class Sidebar(QWidget):
     def _save_file_navigator_item(self):
         self.main.content.csvpath_source_view.text_edit.on_save()
 
+
+    def _edit_as_json(self) -> None:
+        index = self.file_navigator.selectionModel().selectedIndexes()
+        if len(index) < 1:
+            print(f"_edit_as_json: no index. returning")
+            return
+        index = index[0]
+        path = None
+        if not index.isValid():
+            print(f"_edit_as_json: invalid index. returning")
+            return
+        path = self.proxy_model.filePath(index)
+        nos = Nos(path)
+        if not nos.isfile():
+            print(f"_edit_as_json: {path} is not a file. returning")
+            return
+        #
+        # do we have one already?
+        # if we have the file already open we need to close it
+        #
+        data_view = taut.find_tab(self.main.content.tab_widget, path)
+        if data_view is not None:
+            self.main.content.tab_widget.close_tab(path)
+        self.main.spin_up_json_worker(path=path, editable=EditStates.EDITABLE)
+
+
+
+
     def _new_file_navigator_item(self):
         dialog = QInputDialog()
         dialog.setFixedSize(QSize(420, 125))
@@ -724,15 +769,19 @@ class Sidebar(QWidget):
                 # if we're creating a JSON file we need to populate with a {} or []
                 #
                 content = ""
-                if new_name.endswith(".json"):
+                if ns[1] in ["json", "jsonl", "ndjson", "jsonlines"]:
                     items = ["{}", "[]"]
                     item, ok = QInputDialog.getItem(self, "Data structure", "Start with", items, 0, False)
                     if ok and item:
                         content = item
-                elif new_name.endswith(".md"):
+                elif ns[1] == "md":
                     content = """# Title
 *(hit control-t to toggle to raw markdown editing)*
                     """
+                #elif ns[1] in ["jsonl", "ndjson", "jsonlines"]:
+                #    content = """{"":""}"""
+                elif ns[1] in self.main.csvpath_config.get(section="extensions", name="csv_files"):
+                    content = ","
                 elif ns[1] in self.main.csvpath_config.get(section="extensions", name="csvpath_files"):
                     testdata = ""
                     _ = os.path.join(self.main.state.cwd, "examples/test.csv")
@@ -745,7 +794,9 @@ class Sidebar(QWidget):
 ~
 
 $[*][ print("hello world") ]"""
-
+                else:
+                    QMessageBox.warning(self, "Error", "Unknown file extension")
+                    return
                 try:
                     if not new_name.startswith(self.main.state.cwd):
                         if self._last_path is None:
@@ -801,10 +852,14 @@ $[*][ print("hello world") ]"""
         if ( ext not in self.main.csvpath_config.get(section="extensions", name="csvpath_files")
              and ext not in self.main.csvpath_config.get(section="extensions", name="csv_files")
         ):
-            return False, "File name must have an extension configured for csvpaths or data files"
-
-        if ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
-            meut.message( title="Data file", msg="You are creating an empty data file that must be edited outside of FlightPath" )
+            return False, "Extension must be for csvpaths, data, text, or markdown"
+        #
+        # all data files are editable now, except xlsx/xls
+        #
+        #if ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
+        #    meut.message( title="Data file", msg="You are creating an empty data file that must be edited outside of FlightPath" )
+        if ext in ["xlsx", "xsl"]:
+            return False, "Excel files are not supported in FlightPath at this time"
 
         return True, "Ok"
 

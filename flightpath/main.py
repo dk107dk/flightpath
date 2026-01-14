@@ -172,7 +172,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self._selected_file_path = None
         self.last_main = None
         self.build_number = None
-        self.progress_dialog = None # not sure we need this as a member, but it is used as one atm.
         #
         # TODO: why do we create state twice?
         #
@@ -687,8 +686,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def update_json_views(self, worker_data):
         try:
             filepath, data, editable = worker_data   # pylint: disable=W0612
-            if self.progress_dialog:
-                self.progress_dialog.close()
             if isinstance( data, Exception ):
                 meut.message(icon=QMessageBox.Critical, title="File opening error", msg=f"Error: {data}")
                 return
@@ -701,6 +698,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             # hide grid, source tabs
             #
             json_view = taut.find_tab(self.content.tab_widget, filepath)
+
             if json_view is None:
                 json_view = JsonViewer2(self, editable)
                 json_view.open_file(path=filepath, data=data)
@@ -721,8 +719,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @Slot(tuple)
     def update_md_views(self, worker_data):
         filepath, data, editable = worker_data # pylint: disable=W0612
-        if self.progress_dialog:
-            self.progress_dialog.close()
         if isinstance( data, Exception ):
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
@@ -786,8 +782,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @Slot(tuple)
     def update_csvpath_views(self, worker_data):
         filepath, data, editable = worker_data # pylint: disable=W0612
-        if self.progress_dialog:
-            self.progress_dialog.close()
         if isinstance( data, Exception ):
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
@@ -835,8 +829,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     @Slot(tuple)
     def update_views(self, worker_data):
         msg, lines, filepath, data, lines_to_take, editable = worker_data # pylint: disable=W0612
-        if self.progress_dialog:
-            self.progress_dialog.close()
         if isinstance( lines, Exception ):
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
@@ -880,12 +872,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.content.toolbar.enable()
         self.show_now_or_later(self.content.toolbar)
-        #self.content.toolbar.show()
-        #
-        # hide right tabs because we don't need csvpath helpers when looking
-        # at data
-        #
-        #self._rt_tabs_hide()
         taut.select_tab(self.content.tab_widget, data_view)
 
 
@@ -925,9 +911,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # had trouble getting them to behave correctly.
         #
         info = QFileInfo(path)
-        #
-        # TODO: consolidate below
-        #
         worker = None
         nos = Nos(path)
         isfile = nos.isfile()
@@ -945,10 +928,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             if finished_callback is not None:
                 worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
-            self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
-            self.progress_dialog.setWindowModality(Qt.WindowModal)
-            self.progress_dialog.setValue(0)
-            self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         elif isfile and info.suffix() in self.csvpath_config.get(section="extensions", name="csvpath_files"): # pylint: disable=E1135
             worker = CsvpathFileWorker(path, self, editable=editable)
@@ -956,47 +935,37 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             if finished_callback is not None:
                 worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
-            self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
-            self.progress_dialog.setWindowModality(Qt.WindowModal)
-            self.progress_dialog.setValue(0)
-            self.progress_dialog.setMinimumDuration(400)
             self.threadpool.start(worker)
         elif isfile and info.suffix() == "json":
-            worker = JsonDataWorker(path, self, editable=editable)
-            if finished_callback is not None:
-                #
-                # this callback should work, but even when clearly wired right it
-                # doesn't seem to actually get called. no idea what's up. :/
-                #
-                worker.signals.finished.connect(finished_callback)
-            worker.signals.finished.connect(self.update_json_views)
-            worker.signals.messages.connect(self.statusBar().showMessage)
-            self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
-            self.progress_dialog.setWindowModality(Qt.WindowModal)
-            self.progress_dialog.setValue(0)
-            self.progress_dialog.setMinimumDuration(400)
-            self.threadpool.start(worker)
+            self.spin_up_json_worker(path=path, editable=editable, finished_callback=finished_callback)
         elif isfile and info.suffix() in ["md", "html", "txt"]:
-            #
-            # txt could be set in csv extensions. probably not, but possible. we
-            # don't need these to be configurable at this time.
-            #
-            worker = MdWorker(path, self, editable=editable)
-            worker.signals.finished.connect(self.update_md_views)
-            if finished_callback is not None:
-                worker.signals.finished.connect(finished_callback)
-            worker.signals.messages.connect(self.statusBar().showMessage)
-            self.progress_dialog = QProgressDialog("Loading...", None, 0, 0, self)
-            self.progress_dialog.setWindowModality(Qt.WindowModal)
-            self.progress_dialog.setValue(0)
-            self.progress_dialog.setMinimumDuration(400)
-            self.threadpool.start(worker)
+            self.spin_up_md_worker(path=path, editable=editable, finished_callback=finished_callback)
         elif not info.isFile():
             meut.message(title="File opening error", msg=f"Cannot open {path}")
         else:
             print("Error: main.read_validate_and_display_file_for_path: cannot open file")
             self.clear_views()
         return worker
+
+    def spin_up_md_worker(self, *, path, editable, finished_callback=None) -> QRunnable:
+        worker = MdWorker(path, self, editable=editable)
+        worker.signals.finished.connect(self.update_md_views)
+        if finished_callback is not None:
+            worker.signals.finished.connect(finished_callback)
+        worker.signals.messages.connect(self.statusBar().showMessage)
+        self.threadpool.start(worker)
+        return worker
+
+    def spin_up_json_worker(self, *, path, editable, finished_callback=None) -> QRunnable:
+        worker = JsonDataWorker(path, self, editable=editable)
+        if finished_callback is not None:
+            worker.signals.finished.connect(finished_callback)
+        worker.signals.finished.connect(self.update_json_views)
+        worker.signals.messages.connect(self.statusBar().showMessage)
+        self.threadpool.start(worker)
+        return worker
+
+
 
 
     def run_paths(self, *,

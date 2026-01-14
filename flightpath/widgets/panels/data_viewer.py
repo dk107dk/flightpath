@@ -341,13 +341,36 @@ class DataViewer(QWidget):
               and event.modifiers() == Qt.KeyboardModifier.ControlModifier
         ):
             self.paste_from_clipboard()
+
+        elif self.is_editable and key == Qt.Key_Right:
+            selection_model = self.table_view.selectionModel()
+            selected_indexes = selection_model.selectedIndexes()
+            if selected_indexes and len(selected_indexes) == 1:
+                index = selected_indexes[0]
+                col = index.column()
+                if col + 1 == self.table_view.model().columnCount():
+                    self._insert_header_right(col)
+
+        elif self.is_editable and key == Qt.Key_Down:
+            selection_model = self.table_view.selectionModel()
+            selected_indexes = selection_model.selectedIndexes()
+            if selected_indexes and len(selected_indexes) == 1:
+                index = selected_indexes[0]
+                row = index.row()
+                if row + 1 == self.table_view.model().rowCount():
+                    self._insert_line_below(row)
         else:
             ...
+
+
         #
         # if we're editable we'll keep the event. remember that editability of
         # individual cells is controled by the TableModel's editable value.
         #
         if self.is_editable:
+            #
+            # hand up for further
+            #
             super().keyPressEvent(event)
         else:
             event.ignore()
@@ -450,7 +473,7 @@ class DataViewer(QWidget):
         self.layout().setCurrentIndex(i)
 
 
-    def on_save_as(self, switch_local=False) -> None:
+    def on_save_as(self, switch_local=False, *, info=None) -> None:
         if self.editable == EditStates.UNEDITABLE:
             return
         #
@@ -486,10 +509,13 @@ class DataViewer(QWidget):
             thepath = self.path
             thepath = os.path.dirname(thepath)
 
+        msg = "Where should the new file live? "
+        if info is not None:
+            msg = f"{info}\n\n{msg}"
         name = os.path.basename(self.path)
         name, ok = meut.input(
             title="Save As",
-            msg="Where should the new file live? ",
+            msg=msg,
             text=thepath
         )
         if ok and name:
@@ -509,12 +535,49 @@ class DataViewer(QWidget):
             return
         ap = self.main.csvpath_config.archive_path
         ncp = self.main.csvpath_config.inputs_csvpaths_path
+        if (
+            self.path.endswith(".jsonl") or
+            self.path.endswith(".ndjson") or
+            self.path.endswith(".json") or
+            self.path.endswith(".jsonlines")
+        ):
+            msg = "Saving JSONL converts the data to CSV."
+            #meut.message(msg=msg)
+            self.on_save_as(info=msg)
+            return
         if self.path.startswith(ap) or self.path.startswith(ncp):
             self.on_save_as(switch_local=True)
             return
         self._save(self.path)
 
     def _save(self, path:str) -> None:
+        if path is None:
+            raise ValueError("Path cannot be None")
+        ns = fiut.split_filename(path)
+        exts = self.main.csvpath_config.get(section="extensions", name="csv_files")
+        if ns[1] not in exts:
+            meut.warning(parent=self, title="Bad Filename", msg="The path must end in a data format extension")
+            self.on_save_as()
+            return
+        self._save_csv(path)
+
+        """
+        if path.endswith(".csv"):
+        else:
+            self._save_jsonl(path)
+        """
+
+    def _save_jsonl(self, path:str) -> None:
+        lines = JsonlLineSpooler(path=path)
+        for _ in range(self.table_view.model().rowCount()):
+            line = [
+                self.table_view.model().data(self.table_view.model().index(_, col), Qt.ItemDataRole.DisplayRole)
+                for col in range(self.table_view.model().columnCount())
+            ]
+            lines.append(line)
+        lines.close()
+
+    def _save_csv(self, path:str) -> None:
         #
         # get a line spooler. it uses a DataFileWriter to get a file-like
         # smart-open behind the scenes and then uses the native csv module
@@ -522,7 +585,7 @@ class DataViewer(QWidget):
         # does it, in order to allow for both lists in memory and files,
         # with files being in any of the backends.
         #
-        lines = CsvLineSpooler(None, path=path) # we don't use a Result
+        lines = CsvLineSpooler(None, path=path) # we don't use a Result object
         for _ in range(self.table_view.model().rowCount()):
             line = [
                 self.table_view.model().data(self.table_view.model().index(_, col), Qt.ItemDataRole.DisplayRole)

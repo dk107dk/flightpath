@@ -1,16 +1,16 @@
 ~
-   This csvpath creates an index of zipcodes by city. The index is used by another 
+   This csvpath creates an index of zipcodes by city. The index is used by another
    csvpath in a different named-paths group.
 
-   Run this example: 
-     1. load Boundaries_US_Zip_Codes.csv as a named-file called zips
-     2. load this csvpath as a named-paths group called zip_index
+   Run this example:
+     1. right-click on the file to load Boundaries_US_Zip_Codes.csv as a named-file called zips
+     2. right-click on this file to load this csvpath as a named-paths group called zip_index
      3. run zip_index against the named-file zips
 
    See README.md for the full example steps sequence.
 
-   source: data.gov, catalog.data.gov/dataset/boundaries-us-zip-codes   
-   test-data: lookups/Boundaries__US_Zip_Codes.csv
+   source: data.gov, catalog.data.gov/dataset/boundaries-us-zip-codes
+   test-data: examples/lookups/Boundaries_US_Zip_Codes.csv
    name: create index
 ~
 $[1*][

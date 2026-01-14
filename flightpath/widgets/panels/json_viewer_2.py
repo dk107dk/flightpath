@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+from typing import Any
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -239,7 +240,7 @@ class JsonViewer2(QWidget):
     def open_file(self, *, path:str, data:str):
         #
         # we still want the data for the old grid view, but here we just want the
-        # string
+        # string. <<< means we're loading twice. that can't be right.
         #
         self.path = path
         info = QFileInfo(path)
@@ -247,22 +248,27 @@ class JsonViewer2(QWidget):
         # do we really want / need to double check if we're handling a file?
         #
         nos = Nos(path)
-        if not nos.isfile() or info.suffix() != "json":
+        if not nos.isfile() or info.suffix() not in ["json", "jsonl", "ndjson", "jsonlines"]:
             self.view.hide()
+            #
+            # need an alert here
+            #
+            meut.warning(parent=self.main, msg="Unknown file type", title="Cannot open file")
             return
-        with DataFileReader(path) as file:
-            t = file.read()
-            try:
-                j = json.loads(t)
-                t = json.dumps(j, indent=2)
-            except:
-                #
-                # would be good to notify the user here
-                #
-                print(f"cannot format as json")
-
-            self.view.setPlainText(t)
-
+        t = data
+        if t is None or not isinstance(t, str):
+            with DataFileReader(path) as file:
+                t = file.read()
+        try:
+            j = json.loads(t)
+            t = json.dumps(j, indent=2)
+        except:
+            #
+            # would be good to notify the user here?
+            #  assuming there is any data to fail to format.
+            #
+            print(f"cannot format {path} as json")
+        self.view.setPlainText(t)
         self.main.show_now_or_later(self.view)
 
     def clear(self):
@@ -270,3 +276,35 @@ class JsonViewer2(QWidget):
 
 
 
+    #
+    # the below are from json and data viewer classes.
+    #not sure why we need them here yet.
+    # we only need them if we could be in json_viewer_2 and someone clicks the node so that it
+    # wants to open in data_viewer or json_viewer.
+    #
+    # we want that to never happen. we have to close and reopen the file if it is in the wrong viewer
+    #
+
+    def display_data(self, model):
+        """
+        self.table_view.setModel(model)
+        self.main.show_now_or_later(self.table_view)
+        self.main.show_now_or_later(self.parent.toolbar)
+        self.layout().setCurrentIndex(0)
+        """
+
+    #@Slot(tuple)
+    def on_row_or_column_edit(self, fromf:tuple[int,int]) -> None:
+        """
+        self.mark_unsaved()
+        """
+
+    #@Slot(tuple)
+    def on_edit_made(self, xy:tuple[int,int, Any, Any]) -> None:
+        """
+        if xy[2] != xy[3]:
+            self.mark_unsaved()
+            #
+            # other actions?
+            #
+        """

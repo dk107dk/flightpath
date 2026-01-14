@@ -3,14 +3,14 @@
   This csvpath iterates a file and looks up the zipcode for Boston for every line.
 
   To run it, first follow the steps in index_zipcodes.csvpaths to create the index.
-  Then: 
-     1. load this csvpaths file as a named-paths group call zip_lookup
-     2. run the zips named-file against zip_lookup 
+  Then:
+     1. right-click on the file to load this csvpaths file as a named-paths group call zip_lookup
+     2. run the zips named-file against zip_lookup
 
    id: zip lookup
    validation-mode:raise,print
 ~
-$[1*][ 
+$[1*][
     @a = $bigzips.variables.zipcodes.Boston
     ~ we again want the variables but not the data, so we reject all lines ~
     no()
