@@ -165,14 +165,30 @@ class JsonViewer2(QWidget):
             return
         t = self.view.toPlainText()
         t = strut.sanitize_json(t)
-        try:
-            j = json.loads(t)
-            t = json.dumps(j, indent=2)
-        except:
-            #
-            # would be good to notify the user here
-            #
-            print(f"cannot format as json")
+
+        info = QFileInfo(self.path)
+        if info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
+            try:
+                #
+                # this could be slow for large files due to how we find the
+                # lines. we can not pretty print here to speed things up; instead
+                # making the user actively ask for pretty printing. still, that
+                # wouldn't fix the performance problem, only minimize it. before
+                # creating a real parser let's see if there are complaints. or
+                # maybe there's a jsonl formatter that I just didn't find?
+                #
+                t = strut.jsonl_text_to_lines(t)
+            except:
+                ...
+        else:
+            try:
+                j = json.loads(t)
+                t = json.dumps(j, indent=2)
+            except:
+                #
+                # would be good to notify the user here
+                #
+                print(f"cannot format as json")
         with DataFileWriter(path=self.path) as file:
             file.write(t)
         #
@@ -181,7 +197,15 @@ class JsonViewer2(QWidget):
         self._set_modified(False)
 
     def _pretty(self) -> str:
-        t = self._check(show_good_message=False)
+        info = QFileInfo(self.path)
+        #
+        # do we really want / need to double check if we're handling a file?
+        #
+        t = None
+        if info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
+            t = strut.jsonl_text_to_lines(self.view.toPlainText())
+        else:
+            t = self._check(show_good_message=False)
         self.view.setPlainText(t)
 
     def _check(self, *, show_good_message=True) -> str:
@@ -259,15 +283,16 @@ class JsonViewer2(QWidget):
         if t is None or not isinstance(t, str):
             with DataFileReader(path) as file:
                 t = file.read()
-        try:
-            j = json.loads(t)
-            t = json.dumps(j, indent=2)
-        except:
-            #
-            # would be good to notify the user here?
-            #  assuming there is any data to fail to format.
-            #
-            print(f"cannot format {path} as json")
+        if not nos.isfile() or info.suffix() not in ["jsonl", "ndjson", "jsonlines"]:
+            try:
+                j = json.loads(t)
+                t = json.dumps(j, indent=2)
+            except:
+                #
+                # would be good to notify the user here?
+                #  assuming there is any data to fail to format.
+                #
+                print(f"cannot format {path} as json")
         self.view.setPlainText(t)
         self.main.show_now_or_later(self.view)
 
@@ -284,7 +309,8 @@ class JsonViewer2(QWidget):
     #
     # we want that to never happen. we have to close and reopen the file if it is in the wrong viewer
     #
-
+    # remove
+    #
     def display_data(self, model):
         """
         self.table_view.setModel(model)
@@ -293,12 +319,18 @@ class JsonViewer2(QWidget):
         self.layout().setCurrentIndex(0)
         """
 
+    #
+    # remove
+    #
     #@Slot(tuple)
     def on_row_or_column_edit(self, fromf:tuple[int,int]) -> None:
         """
         self.mark_unsaved()
         """
 
+    #
+    # remove
+    #
     #@Slot(tuple)
     def on_edit_made(self, xy:tuple[int,int, Any, Any]) -> None:
         """
