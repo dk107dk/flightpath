@@ -1,6 +1,7 @@
 import re
 import os
 import json
+import traceback
 from PySide6.QtWidgets import ( # pylint: disable=E0611
         QVBoxLayout,
         QHBoxLayout,
@@ -31,6 +32,7 @@ from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.util.server_utility import  ServerUtility as seut
 
 class CompileEnvDialog(QDialog):
 
@@ -98,7 +100,7 @@ class CompileEnvDialog(QDialog):
         self.table_of_existing = QTableWidget()
         self.table_of_existing.setFixedHeight(265)
         self.table_of_existing.setColumnCount(2)
-        self.table_of_existing.setHorizontalHeaderLabels(["Name", "Value"])
+        self.table_of_existing.setHorizontalHeaderLabels(["Name", "Local value"])
         self.table_of_existing.verticalHeader().setVisible(False)
         header = self.table_of_existing.horizontalHeader()
         header.setStretchLastSection(True)
@@ -109,11 +111,12 @@ class CompileEnvDialog(QDialog):
         self.table_of_sending = QTableWidget()
         self.table_of_sending.setFixedHeight(265)
         self.table_of_sending.setColumnCount(2)
-        self.table_of_sending.setHorizontalHeaderLabels(["Name", "Value"])
+        self.table_of_sending.setHorizontalHeaderLabels(["Name", "Server value"])
         self.table_of_sending.verticalHeader().setVisible(False)
         header = self.table_of_sending.horizontalHeader()
         header.setStretchLastSection(True)
         self.table_of_sending.itemClicked.connect(self.table_of_sending_clicked)
+        self.populate_sending()
         self.main.show_now_or_later(self.table_of_sending)
         self.layout.addWidget(self.table_of_sending)
 
@@ -138,13 +141,13 @@ class CompileEnvDialog(QDialog):
         kv_box_layout.addWidget(self.add_name)
         self.add_value = QLineEdit()
         kv_box_layout.addWidget(self.add_value)
-        button = QPushButton("Add env var")
+        button = QPushButton("Add/modify env var")
 
         add_form_inputs_layout.addWidget(kv_box)
         add_form_inputs_layout.addWidget(button)
         button.clicked.connect(self._on_click_add)
 
-        add_form_layout.addRow("Add new: ", add_form_inputs)
+        add_form_layout.addRow("", add_form_inputs)
 
         self.cancel_button = QPushButton("Cancel")
         self.upload_button = QPushButton("Upload")
@@ -159,7 +162,7 @@ class CompileEnvDialog(QDialog):
         self.cancel_button.clicked.connect(self.reject)
 
         self.refreshing = False
-        self.refresh_table()
+        self.populate_existing()
 
 
 #==================
@@ -195,7 +198,15 @@ class CompileEnvDialog(QDialog):
         name = self.table_of_existing.item(row, 0)
         value = self.table_of_existing.item(row, 1)
         i = self.table_of_sending.rowCount()
-        self.table_of_sending.insertRow(i)
+        n = name.text()
+        x = self._has_key(n)
+        if x == -1:
+            self.table_of_sending.insertRow(i)
+        else:
+            i = x
+
+
+        #self.table_of_sending.insertRow(i)
         k = QTableWidgetItem(name.text())
         v = QTableWidgetItem(value.text())
         self.table_of_sending.setItem(i, 0, k)
@@ -222,15 +233,29 @@ class CompileEnvDialog(QDialog):
         else:
             return self.envs().items()
 
+    def populate_sending(self) -> None:
+        try:
+            form = self.main.config.config_panel.get_form( "ServerForm" )
+            host = form.host.text()
+            r = seut.download_env(host=host, project=self.name, headers=form._headers)
+            j = json.loads(r)
+            self.table_of_sending.setRowCount(len(j))
+            for i, (k, v) in enumerate(j.items()):
+                ki = QTableWidgetItem(k)
+                vi = QTableWidgetItem(v)
+                self.table_of_sending.setItem(i, 0, ki)
+                self.table_of_sending.setItem(i, 1, vi)
+        except Exception as e:
+            print(traceback.format_exc())
+            meut.warning(parent=self, msg=f"Cannot download the {self.name} env", title="Download failed")
 
 
-    def refresh_table(self) -> None:
+    def populate_existing(self) -> None:
         self.refreshing = True
         ffilter = self.filter_input.text()
         ffilter = ffilter if ffilter and ffilter.strip() != "" else None
         rows = {}
         for k, v in self._enum():
-        #for k, v in os.environ.items():
             if ffilter is not None:
                 r = re.compile(ffilter)
                 m = r.findall(k)
@@ -248,16 +273,28 @@ class CompileEnvDialog(QDialog):
         self.refreshing = False
 
     def _on_click_update(self) -> None:
-        self.refresh_table()
+        self.populate_existing()
 
     def _on_click_add(self) -> None:
         i = self.table_of_sending.rowCount()
-        self.table_of_sending.insertRow(i)
+        x = self._has_key(self.add_name.text())
+        if x == -1:
+            self.table_of_sending.insertRow(i)
+        else:
+            i = x
         k = QTableWidgetItem(self.add_name.text())
         v = QTableWidgetItem(self.add_value.text())
         self.table_of_sending.setItem(i, 0, k)
         self.table_of_sending.setItem(i, 1, v)
 
+    def _has_key(self, k:str) -> int:
+        rows = self.table_of_sending.rowCount()
+        for row in range(rows):
+            ki = self.table_of_sending.item(row, 0)
+            vi = self.table_of_sending.item(row, 1)
+            if ki.text() == k:
+                return row
+        return -1
 
 
 

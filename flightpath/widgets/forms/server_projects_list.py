@@ -21,7 +21,7 @@ class ServerProjectsList(QListWidget):
         menu.addSeparator()
         overwrite_config = menu.addAction("Upload config")
         sync_config = menu.addAction("Sync config")
-        overwrite_env = menu.addAction("Upload env")
+        overwrite_env = menu.addAction("Sync env")
         menu.addSeparator()
         new_proj = menu.addAction("New project")
         menu.addSeparator()
@@ -92,7 +92,6 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            print(f"set env for project named: {name}")
             self.parent._upload_env(name)
         else:
             meut.message(msg="Please select a project", title="Select project")

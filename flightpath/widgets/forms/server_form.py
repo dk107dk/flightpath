@@ -73,9 +73,13 @@ class ServerForm(BlankForm):
         self.setLayout(layout)
         self._setup()
 
-        self.server_unchanged = False
-
         self.main.config.config_panel.forms_layout.currentChanged.connect(self.on_widget_changed)
+        #
+        # if we haven't been viewed we won't have loaded the server and key fields
+        #
+        self.server_unchanged = False
+        self.viewed = False
+
 
     def on_widget_changed(self) -> None:
         #
@@ -86,7 +90,7 @@ class ServerForm(BlankForm):
             self.populate()
             self._update_project_list()
             self.server_unchanged = True
-
+            self.viewed = True
 
 
     def _set_projects_path(self) -> None:
@@ -103,6 +107,11 @@ class ServerForm(BlankForm):
 
 
     def add_to_config(self, config) -> None:
+        #
+        # if we've never been viewed we won't have setup the host and key.
+        # if we don't do that and save we'll be saving blanks.
+        #
+        self.populate_if()
         host = self.host.text()
         key = self.key.text()
         config.add_to_config("server", "host", host )
@@ -147,9 +156,19 @@ class ServerForm(BlankForm):
             return
         if self.server_unchanged is True:
             return
+        self.really_populate()
 
+    def populate_if(self) -> None:
+        #
+        # if we never setup or never viewed we have to do a populate()
+        # server unchanged will always be false if viewed is false. but in principle
+        # we could set the values and never show them.
+        #
+        if self.viewed is False:
+            self.really_populate()
+
+    def really_populate(self) -> None:
         en = self.main.config.toolbar.button_close.isEnabled()
-
         config = self.config
         host = config.get(section="server", name="host")
         if host and self.host.text() != host:
@@ -160,7 +179,6 @@ class ServerForm(BlankForm):
             self.key.setText(key)
             self.server_unchanged = False
         self._enable_server_if()
-
         if en:
             self.main.config.reset_config_toolbar()
 
@@ -278,12 +296,6 @@ class ServerForm(BlankForm):
             meut.warning(
                 parent=self,
                 msg=f"Cannot upload env JSON because the server is off or there is insufficient information to make the request")
-            return
-        if meut.yes_no(
-            parent=self,
-            title="Overwrite project env JSON values?",
-            msg=f"Permanently overwrite the {name} project's env JSON?"
-        ) is False:
             return
         #
         # open a dialog to collect the env vars
