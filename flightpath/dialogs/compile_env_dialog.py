@@ -25,6 +25,8 @@ from PySide6.QtGui import QAction
 
 from PySide6.QtCore import Qt, Slot
 
+from csvpath.util.config_env import ConfigEnv
+
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.log_utility import LogUtility as lout
@@ -38,7 +40,6 @@ class CompileEnvDialog(QDialog):
         self.parent = parent
         self.main = parent.main
         self.name = name
-        self.evars = None
         self.context_menu = None
         #
         # config_str is the payload we're trying to get to the server
@@ -204,14 +205,32 @@ class CompileEnvDialog(QDialog):
 # filter buttons
 #==================
 
+    def _os(self) -> bool:
+        source = self.main.csvpath_config.get(section="config", name="var_sub_source")
+        return str(source).strip() == "env"
+
+    def envs(self) -> dict:
+        if self._os():
+            return os.environ.items()
+        else:
+            ce = ConfigEnv(config=self.main.csvpath_config)
+            return ce.env
+
+    def _enum(self):
+        if self._os():
+            return self.envs()
+        else:
+            return self.envs().items()
+
+
+
     def refresh_table(self) -> None:
         self.refreshing = True
-        if self.evars is None:
-            self.evars = os.environ.items()
         ffilter = self.filter_input.text()
         ffilter = ffilter if ffilter and ffilter.strip() != "" else None
         rows = {}
-        for k, v in self.evars:
+        for k, v in self._enum():
+        #for k, v in os.environ.items():
             if ffilter is not None:
                 r = re.compile(ffilter)
                 m = r.findall(k)
