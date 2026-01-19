@@ -34,6 +34,10 @@ headers/projects_with_reset.csv
 headers/projects.csv
 headers/README.md
 
+json/jsonpath.csvpath
+json/prompts.jsonl
+json/README.md
+
 math/Automobiles_Annual_Imports_and_Exports_Port_Authority_of_NY.csv
 math/math.csvpaths
 math/min_max_average_percents.csvpaths

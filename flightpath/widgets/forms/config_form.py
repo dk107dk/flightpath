@@ -44,7 +44,7 @@ class ConfigForm(BlankForm):
         path = self.config_dir_path.text()
         if path is None or path.strip() == "":
             path = f"config{os.sep}config.ini"
-        elif not path.endswith(f"{os.sep}config.ini"):
+        elif not path.endswith(f".ini"):
             path = f"{path}{os.sep}config.ini"
         self.config.add_to_config("config", "path", path )
         self.config.add_to_config("config", "allow_var_sub", self.allow_var_sub.currentText() )

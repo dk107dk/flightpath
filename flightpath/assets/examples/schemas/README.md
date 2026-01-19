@@ -7,7 +7,7 @@ approaches have their own strengths.
 This example shows how to create a simple schema that functions much like a SQL
 DDL schema.
 
-The DDL example is in person.sql.txt. It has a simplistic 3-table model of a
+The DDL example is in `person.sql.txt`. It has a simplistic 3-table model of a
 person with address and contact information.
 
 The examples in schemas.csvpath show four variations on an analogous CsvPath

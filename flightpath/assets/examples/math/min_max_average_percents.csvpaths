@@ -6,6 +6,15 @@
   pass them numbers. min() and max() convert to numbers, but plain headers
   are always strings until you do something with them.
 
+  Why are there no matching lines? Two things contribute to the lack of matches:
+    1. The match components using the increase and decrease qualifiers knockout most of the lines
+    2. The last() function only matches the last line
+
+  Try adding the nocontrib qualifier to `last()` so that `last()` doesn't contribute
+  to the match calculation. That looks like:
+        last.nocontrib()
+  Then when you run you should see a matching line in the Matches tab.
+
   id: min-max
   test-data: examples/math/Automobiles_Annual_Imports_and_Exports_Port_Authority_of_NY.csv
 ~
@@ -45,7 +54,7 @@ $[1*][
      last() ->
      print("Final average: $.variables.a
 Final median: $.variables.m
-See variables for running values.
+See the Variables tab for running values.
 ")]
 
 ---- CSVPATH ----

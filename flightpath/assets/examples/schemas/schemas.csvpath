@@ -45,7 +45,7 @@ $[1*][
 	)
 	~  Just to see something in the printouts let's say hello. ~
 	@name = concat(caps(#1), " ", caps(#2))
-	print("Hello $.variables.name")
+    print("Hello $.variables.name.. This is $.csvpath.identity..")
 ]
 
 ---- CSVPATH ----
@@ -106,7 +106,7 @@ $[1*][
 		wildcard()
 	)
 
-    last.nocontrib() -> print("See the Matches tab for valid lines")
+    last.nocontrib() -> print("$.csvpath.identity run complete. See the Matches tab for valid lines.")
  ]
 
 ---- CSVPATH ----

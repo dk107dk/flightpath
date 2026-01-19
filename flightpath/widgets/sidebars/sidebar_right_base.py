@@ -1,4 +1,5 @@
 import os
+import traceback
 from pathlib import Path
 
 from PySide6.QtWidgets import QWidget
@@ -14,6 +15,14 @@ from flightpath.util.message_utility import MessageUtility as meut
 # long overdue start on making the right side windows more DRY
 #
 class SidebarRightBase(QWidget):
+
+    def update_style(self) -> None:
+        try:
+            self.model.set_style(self.view.style())
+        except Exception as e:
+            print(f"{type(e)} error in archive: {e}")
+            print(traceback.format_exc())
+
 
     def _copy_back_to_cwd(self) -> None:
         from_index = self.view.currentIndex()

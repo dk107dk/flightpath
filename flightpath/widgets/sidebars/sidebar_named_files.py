@@ -1,6 +1,7 @@
 import sys
 import os
 from pathlib import Path
+import traceback
 
 from PySide6.QtWidgets import (
     QPushButton,
@@ -59,11 +60,9 @@ class SidebarNamedFiles(SidebarRightBase):
             nos = Nos(named_files_path)
             try:
                 if not nos.dir_exists():
-                    #
-                    #
-                    #
                     nos.makedir()
             except Exception as ex:
+                print(traceback.format_exc())
                 msg = f"Error during named-files inputs setup: {ex}"
                 meut.warning(parent=self, msg=msg, title="Error")
                 return
@@ -104,16 +103,17 @@ class SidebarNamedFiles(SidebarRightBase):
             self.setLayout(layout)
 
         except Exception as e:
-            import traceback
             print(traceback.format_exc())
             print(f"error in named files: {type(e)}: {e}")
             meut.message(title=f"{type(e)} error loading named-files", msg=f"Named-files error: {e}")
 
+    """
     def update_style(self) -> None:
         try:
             self.model.set_style(self.view.style())
         except Exception as e:
             print(f"error in named files: {type(e)}: {e}")
+    """
 
     #
     # moved from main
@@ -126,7 +126,6 @@ class SidebarNamedFiles(SidebarRightBase):
             #self._show_welcome_but_do_not_deselect()
         else:
             self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
-            #self.main.read_validate_and_display_file(editable=EditStates.NO_SAVE_NO_CTX)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
     def refresh(self) -> None:
@@ -159,7 +158,6 @@ class SidebarNamedFiles(SidebarRightBase):
         self.copy_action = QAction()
         self.copy_action.setText(self.tr("Copy to working dir"))
         self.copy_action.triggered.connect(self._copy_back_to_cwd)
-        #self.copy_action.triggered.connect(self._copy_file_back_to_cwd)
 
         # setup callbacks
         # add to menu
@@ -209,49 +207,6 @@ class SidebarNamedFiles(SidebarRightBase):
             path = self.model.filePath(from_index)
             clipboard = QApplication.instance().clipboard()
             clipboard.setText(path)
-
-    """
-    def _copy_file_back_to_cwd(self) -> None:
-        from_index = self.view.currentIndex()
-        if from_index.isValid():
-            from_path = self.model.filePath(from_index)
-            to_index = self.main.sidebar.file_navigator.currentIndex()
-            to_path = None
-            if to_index.isValid():
-                to_path = self.main.sidebar.proxy_model.filePath(to_index)
-            else:
-                to_path = self.main.state.cwd
-            to_nos = Nos(to_path)
-            if to_nos.isfile():
-                to_nos.path = os.path.dirname(to_path)
-            to_path = fiut.deconflicted_path(to_path, f"{os.path.basename(from_path)}")
-            print(f"_copy_file_back_to_cwd: ")
-            print(f"    from: {from_path}")
-            print(f"      to: {to_path}")
-            to_nos.path = to_path
-            if to_nos.exists():
-                #
-                # this won't realistically happen
-                #
-                print(f"ERROR: {to_nos} exists")
-            print(f"local path does not exist. ready to do the copy from {from_path}")
-            print(f"doing the copy to {to_nos.path}")
-            #
-            # nos copy only works if we're copying to the same backend, which we won't always be.
-            # so we use reader/writers. leaving as a reminder.
-            #
-            #from_nos.copy(to_nos.path)
-            #
-            try:
-                with DataFileReader(from_path) as ffrom:
-                    with DataFileWriter(path=to_path, mode="wb") as tto:
-                        tto.write(ffrom.read())
-            except NotADirectoryError:
-                QMessageBox.warning(self, "Error", "Cannot copy item over another file")
-
-        else:
-            QMessageBox.warning(self, "Error", "Cannot copy item")
-        """
 
     def _new_run(self):
         maker = SidebarFileRefMaker(parent=self, main=self.main)

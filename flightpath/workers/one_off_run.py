@@ -30,10 +30,11 @@ class OneOffRunWorker(QRunnable):
 
         try:
             lines = path.collect()
+            self.signals.messages.emit(f"Test run complete. Matched {len(lines)} line{'s' if len(lines) != 1 else ''}.")
         except Exception as ex:
             import traceback
             print( traceback.format_exc())
             self.csvpath.logger.error(ex)
-        self.signals.messages.emit(f"Test run failed")
+            self.signals.messages.emit(f"Test run failed")
         self.signals.finished.emit( (self.csvpath, self.csvpath_str, lines, self.printer ) )
 

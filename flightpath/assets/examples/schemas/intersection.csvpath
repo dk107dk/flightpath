@@ -1,5 +1,6 @@
 ~
-   This csvpath is roughly equal to this SQL:
+   This csvpath compares querying SQL tables to CsvPath `line()` Schemas.
+
 	SELECT
 	  street,
 	  city
@@ -10,17 +11,15 @@
 	  city
 	FROM billing_address
 
-   We set up the schemas for the shipping address and billing address, just
-   for clarity; whereas, the SQL query only tests for street and city being
-   equal.
+   In the CsvPath below we set up schemas for the shipping address and billing
+   address for clarity, but we don't necessarily need them. In the SQL query
+   we are selecting rows where street and city are equal in both tables.
 
-   To be more equivalent, the csvpath would just be:
-	#3 == #9
+   An equivalent csvpath statement could be as simple as:
+	`#3 == #9
 	#4 == #10
-	collect(#street, #city)
+	collect(#street, #city)`
 
-   Regardless, it is not a very realistic case, but it is interesting to look
-   at the similarities to SQL.
 
    In the second line() definition we use the header indexes rather than the
    names. That is because we have conflicting header names. Header names are
@@ -71,3 +70,4 @@ $[1*][
 	#4 == #10
 	collect(#street, #city)
 ]
+

@@ -59,10 +59,10 @@ class SftpTab(QWidget):
 
     def populate(self):
         config = self.form.config
-        server = config.get(section=self.section, name="server", default="localhost")
+        server = config.get(section=self.section, name="server", default="")
         self.server.setText(server)
 
-        port = config.get(section=self.section, name="port", default="22")
+        port = config.get(section=self.section, name="port", default="")
         self.port.setText(port)
 
         username = config.get(section=self.section, name="username", default="")

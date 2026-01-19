@@ -13,9 +13,9 @@ from PySide6.QtWidgets import (
     QLabel
 )
 
-from csvpath.util.config import Config
 from csvpath.util.box import Box
 from csvpath.util.nos import Nos
+from csvpath.util.config_env import ConfigEnv
 from flightpath.util.os_utility import OsUtility as osut
 from .blank_form import BlankForm
 
@@ -38,7 +38,6 @@ class EnvForm(BlankForm):
         form_layout.addRow("", button)
         button.clicked.connect(self._on_click_update)
 
-        self.evars = None
         self.table = QTableWidget()
         self.table.setColumnCount(2)
         self.table.setHorizontalHeaderLabels(["Name", "Value"])
@@ -46,8 +45,6 @@ class EnvForm(BlankForm):
         header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
         self.table.itemChanged.connect(self._on_item_changed)
-        #self.main.show_now_or_later(self.table)
-        #self.table.show()
         self.layout.addWidget(self.table)
 
         add = QWidget()
@@ -79,6 +76,45 @@ class EnvForm(BlankForm):
         self.refresh_table()
         self.main.show_now_or_later(self.table)
 
+
+    def _os(self) -> bool:
+        source = self.config.get(section="config", name="var_sub_source")
+        return str(source).strip() == "env"
+
+    def envs(self) -> dict:
+        if self._os():
+            return os.environ.items()
+        else:
+            ce = ConfigEnv(config=self.config)
+            return ce.env
+
+    def _delete_key(self, name:str) -> None:
+        if self._os():
+            if name in os.environ:
+                del os.environ[name]
+            self.main.state.set_env(name, None)
+        else:
+            env = self.envs()
+            if name in env:
+                del env[name]
+            ConfigEnv(config=self.config).write_env_file(env)
+
+    def _set_key(self, name:str, value:str) -> None:
+        if self._os():
+            os.environ[name] = value
+            self.main.state.set_env(name, value)
+        else:
+            env = self.envs()
+            env[name] = value
+            ConfigEnv(config=self.config).write_env_file(env)
+
+    def _has_key(self, name:str) -> bool:
+        if self._os():
+            return name in os.environ
+        else:
+            return name in self.envs()
+
+
     def _on_click_reload_helpers(self) -> None:
         #
         # we need to reload env vars, then reset stuff, esp. the right-side file trees
@@ -94,14 +130,18 @@ class EnvForm(BlankForm):
         Box().empty_my_stuff()
         self.main.load_state_and_cd()
 
+    def _enum(self):
+        if self._os():
+            return self.envs()
+        else:
+            return self.envs().items()
+
     def refresh_table(self) -> None:
         self.refreshing = True
-        if self.evars is None:
-            self.evars = os.environ.items()
         ffilter = self.filter_input.text()
         ffilter = ffilter if ffilter and ffilter.strip() != "" else None
         rows = {}
-        for k, v in self.evars:
+        for k, v in self._enum():
             if ffilter is not None:
                 r = re.compile(ffilter)
                 m = r.findall(k)
@@ -128,12 +168,9 @@ class EnvForm(BlankForm):
         name = self.add_name.text()
         value = self.add_value.text()
         if value is None or value.strip() == "":
-            if name in os.environ:
-                del os.environ[name]
-            self.main.state.set_env(name, None)
+            self._delete_key(name)
         else:
-            os.environ[name] = value
-            self.main.state.set_env(name, value)
+            self._set_key(name, value)
         #
         # update table
         #
@@ -150,19 +187,17 @@ class EnvForm(BlankForm):
         key = self.table.item(row, 0)
         k = key.text()
         if new_text is None or new_text.strip() == "":
-            if k in os.environ:
-                del os.environ[k]
-            self.main.state.set_env(k, None)
-            return
-        os.environ[k] = new_text
-        self.main.state.set_env(k, new_text)
+            if self._has_key(k):
+                self._delete_key(k)
+        else:
+            self._set_key(k, new_text)
+        self.refresh_table()
 
     def add_to_config(self, config) -> None:
-        ...
+        self.refresh_table()
 
     def populate(self):
-        ...
-
+        self.refresh_table()
 
     @property
     def fields(self) -> list[str]:

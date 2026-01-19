@@ -5,9 +5,13 @@ The main way to setup a CsvPath Framework project is through its config.ini sett
 A `config.ini` file can live anyplace you choose. By default, CsvPath Framework will generate a config file in `config/config.ini`. When you are working in FlightPath the default is that path, relative to your project's root directory. If you want to put your config values in another place do one of two things:
 
 * Set a `CSVPATH_CONFIG_PATH` environment variable pointing to the file
-* Make the `[config]` section `path` key in the default `config/config.ini` file point to the file you actually want to use
+* Make the `[config] path` key in the default `config/config.ini` file point to the file you actually want to use
 
 In the latter case, CsvPath Framework will load your default config file and then reload using the file that you identify. It is important to remember that CsvPath will load the config.ini at its default location -- creating one if needed. But it will then check `[config] path` and reload if finds the path to another config file.
+
+You must make sure your desired config file has a `[config] path` key that points to itself. If your `[config] path` keys create reload cycles, from one config file to the next and then back to the first, FlightPath will refuse to start, rather than entering an infinite config reload loop.
+
+All that said, creating a config file that doesn't live at `config/config.ini` is not typical. More typically, when a separate config is needed, you would just create a new project.
 
 ### env.json
 

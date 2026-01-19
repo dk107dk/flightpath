@@ -67,7 +67,7 @@ class MarquezTab(QWidget):
 
     def populate(self):
         config = self.form.config
-        base_url = config.get(section=self.section, name="base_url", default="http://localhost:5000")
+        base_url = config.get(section=self.section, name="base_url", default="")
         self.base_url.setText(base_url)
 
         endpoint = config.get(section=self.section, name="endpoint", default="api/v1/lineage")
@@ -76,10 +76,10 @@ class MarquezTab(QWidget):
         api_key = config.get(section=self.section, name="api_key", default="")
         self.api_key.setText(api_key)
 
-        timeout = config.get(section=self.section, name="timeout", default="5")
+        timeout = config.get(section=self.section, name="timeout", default="")
         self.timeout.setText(timeout)
 
-        verify = config.get(section=self.section, name="verify", default="False")
+        verify = config.get(section=self.section, name="verify", default="")
         self.verify.setText(verify)
 
 

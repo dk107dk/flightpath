@@ -6,7 +6,7 @@
 $[1*][
 
     @name = header_name(1)
-	@name == "compliance_project_name" -> print("Name is correct!")
+	@name == "compliance_project_name" -> print("Name is correct on line $.csvpath.line_number!")
 
 ]
 

@@ -122,13 +122,14 @@ class SidebarArchive(SidebarRightBase):
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
 
-
+    """
     def update_style(self) -> None:
         try:
             self.model.set_style(self.view.style())
         except Exception as e:
             print(f"{type(e)} error in archive: {e}")
             print(traceback.format_exc())
+    """
 
     def refresh(self) -> None:
         if self.view:

@@ -43,10 +43,10 @@ class SqlTab(QWidget):
 
     def populate(self):
         config = self.form.config
-        dialect = config.get(section=self.section, name="dialect", default="sqlite")
+        dialect = config.get(section=self.section, name="dialect", default="")
         self.dialect.setText(dialect)
 
-        connection_string = config.get(section=self.section, name="connection_string", default="sqlite:///archive/csvpath-sqlite.db")
+        connection_string = config.get(section=self.section, name="connection_string", default="")
         self.connection_string.setText(connection_string)
 
 

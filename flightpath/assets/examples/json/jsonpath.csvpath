@@ -1,0 +1,16 @@
+~
+   This examples demonstrates how data can be pulled from a JSON structure using JSONPath. The
+   data file is in JSONL. It contains a LLM API chat stream. The file is read line by line. Each
+   line has one header, "messages". The JSONPath statement is applied to that header's value.
+   Keep in mind, JSONPath can be used with CSV, Excel or other delmited formats. It is not only
+   for JSONL. Any format that has a header with JSON values can use JSONPath.
+
+   id: jsonpath
+   test-data: examples/json/prompts.jsonl
+   validation-mode:raise, print
+~
+$[*][ 
+    push("roles", jsonpath(#messages, "$[?(@.role == 'assistant')].content") )
+
+    last() -> print("See the variables tab for results")
+]

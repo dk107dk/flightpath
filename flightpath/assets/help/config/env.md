@@ -10,14 +10,28 @@ So if your SFTP password is found in an env var called *SFTP_PASSWD* you would s
     [sftp]
      username=Fred*
      password=SFTP_PASSWD*
+
 ````
 
-FlightPath env vars are set here and saved in plain text JSON in the `.flightpath` config file in your home directory. This approach persists the env vars across multiple FlightPath sessions. You should be able to do all your work with env vars here, but if you run into trouble, you can always inspect and update `.flightpath` directly, then restart FlightPath.
 
-Setting var values here does not change your env vars outside of FlightPath, but it does override them within FlightPath. You can, of course, also set env vars in the usual way, OS wide, outside of FlightPath. To delete a var, set it to an empty value. However, to delete a regular OS-wide env var, even one overridden in FlightPath and deleted for the current session, you must do it outside FlightPath and restart the application.
+### Where the data comes from
+What you see in this tab depends on your *Variable substitution source* setting in the Config tab. If your source is `env`, you will see the OS env vars combined with the FlightPath Data env vars set in `.flightpath` in your home directory. If your source is the path to a JSON file containing a dictionary, you will see just those keys and values.
 
-Unlike other config settings, when you make a change in the env vars table it is saved immediately. Note that, in some cases, if you make a change here to an env var used for an integration you may need to restart FlightPath for the change to take effect.
+### The FlightPath Data env
+FlightPath Data is a single user, multi-project environment. That means that the OS vars will never conflict with another user, but two projects may have different env needs.
 
-One final thing to be aware of. FlightPath Data uses OS env vars by default. As we described, you can add env vars that are persisted across session from the env config tab within the app. However, if you are using FlightPath Server you must use a JSON dictionary in an `env.json` file to get the same effect. `env.json` allows you to do substitution and configure integrations in exactly the same way as OS env vars, but is safe for a multi-user server environment.
+Vars set here are saved to plain text in JSON files. If your variable substitution source is `env`, meaning the OS environment, your changes made here are saved in the `.flightpath` config file in your home directory. This approach persists the env vars across multiple FlightPath sessions and makes them available to all projects.
 
-You can use `env.json` in FlightPath Data as well. Doing so is an alternative to using OS env vars. The setting is in the `config` tab. However, you must be mindful if you are using the file not the OS. The file must be managed by editing it, rather than in the `env` tab. The `env` tab is only for OS env vars.
+Conversely, if your `config.ini` has a JSON file path as its `var_sub_source` setting, you see the contents of only that file here. No OS or `.flightpath` env vars are included. And your env vars are not shared with any other projects.
+
+### Where the data goes
+Setting var values here does not change your env vars outside of FlightPath, even if you are using OS env vars. Your changes do override any OS env vars that have the same key, but only within FlightPath. You can, of course, also set env vars in the usual way, OS wide, outside of FlightPath.
+
+To delete a var, set it to an empty value. However, to delete a regular OS-wide env var you must do it outside FlightPath and restart the application. If you have a value in `.flightpath` that overrides an OS env var, you can remove the `.flightpath` override here, but you must restart FlightPath if you change the original OS env var.
+
+Unlike other config settings, when you make a change in the env vars table it is saved immediately. Note that, in a few cases, if you make a change here to an env var used for an integration you may need to switch projects or restart FlightPath for the change to take effect.
+
+### Using FlightPath Server
+Like FlightPath Data, FlightPath Server supports multiple projects. However, unlike FlightPath Data, FlightPath Server is also a multi-user environment. That means for security and correct functioning, FlightPath Server only uses variable substitution JSON files. You cannot use the OS env vars in a server project.
+
+

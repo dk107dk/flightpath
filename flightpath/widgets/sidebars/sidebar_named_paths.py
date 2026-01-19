@@ -112,12 +112,13 @@ class SidebarNamedPaths(SidebarRightBase):
             self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
-
+    """
     def update_style(self) -> None:
         try:
             self.model.set_style(self.view.style())
         except Exception as e:
             print(f"error in named-paths: {type(e)}: {e}")
+    """
 
     def refresh(self) -> None:
         if self.view:

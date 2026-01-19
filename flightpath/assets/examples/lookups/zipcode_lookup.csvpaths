@@ -11,7 +11,7 @@
    validation-mode:raise,print
 ~
 $[1*][
-    @a = $bigzips.variables.zipcodes.Boston
+    @a = $zip_index.variables.zipcodes.Boston
     ~ we again want the variables but not the data, so we reject all lines ~
     no()
 ]
