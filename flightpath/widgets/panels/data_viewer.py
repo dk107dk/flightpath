@@ -457,7 +457,8 @@ class DataViewer(QWidget):
         # and grid is not changed: self.saved == True
         #
         if i == 1 and w.loaded == False and self.saved is True:
-            w.open_file(self.main.selected_file_path, self.lines_to_take)
+            p = self.objectName()
+            w.open_file(p, self.lines_to_take)
         #
         # if i == 1 (meaning we're going to show raw)
         # and raw is not loaded

@@ -547,44 +547,22 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.content.toolbar.hide()
 
     def _connects(self) -> None:
-        """ some of the connects. may want to consolidate here
-            and/or move consolidated to a helper connect class """
-
+        #
+        # CAUTION!
+        # be aware that this setup method is called at every project change
+        # that means we are accumulating connects. atm, not a big problem. but
+        # near-term need to refactor.
+        #
         self.rt_tab_widget.currentChanged.connect(self._on_rt_tab_changed)
         self.main_layout.currentChanged.connect(self._on_stack_change)
         #
         # this toggles help. if no help is showing welcome.md should be shown.
         #
         self.welcome.clicked.connect(self.welcome.on_click)
-        #
-        # data_view's sampling toolbar
-        #
-        self.content.toolbar.sampling.activated.connect(self.on_reload_data)
-        self.content.toolbar.rows.activated.connect(self.on_data_rows_changed)
-        self.content.toolbar.save_sample.clicked.connect(self.on_save_sample)
-        self.content.toolbar.delimiter.activated.connect(self.on_set_delimiter)
-        self.content.toolbar.quotechar.activated.connect(self.on_set_quotechar)
-        self.content.toolbar.raw_source.clicked.connect(self.on_raw_source)
-        self.content.toolbar.file_info.clicked.connect(self.on_file_info)
-        #
-        #
-        #
         self.sidebar.file_navigator.clicked.connect(self.on_tree_click)
-        #
-        # rt-side trees
-        #
-        #self.sidebar_rt_top.view.clicked.connect(self.on_named_file_tree_click)
-        #self.sidebar_rt_mid.view.clicked.connect(self.on_named_paths_tree_click)
-        #self.sidebar_rt_bottom.view.clicked.connect(self.on_archive_tree_click)
-        #
-        # config stuff
-        #
         self.config.toolbar.button_close.clicked.connect(self.close_config)
         self.config.toolbar.button_cancel_changes.clicked.connect(self.cancel_config_changes)
         self.config.toolbar._button_save.clicked.connect(self.save_config_changes)
-        #
-        #
-        #
         self.sidebar.file_navigator.empty_area_click.connect(self.show_welcome_screen)
         self.sidebar.icon_label.clicked.connect(self.show_welcome_screen)
 
@@ -1117,9 +1095,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.read_validate_and_display_file()
 
     def on_raw_source(self) -> None:
+        print(f"on_raw_sourceon_raw_sourceon_raw_source")
         index = self.content.tab_widget.currentIndex()
+        print(f"on_raw_source: {index}")
         t = self.content.tab_widget.widget(index)
+        print(f"on_raw_source: {t}")
         t.toggle_grid_raw()
+        print(f"on_raw_source: done")
 
     def on_file_info(self) -> None:
         index = self.content.tab_widget.currentIndex()

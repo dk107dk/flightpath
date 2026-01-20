@@ -87,9 +87,6 @@ class DataToolbar(QToolBar):
         #
         # add help
         #
-        #self.toolbar_help = HelpLabel(main=self.parent.main, on_help=self.on_help_sample_toolbar)
-        #self.toolbar.addWidget(self.toolbar_help)
-        #
         self.help = ClickableLabel()
         self.help.setStyleSheet("ClickableLabel { margin-left:5px;font-weight:100;color:#eeaa55;margin-right:20px; }")
         svg_renderer = QSvgRenderer(fiut.make_app_path(f"assets{os.sep}icons{os.sep}help.svg"))
@@ -141,6 +138,15 @@ class DataToolbar(QToolBar):
         # hide the toolbar till needed
         #
         self.hide()
+
+        self.sampling.activated.connect(self.parent.on_reload_data)
+        self.rows.activated.connect(self.parent.on_data_rows_changed)
+        self.save_sample.clicked.connect(self.parent.on_save_sample)
+        self.delimiter.activated.connect(self.parent.on_set_delimiter)
+        self.quotechar.activated.connect(self.parent.on_set_quotechar)
+        self.raw_source.clicked.connect(self.parent.on_raw_source)
+        self.file_info.clicked.connect(self.parent.on_file_info)
+
 
     def _add_help(self, callback) -> None:
         self.help = ClickableLabel()
