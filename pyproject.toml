@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "flightpath"
-version = "0.1.26"
+version = "0.1.27"
 description = ""
 authors = ["Atesta Analytics <support@atestaanalytics.com>"]
 readme = "README.md"
