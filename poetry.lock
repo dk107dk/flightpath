@@ -381,18 +381,18 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.42.30"
+version = "1.42.31"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "boto3-1.42.30-py3-none-any.whl", hash = "sha256:d7e548bea65e0ae2c465c77de937bc686b591aee6a352d5a19a16bc751e591c1"},
-    {file = "boto3-1.42.30.tar.gz", hash = "sha256:ba9cd2f7819637d15bfbeb63af4c567fcc8a7dcd7b93dd12734ec58601169538"},
+    {file = "boto3-1.42.31-py3-none-any.whl", hash = "sha256:7f04b4cd7c375e4d88cc2cba3022c40805012ce8f57468b82cedb1bcd6b3a58a"},
+    {file = "boto3-1.42.31.tar.gz", hash = "sha256:b2038fc5dbcd6746a16ada8d55fe73659b8cf95c7b6aeb63fe782e831485edaa"},
 ]
 
 [package.dependencies]
-botocore = ">=1.42.30,<1.43.0"
+botocore = ">=1.42.31,<1.43.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.16.0,<0.17.0"
 
@@ -401,14 +401,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.42.30"
+version = "1.42.31"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "botocore-1.42.30-py3-none-any.whl", hash = "sha256:97070a438cac92430bb7b65f8ebd7075224f4a289719da4ee293d22d1e98db02"},
-    {file = "botocore-1.42.30.tar.gz", hash = "sha256:9bf1662b8273d5cc3828a49f71ca85abf4e021011c1f0a71f41a2ea5769a5116"},
+    {file = "botocore-1.42.31-py3-none-any.whl", hash = "sha256:021346ad57cc3018acf4a46edc1f649b9818b33c07a08674ce1c36e9edbb5859"},
+    {file = "botocore-1.42.31.tar.gz", hash = "sha256:62f2c31e229df625612dd4d7c72618948e4064436d71a647102f36fcddfa0f4d"},
 ]
 
 [package.dependencies]
@@ -806,14 +806,14 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "csvpath"
-version = "0.0.585"
+version = "0.0.586"
 description = "A data preboarding framework for ingesting, managing, and validating CSV, Excel, and other tabular data files using a Collect, Store, Validate, Publish architecture to create a trusted publisher for downstream data consumers."
 optional = false
 python-versions = "<4.0,>3.10"
 groups = ["main"]
 files = [
-    {file = "csvpath-0.0.585-py3-none-any.whl", hash = "sha256:b9e629ad781c6d2a246be10d17677122ace673b719c0d9f7ecb8262926269263"},
-    {file = "csvpath-0.0.585.tar.gz", hash = "sha256:342cd75ba465285203cb094b12eff303ab67016c6d62ce595def891dc200d0bf"},
+    {file = "csvpath-0.0.586-py3-none-any.whl", hash = "sha256:3b4bc6b776198c142d8973c44ac433ed17aa0d088b8122cc91e0ddf6ddfed609"},
+    {file = "csvpath-0.0.586.tar.gz", hash = "sha256:e3ffcd4fca2b24555b8202ae5cfca02b2cc0c438ea6af9aeea3a71e02a392778"},
 ]
 
 [package.dependencies]
@@ -1005,24 +1005,24 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "htt
 
 [[package]]
 name = "flightpath-server"
-version = "0.1.21"
+version = "0.1.22"
 description = "A DataOps data ingestion preboarding automation server for FlightPath and CsvPath Framework"
 optional = false
 python-versions = ">3.10,<3.14"
 groups = ["main"]
 files = [
-    {file = "flightpath_server-0.1.21.tar.gz", hash = "sha256:ef2c03028f8bbe19387cf93314fe12abaf6fac2a20bada61782aeb39ad188c46"},
+    {file = "flightpath_server-0.1.22.tar.gz", hash = "sha256:fe2e9808c9adf88b09b67e8cbc5fe51c20bf6902b7c1ce99f2425af1fb0e534b"},
 ]
 
 [package.dependencies]
-csvpath = ">=0.0.585,<0.0.586"
+csvpath = ">=0.0.586,<0.0.587"
 fastapi = ">=0.115.13,<0.116.0"
 python-json-logger = ">=3.3.0,<4.0.0"
 uvicorn = ">=0.34.3,<0.35.0"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_server-0.1.21.tar.gz"
+url = "assets/flightpath_server-0.1.22.tar.gz"
 
 [[package]]
 name = "google-api-core"
@@ -2917,14 +2917,14 @@ hook-testing = ["execnet (>=1.5.0)", "psutil", "pytest (>=2.7.3)"]
 
 [[package]]
 name = "pyinstaller-hooks-contrib"
-version = "2025.11"
+version = "2026.0"
 description = "Community maintained hooks for PyInstaller"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "pyinstaller_hooks_contrib-2025.11-py3-none-any.whl", hash = "sha256:777e163e2942474aa41a8e6d31ac1635292d63422c3646c176d584d04d971c34"},
-    {file = "pyinstaller_hooks_contrib-2025.11.tar.gz", hash = "sha256:dfe18632e06655fa88d218e0d768fd753e1886465c12a6d4bce04f1aaeec917d"},
+    {file = "pyinstaller_hooks_contrib-2026.0-py3-none-any.whl", hash = "sha256:0590db8edeba3e6c30c8474937021f5cd39c0602b4d10f74a064c73911efaca5"},
+    {file = "pyinstaller_hooks_contrib-2026.0.tar.gz", hash = "sha256:0120893de491a000845470ca9c0b39284731ac6bace26f6849dea9627aaed48e"},
 ]
 
 [package.dependencies]
@@ -4210,4 +4210,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.10,<3.14"
-content-hash = "0bda81d45c4349f59ab74347b8af71548efff938161cc20bc2ff91d84f559145"
+content-hash = "35454da94da26d962123d0aaa6b5165a0362a19a22d3b8e28a25eb8c63f1917a"
