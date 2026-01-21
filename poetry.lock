@@ -381,18 +381,18 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.42.31"
+version = "1.42.32"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "boto3-1.42.31-py3-none-any.whl", hash = "sha256:7f04b4cd7c375e4d88cc2cba3022c40805012ce8f57468b82cedb1bcd6b3a58a"},
-    {file = "boto3-1.42.31.tar.gz", hash = "sha256:b2038fc5dbcd6746a16ada8d55fe73659b8cf95c7b6aeb63fe782e831485edaa"},
+    {file = "boto3-1.42.32-py3-none-any.whl", hash = "sha256:695ac7e62dfde28cc1d3b28a581cce37c53c729d48ea0f4cd0dbf599856850cf"},
+    {file = "boto3-1.42.32.tar.gz", hash = "sha256:0ba535985f139cf38455efd91f3801fe72e5cce6ded2df5aadfd63177d509675"},
 ]
 
 [package.dependencies]
-botocore = ">=1.42.31,<1.43.0"
+botocore = ">=1.42.32,<1.43.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.16.0,<0.17.0"
 
@@ -401,14 +401,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.42.31"
+version = "1.42.32"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "botocore-1.42.31-py3-none-any.whl", hash = "sha256:021346ad57cc3018acf4a46edc1f649b9818b33c07a08674ce1c36e9edbb5859"},
-    {file = "botocore-1.42.31.tar.gz", hash = "sha256:62f2c31e229df625612dd4d7c72618948e4064436d71a647102f36fcddfa0f4d"},
+    {file = "botocore-1.42.32-py3-none-any.whl", hash = "sha256:9c1ce43687cc4c0bba12054b229b3464265c699e2de4723998d86791254a5a37"},
+    {file = "botocore-1.42.32.tar.gz", hash = "sha256:4c0a9fe23e060c019e327cd5e4ea1976a1343faba74e5301ebfc9549cc584ccb"},
 ]
 
 [package.dependencies]
@@ -806,14 +806,14 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "csvpath"
-version = "0.0.589"
+version = "0.0.590"
 description = "A data preboarding framework for ingesting, managing, and validating CSV, Excel, and other tabular data files using a Collect, Store, Validate, Publish architecture to create a trusted publisher for downstream data consumers."
 optional = false
 python-versions = "<4.0,>3.10"
 groups = ["main"]
 files = [
-    {file = "csvpath-0.0.589-py3-none-any.whl", hash = "sha256:0e0a1a788309218354beb4f3e2dbf678f93c3fa599ca600696e67a3eb18f7b76"},
-    {file = "csvpath-0.0.589.tar.gz", hash = "sha256:a7ef43f14c64036a792b010a20f4fde3f965c1a167f763a4dd90953a776a1f30"},
+    {file = "csvpath-0.0.590-py3-none-any.whl", hash = "sha256:3198001788809eb5042601d7488bc834f5a2e921cacbf9dd4970eac2e4de16e0"},
+    {file = "csvpath-0.0.590.tar.gz", hash = "sha256:c8668407de8e195df36f267d87681e89beb4ccc6ad81a7a135963401b99fab9f"},
 ]
 
 [package.dependencies]
@@ -1005,24 +1005,24 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "htt
 
 [[package]]
 name = "flightpath-server"
-version = "0.1.25"
+version = "0.1.26"
 description = "A DataOps data ingestion preboarding automation server for FlightPath and CsvPath Framework"
 optional = false
 python-versions = ">3.10,<3.14"
 groups = ["main"]
 files = [
-    {file = "flightpath_server-0.1.25.tar.gz", hash = "sha256:f71d12777dab0984d1f9c623ec7267a9c201e97d902dd456140e75d3cc5b8e62"},
+    {file = "flightpath_server-0.1.26.tar.gz", hash = "sha256:1399f81818045f0b8b7789c7aa6e42196c7fb80f66f859ef2e174281b26d8da7"},
 ]
 
 [package.dependencies]
-csvpath = ">=0.0.589,<0.0.590"
+csvpath = ">=0.0.590,<0.0.591"
 fastapi = ">=0.115.13,<0.116.0"
 python-json-logger = ">=3.3.0,<4.0.0"
 uvicorn = ">=0.34.3,<0.35.0"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_server-0.1.25.tar.gz"
+url = "assets/flightpath_server-0.1.26.tar.gz"
 
 [[package]]
 name = "google-api-core"
@@ -2300,14 +2300,14 @@ opentelemetry-api = "1.29.0"
 
 [[package]]
 name = "packaging"
-version = "25.0"
+version = "26.0"
 description = "Core utilities for Python packages"
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"},
-    {file = "packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"},
+    {file = "packaging-26.0-py3-none-any.whl", hash = "sha256:b36f1fef9334a5588b4166f8bcd26a14e521f2b55e6b9de3aaa80d3ff7a37529"},
+    {file = "packaging-26.0.tar.gz", hash = "sha256:00243ae351a257117b6a241061796684b084ed1c516a08c48a3f7e147a9d80b4"},
 ]
 
 [[package]]
@@ -4217,4 +4217,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.10,<3.14"
-content-hash = "1302a1832da373f418ddf6d2fc6194e60c943a485059410ffb1c0bffd4bdf74b"
+content-hash = "a5b268f15c86f54c461fba4a4354b8c3612ff86ae13d291459de2c19a4ec8660"
