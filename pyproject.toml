@@ -10,13 +10,13 @@ python = ">3.10,<3.14"
 pyside6 = ">=6.8.3"
 pygments = "^2.19.1"
 darkdetect = "^0.8.0"
-csvpath = "^0.0.587"
+csvpath = "^0.0.588"
 #csvpath = { path = "../csvpath/builds/csvpath-0.0.579.tar.gz" }
 #
 # always use the local flightpath_server because we bundle it, not push it to PyPi
 #
 #flightpath_server = "^0.1.17"
-flightpath_server = { path = "./assets/flightpath_server-0.1.23.tar.gz" }
+flightpath_server = { path = "./assets/flightpath_server-0.1.24.tar.gz" }
 #
 # having troubles (suddenly?!) getting sftp to work in smart-open. this
 # didn't help. all dependencies are already present, as you'd think since
