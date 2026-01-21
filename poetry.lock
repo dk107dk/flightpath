@@ -806,14 +806,14 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "csvpath"
-version = "0.0.588"
+version = "0.0.589"
 description = "A data preboarding framework for ingesting, managing, and validating CSV, Excel, and other tabular data files using a Collect, Store, Validate, Publish architecture to create a trusted publisher for downstream data consumers."
 optional = false
 python-versions = "<4.0,>3.10"
 groups = ["main"]
 files = [
-    {file = "csvpath-0.0.588-py3-none-any.whl", hash = "sha256:a4c9517fd7295e3c50fa56b301aac4346ff7e930c13c6065d1f0c49ddcab33a4"},
-    {file = "csvpath-0.0.588.tar.gz", hash = "sha256:d852b818f4731482c73c35285bb9950924a1bcb47488ae9c627237793eb2a4e2"},
+    {file = "csvpath-0.0.589-py3-none-any.whl", hash = "sha256:0e0a1a788309218354beb4f3e2dbf678f93c3fa599ca600696e67a3eb18f7b76"},
+    {file = "csvpath-0.0.589.tar.gz", hash = "sha256:a7ef43f14c64036a792b010a20f4fde3f965c1a167f763a4dd90953a776a1f30"},
 ]
 
 [package.dependencies]
@@ -1005,24 +1005,24 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "htt
 
 [[package]]
 name = "flightpath-server"
-version = "0.1.24"
+version = "0.1.25"
 description = "A DataOps data ingestion preboarding automation server for FlightPath and CsvPath Framework"
 optional = false
 python-versions = ">3.10,<3.14"
 groups = ["main"]
 files = [
-    {file = "flightpath_server-0.1.24.tar.gz", hash = "sha256:fb64ddeabe1e77cf6032b58b7ddcb212c76b5e76be3ea8721c8f199e6956fa91"},
+    {file = "flightpath_server-0.1.25.tar.gz", hash = "sha256:f71d12777dab0984d1f9c623ec7267a9c201e97d902dd456140e75d3cc5b8e62"},
 ]
 
 [package.dependencies]
-csvpath = ">=0.0.588,<0.0.589"
+csvpath = ">=0.0.589,<0.0.590"
 fastapi = ">=0.115.13,<0.116.0"
 python-json-logger = ">=3.3.0,<4.0.0"
 uvicorn = ">=0.34.3,<0.35.0"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_server-0.1.24.tar.gz"
+url = "assets/flightpath_server-0.1.25.tar.gz"
 
 [[package]]
 name = "google-api-core"
@@ -4217,4 +4217,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.10,<3.14"
-content-hash = "d0df3bf0fa24a17d0578a3b75dbdc72e3041c639ac73b44b45a9f5f7444e2e19"
+content-hash = "1302a1832da373f418ddf6d2fc6194e60c943a485059410ffb1c0bffd4bdf74b"
