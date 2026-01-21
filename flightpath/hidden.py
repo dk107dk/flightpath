@@ -15,10 +15,12 @@ from csvpath.util.s3.s3_nos import S3Do
 from csvpath.util.s3.s3_data_reader import S3DataReader
 from csvpath.util.s3.s3_data_writer import S3DataWriter
 from csvpath.util.s3.s3_xlsx_data_reader import S3XlsxDataReader
+from csvpath.util.s3.s3_json_data_reader import S3JsonDataReader
 from csvpath.util.s3.s3_utils import S3Utils
 from csvpath.util.sftp.sftp_nos import SftpDo
 from csvpath.util.sftp.sftp_data_reader import SftpDataReader
 from csvpath.util.sftp.sftp_data_writer import SftpDataWriter
+from csvpath.util.sftp.sftp_json_data_reader import SftpJsonDataReader
 from csvpath.util.sftp.sftp_xlsx_data_reader import SftpXlsxDataReader
 from csvpath.util.sftp.sftp_config import SftpConfig
 from csvpath.util.azure.azure_nos import AzureDo
@@ -26,11 +28,13 @@ from csvpath.util.azure.azure_utils import AzureUtility
 from csvpath.util.azure.azure_data_reader import AzureDataReader
 from csvpath.util.azure.azure_data_writer import AzureDataWriter
 from csvpath.util.azure.azure_xlsx_data_reader import AzureXlsxDataReader
+from csvpath.util.azure.azure_json_data_reader import AzureJsonDataReader
 from csvpath.util.gcs.gcs_nos import GcsDo
 from csvpath.util.gcs.gcs_utils import GcsUtility
 from csvpath.util.gcs.gcs_data_reader import GcsDataReader
 from csvpath.util.gcs.gcs_data_writer import GcsDataWriter
 from csvpath.util.gcs.gcs_xlsx_data_reader import GcsXlsxDataReader
+from csvpath.util.gcs.gcs_json_data_reader import GcsJsonDataReader
 from csvpath.managers.results.readers.file_errors_reader import FileErrorsReader
 from csvpath.managers.results.readers.file_printouts_reader import FilePrintoutsReader
 from csvpath.managers.results.readers.file_lines_reader import FileLinesReader
