@@ -1,15 +1,15 @@
 
 ~
    This example uses some very artifical sample SAP data and does a duplicate check
-   on the transaction ID. If a duplicate is found we print the error with the most 
+   on the transaction ID. If a duplicate is found we print the error with the most
    recent time the ID was seen.
 
    id: sales
-   test-data: duplicates/sales.csv
+   test-data: examples/duplicates/sales.csv
    validation-mode:raise, print
 ~
-$[*][ 
-	@d = has_dups(#transactionId) 	
+$[*][
+	@d = has_dups(#transactionId)
 
 	~ if we have a duplicate, find the last time we saw it ~
 	@d.asbool -> @last = get(@track, #transactionId)
@@ -17,8 +17,8 @@ $[*][
 	~ again, if we have a duplicate, this time print the error ~
 	@d.asbool -> print("On line $.csvpath.line_number ID '$.headers.transactionId' is a duplicate ID last seen at $.variables.last")
 
-	~ update our map capturing the last duplicate ~	
-	track(#transactionId, #transactionCreatedDateTime)	
+	~ update our map capturing the last duplicate ~
+	track(#transactionId, #transactionCreatedDateTime)
 ]
 
 
