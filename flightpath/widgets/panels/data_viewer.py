@@ -4,7 +4,7 @@ import io
 from typing import Any
 import json
 
-from PySide6.QtCore import Qt, Slot, QPoint, QSize
+from PySide6.QtCore import Qt, Slot, QPoint, QSize, QMimeData, QThread, QCoreApplication
 from PySide6.QtWidgets import (
         QWidget,
         QVBoxLayout,
@@ -404,21 +404,41 @@ class DataViewer(QWidget):
             data = self.table_view.model().data(self.table_view.model().index(row, col), Qt.ItemDataRole.DisplayRole)
             pairs.append( ( row, col, data if data is not None else "" ) )
         jsons = json.dumps(pairs, indent=2)
+        print("\nDataViewer: starting clipboard operation")
         clipboard = QApplication.clipboard()
-        clipboard.setText(jsons)
-
+        print("DataViewer: clearing clipboard")
+        #
+        # on windows this will often report failure but actually succeed due to a retry in the Qt code.
+        # adding our own retry loop has been suggested, but atm the processEvents() call seems to clear
+        # out any locks and adding a retry without processEvents() didn't help. since adding
+        # processEvents() we haven't had problems.
+        #
+        clipboard.clear()
+        print("DataViewer: processing events")
+        QApplication.processEvents()
+        print("DataViewer: Clipboard mode:", clipboard.supportsSelection())
+        print("DataViewer: Clipboard text before:", clipboard.text())
+        print("DataViewer: supportsSelection:", clipboard.supportsSelection())
+        print("DataViewer: ownsClipboard:", clipboard.ownsClipboard())
+        print("DataViewer: ownsFindBuffer:", clipboard.ownsFindBuffer())
+        print(f"DataViewer: on main thread: {(QThread.currentThread() == QCoreApplication.instance().thread())}")
+        mime = QMimeData()
+        mime.setText(jsons)
+        print("DataViewer: setting mime data to clipboard")
+        clipboard.setMimeData(mime)
+        print("DataViewer: set mime data to clipboard. done.\n")
 
     def paste_from_clipboard(self):
         clipboard = QApplication.clipboard()
         pasted_text = clipboard.text()
         if not pasted_text:
-            meut.message("There is nothing to paste")
+            meut.message(msg="There is nothing to paste", title="Clipboard Error")
             return
 
         pcells = json.loads(pasted_text)
         start_index = self.table_view.selectionModel().currentIndex()
         if not start_index.isValid():
-            meut.message("Select a cell to paste into")
+            meut.message(msg="Select a cell to paste into", title="Clipboard Error")
             return
 
         source_x = pcells[0][0]
@@ -445,7 +465,6 @@ class DataViewer(QWidget):
                 target_index = self.table_view.model().index( the_x, the_y)
                 if target_index.isValid():
                     self.table_view.model().setData(target_index, _[2], Qt.ItemDataRole.EditRole)
-
 
     def toggle_grid_raw(self):
         i = self.layout().currentIndex()
