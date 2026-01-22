@@ -25,5 +25,5 @@ $[1*][
 	last() -> replace( #neighborhood, @neighborhood_hours )
 	last() -> replace( #trade, @trade_hours )
 	last() -> collect( "neighborhood", "trade" )
-	last() -> print("Check out the matches tab")
+	last() -> print("Check out the variables tab")
 ]
