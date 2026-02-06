@@ -357,6 +357,18 @@ class Sidebar(QWidget):
         self.context_menu.addAction(self.generate_action)
 
 
+    def _has_llm(self)->bool:
+        m = self.main.csvpath_config.get(section="llm", name="model")
+        if m is None:
+            return False
+        if str(m).strip() == "":
+            return False
+        m = self.main.csvpath_config.get(section="llm", name="api_base")
+        if m is None:
+            return False
+        if str(m).strip() == "":
+            return False
+        return True
 
     def _show_context_menu(self, position):
         index = self.file_navigator.indexAt(position)
@@ -388,7 +400,7 @@ class Sidebar(QWidget):
                     self.generate_action.setVisible(False)
                     self.load_paths_action.setVisible(True)
                 elif ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
-                    self.generate_action.setVisible(True)
+                    self.generate_action.setVisible(self._has_llm())
                     self.stage_data_action.setVisible(True)
                     self.load_paths_action.setVisible(False)
                 else:

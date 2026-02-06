@@ -1,0 +1,121 @@
+tag with version (e.g. v1.0.3) in all three repos. push tags with: git push --tags origin
+
+~Sept 24th 2025
+ Version: 1.0.3:
+ git tag -a v1.0.3
+   2nd FlightPath Data release candidate; first with FlightPath Server
+    - CsvPath: 0.0.557
+    - FlightPath Server: 0.1.1
+    - FlightPath Data: 0.1.16
+ git push --tags origin
+
+~Sept 26th 2025
+ Version: 1.0.3:
+ git tag -a v1.0.3a
+   2nd FlightPath Data release candidate; first with FlightPath Server
+    - CsvPath: 0.0.558
+    - FlightPath Server: 0.1.2
+    - FlightPath Data: 0.1.16
+ git push origin v1.0.3a
+
+~Sept 30th 2025
+ Version: 1.0.3b
+ git tag -a v1.0.3b
+   3rd FlightPath Data RC, with Server
+    - CsvPath: 0.0.559
+    - FlightPath Server: 0.1.3
+    - FlightPath Data: 0.1.16
+ git push origin v1.0.3b
+
+~1 Oct 2025
+ Version: 1.0.3c
+ Switching to tagging the pyproject version. 1.0.3_ will be the version of shipping product comprising all three
+    4th FlightPath Data RC
+    - CsvPath 0.0.560
+    - FlightPath Server: 0.1.4
+    - FlightPath Data: 0.1.17
+
+~3 Oct 2025
+ Version: 1.0.3d
+    - CsvPath 0.0.561
+    - FlightPath Server: 0.1.5
+    - FlightPath Data: 0.1.18
+ git tag -a v1.0.3d
+ git push origin v1.0.3d
+
+~8 Oct 2025
+ Version: 1.0.3e
+    - CsvPath 0.0.570
+    - FlightPath Server: 0.1.7
+    - FlightPath Data: 0.1.19
+ git tag -a v1.0.3e
+ git push origin v1.0.3e
+
+~Oct 16 2025
+ Version: 1.0.3f
+    - CsvPath 0.0.572
+    - FlightPath Server: 0.1.10
+    - FlightPath Data: 0.1.20
+ git tag -a v1.0.3f
+ git push origin v1.0.3f
+ (updated flightpath to v1.0.3f2 because of a missed buildnumber update; no other changes)
+
+###################
+# syncing on the Apple store's number, which was at 1.0.85
+###################
+~Oct 16 2025
+ Version: 1.0.86
+    - CsvPath 0.0.572
+    - FlightPath Server: 0.1.10
+    - FlightPath Data: 0.1.20
+ git tag -a v1.0.86
+ git push origin v1.0.86
+
+~Oct 17 2025
+ Version: 1.0.86b
+    - CsvPath 0.0.572
+    - FlightPath Server: 0.1.11
+    - FlightPath Data: 0.1.21
+ git tag -a v1.0.86b
+ git push origin v1.0.86b
+
+~Oct 20 2025
+ Version: 1.0.86c
+    - CsvPath 0.0.573
+    - FlightPath Server: 0.1.12
+    - FlightPath Data: 0.1.22
+ git tag -a v1.0.86c
+ git push origin v1.0.86c
+
+#################
+# syncing on Windows Store number, set at 1.1.86
+#################
+~Oct 23 2025
+ Version: 1.1.86d
+    - CsvPath 0.0.575
+    - FlightPath Server: 0.1.13
+    - FlightPath Data: 0.1.23
+ git tag -a v1.1.86d -m "release candidate; build number sync"
+ git push origin v1.1.86d
+
+
+#################
+# Jan release: 1.1.87
+#################
+~Oct 23 2025
+ Version: 1.1.87
+    - CsvPath 0.0.591
+    - FlightPath Server: 0.1.27
+    - FlightPath Data: 0.1.28
+ git tag -a v1.1.87 -m "jan release candidate; build number sync"
+ git push origin v1.1.87
+
+
+
+
+
+
+
+
+
+
