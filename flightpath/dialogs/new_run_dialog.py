@@ -208,7 +208,7 @@ class NewRunDialog(QDialog):
     def on_help_named_files(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("run/named_files.md")
         if md is None:
-            self.sidebar.main.close_open()
+            self.sidebar.main.helper.close_help()
             return
         self.sidebar.main.helper.get_help_tab().setMarkdown(md)
         if not self.sidebar.main.helper.is_showing_help():
