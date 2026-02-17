@@ -23,6 +23,7 @@ from csvpath.util.path_util import PathUtility as pathu
 
 from flightpath.widgets.config.config import Config
 from flightpath.dialogs.stage_data_dialog import StageDataDialog
+from flightpath.dialogs.generate_csvpath_dialog import GenerateCsvpathDialog
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.custom_tree_view import CustomTreeView
@@ -277,6 +278,7 @@ class Sidebar(QWidget):
         self.stage_data_action = QAction()
         self.load_paths_action = QAction()
         self.run_action = QAction()
+        self.generate_action = QAction()
         #
         #
         #
@@ -304,6 +306,7 @@ class Sidebar(QWidget):
         self.stage_data_action.setText("Stage data")
         self.load_paths_action.setText("Load csvpaths")
         self.edit_jsonl_action.setText("Edit as JSON")
+        self.generate_action.setText("Generate csvpath")
         #
         #
         #
@@ -324,6 +327,7 @@ class Sidebar(QWidget):
         self.copy_action.triggered.connect(self._copy)
         self.paste_action.triggered.connect(self._paste)
         self.edit_jsonl_action.triggered.connect(self._edit_as_json)
+        self.generate_action.triggered.connect(self._generate_csvpath)
 
 
         self.context_menu.addAction(self.edit_jsonl_action)
@@ -349,6 +353,22 @@ class Sidebar(QWidget):
         self.context_menu.addAction(self.load_paths_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.line_number_action)
+
+        self.context_menu.addAction(self.generate_action)
+
+
+    def _has_llm(self)->bool:
+        m = self.main.csvpath_config.get(section="llm", name="model")
+        if m is None:
+            return False
+        if str(m).strip() == "":
+            return False
+        m = self.main.csvpath_config.get(section="llm", name="api_base")
+        if m is None:
+            return False
+        if str(m).strip() == "":
+            return False
+        return True
 
     def _show_context_menu(self, position):
         index = self.file_navigator.indexAt(position)
@@ -377,9 +397,16 @@ class Sidebar(QWidget):
                 self.load_paths_action.setVisible(False)
                 self.stage_data_action.setVisible(False)
                 if ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files") or ext.lower() == "json":
+                    self.generate_action.setVisible(False)
                     self.load_paths_action.setVisible(True)
                 elif ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
+                    self.generate_action.setVisible(self._has_llm())
                     self.stage_data_action.setVisible(True)
+                    self.load_paths_action.setVisible(False)
+                else:
+                    self.generate_action.setVisible(False)
+                    self.load_paths_action.setVisible(False)
+
                 if(
                    ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files")
                    or ext in self.main.csvpath_config.get(section="extensions", name="csv_files")
@@ -457,6 +484,7 @@ class Sidebar(QWidget):
             # needs to happen.
             #
             self.rename_action.setVisible(False)
+            self.generate_action.setVisible(False)
 
             self.paste_action.setVisible(True)
             if self.cutted or self.copied:
@@ -548,12 +576,21 @@ class Sidebar(QWidget):
         self.cutted = None
         self.copied = None
 
+
+    def _generate_csvpath(self) -> None:
+        index = self.file_navigator.currentIndex()
+        if index.isValid():
+            path = self.proxy_model.filePath(index)
+            gen = GenerateCsvpathDialog(parent=self, main=self.main, path=path)
+            self.main.show_now_or_later(gen)
+
     def _load_paths(self) -> None:
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
             loader = CsvpathLoader(main=self.main)
             loader.load_paths(path)
+
 
     def _run_paths(self) -> None:
         print(f"_run_paths called. not doing anything about it")

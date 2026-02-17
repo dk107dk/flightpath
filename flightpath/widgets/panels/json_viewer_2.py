@@ -75,15 +75,22 @@ class JsonViewer2(QWidget):
         #
         #
         #
-        save_shortcut_ctrl_save = QShortcut(QKeySequence("Ctrl+S"), self)
-        save_shortcut_cmd_save = QShortcut(QKeySequence("Command+S"), self)
-        save_shortcut_ctrl_save.activated.connect(self._save)
-        save_shortcut_cmd_save.activated.connect(self._save)
+        save_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+s"), self)
+        save_shortcut_ctrl.activated.connect(self._save)
+
+        form_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+f"), self)
+        form_shortcut_ctrl.activated.connect(self._check)
+
+        beauty_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+b"), self)
+        beauty_shortcut_ctrl.activated.connect(self._pretty)
+
+        expand_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+e"), self)
+        expand_shortcut_ctrl.activated.connect(self._expand)
+
 
         self.context_menu = None
         self.view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.view.customContextMenuRequested.connect(self._show_context_menu)
-        self._setup_view_context_menu()
         #
         layout.addWidget(self.view)
         #
@@ -112,23 +119,6 @@ class JsonViewer2(QWidget):
         name = f"+ {os.path.basename(self.path)}" if t is True else os.path.basename(self.path)
         self.main.content.tab_widget.setTabText( tab[0], name)
 
-    def _setup_view_context_menu(self):
-        self.context_menu = QMenu(self)
-        self.save_action = QAction()
-        self.save_action.setText("Save")
-        self.save_action.triggered.connect(self._save)
-        self.context_menu.addAction(self.save_action)
-
-        self.well_formed_action = QAction()
-        self.well_formed_action.setText("Check well-formedness")
-        self.well_formed_action.triggered.connect(self._check)
-        self.context_menu.addAction(self.well_formed_action)
-
-        self.pretty_print_action = QAction()
-        self.pretty_print_action.setText("Pretty print")
-        self.pretty_print_action.triggered.connect(self._pretty)
-        self.context_menu.addAction(self.pretty_print_action)
-
     def _copy_back_question(self) -> None:
         yes = meut.yesNo( parent=self, msg="You can't edit here. Copy back to project?", title="Copy file to project?")
         if yes is True:
@@ -150,12 +140,77 @@ class JsonViewer2(QWidget):
             return
         global_pos = self.view.viewport().mapToGlobal(position)
 
-        if self.modified:
-            self.save_action.setEnabled(True)
-        else:
-            self.save_action.setEnabled(False)
+        #
+        # exp!
+        #
+        menu = self.view.createStandardContextMenu()
 
-        self.context_menu.exec(global_pos)
+        save_action = QAction()
+        save_action.setText("Save")
+        save_action.setShortcut(QKeySequence("Ctrl+s"))
+        save_action.setShortcutVisibleInContextMenu(True)
+        save_action.triggered.connect(self._save)
+        menu.addAction(save_action)
+
+        menu.addSeparator()
+        for action in menu.actions():
+            if isinstance(action, QAction):
+                t = action.text()
+                if t and str(t).strip() != "":
+                    t = t.replace("&", "").lower()
+                    if t == "cut":
+                        action.setShortcut(QKeySequence("Ctrl+x"))
+                    if t == "copy":
+                        action.setShortcut(QKeySequence("Ctrl+c"))
+                    if t == "paste":
+                        action.setShortcut(QKeySequence("Ctrl+v"))
+                    if t == "undo":
+                        action.setShortcut(QKeySequence("Ctrl+z"))
+                    if t == "redo":
+                        action.setShortcut(QKeySequence("Shift+Ctrl+Z"))
+                    if "select" in t:
+                        action.setShortcut(QKeySequence("Ctrl+a"))
+                    if t == "delete":
+                        action.setShortcut(QKeySequence("Ctrl+d"))
+                    action.setShortcutVisibleInContextMenu(True)
+
+
+        menu.addSeparator()
+
+
+        pretty_print_action = QAction()
+        pretty_print_action.setText("Beautify")
+        pretty_print_action.setShortcut(QKeySequence("Ctrl+b"))
+        pretty_print_action.setShortcutVisibleInContextMenu(True)
+        pretty_print_action.triggered.connect(self._pretty)
+        menu.addAction(pretty_print_action)
+
+        info = QFileInfo(self.path)
+        if info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
+            expand_action = QAction()
+            expand_action.setText("Expand")
+            expand_action.setShortcut(QKeySequence("Ctrl+e"))
+            expand_action.setShortcutVisibleInContextMenu(True)
+            expand_action.triggered.connect(self._expand)
+            menu.addAction(expand_action)
+
+            check_jsonl = QAction()
+            check_jsonl.setText("Check well-formedness")
+            check_jsonl.setShortcut(QKeySequence("Ctrl+l"))
+            check_jsonl.setShortcutVisibleInContextMenu(True)
+            check_jsonl.triggered.connect(self._check_lines)
+            menu.addAction(check_jsonl)
+
+        else:
+            well_formed_action = QAction()
+            well_formed_action.setText("Check well-formedness")
+            well_formed_action.setShortcut(QKeySequence("Ctrl+f"))
+            well_formed_action.setShortcutVisibleInContextMenu(True)
+            well_formed_action.triggered.connect(self._check)
+            menu.addAction(well_formed_action)
+
+
+        menu.exec(global_pos)
 
     def _save(self) -> None:
         if self.editable == EditStates.UNEDITABLE:
@@ -179,6 +234,7 @@ class JsonViewer2(QWidget):
                 #
                 t = strut.jsonl_text_to_lines(t)
             except:
+                print(f"cannot format as jsonl")
                 ...
         else:
             try:
@@ -198,28 +254,62 @@ class JsonViewer2(QWidget):
 
     def _pretty(self) -> str:
         info = QFileInfo(self.path)
-        #
-        # do we really want / need to double check if we're handling a file?
-        #
         t = None
         if info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
             t = strut.jsonl_text_to_lines(self.view.toPlainText())
         else:
             t = self._check(show_good_message=False)
         self.view.setPlainText(t)
+        self._set_modified(True)
+
+    def _expand(self) -> str:
+        info = QFileInfo(self.path)
+        t = None
+        if not info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
+            return
+
+        t = self.view.toPlainText()
+        expanded = ""
+        for _ in t.split("\n"):
+            print(f"asline: {_}")
+            try:
+                j = json.loads(_)
+                expanded += json.dumps(j, indent=2)
+            except:
+                expanded += _
+            expanded += "\n"
+        self.view.setPlainText(expanded)
+        self._set_modified(True)
+
+    def _check_lines(self) -> str:
+        info = QFileInfo(self.path)
+        t = None
+        if not info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
+            return
+        t = self.view.toPlainText()
+        expanded = ""
+        for _ in t.split("\n"):
+            if not self._check_one(_):
+                return
+        meut.message(msg="This file is well-formed JSONL", title="Well-formed")
+        return t
 
     def _check(self, *, show_good_message=True) -> str:
         t = self.view.toPlainText()
+        if self._check_one(t):
+            if show_good_message is True:
+                meut.message(msg="This file is well-formed JSON", title="Well-formed")
+        return t
+
+    def _check_one(self, t:str) -> bool:
         t1 = strut.sanitize_json(t)
         try:
             j = json.loads(t1)
             t1 = json.dumps(j, indent=2)
         except json.decoder.JSONDecodeError as e:
             self._formatting_error(t, e)
-            return t
-        if show_good_message is True:
-            meut.message(msg="This file is well-formed JSON", title="Well-formed")
-        return t1
+            return False
+        return True
 
     def _formatting_error(self, t:str, e) -> None:
         #

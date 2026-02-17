@@ -14,6 +14,8 @@ from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.syntax.span_utility import SpanUtility as sput
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
+from flightpath.dialogs.generate_csv_dialog import GenerateCsvDialog
+from flightpath.dialogs.ask_question_dialog import AskQuestionDialog
 
 from flightpath.editable import EditStates
 
@@ -31,6 +33,8 @@ class CsvPathTextEdit(QPlainTextEdit):
         #
         save_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+s"), self)
         save_shortcut_ctrl.activated.connect(self.on_save)
+        save_shortcut_ctrl = QShortcut(QKeySequence("Shift+Ctrl+S"), self)
+        save_shortcut_ctrl.activated.connect(self.on_save_as)
         #
         #
         #
@@ -46,6 +50,17 @@ class CsvPathTextEdit(QPlainTextEdit):
         #
         append_shortcut_ctrl = QShortcut(QKeySequence("Shift+Ctrl+A"), self)
         append_shortcut_ctrl.activated.connect(self.on_append)
+        #
+        #
+        #
+        generate_shortcut_ctrl = QShortcut(QKeySequence("Shift+Ctrl+G"), self)
+        generate_shortcut_ctrl.activated.connect(self.on_generate_data)
+
+        ask_question_ctrl = QShortcut(QKeySequence("Shift+Ctrl+Q"), self)
+        ask_question_ctrl.activated.connect(self.on_ask_question)
+
+        #
+        # what is this? still used? no refs.
         #
         # we use the seqs to make sure we're not setting a doc to
         # desaved when we should just be reacting to a shortcut
@@ -89,6 +104,31 @@ class CsvPathTextEdit(QPlainTextEdit):
             self._copy_back_question()
             return
         menu = self.createStandardContextMenu()
+
+        #
+        # several actions are default, but qt doesn't add shortcuts
+        #
+        for action in menu.actions():
+            if isinstance(action, QAction):
+                t = action.text()
+                if t and str(t).strip() != "":
+                    t = t.replace("&", "").lower()
+                    if t == "cut":
+                        action.setShortcut(QKeySequence("Ctrl+x"))
+                    if t == "copy":
+                        action.setShortcut(QKeySequence("Ctrl+c"))
+                    if t == "paste":
+                        action.setShortcut(QKeySequence("Ctrl+v"))
+                    if t == "undo":
+                        action.setShortcut(QKeySequence("Ctrl+z"))
+                    if t == "redo":
+                        action.setShortcut(QKeySequence("Shift+Ctrl+Z"))
+                    if "select" in t:
+                        action.setShortcut(QKeySequence("Ctrl+a"))
+                    if t == "delete":
+                        action.setShortcut(QKeySequence("Ctrl+d"))
+                    action.setShortcutVisibleInContextMenu(True)
+
         #
         # separator and save options
         #
@@ -96,11 +136,13 @@ class CsvPathTextEdit(QPlainTextEdit):
         save = "Save"
         save_action = QAction(save, self)
         save_action.triggered.connect(self.on_save)
-        save_action.setShortcut(QKeySequence("Ctrl+S"))
+        save_action.setShortcut(QKeySequence("Ctrl+s"))
         save_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(save_action)
 
         save_as_action = QAction("Save as", self)
+        save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
+        save_as_action.setShortcutVisibleInContextMenu(True)
         save_as_action.triggered.connect(self.on_save_as)
         menu.addAction(save_as_action)
         #
@@ -109,7 +151,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         menu.addSeparator()
         load_action = QAction("Load to group", self)
         load_action.triggered.connect(self.on_load)
-        load_action.setShortcut(QKeySequence("Ctrl+L"))
+        load_action.setShortcut(QKeySequence("Ctrl+l"))
         load_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(load_action)
         #
@@ -118,15 +160,32 @@ class CsvPathTextEdit(QPlainTextEdit):
         #menu.addSeparator()
         run_action = QAction("Run", self)
         run_action.triggered.connect(self.on_run)
-        run_action.setShortcut(QKeySequence("Ctrl+R"))
+        run_action.setShortcut(QKeySequence("Ctrl+r"))
         run_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(run_action)
+
         menu.addSeparator()
         append_action = QAction("Append a csvpath", self)
         append_action.triggered.connect(self.on_append)
         append_action.setShortcut(QKeySequence("Shift+Ctrl+A"))
         append_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(append_action)
+
+        menu.addSeparator()
+        generate_data_action = QAction("Generate data", self)
+        generate_data_action.triggered.connect(self.on_generate_data)
+        generate_data_action.setShortcut(QKeySequence("Shift+Ctrl+G"))
+        generate_data_action.setShortcutVisibleInContextMenu(True)
+        menu.addAction(generate_data_action)
+
+        ask_question_action = QAction("Ask question", self)
+        ask_question_action.triggered.connect(self.on_ask_question)
+        ask_question_action.setShortcut(QKeySequence("Shift+Ctrl+Q"))
+        ask_question_action.setShortcutVisibleInContextMenu(True)
+        menu.addAction(ask_question_action)
+        menu.addSeparator()
+
+
         #
         # submenus
         #
@@ -254,6 +313,14 @@ class CsvPathTextEdit(QPlainTextEdit):
 
     def on_validation(self) -> None:
        self._insert_mode("validation-mode: print, no-raise")
+
+    def on_generate_data(self) -> None:
+        gen = GenerateCsvDialog(main=self.parent.main, path=self.parent.path)
+        self.main.show_now_or_later(gen)
+
+    def on_ask_question(self) -> None:
+        gen = AskQuestionDialog(parent=self, main=self.parent.main, path=self.parent.path)
+        self.main.show_now_or_later(gen)
 
     def on_load(self) -> None:
         loader = CsvpathLoader(self.parent.main)

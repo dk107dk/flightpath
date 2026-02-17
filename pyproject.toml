@@ -18,6 +18,10 @@ csvpath = "^0.0.591"
 #flightpath_server = "^0.1.17"
 flightpath_server = { path = "./assets/flightpath_server-0.1.27.tar.gz" }
 #
+#
+#
+flightpath_generator = { path = "./assets/flightpath_generator-0.1.9.tar.gz"}
+#
 # having troubles (suddenly?!) getting sftp to work in smart-open. this
 # didn't help. all dependencies are already present, as you'd think since
 # it was working.

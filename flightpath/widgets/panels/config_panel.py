@@ -33,6 +33,7 @@ from flightpath.widgets.forms.inputs_form import InputsForm
 from flightpath.widgets.forms.listeners_form import ListenersForm
 from flightpath.widgets.forms.logging_form import LoggingForm
 from flightpath.widgets.forms.results_form import ResultsForm
+from flightpath.widgets.forms.llm_form import LlmForm
 from flightpath.util.style_utils import StyleUtility as stut
 
 from csvpath.util.config import Config
@@ -127,7 +128,8 @@ class ConfigPanel(QWidget):
             LoggingForm(main=self.main),
             ResultsForm(main=self.main),
             ServerForm(main=self.main),
-            FunctionsForm(main=self.main)
+            FunctionsForm(main=self.main),
+            LlmForm(main=self.main)
         ]
         for form in self.forms:
             self.forms_layout.addWidget(form)
@@ -201,6 +203,10 @@ class ConfigPanel(QWidget):
             self.main.config.show_help_for_form("functions", fallback=fallback)
             self.forms_layout.setCurrentIndex(12)
             self.title.setText("Functions")
+        if form == "llm" or parent == "llm":
+            self.main.config.show_help_for_form("llm", fallback=fallback)
+            self.forms_layout.setCurrentIndex(13)
+            self.title.setText("LLM")
 
     @property
     def tree(self) -> QTreeWidget:
@@ -244,7 +250,7 @@ class ConfigPanel(QWidget):
     @property
     def core_sections(self) -> list[str]:
         return [
-            "config", "cache", "logging", "extensions", "errors", "functions", "results", "inputs", "listeners", "server"
+            "config", "cache", "logging", "extensions", "errors", "functions", "results", "inputs", "listeners", "server", "llm"
         ]
 
     @property

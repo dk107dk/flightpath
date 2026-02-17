@@ -41,7 +41,6 @@ from PySide6.QtCore import ( # pylint: disable=E0611
     QTimer
 )
 
-from csvpath import CsvPaths
 from csvpath.util.config import Config as CsvPathConfig
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
