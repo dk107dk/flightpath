@@ -581,7 +581,7 @@ class Sidebar(QWidget):
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
-            gen = GenerateCsvpathDialog(main=self.main, path=path)
+            gen = GenerateCsvpathDialog(parent=self, main=self.main, path=path)
             self.main.show_now_or_later(gen)
 
     def _load_paths(self) -> None:

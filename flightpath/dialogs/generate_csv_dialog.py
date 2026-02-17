@@ -136,6 +136,7 @@ class GenerateCsvDialog(QDialog):
         print(f"generatorpath: {path}")
         config = GeneratorConfig(path)
         generator = Generator(config)
+        generator.version_key="testdata"
         generator.csvpath_config = cc
         generator.csvpath_logger = self.main.logger
         generator.config.dump_config_info()

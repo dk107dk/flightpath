@@ -15,6 +15,7 @@ from flightpath.util.syntax.span_utility import SpanUtility as sput
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 from flightpath.dialogs.generate_csv_dialog import GenerateCsvDialog
+from flightpath.dialogs.ask_question_dialog import AskQuestionDialog
 
 from flightpath.editable import EditStates
 
@@ -54,6 +55,9 @@ class CsvPathTextEdit(QPlainTextEdit):
         #
         generate_shortcut_ctrl = QShortcut(QKeySequence("Shift+Ctrl+G"), self)
         generate_shortcut_ctrl.activated.connect(self.on_generate_data)
+
+        ask_question_ctrl = QShortcut(QKeySequence("Shift+Ctrl+Q"), self)
+        ask_question_ctrl.activated.connect(self.on_ask_question)
 
         #
         # what is this? still used? no refs.
@@ -173,6 +177,12 @@ class CsvPathTextEdit(QPlainTextEdit):
         generate_data_action.setShortcut(QKeySequence("Shift+Ctrl+G"))
         generate_data_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(generate_data_action)
+
+        ask_question_action = QAction("Ask question", self)
+        ask_question_action.triggered.connect(self.on_ask_question)
+        ask_question_action.setShortcut(QKeySequence("Shift+Ctrl+Q"))
+        ask_question_action.setShortcutVisibleInContextMenu(True)
+        menu.addAction(ask_question_action)
         menu.addSeparator()
 
 
@@ -306,6 +316,10 @@ class CsvPathTextEdit(QPlainTextEdit):
 
     def on_generate_data(self) -> None:
         gen = GenerateCsvDialog(main=self.parent.main, path=self.parent.path)
+        self.main.show_now_or_later(gen)
+
+    def on_ask_question(self) -> None:
+        gen = AskQuestionDialog(parent=self, main=self.parent.main, path=self.parent.path)
         self.main.show_now_or_later(gen)
 
     def on_load(self) -> None:

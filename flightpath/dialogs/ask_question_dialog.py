@@ -16,23 +16,24 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QMessageBox
 )
 from PySide6.QtCore import Qt, QSize
+
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.class_loader import ClassLoader
 
 from flightpath_generator.util.config import Config as GeneratorConfig
 from flightpath_generator import Generator
-from flightpath_generator.client.run_tool import LiteLLMRunTool
-#from flightpath_generator.client.syntax_tool import LiteLLMSyntaxTool
-from flightpath_generator.client.function_tool import LiteLLMFunctionTool
-
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 from flightpath.editable import EditStates
 
-class GenerateCsvpathDialog(QDialog):
+from flightpath_generator.client.run_tool import LiteLLMRunTool
+#from flightpath_generator.client.syntax_tool import LiteLLMSyntaxTool
+from flightpath_generator.client.function_tool import LiteLLMFunctionTool
+
+class AskQuestionDialog(QDialog):
 
 
     def __init__(self, *, parent, main, path):
@@ -49,10 +50,10 @@ class GenerateCsvpathDialog(QDialog):
         self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.NonModal)
 
-        self.setWindowTitle("Generate a CsvPath statement")
+        self.setWindowTitle("Ask a CsvPath question")
 
         self.run_button = QPushButton()
-        self.run_button.setText("Generate")
+        self.run_button.setText("Answer")
         self.run_button.clicked.connect(self.do_generate)
         self.cancel_button = QPushButton()
         self.cancel_button.setText("Cancel")
@@ -61,11 +62,7 @@ class GenerateCsvpathDialog(QDialog):
         self.save_button.setText("Save")
         self.save_button.setEnabled(False)
         self.save_button.clicked.connect(self.on_save)
-        #
-        # self.saved is a requirement for using CsvPathTextEdit. that class
-        # expects its parent to have a self.saved. we don't need one otherwise.
-        #
-        self.saved = None
+
         #
         #
         #
@@ -74,13 +71,34 @@ class GenerateCsvpathDialog(QDialog):
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
 
+
+
+
         self.form_layout = QFormLayout()
         self.form_layout.setRowWrapPolicy(QFormLayout.RowWrapPolicy.DontWrapRows)
         main_layout.addLayout(self.form_layout)
 
+
+        #
+        # show csvpath path
+        #
+        self.csvpath_path = QScrollArea()
+        self.csvpath_path.setWidgetResizable(True)
+        self.csvpath_path.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.csvpath_path.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.csvpath_path.setFixedHeight(33)
+
+        self.csvpath_path_text = QLabel()
+        self.csvpath_path_text.setText(self.path)
+        self.csvpath_path_text.setTextInteractionFlags(Qt.TextSelectableByMouse)
+
+        self.csvpath_path.setWidget(self.csvpath_path_text)
+        self.form_layout.addRow("Current file: ", self.csvpath_path)
+
         #
         # show csv data path
         #
+        data = self._get_data_path()
         self.data_path = QScrollArea()
         self.data_path.setWidgetResizable(True)
         self.data_path.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -88,7 +106,10 @@ class GenerateCsvpathDialog(QDialog):
         self.data_path.setFixedHeight(33)
 
         self.data_path_text = QLabel()
-        self.data_path_text.setText(self.path)
+        path = self._get_data_path()
+        if path is not None:
+            self.data_path_text.setText(path)
+
         self.data_path_text.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
         self.data_path.setWidget(self.data_path_text)
@@ -109,18 +130,16 @@ class GenerateCsvpathDialog(QDialog):
             on_help=self.on_help_sample_size
         )
         self.form_layout.addRow("Sample size: ", box)
-        #
-        # instructions to the AI
-        #
-        self.instructions = QPlainTextEdit()
-        self.instructions.textChanged.connect(self.on_instructions_changed)
+
+        self.question = QPlainTextEdit()
+        self.question.textChanged.connect(self.on_question_changed)
 
         box = HelpIconPackager.add_help(
             main=self.main,
-            widget=self.instructions,
-            on_help=self.on_help_instructions
+            widget=self.question,
+            on_help=self.on_help_question
         )
-        self.form_layout.addRow("AI instructions: ", box)
+        self.form_layout.addRow("Question: ", box)
 
         buttons_layout = QHBoxLayout()
         buttons_layout.addWidget(self.cancel_button)
@@ -129,7 +148,24 @@ class GenerateCsvpathDialog(QDialog):
         main_layout.addLayout(buttons_layout)
 
 
-
+    def _get_data_path(self) -> str:
+        print(f"ask: _get_data_path")
+        csvpath = None
+        with DataFileReader(self.path) as file:
+            csvpath = file.read()
+        print(f"ask: _get_data_path: csvpath: {csvpath}")
+        stmt = None
+        c = None
+        for _ in csvpath.split("---- CSVPATH ----"):
+            if _.find("test-data:") > -1:
+                stmt, c = self.parent.parent._statement_and_comment(_)
+                break
+        print(f"ask: _get_data_path: stmt: {stmt}")
+        if stmt is None:
+            return None
+        path = self.parent.parent._get_filepath(stmt, c)
+        print(f"ask: _get_data_path: path: {path}")
+        return path
 
 
     def show_dialog(self) -> None:
@@ -143,7 +179,7 @@ class GenerateCsvpathDialog(QDialog):
         # enable the send button
         ...
 
-    def on_instructions_changed(self) -> None:
+    def on_question_changed(self) -> None:
         # enable the send button
         ...
 
@@ -155,16 +191,20 @@ class GenerateCsvpathDialog(QDialog):
         if not self.main.helper.is_showing_help():
             self.main.helper.on_click_help()
 
+    def on_help_question(self) -> None:
+        md = HelpFinder(main=self.main).help("generate/question.md")
+        self._show_help(md)
+
     def on_help_answer(self) -> None:
         md = HelpFinder(main=self.main).help("generate/answer.md")
         self._show_help(md)
 
-    def on_help_sample_size(self) -> None:
-        md = HelpFinder(main=self.main).help("generate/sample_size.md")
+    def on_help_test_data(self) -> None:
+        md = HelpFinder(main=self.main).help("generate/test_data.md")
         self._show_help(md)
 
-    def on_help_instructions(self) -> None:
-        md = HelpFinder(main=self.main).help("generate/instructions.md")
+    def on_help_sample_size(self) -> None:
+        md = HelpFinder(main=self.main).help("generate/sample_size.md")
         self._show_help(md)
 
     def do_generate(self) -> None:
@@ -174,14 +214,14 @@ class GenerateCsvpathDialog(QDialog):
         print(f"generatorpath: {path}")
         config = GeneratorConfig(path)
         generator = Generator(config)
-        generator.version_key="validation"
+        generator.version_key="question"
         generator.csvpath_config = cc
         generator.csvpath_logger = self.main.logger
-        generator.config.dump_config_info()
         generator.tools = [
             LiteLLMRunTool().tool_definition(),
             LiteLLMFunctionTool().tool_definition()
         ]
+        generator.config.dump_config_info()
         context = generator.config.get("version", "context")
         context = generator.context_manager.get_context(context)
         prompt = generator.prompt_manager.create_prompt()
@@ -189,8 +229,10 @@ class GenerateCsvpathDialog(QDialog):
         n = self.sample_size.currentText()
         n = int(n)
         lines = []
-        print(f"getting nomorethan {n} lines sample from {self.path}")
-        with DataFileReader(self.path) as r:
+
+        data_path = self.data_path_text.text()
+        print(f"getting nomorethan {n} lines sample from {data_path}")
+        with DataFileReader(data_path) as r:
             for i, _ in enumerate(r.source):
                 _ = _.strip()
                 if _ == "":
@@ -201,19 +243,29 @@ class GenerateCsvpathDialog(QDialog):
 
         data = "\n".join(lines)
         prompt.example = data
-        prompt.rules = self.instructions.toPlainText()
-        if prompt.rules is None:
-            prompt.rules = ""
+        prompt.rules = self.question.toPlainText()
+
+        #print(f"promte: {prompt.to_json()}")
 
         prompt.save()
-        generation = generator.do_send(context=context, prompt=prompt, datapath=self.path)
-        text = generation.response_text
+        generator.tools = [ LiteLLMRunTool().tool_definition() ]
+        generation = None
+        try:
+            generation = generator.do_send(context=context, prompt=prompt, datapath=data_path)
+        except Exception as ex:
+            print(f"Error: {ex}")
+            ...
+        if generation is None:
+            text = f"Cannot ask a question. Is your config set correctly?"
+        else:
+            text = generation.response_text
+        print(f"generatedtext: {text}")
 
         if not hasattr( self, "answer"):
             self.answer = ClassLoader.load(
                 "from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit",
                 args=[],
-                kwargs={"main":self.main, "parent":self, "editable":EditStates.EDITABLE}
+                kwargs={"main":self.main, "parent":self.parent, "editable":EditStates.EDITABLE}
             )
             self.answer.setLineWrapMode(QPlainTextEdit.NoWrap)
             self.answer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -228,11 +280,6 @@ class GenerateCsvpathDialog(QDialog):
         self.answer.setPlainText(text)
         CsvPathSyntaxHighlighter(self.answer.document())
         self.save_button.setEnabled(True)
-
-
-
-
-
 
     def on_save(self) -> None:
         text = self.answer.toPlainText()

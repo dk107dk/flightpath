@@ -16,12 +16,14 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QMessageBox
 )
 from PySide6.QtCore import Qt, QSize
-from flightpath_generator.util.config import Config as GeneratorConfig
-from flightpath_generator import Generator
+
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
-
-
+from flightpath_generator.util.config import Config as GeneratorConfig
+from flightpath_generator import Generator
+from flightpath_generator.client.run_tool import LiteLLMRunTool
+#from flightpath_generator.client.syntax_tool import LiteLLMSyntaxTool
+from flightpath_generator.client.function_tool import LiteLLMFunctionTool
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.file_utility import FileUtility as fiut
@@ -164,6 +166,10 @@ class GenerateHowWouldIDialog(QDialog):
         generator = Generator(config)
         generator.csvpath_config = cc
         generator.csvpath_logger = self.main.logger
+        generator.tools = [
+            LiteLLMRunTool().tool_definition(),
+            LiteLLMFunctionTool().tool_definition()
+        ]
         generator.config.dump_config_info()
         context = generator.config.get("version", "context")
         context = generator.context_manager.get_context(context)
