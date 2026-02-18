@@ -46,10 +46,11 @@ class ClosingTabs(QTabWidget):
         # "Matches". but that would be a weird name and a subtle impact. can probably just
         # ignore so we don't have to check what tab bar we are in.
         #
-        if not t.objectName() == "Matches":
+        print(f"object asne: {t.objectName()}")
+        if  t.objectName() in ["Code", "Why", "Help Content"]:
             return
         menu = QMenu(self)
-        save_sample = QAction("Save sample", self)
+        save_sample = QAction("Save", self)
         menu.addAction(save_sample)
         save_sample.triggered.connect(lambda: self.on_save_sample(index))
         menu.popup(self.mapToGlobal(pos))
@@ -65,13 +66,21 @@ class ClosingTabs(QTabWidget):
         if nos.isfile():
             path = os.path.dirname(path)
         t = self.widget(index)
-        if not t.objectName() == "Matches":
+        ton = t.objectName()
+        if ton in ["Code", "Why", "Help Content"]:
             return
-        l = t.layout()
-        w = l.itemAt(0).widget()
-        m = w.model()
-        data = m.get_data()
-        self.main.save_sample(path=path, name="sample.csv", data=data)
+        if ton == "Matches":
+            l = t.layout()
+            w = l.itemAt(0).widget()
+            m = w.model()
+            data = m.get_data()
+            self.main.save_sample(path=path, name="sample.csv", data=data)
+        else:
+            l = t.layout()
+            w = l.itemAt(0).widget()
+            txt = w.toPlainText()
+            self.main.save_sample(path=path, name=ton, data=txt)
+
 
     @Slot(str)
     def close_tab(self, name:str) -> bool:

@@ -13,8 +13,10 @@ from flightpath.editable import EditStates
 
 class RawViewer(QWidget):
 
-    def __init__(self, main):
+    def __init__(self, *, main, parent, editable=None):
         super().__init__()
+        self.main = main
+        self.parent = parent
         #
         # sets the font size
         #
@@ -22,7 +24,6 @@ class RawViewer(QWidget):
         #
         #
         #
-        self.main = main
         self.path = main.selected_file_path
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -32,16 +33,29 @@ class RawViewer(QWidget):
         self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         self.text_edit = QPlainTextEdit(self)
-        self.content_view = self.text_edit
-        self.editable = EditStates.UNEDITABLE
-        self.text_edit.editable = self.editable
-        stut.set_editable_background(self.text_edit)
-
+        self.text_edit.textChanged.connect(self.on_text_changed)
         self.text_edit.setLineWrapMode(QPlainTextEdit.NoWrap)
-        self.text_edit.setReadOnly(True)
+        #
+        # used by style utility
+        #
+        self.content_view = self.text_edit
+
+        self.editable = editable if editable is not None else EditStates.UNEDITABLE
+        self.text_edit.editable = self.editable
+        print(f"Rawviewerx: self.editable: {self.editable}, self.text_edit.editable: {self.text_edit.editable}")
+        if self.text_edit.editable:
+            self.text_edit.setReadOnly(False)
+            stut.set_editable_background(self)
+        else:
+            self.text_edit.setReadOnly(True)
+            #stut.set_editable_background(self.text_edit)
+
         layout.addWidget(self.label)
         layout.addWidget(self.text_edit)
         self.loaded = False
+
+    def on_text_changed(self) -> None:
+        self.parent.mark_unsaved()
 
     def open_file(self, filepath, lines_to_take=None):
         if not Nos(filepath).isfile():

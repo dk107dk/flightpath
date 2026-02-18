@@ -69,16 +69,14 @@ class StyleUtility:
 
     @classmethod
     def _set_editable_background(cls, widget) -> None:
+        print(f"_set_editable_backgroundx: {widget}: {widget.editable}")
         inst = isinstance(widget, (QTreeView, QTableView, QPlainTextEdit, CsvPathTextEdit, MdTextEdit, RawTextEdit) )
         name = cls._name(widget)
         inst = inst or name == "KeyableTreeView"
         if inst:
-            color = StyleUtility.get_not_editable_color()
-            #color = StyleUtility.NOT_EDITABLE_DARK if darkdetect.isDark() else StyleUtility.NOT_EDITABLE
             if not widget.editable == EditStates.EDITABLE:
+                color = StyleUtility.get_not_editable_color()
                 widget.setStyleSheet(f"{name} {{ background-color: {color}; }}")
-            #if isinstance( widget, CsvPathTextEdit ):
-            #    CsvPathSyntaxHighlighter(widget.document())
         else:
             print(f"Unknown widget type: {widget.__class__.__name__}. Cannot determine editability for style.")
         #

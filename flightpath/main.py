@@ -1094,13 +1094,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.read_validate_and_display_file()
 
     def on_raw_source(self) -> None:
-        print(f"on_raw_sourceon_raw_sourceon_raw_source")
         index = self.content.tab_widget.currentIndex()
-        print(f"on_raw_source: {index}")
         t = self.content.tab_widget.widget(index)
-        print(f"on_raw_source: {t}")
         t.toggle_grid_raw()
-        print(f"on_raw_source: done")
 
     def on_file_info(self) -> None:
         index = self.content.tab_widget.currentIndex()
@@ -1197,7 +1193,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         dialog = QInputDialog()
         dialog.setFixedSize(QSize(420, 125))
-        dialog.setLabelText("Enter a name for the sample file:")
+        dialog.setLabelText("Enter a name for the file:")
         dialog.setTextValue(name)
         ok = dialog.exec()
         new_name = dialog.textValue()
@@ -1205,7 +1201,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         #
         if ok and new_name and new_name.strip() != "":
-            if not new_name.endswith(".csv"):
+            if not isinstance(data, str) and not new_name.endswith(".csv"):
                 new_name = f"{new_name}.csv"
             #
             # do the same subpath rejiggering in case the user added a subpath to name
@@ -1222,9 +1218,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             # minimal change to help us not overwrite
             #
             path = fiut.deconflicted_path(path, new_name)
-            with DataFileWriter(path=path) as file: # pylint: disable=E0110
-                writer = csv.writer(file.sink)
-                writer.writerows(data)
+            if isinstance(data, str):
+                with open(path, "w") as file:
+                    file.write(data)
+            else:
+                with DataFileWriter(path=path) as file: # pylint: disable=E0110
+                    writer = csv.writer(file.sink)
+                    writer.writerows(data)
             return path
         else:
             return None

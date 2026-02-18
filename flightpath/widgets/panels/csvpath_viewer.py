@@ -122,6 +122,7 @@ class CsvpathViewer(QWidget):
         if filepath is None:
             return None
         filepath = filepath.strip()
+        filepath = filepath if filepath.find("\n") == -1 else filepath[0:filepath.find("\n")]
         if not filepath.startswith("/"):
             #
             # check if we lopped off a leading '/'. metadata parser has a bug.
@@ -178,7 +179,7 @@ class CsvpathViewer(QWidget):
         c = c.strip()
         return c
 
-    def run_one_csvpath(self, csvpath:str, filepath:str=None) -> None:
+    def run_one_csvpath(self, csvpath:str, filepath:str=None, *, position=None) -> None:
         if (
             csvpath is None
             or csvpath.strip() == ""
@@ -198,6 +199,12 @@ class CsvpathViewer(QWidget):
                 filepath = self._get_filepath(cstr, comment)
             else:
                 filepath = cstr[cstr.find("$")+1: cstr.find("[")]
+        if comment is None:
+            #
+            # not sure this would happen, but we can defend
+            #
+            comment = ""
+        comment = comment.strip()
         if filepath is None:
             #
             # request filename from user
@@ -214,6 +221,17 @@ class CsvpathViewer(QWidget):
             if filepath is None:
                 meut.message(title="No File", msg="No file was selected. Cannot continue.")
                 return
+            #
+            # add the test data file to the comment. easy to add to comment, but how to
+            # get it back into the original file....
+            #
+            self.text_edit.add_to_external_comment_of_csvpath_at_position(
+                position=position,
+                addto=f"test-data:{filepath}\n"
+            )
+            #
+            #
+            #
         # if we don't have the file in the cstr already add it
         if cstr.find(filepath) == -1:
             csvpath = f"~{comment}~ ${filepath}{cstr.lstrip('$')}"
@@ -270,27 +288,11 @@ class CsvpathViewer(QWidget):
             worker.signals.messages.connect(self.main.statusBar().showMessage)
             self.main.threadpool.start(worker)
 
-
-            #lines = path.collect()
         except Exception as e:
             estr = traceback.format_exc()
             self._display_stacktrace(estr)
             meut.message(title="Error", msg=f"Error: {e}")
             return
-        """
-        #
-        # shut down the logger. not sure this is needed, but ruling stuff out.
-        #
-        lout.clear_logging(path)
-        #
-        # display to the user in the lower panel
-        #
-        self._run_feedback(csvpath_str=csvpath, path=path, lines=lines, printer=capture)
-        #
-        # there's no absolute need to drop the metadata, but it seems prudent
-        #
-        self.mdata = None
-        """
 
     @Slot(tuple)
     def _on_test_run_complete(self, t:tuple) -> None:

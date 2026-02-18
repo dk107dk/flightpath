@@ -427,7 +427,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         position = cursor.position()
         text = self.toPlainText()
         text = self.find_csvpath_at_position( position, text )
-        self.parent.run_one_csvpath(text)
+        self.parent.run_one_csvpath(text, position=position)
 
     def on_append(self) -> None:
         if self.editable == EditStates.UNEDITABLE:
@@ -468,5 +468,82 @@ class CsvPathTextEdit(QPlainTextEdit):
 
         text2 = f"{top2}{bottom2}"
         return text2
+
+    def add_to_external_comment_of_csvpath_at_position(self, *, position:int, addto:str) -> str:
+        text = self.toPlainText()
+        text, d = self._add_to_external_comment_of_csvpath_at_position(text=text, position=position, addto=addto)
+        self.setPlainText(text)
+
+    @classmethod
+    def _add_to_external_comment_of_csvpath_at_position(self, *, text:str, position:int, addto:str) -> tuple[str, dict]:
+        #
+        # text: the whole file
+        # position: where the cursor is, indicating which csvpath
+        # addto: information we want to add to the external comment
+        #
+        # we return the new string and a dict of the parts of the original string + the
+        # additional metadata. the latter is only for debugging. it could go away, but
+        # it does no harm to leave it while the code is new and the unit tests small.
+        #
+        if position >= len(text):
+            raise ValueError(f"Index {position} out of string: {text}")
+        #
+        #                                                 V
+        #$[*][ yes()] ---- CSVPATH ---- ~ two fish ~ $[*][ yes()] ---- CSVPATH ---- ~ three bugs ~ $[*][ yes() ]
+        #|--------------------top-------------------------|----------bottom------------------------------------|
+        #|--------------over-----------|------head--------|-tail--|---------under------------------------------|
+        #                              |s|--comment-|-pre-|
+        #                                /\
+        #                               /m\
+        #
+        #
+        top = None
+        bottom = None
+        over = None
+        head = None
+        tail = None
+        under = None
+        s = None
+        comment = None
+        pre = None
+        #
+        # find major parts
+        #
+        top = text[0:position]
+        bottom = text[position:]
+        _ = top.rfind(PathsManager.MARKER)
+        if _ == -1:
+            over = ""
+            head = top
+        else:
+            over = top[0:_]
+            head = top[_:]
+        _ = bottom.find(PathsManager.MARKER)
+        if _ == -1:
+            tail = bottom
+            under = ""
+        else:
+            tail = bottom[0:_]
+            under = bottom[_:]
+        #
+        # parse head further
+        #
+        if head.find("~") > -1:
+            _ = head.find("~")
+            s = head[0:_+1]
+            comment = head[_+1:head.rfind("~")+1]
+            pre = head[head.rfind("~")+1:]
+        else:
+            s = "~"
+            comment = "~"
+            pre = head
+        #
+        # build the new string and collect the dict for checking, if needed.
+        #
+        return (
+          f"{over}{s}{addto}{comment}{pre}{tail}{under}",
+          {"over":over, "s":s, "addto":addto, "comment":comment,"pre":pre, "tail":tail, "under":under}
+        )
+
 
 

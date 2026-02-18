@@ -1,8 +1,9 @@
 import os
 import csv
 import io
-from typing import Any
 import json
+import traceback
+from typing import Any
 
 from PySide6.QtCore import Qt, Slot, QPoint, QSize, QMimeData, QThread, QCoreApplication
 from PySide6.QtWidgets import (
@@ -18,9 +19,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QPixmap, QPainter, QShortcut, QKeySequence, QAction, QStandardItem, QKeyEvent
 from PySide6.QtSvg import QSvgRenderer
 
-
 from csvpath.util.line_spooler import CsvLineSpooler
 
+from flightpath.widgets.panels.table_model import TableModel
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
@@ -59,7 +60,7 @@ class DataViewer(QWidget):
         stut.set_editable_background(self.table_view)
 
         self.table_view.hide()
-        self.raw_view = RawViewer(self.main)
+        self.raw_view = RawViewer(main=self.main, parent=self, editable=self.editable)
         stut.set_editable_background(self.raw_view)
 
         self.main_layout.addWidget(self.table_view)
@@ -362,7 +363,6 @@ class DataViewer(QWidget):
         else:
             ...
 
-
         #
         # if we're editable we'll keep the event. remember that editability of
         # individual cells is controled by the TableModel's editable value.
@@ -469,6 +469,57 @@ class DataViewer(QWidget):
     def toggle_grid_raw(self):
         i = self.layout().currentIndex()
         i = 0 if i == 1 else 1
+        #
+        if i == 1:
+        #
+            self.show_raw()
+        #
+        else:
+        #
+            self.show_grid()
+        #
+        self.layout().setCurrentIndex(i)
+
+    def show_grid(self) -> None:
+        if self.saved is False:
+            w = self.layout().widget(1)
+            data = []
+            try:
+                file = io.StringIO(w.text_edit.toPlainText())
+                delimiter = self.main.content.toolbar.delimiter_char()
+                quotechar= self.main.content.toolbar.quotechar_char()
+                reader = csv.reader(
+                    file, delimiter=delimiter, quotechar=quotechar
+                )
+                for line in reader:
+                    data.append(line)
+            finally:
+                file.close()
+            #
+            # add data to table model, clearing table model first
+            #
+            table_model = TableModel(data=data, editable=self.editable)
+            self.display_data(table_model)
+
+    def show_raw(self) -> None:
+        w = self.layout().widget(1)
+        if w.loaded == False and self.saved is True:
+            p = self.objectName()
+            w.open_file(p, self.lines_to_take)
+        #
+        # if i == 1 (meaning we're going to show raw)
+        # and raw is not loaded
+        # and grid has changed: self.saved == False
+        #
+        if self.saved is False:
+            cstr = self._write_to_string()
+            self.raw_view.text_edit.setPlainText(cstr)
+            self.raw_view.loaded = True
+
+    """
+    def toggle_grid_raw(self):
+        i = self.layout().currentIndex()
+        i = 0 if i == 1 else 1
         w = self.layout().widget(1)
         #
         # if i == 1 (meaning we're going to show raw)
@@ -491,7 +542,7 @@ class DataViewer(QWidget):
             self.raw_view.text_edit.setPlainText(cstr)
             self.raw_view.loaded = True
         self.layout().setCurrentIndex(i)
-
+    """
 
     def on_save_as(self, switch_local=False, *, info=None) -> None:
         if self.editable == EditStates.UNEDITABLE:
@@ -641,7 +692,6 @@ class DataViewer(QWidget):
                 self.main.read_validate_and_display_file_for_path(to_path)
                 self.main.content.tab_widget.close_tab(name)
             except Exception:
-                import traceback
                 print(traceback.format_exc())
 
     @Slot(tuple)

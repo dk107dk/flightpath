@@ -140,9 +140,6 @@ class JsonViewer2(QWidget):
             return
         global_pos = self.view.viewport().mapToGlobal(position)
 
-        #
-        # exp!
-        #
         menu = self.view.createStandardContextMenu()
 
         save_action = QAction()
@@ -151,6 +148,25 @@ class JsonViewer2(QWidget):
         save_action.setShortcutVisibleInContextMenu(True)
         save_action.triggered.connect(self._save)
         menu.addAction(save_action)
+        #
+        # save as goes here
+        #
+        save_as_action = QAction()
+        save_as_action.setText("Save As")
+        #
+        # save_as_action is for the visible menu item
+        # save_as_action_s is for the invisible keyboard shortcut
+        # both are needed according to gemini. note that save_as_action_s doesn't
+        # have a triggered method.
+        #
+        save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
+        save_as_action_s = QShortcut(QKeySequence("Shift+Ctrl+S"), self)
+        save_as_action.triggered.connect(self._save_as)
+        save_as_action_s.activated.connect(self._save_as)
+
+        save_as_action.setShortcutVisibleInContextMenu(True)
+        menu.addAction(save_as_action)
+
 
         menu.addSeparator()
         for action in menu.actions():
@@ -174,8 +190,6 @@ class JsonViewer2(QWidget):
                         action.setShortcut(QKeySequence("Ctrl+d"))
                     action.setShortcutVisibleInContextMenu(True)
 
-
-        menu.addSeparator()
 
 
         pretty_print_action = QAction()
@@ -212,16 +226,26 @@ class JsonViewer2(QWidget):
 
         menu.exec(global_pos)
 
+
+    def _save_as(self) -> None:
+        path = os.path.dirname(self.path)
+        path, ok = meut.input(title="Save As", msg="Where should the new file live? ")
+        if ok and path:
+            self._do_save(path)
+
     def _save(self) -> None:
+        self._do_save(self.path)
+
+    def _do_save(self, path:str) -> None:
         if self.editable == EditStates.UNEDITABLE:
             return
-        if self.path is None:
+        if path is None:
             print("Error: cannot save json to file path None")
             return
         t = self.view.toPlainText()
         t = strut.sanitize_json(t)
 
-        info = QFileInfo(self.path)
+        info = QFileInfo(path)
         if info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
             try:
                 #
@@ -245,7 +269,7 @@ class JsonViewer2(QWidget):
                 # would be good to notify the user here
                 #
                 print(f"cannot format as json")
-        with DataFileWriter(path=self.path) as file:
+        with DataFileWriter(path=path) as file:
             file.write(t)
         #
         # reset the name w/o the +
