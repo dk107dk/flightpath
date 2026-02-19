@@ -24,6 +24,8 @@ class MdTextEdit(QTextEdit):
         #
         save_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+s"), self)
         save_shortcut_ctrl.activated.connect(self.parent.on_save)
+        save_as_shortcut_ctrl = QShortcut(QKeySequence("Shift+Ctrl+S"), self)
+        save_as_shortcut_ctrl.activated.connect(self.parent.on_save_as)
 
         toggle_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+t"), self)
         toggle_shortcut_ctrl.activated.connect(self.parent.on_toggle)
@@ -62,13 +64,36 @@ class MdTextEdit(QTextEdit):
             return
         menu = self.createStandardContextMenu()
 
+
+        for action in menu.actions():
+            if isinstance(action, QAction):
+                t = action.text()
+                if t and str(t).strip() != "":
+                    t = t.replace("&", "").lower()
+                    if t == "cut":
+                        action.setShortcut(QKeySequence("Ctrl+x"))
+                    if t == "copy":
+                        action.setShortcut(QKeySequence("Ctrl+c"))
+                    if t == "paste":
+                        action.setShortcut(QKeySequence("Ctrl+v"))
+                    if t == "undo":
+                        action.setShortcut(QKeySequence("Ctrl+z"))
+                    if t == "redo":
+                        action.setShortcut(QKeySequence("Shift+Ctrl+Z"))
+                    if "select" in t:
+                        action.setShortcut(QKeySequence("Ctrl+a"))
+                    if t == "delete":
+                        action.setShortcut(QKeySequence("Ctrl+d"))
+                    action.setShortcutVisibleInContextMenu(True)
+
+
         #
         # separator and toggle raw edit
         #
         path = self.parent.path
         if path.endswith(".md"):
             menu.addSeparator()
-            t = "Toggle edit"
+            t = "Toggle view"
             t_action = QAction(t, self)
             t_action.triggered.connect(self.parent.on_toggle)
             t_action.setShortcut(QKeySequence("Ctrl+T"))
@@ -79,6 +104,7 @@ class MdTextEdit(QTextEdit):
         #
         menu.addSeparator()
         save = "Save"
+
         save_action = QAction(save, self)
         save_action.triggered.connect(self.parent.on_save)
         save_action.setShortcut(QKeySequence("Ctrl+S"))
@@ -87,6 +113,8 @@ class MdTextEdit(QTextEdit):
 
         save_as_action = QAction("Save as", self)
         save_as_action.triggered.connect(self.parent.on_save_as)
+        save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
+        save_as_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(save_as_action)
         #
         # Show the menu

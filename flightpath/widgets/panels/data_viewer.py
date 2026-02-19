@@ -46,14 +46,6 @@ class DataViewer(QWidget):
         self.main_layout = QStackedLayout()
         self.setLayout(self.main_layout)
         self.table_view = QTableView()
-        #
-        # not sure what this was
-        #
-        #self.content_view = self.table_view
-        #
-        # attempt to debug the last row ctx menu prob
-        #
-        #self.table_view.verticalHeader().setStretchLastSection(False)
 
         self.editable = editable
         self.table_view.editable = self.editable
@@ -73,13 +65,30 @@ class DataViewer(QWidget):
         self.lines_to_take = None
         self.saved = True
         #
-        # keyboard shortcuts
+        # keyboard shortcuts. these actions are added to data viewer and its children.
+        # in the past we declared them on the individual views/viewers a layer down
+        # just as QShortcuts, like we do elsewhere, but there were conflicts and the
+        # actions sort it. this note is in case it turns out to have effect i'm not
+        # seeing now.
         #
-        if self.is_editable:
-            load_shortcut_save = QShortcut(QKeySequence("Ctrl+s"), self)
-            load_shortcut_save.activated.connect(self.on_save)
-            load_shortcut_save = QShortcut(QKeySequence("Ctrl+a"), self)
-            load_shortcut_save.activated.connect(self.on_save_as)
+        save_action = QAction("Save", self)
+        save_action.setShortcut(QKeySequence.Save)
+        save_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        save_action.triggered.connect(self.on_save)
+        self.addAction(save_action)
+
+        save_as_action = QAction("Save As", self)
+        save_as_action.setShortcut(QKeySequence.SaveAs)
+        save_as_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        save_as_action.triggered.connect(self.on_save_as)
+        self.addAction(save_as_action)
+
+        toggle_action = QAction("Toggle", self)
+        toggle_action.setShortcut("Ctrl+t")
+        toggle_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        toggle_action.triggered.connect(self.toggle_grid_raw)
+        self.addAction(toggle_action)
+
         #
         # context menu
         #
@@ -90,7 +99,6 @@ class DataViewer(QWidget):
     @property
     def is_editable(self) -> bool:
         return self.editable == EditStates.EDITABLE
-
 
     def _show_context_menu(self, position: QPoint):
         # `position` is in the QTableView's coordinates.
@@ -120,11 +128,15 @@ class DataViewer(QWidget):
             save_action = QAction()
             save_action.setText("Save")
             save_action.triggered.connect(self.on_save)
+            save_action.setShortcut(QKeySequence("Ctrl+S"))
+            save_action.setShortcutVisibleInContextMenu(True)
             context_menu.addAction(save_action)
 
             save_as_action = QAction()
             save_as_action.setText("Save As")
             save_as_action.triggered.connect(self.on_save_as)
+            save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
+            save_as_action.setShortcutVisibleInContextMenu(True)
             context_menu.addAction(save_as_action)
 
             context_menu.addSeparator()
@@ -179,6 +191,16 @@ class DataViewer(QWidget):
                 to_new_action.setText("Copy to new file")
                 to_new_action.triggered.connect(self._copy_to_new)
                 context_menu.addAction(to_new_action)
+
+
+            toggle_action = QAction()
+            toggle_action.setText("Toggle view")
+            toggle_action.triggered.connect(self.toggle_grid_raw)
+            toggle_action.setShortcut(QKeySequence("Ctrl+T"))
+            toggle_action.setShortcutVisibleInContextMenu(True)
+            context_menu.addAction(toggle_action)
+
+
             context_menu.exec(global_position)
         else:
             print(f"index not valid: {index}: {index.row()}, {index.column()}; row: {row}")
@@ -481,7 +503,16 @@ class DataViewer(QWidget):
         self.layout().setCurrentIndex(i)
 
     def show_grid(self) -> None:
-        if self.saved is False:
+        #
+        # if we save while in raw view we must reload before showing the grid.
+        # however, we don't know we changed and then saved because we only have
+        # the saved boolean to go on.
+        #
+        # for now we'll just reload every switch. that's going to work badly for
+        # very large files. but we're problem w/ very large files anyway, so
+        # we're not really making it worse.
+        #
+        if True or self.saved is False:
             w = self.layout().widget(1)
             data = []
             try:
@@ -516,35 +547,9 @@ class DataViewer(QWidget):
             self.raw_view.text_edit.setPlainText(cstr)
             self.raw_view.loaded = True
 
-    """
-    def toggle_grid_raw(self):
-        i = self.layout().currentIndex()
-        i = 0 if i == 1 else 1
-        w = self.layout().widget(1)
-        #
-        # if i == 1 (meaning we're going to show raw)
-        # and raw is not loaded
-        # and grid is not changed: self.saved == True
-        #
-        if i == 1 and w.loaded == False and self.saved is True:
-            p = self.objectName()
-            w.open_file(p, self.lines_to_take)
-        #
-        # if i == 1 (meaning we're going to show raw)
-        # and raw is not loaded
-        # and grid has changed: self.saved == False
-        #
-        if i == 1 and self.saved is False:
-            #
-            # load the unsaved content from the grid view
-            #
-            cstr = self._write_to_string()
-            self.raw_view.text_edit.setPlainText(cstr)
-            self.raw_view.loaded = True
-        self.layout().setCurrentIndex(i)
-    """
 
     def on_save_as(self, switch_local=False, *, info=None) -> None:
+        print(f"data_viewer: on_save_as")
         if self.editable == EditStates.UNEDITABLE:
             return
         #
@@ -595,6 +600,7 @@ class DataViewer(QWidget):
 
     @Slot()
     def on_save(self) -> None:
+        print(f"data_viewer: on_save")
         #
         # if the path is under the inputs or archive we have to save-as, not just save
         #
@@ -631,12 +637,6 @@ class DataViewer(QWidget):
             self.on_save_as()
             return
         self._save_csv(path)
-
-        """
-        if path.endswith(".csv"):
-        else:
-            self._save_jsonl(path)
-        """
 
     def _save_jsonl(self, path:str) -> None:
         lines = JsonlLineSpooler(path=path)

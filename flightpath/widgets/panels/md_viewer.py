@@ -78,7 +78,6 @@ class MdViewer(QWidget):
         #
         self.layout().addWidget(self.text_edit)
         self.main.show_now_or_later(self.text_edit)
-        #self.text_edit.show()
 
     def reset_saved(self) -> None:
         self.saved = True
@@ -86,6 +85,18 @@ class MdViewer(QWidget):
         name = self.main.content.tab_widget.tabText(i)
         name = name.replace("+", "")
         self.main.content.tab_widget.setTabText(i, name )
+
+    def desaved(self) -> bool:
+        if self.saved is True:
+            path = self.path
+            path = os.path.dirname(path)
+            i = self.main.content.tab_widget.currentIndex()
+            name = self.main.content.tab_widget.tabText(i)
+            name = name.replace("+ ", "")
+            self.main.content.tab_widget.setTabText(i, f"+ {name}" )
+            self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
+            self.saved = False
+
 
     #
     # do we need this here?
@@ -134,7 +145,6 @@ class MdViewer(QWidget):
         c = "cmd" if osut.is_mac() else "ctrl"
         self.main.statusBar().showMessage(f"{c}-s to save • Opened {path}")
         self.main.show_now_or_later(self.text_edit)
-        #self.text_edit.show()
 
     def clear(self):
         self.text_edit.hide()
@@ -145,7 +155,7 @@ class MdViewer(QWidget):
     def on_save_as(self, switch_local=False) -> None:
         if self.editable == EditStates.UNEDITABLE:
             return
-        thepath = self.text_edit.parent.path
+        thepath = self.path
         thepath = os.path.dirname(thepath)
         name = os.path.basename(self.path)
 
@@ -183,7 +193,6 @@ class MdViewer(QWidget):
     def on_toggle(self) -> None:
         info = QFileInfo(self.path)
         if info.suffix() in ["md"]:
-        #if info.suffix() in ["md", "txt"]:
             editor = self.text_edit
             if self.displaying is True:
                 self.displaying = False

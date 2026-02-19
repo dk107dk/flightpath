@@ -11,6 +11,7 @@ from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.tabs_nonscrolling_tab_bar import NonScrollingTabBar
 from flightpath.util.tabs_utility import TabsUtility as taut
+from flightpath.util.json_utility import JsonUtility as jsut
 
 class ClosingTabs(QTabWidget):
     def __init__(self, main, *, parent=None):
@@ -164,6 +165,8 @@ class ClosingTabs(QTabWidget):
         close_button.setStyleSheet("border: none;")
         close_button.clicked.connect(lambda: self.close_tab(widget.objectName()))
         self.tabBar().setTabButton(index, QTabBar.ButtonPosition.LeftSide, close_button)
+
+
 
     def on_tab_change(self):
         i = self.currentIndex()

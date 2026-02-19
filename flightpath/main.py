@@ -78,6 +78,7 @@ from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.style_utils import StyleUtility as stut
+from flightpath.util.json_utility import JsonUtility as jsut
 
 from flightpath.util.state import State
 from flightpath.inspect.inspector import Inspector
@@ -847,7 +848,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # when  data _view is visible we show the sample tool bar
         #
-        self.content.toolbar.enable()
+        if jsut.is_jsonl(filepath):
+            self.content.toolbar.enable()
+            #self.content.toolbar.disable()
+        else:
+            self.content.toolbar.enable()
+
         self.show_now_or_later(self.content.toolbar)
         taut.select_tab(self.content.tab_widget, data_view)
 
@@ -1276,6 +1282,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.config.toolbar.button_close.setEnabled(False)
             self.config.toolbar.button_cancel_changes.setEnabled(True)
             self.config.toolbar.enable_save()
+
 
     def closeEvent(self, event):
         if (

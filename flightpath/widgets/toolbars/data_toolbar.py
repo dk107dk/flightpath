@@ -23,6 +23,7 @@ from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.style_utils import StyleUtility as stut
+from flightpath.util.json_utility import JsonUtility as jsut
 
 class DataToolbar(QToolBar):
 
@@ -233,10 +234,24 @@ class DataToolbar(QToolBar):
             self.rows.setEnabled(True)
         if self.save_sample:
             self.save_sample.setEnabled(True)
-        if self.delimiter:
-            self.delimiter.setEnabled(True)
-        if self.quotechar:
-            self.quotechar.setEnabled(True)
+
+        i = self.parent.content.tab_widget.currentIndex()
+        w = self.parent.content.tab_widget.widget(i)
+        path = w.objectName()
+        print(f"tdatatoolbar: path: {path}")
+        if jsut.is_jsonl(path):
+            print(f"path IS jsonl: {path}")
+            if self.delimiter:
+                self.delimiter.setEnabled(False)
+            if self.quotechar:
+                self.quotechar.setEnabled(False)
+        else:
+            print(f"path is NOT jsonl: {path}")
+            if self.delimiter:
+                self.delimiter.setEnabled(True)
+            if self.quotechar:
+                self.quotechar.setEnabled(True)
+
         if self.raw_source:
             self.raw_source.setEnabled(True)
         if self.file_info:

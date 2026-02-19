@@ -23,12 +23,14 @@ class InputsForm(BlankForm):
         msg.setWordWrap(True)
         layout.addRow("", msg)
 
+
         self.setLayout(layout)
         self._setup()
 
     def _setup(self) -> None:
         self.named_paths.textChanged.connect(self.main.on_config_changed)
         self.named_files.textChanged.connect(self.main.on_config_changed)
+
 
     def add_to_config(self, config) -> None:
         config.add_to_config("inputs", "files", self.named_files.text() )

@@ -8,7 +8,6 @@ from PySide6.QtWidgets import QApplication
 from csvpath.util.file_readers import DataFileReader
 from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
-from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.toolbars.data_toolbar import DataToolbar
 from flightpath.editable import EditStates
 from .data_worker_signals import DataWorkerSignals

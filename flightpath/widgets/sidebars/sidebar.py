@@ -134,7 +134,6 @@ class Sidebar(QWidget):
 
     def _set_project_from_state(self) -> None:
         #
-        #
         # recreate all UI parts
         #
         self._setup_tree(replace=True)
@@ -214,7 +213,7 @@ class Sidebar(QWidget):
         exts = [f"*.{e}" for e in exts]
         #
         # we need json, of course. no reason to think it would be in csvpaths or csv extensions, but
-        # checking just in case. there is a flattened json-ish format that could maybe come into play.
+        # checking just in case.
         #
         if "*.json" not in exts:
             exts.append("*.json")
@@ -244,11 +243,6 @@ class Sidebar(QWidget):
         self.file_navigator.setModel(self.proxy_model)
         self.file_navigator.setRootIndex(self.proxy_model.mapFromSource(self.file_model.index(self.main.state.cwd)))
         #
-        # end exp; orig 2 below
-        #
-        #self.file_navigator.setModel(self.file_model)
-        #self.file_navigator.setRootIndex(self.file_model.setRootPath(self.main.state.cwd))
-        #
         # this is alpha-sort descending. :/
         #
         self.file_navigator.setSortingEnabled(True)
@@ -258,6 +252,10 @@ class Sidebar(QWidget):
         self.file_navigator.setContextMenuPolicy(Qt.CustomContextMenu)
         self.file_navigator.customContextMenuRequested.connect(self._show_context_menu)
         self._setup_file_navigator_context_menu()
+        #
+        # reconnect the nav so we react to clicking on files
+        #
+        self.file_navigator.clicked.connect(self.main.on_tree_click)
         if replace and old:
             self.layout().replaceWidget(old, self.file_navigator)
         else:

@@ -1,5 +1,5 @@
 import os
-from PySide6.QtWidgets import QPlainTextEdit, QMenu
+from PySide6.QtWidgets import QPlainTextEdit, QMenu, QWidget
 from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtCore import Qt, QFileInfo
 
@@ -17,23 +17,12 @@ class RawTextEdit(QPlainTextEdit):
         super().__init__()
         self.main = main
         self.parent = parent
+
+        print(f"rawtextedit: main: {main}, parent: {parent}")
+
         self.editable = editable
         self.parent.saved = True
-        #
-        #
-        #
-        save_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+s"), self)
-        save_shortcut_ctrl.activated.connect(self.parent.on_save)
 
-        toggle_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+t"), self)
-        toggle_shortcut_ctrl.activated.connect(self.parent.on_toggle)
-        #
-        # we use the seqs to make sure we're not setting a doc to
-        # desaved when we should just be reacting to a shortcut
-        #
-        self.short_seqs = []
-        self.short_seqs.append(save_shortcut_ctrl.key())
-        self.short_seqs.append(toggle_shortcut_ctrl.key())
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.editable == EditStates.UNEDITABLE:
@@ -44,6 +33,8 @@ class RawTextEdit(QPlainTextEdit):
             self.desaved()
 
     def desaved(self) -> bool:
+        return self.parent.desaved()
+        """
         if self.editable == EditStates.UNEDITABLE:
             return False
         if self.parent.saved is True:
@@ -56,12 +47,36 @@ class RawTextEdit(QPlainTextEdit):
             self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
             self.parent.saved = False
         return True
+        """
 
     def contextMenuEvent(self, event):
         if self.editable == EditStates.UNEDITABLE:
             return
         menu = self.createStandardContextMenu()
-        """
+
+        for action in menu.actions():
+            if isinstance(action, QAction):
+                t = action.text()
+                if t and str(t).strip() != "":
+                    t = t.replace("&", "").lower()
+                    if t == "cut":
+                        action.setShortcut(QKeySequence("Ctrl+x"))
+                    if t == "copy":
+                        action.setShortcut(QKeySequence("Ctrl+c"))
+                    if t == "paste":
+                        action.setShortcut(QKeySequence("Ctrl+v"))
+                    if t == "undo":
+                        action.setShortcut(QKeySequence("Ctrl+z"))
+                    if t == "redo":
+                        action.setShortcut(QKeySequence("Shift+Ctrl+Z"))
+                    if "select" in t:
+                        action.setShortcut(QKeySequence("Ctrl+a"))
+                    if t == "delete":
+                        action.setShortcut(QKeySequence("Ctrl+d"))
+                    action.setShortcutVisibleInContextMenu(True)
+
+
+
         #
         # separator and toggle raw edit
         #
@@ -72,7 +87,7 @@ class RawTextEdit(QPlainTextEdit):
         t_action.setShortcut(QKeySequence("Ctrl+T"))
         t_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(t_action)
-        """
+
         #
         # separator and save options
         #
@@ -86,7 +101,10 @@ class RawTextEdit(QPlainTextEdit):
 
         save_as_action = QAction("Save as", self)
         save_as_action.triggered.connect(self.parent.on_save_as)
+        save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
+        save_as_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(save_as_action)
+
         #
         # Show the menu
         #
