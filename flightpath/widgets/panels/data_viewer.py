@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
         QVBoxLayout,
         QStackedLayout,
         QTableView,
+        QDialog,
         QLabel,
         QMenu,
         QApplication,
@@ -20,7 +21,9 @@ from PySide6.QtGui import QPixmap, QPainter, QShortcut, QKeySequence, QAction, Q
 from PySide6.QtSvg import QSvgRenderer
 
 from csvpath.util.line_spooler import CsvLineSpooler
+from csvpath.util.file_writers import DataFileWriter
 
+from flightpath.dialogs.save_csv_to import SaveCsvToDialog
 from flightpath.widgets.panels.table_model import TableModel
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.file_utility import FileUtility as fiut
@@ -30,6 +33,9 @@ from flightpath.editable import EditStates
 from .raw_viewer import RawViewer
 
 class DataViewer(QWidget):
+    DELIMITERS = {"comma":",", "semi-colon":";", "pipe":"|", "tab":"\t"}
+    QUOTECHARS = {"single-quotes":"'", "double-quotes":'"'}
+
 
     def __init__(self, parent, *, editable:EditStates=EditStates.UNEDITABLE):
         super().__init__()
@@ -153,7 +159,6 @@ class DataViewer(QWidget):
             insert_line_below_action.triggered.connect(lambda: self._insert_line_below(row))
             context_menu.addAction(insert_line_below_action)
 
-            context_menu.addSeparator()
 
             delete_line_action = QAction()
             delete_line_action.setText("Delete line")
@@ -174,7 +179,6 @@ class DataViewer(QWidget):
             insert_header_right_action.triggered.connect(lambda: self._insert_header_right(index.column()))
             context_menu.addAction(insert_header_right_action)
 
-            context_menu.addSeparator()
 
             delete_header_action = QAction()
             delete_header_action.setText("Delete header")
@@ -426,9 +430,7 @@ class DataViewer(QWidget):
             data = self.table_view.model().data(self.table_view.model().index(row, col), Qt.ItemDataRole.DisplayRole)
             pairs.append( ( row, col, data if data is not None else "" ) )
         jsons = json.dumps(pairs, indent=2)
-        print("\nDataViewer: starting clipboard operation")
         clipboard = QApplication.clipboard()
-        print("DataViewer: clearing clipboard")
         #
         # on windows this will often report failure but actually succeed due to a retry in the Qt code.
         # adding our own retry loop has been suggested, but atm the processEvents() call seems to clear
@@ -436,19 +438,10 @@ class DataViewer(QWidget):
         # processEvents() we haven't had problems.
         #
         clipboard.clear()
-        print("DataViewer: processing events")
         QApplication.processEvents()
-        print("DataViewer: Clipboard mode:", clipboard.supportsSelection())
-        print("DataViewer: Clipboard text before:", clipboard.text())
-        print("DataViewer: supportsSelection:", clipboard.supportsSelection())
-        print("DataViewer: ownsClipboard:", clipboard.ownsClipboard())
-        print("DataViewer: ownsFindBuffer:", clipboard.ownsFindBuffer())
-        print(f"DataViewer: on main thread: {(QThread.currentThread() == QCoreApplication.instance().thread())}")
         mime = QMimeData()
         mime.setText(jsons)
-        print("DataViewer: setting mime data to clipboard")
         clipboard.setMimeData(mime)
-        print("DataViewer: set mime data to clipboard. done.\n")
 
     def paste_from_clipboard(self):
         clipboard = QApplication.clipboard()
@@ -489,7 +482,8 @@ class DataViewer(QWidget):
                     self.table_view.model().setData(target_index, _[2], Qt.ItemDataRole.EditRole)
 
     def toggle_grid_raw(self):
-        i = self.layout().currentIndex()
+        i = self.current_view_index
+        #i = self.layout().currentIndex()
         i = 0 if i == 1 else 1
         #
         if i == 1:
@@ -533,6 +527,11 @@ class DataViewer(QWidget):
             self.display_data(table_model)
 
     def show_raw(self) -> None:
+        #
+        # if we're saved we're going to get unsaved in the process below.
+        # that's not what we want so we have to keep track of our state.
+        #
+        saved = self.saved
         w = self.layout().widget(1)
         if w.loaded == False and self.saved is True:
             p = self.objectName()
@@ -542,14 +541,19 @@ class DataViewer(QWidget):
         # and raw is not loaded
         # and grid has changed: self.saved == False
         #
-        if self.saved is False:
+        if saved is False:
             cstr = self._write_to_string()
             self.raw_view.text_edit.setPlainText(cstr)
             self.raw_view.loaded = True
-
+            #
+            # block saved/unsaved switch. setting the text_edit will
+            # trigger saved = False, but we don't want to change the
+            # saved state.
+            #
+        else:
+            self.reset_saved()
 
     def on_save_as(self, switch_local=False, *, info=None) -> None:
-        print(f"data_viewer: on_save_as")
         if self.editable == EditStates.UNEDITABLE:
             return
         #
@@ -589,24 +593,33 @@ class DataViewer(QWidget):
         if info is not None:
             msg = f"{info}\n\n{msg}"
         name = os.path.basename(self.path)
-        name, ok = meut.input(
-            title="Save As",
-            msg=msg,
-            text=thepath
-        )
-        if ok and name:
-            path = fiut.deconflicted_path( thepath, name )
-            self._save(path)
+        #
+        # have to ask for the delimiter and quote char in order to save in the desired format
+        # it should start with the settings in the toolbar.
+        #
+        dialog = SaveCsvToDialog(parent=self, path=self.path, main=self.main)
+        if dialog.exec() == QDialog.Accepted:
+            t = dialog.get_path()
+            delimiter = dialog.get_delimiter()
+            quotechar = dialog.get_quotechar()
+            d = os.path.dirname(t)
+            b = os.path.basename(t)
+            t = fiut.deconflicted_path( d, b )
+            self._save(path=t, delimiter=delimiter, quotechar=quotechar)
+
+    @property
+    def current_view_index(self) -> int:
+        return self.layout().currentIndex()
 
     @Slot()
     def on_save(self) -> None:
-        print(f"data_viewer: on_save")
         #
         # if the path is under the inputs or archive we have to save-as, not just save
         #
         # if the parent isn't editable we shouldn't get here, but if we did we need to
         # be sure to not save.
         #
+        print(f"data_viewer: onsave: view active index: {self.current_view_index}")
         if self.editable == EditStates.UNEDITABLE:
             self._copy_back_question()
             return
@@ -625,9 +638,9 @@ class DataViewer(QWidget):
         if self.path.startswith(ap) or self.path.startswith(ncp):
             self.on_save_as(switch_local=True)
             return
-        self._save(self.path)
+        self._save(path=self.path)
 
-    def _save(self, path:str) -> None:
+    def _save(self, *, path:str, delimiter:str=None, quotechar:str=None) -> None:
         if path is None:
             raise ValueError("Path cannot be None")
         ns = fiut.split_filename(path)
@@ -636,9 +649,17 @@ class DataViewer(QWidget):
             meut.warning(parent=self, title="Bad Filename", msg="The path must end in a data format extension")
             self.on_save_as()
             return
-        self._save_csv(path)
+        self._save_csv(path=path, delimiter=delimiter, quotechar=quotechar)
 
     def _save_jsonl(self, path:str) -> None:
+        #
+        # is this used anywhere or dead?
+        # don't see it.
+        #
+        raise Exception("Triggered code block")
+        #
+        # this should all go. but waiting for attention.
+        #
         lines = JsonlLineSpooler(path=path)
         for _ in range(self.table_view.model().rowCount()):
             line = [
@@ -648,7 +669,25 @@ class DataViewer(QWidget):
             lines.append(line)
         lines.close()
 
-    def _save_csv(self, path:str) -> None:
+    def _save_csv(self, *, path:str, delimiter:str=None, quotechar:str=None) -> None:
+        if self.current_view_index == 0:
+            self._save_csv_grid(path=path, delimiter=delimiter, quotechar=quotechar)
+        else:
+            self._save_csv_raw(path=path, delimiter=delimiter, quotechar=quotechar)
+        self.reset_saved()
+        self.main.statusBar().showMessage(f"  Saved to: {self.path}")
+
+    def _save_csv_raw(self, *, path:str, delimiter:str=None, quotechar:str=None) -> None:
+        #
+        # we don't treat raw csv as csv. we're just writing text to a file using a
+        # location insenstive writer. the delimiter and quotechar could possibly become
+        # useful, maybe, but for now just being consistent.
+        #
+        t = self.raw_view.text_edit.toPlainText()
+        with DataFileWriter(path=path) as file:
+            file.sink.write(t)
+
+    def _save_csv_grid(self, *, path:str, delimiter:str=None, quotechar:str=None) -> None:
         #
         # get a line spooler. it uses a DataFileWriter to get a file-like
         # smart-open behind the scenes and then uses the native csv module
@@ -656,7 +695,30 @@ class DataViewer(QWidget):
         # does it, in order to allow for both lists in memory and files,
         # with files being in any of the backends.
         #
-        lines = CsvLineSpooler(None, path=path) # we don't use a Result object
+        #
+        # need to respect the delimiter and quote chars
+        #
+        delimiter = str(delimiter).lower()
+        delimiter = self.main.content.toolbar.delimiter_char() if delimiter is None else delimiter
+        if delimiter in self.DELIMITERS:
+            delimiter = self.DELIMITERS.get(delimiter)
+        if str(delimiter).strip() not in [",", "|", ";", "\t"]:
+            delimiter = ","
+
+        quotechar = str(quotechar).lower()
+        quotechar = self.main.content.toolbar.quotechar_char() if quotechar is None else quotechar
+        if quotechar in self.QUOTECHARS:
+            quotechar = self.QUOTECHARS.get(quotechar)
+        if str(quotechar).strip() not in ["'", '"']:
+            quotechar = '"'
+
+        lines = CsvLineSpooler(
+            None,
+            path=path,
+            delimiter=delimiter,
+            quotechar=quotechar
+        ) # we don't use a Result object
+        #lines = CsvLineSpooler(None, path=path) # we don't use a Result object
         for _ in range(self.table_view.model().rowCount()):
             line = [
                 self.table_view.model().data(self.table_view.model().index(_, col), Qt.ItemDataRole.DisplayRole)
@@ -667,8 +729,8 @@ class DataViewer(QWidget):
         #
         # set the status bar
         #
-        self.main.statusBar().showMessage(f"  Saved to: {self.path}")
-        self.reset_saved()
+        #self.main.statusBar().showMessage(f"  Saved to: {self.path}")
+        #self.reset_saved()
 
     def _write_to_string(self) -> str:
         buffer = io.StringIO(newline="")

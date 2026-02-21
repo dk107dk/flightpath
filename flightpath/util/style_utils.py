@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
 import darkdetect
 from flightpath.editable import EditStates
 from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit
-#from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 from flightpath.widgets.raw_text_edit import RawTextEdit
 from flightpath.widgets.md_text_edit import MdTextEdit
 
@@ -69,7 +68,6 @@ class StyleUtility:
 
     @classmethod
     def _set_editable_background(cls, widget) -> None:
-        print(f"_set_editable_backgroundx: {widget}: {widget.editable}")
         inst = isinstance(widget, (QTreeView, QTableView, QPlainTextEdit, CsvPathTextEdit, MdTextEdit, RawTextEdit) )
         name = cls._name(widget)
         inst = inst or name == "KeyableTreeView"

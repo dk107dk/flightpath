@@ -17,37 +17,19 @@ class RawTextEdit(QPlainTextEdit):
         super().__init__()
         self.main = main
         self.parent = parent
-
-        print(f"rawtextedit: main: {main}, parent: {parent}")
-
         self.editable = editable
         self.parent.saved = True
-
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.editable == EditStates.UNEDITABLE:
             return
         super().keyPressEvent(event)
         t = event.text()
-        if t and t != "":
-            self.desaved()
+        #if t and t != "":
+        self.desaved()
 
     def desaved(self) -> bool:
         return self.parent.desaved()
-        """
-        if self.editable == EditStates.UNEDITABLE:
-            return False
-        if self.parent.saved is True:
-            path = self.parent.path
-            path = os.path.dirname(path)
-            i = self.main.content.tab_widget.currentIndex()
-            name = self.main.content.tab_widget.tabText(i)
-            name = name.replace("+ ", "")
-            self.main.content.tab_widget.setTabText(i, f"+ {name}" )
-            self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
-            self.parent.saved = False
-        return True
-        """
 
     def contextMenuEvent(self, event):
         if self.editable == EditStates.UNEDITABLE:
@@ -81,7 +63,7 @@ class RawTextEdit(QPlainTextEdit):
         # separator and toggle raw edit
         #
         menu.addSeparator()
-        t = "Toggle edit"
+        t = "Toggle view"
         t_action = QAction(t, self)
         t_action.triggered.connect(self.parent.on_toggle)
         t_action.setShortcut(QKeySequence("Ctrl+T"))

@@ -4,38 +4,62 @@ import darkdetect
 from csvpath import CsvPath
 from csvpath import CsvPaths
 from csvpath.util.file_readers import DataFileReader
-
+from csvpath.matching.functions.lines.dups import CountDups
 class Inspector:
 
     def __init__(self, *, main, filepath:str) -> None:
+        """
+        print(f"\n\n\n")
+        from csvpath.util.code import Code
+        _ = Code.get_source_path(CountDups)
+        print(f"{_}\n\n\n")
+        """
+
         self.main = main
         self._filepath = filepath
         self._csvpath_str = None
         self._info = None
-        self._path = CsvPath()
+        self._path = None
         self._from_line = None
         self._sample_size = None
         self._headers = None
         self._config = None
+        self._vars = None
+        #
+        # what is this about? we let the user choose cache or not. why override?
+        #
+        """
         if self.main:
             cwd = self.main.state.cwd
             cachedir = f"{cwd}{os.sep}cache"
-            self._path.config.set(section="cache", name="path", value=cachedir)
-            self._path.config.set(section="cache", name="use_cache", value="yes")
+            self.main.csvpath_config.set(section="cache", name="path", value=cachedir)
+            self.main.csvpath_config.set(section="cache", name="use_cache", value="yes")
+        """
+
+    @property
+    def vars(self) -> dict:
+        return self._vars
+
+    @vars.setter
+    def vars(self, v:dict) -> None:
+        self._vars = v
 
     @property
     def info(self) -> dict[str, str|int|float|bool|None]:
         if self._info is None:
             c = self.csvpath_str
-            self.path.parse(c).fast_forward()
+            path = CsvPath()
+            path.parse(c).fast_forward()
+            self.vars = path.variables
             #
             # move the valuable info from vars to our own dict for jinja
             #
-            self._info = self._populate(self.path.variables)
+            self._info = self._populate(self.vars)
         return self._info
 
 
     def _populate(self, vs:dict) -> dict:
+
         info = {}
         info["ui_dark"] = darkdetect.isDark()
         info["file"] = self.filepath
@@ -56,7 +80,7 @@ class Inspector:
             hd[header] = d
             d["name"] = header
             d["number"] = i
-            d["unique_values"] = self.unique_values(i, header)
+            d["duplicate_count"] = self.duplicate_count(i, header)
             d[f"types"] = self.header_types(i, header)
             d["is_distinct"] = self.is_distinct(i, header)
             d["min_val"] = self.min_val(i, header)
@@ -66,18 +90,12 @@ class Inspector:
 
     @property
     def path(self) -> CsvPath:
+        if self._path is None:
+            self._path = CsvPath()
         return self._path
 
     @property
-    def variables(self) -> dict:
-        return self.path.variables
-
-    @property
     def csvpath_str(self) -> str:
-        """
-        from csvpath.util.log_utility import LogUtility as lout
-        lout.log_brief_trace()
-        """
         if self._csvpath_str is None:
             self._csvpath_str = self.compile_csvpath(self.filepath)
         return self._csvpath_str
@@ -109,8 +127,8 @@ class Inspector:
         # somewhere, so for now watermellon. maybe the byte-order mark problem? seems unlikely.
         #
         if self._headers is None:
-            self._path.get_total_lines_and_headers(filename=self.filepath)
-            self._headers = self._path.headers
+            self.path.get_total_lines_and_headers(filename=self.filepath)
+            self._headers = self.path.headers
         return self._headers
 
     def compile_match(self) -> str:
@@ -126,12 +144,21 @@ class Inspector:
             #header = header.replace('\ufeff', "")
             header = i
             m = f"""{m} \n\tpush.distinct("{header}_types", datatype(#{header}))"""
-            m = f"""{m} \n\tnot( has_dups(#{header}) ) -> counter.{header}_uniques() """
+            m = f"""{m} \n\thas_dups(#{header}) -> counter.{header}_dups() """
             m = f"""{m} \n\tin(datatype(#{header}), "integer|decimal") -> @m = min.{header}_min(#{header}) """
             m = f"""{m} \n\tin(datatype(#{header}), "integer|decimal") -> @m = max.{header}_max(#{header}) \n"""
         return m
 
     def compile_scan(self) -> str:
+        i = self.main.content.tab_widget.currentIndex()
+        w = self.main.content.tab_widget.widget(i)
+        c = w.table_view.model().rowCount()
+        #
+        # we won't sample more data than we have showing in the grid. trying to do that would
+        # often put us outside the length of the data.
+        #
+        if self._sample_size > c:
+            self._sample_size = c
         s = None
         if self._from_line:
             if self._from_line == 1 and self.filepath is not None:
@@ -161,7 +188,7 @@ class Inspector:
         scan = self.compile_scan()
         pathstr = f"""
 ~
-validation-mode:no-print, no-raise
+validation-mode:print, no-raise
 ~
 ${filepath}[{scan}][
 {match}
@@ -192,11 +219,11 @@ ${filepath}[{scan}][
 
     @property
     def lines_with_blanks(self) -> int:
-        return self.path.variables.get("lines_with_blanks")
+        return self.vars.get("lines_with_blanks")
 
     @property
     def duplicate_lines(self) -> int:
-        return self.path.variables.get("total_duplicate_lines")
+        return self.vars.get("total_duplicate_lines")
 
 
 #-======================================
@@ -212,24 +239,28 @@ ${filepath}[{scan}][
 # [ push.distinct("coltypes", type()) ]
 #
 
-    def unique_values(self, i:int, header:str) -> int:
-        return self.path.variables.get(f"{i}_uniques")
+    def duplicate_count(self, i:int, header:str) -> int:
+        t = self.vars.get(f"{i}_dups")
+        return t
 
     def header_types(self, i:int, header:str) -> list[str]:
-        return self.path.variables.get(f"{i}_types")
+        t = self.vars.get(f"{i}_types")
+        t = str(t)
+        t = t.replace("'", "")
+        return t
 
     def is_distinct(self, i:int, header) -> int:
-        if self.data_lines < self.sample_size or self.sample_size is None:
-            return self.path.variables.get(f"{i}_uniques") == self.data_lines
-        else:
-            return self.path.variables.get(f"{i}_uniques") == self.sample_size
+        t = f"{i}_dups"
+        r = self.vars.get(t)
+        return r is not None and r == 0
+
 
     def min_val(self, i:int, header) -> int|float:
         ts = self.header_types(i, header)
         if not ts:
             return ""
         if "decimal" in ts or "integer" in ts:
-            i = self.path.variables.get(f"{i}_min")
+            i = self.vars.get(f"{i}_min")
             if not i:
                 return ""
             if float(i) == int(i):
@@ -242,7 +273,7 @@ ${filepath}[{scan}][
         if not _:
             return ""
         if "decimal" in _ or "integer" in _:
-            i = self.path.variables.get(f"{i}_max")
+            i = self.vars.get(f"{i}_max")
             if not i:
                 return ""
             if float(i) == int(i):
@@ -251,7 +282,7 @@ ${filepath}[{scan}][
         return ""
 
     def is_not_none(self, i:int, header) -> bool:
-        t = self.path.variables.get(f"{i}_types")
+        t = self.vars.get(f"{i}_types")
         if t is None:
             return False
         return "none" not in t

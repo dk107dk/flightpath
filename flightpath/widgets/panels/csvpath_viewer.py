@@ -10,7 +10,7 @@ from PySide6.QtCore import Qt, QFileInfo, Slot
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.metadata_parser import MetadataParser
 from csvpath import CsvPath
-from csvpath.util.printer import Printer
+from csvpath.util.printer import Printer, StdOutPrinter
 from csvpath.managers.errors.error_comms import ErrorCommunications
 from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
@@ -275,7 +275,14 @@ class CsvpathViewer(QWidget):
             # setup a printer to capture output
             #
             capture = CapturePrinter()
-            path.set_printers([capture])
+            #
+            # exp. we'll use std out as well as capture so that in debugging/dev we
+            # have an incontext output on the console. Doesn't cause problems in prod
+            # tho, on mac we have the option to run on the command line, so actually
+            # it's potentially helpful there.
+            #
+            std = StdOutPrinter()
+            path.set_printers([capture, std])
             #
             # hand off to the test_run worker
             #

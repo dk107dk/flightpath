@@ -19,31 +19,14 @@ class MdTextEdit(QTextEdit):
         self.parent = parent
         self.editable = editable
         self.parent.saved = True
-        #
-        #
-        #
-        save_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+s"), self)
-        save_shortcut_ctrl.activated.connect(self.parent.on_save)
-        save_as_shortcut_ctrl = QShortcut(QKeySequence("Shift+Ctrl+S"), self)
-        save_as_shortcut_ctrl.activated.connect(self.parent.on_save_as)
-
-        toggle_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+t"), self)
-        toggle_shortcut_ctrl.activated.connect(self.parent.on_toggle)
-        #
-        # we use the seqs to make sure we're not setting a doc to
-        # desaved when we should just be reacting to a shortcut
-        #
-        self.short_seqs = []
-        self.short_seqs.append(save_shortcut_ctrl.key())
-        self.short_seqs.append(toggle_shortcut_ctrl.key())
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.editable == EditStates.UNEDITABLE:
             return
         super().keyPressEvent(event)
         t = event.text()
-        if t and t != "":
-            self.desaved()
+        #if t and t != "":
+        self.desaved()
 
     def desaved(self) -> bool:
         if self.editable == EditStates.UNEDITABLE:
@@ -63,7 +46,6 @@ class MdTextEdit(QTextEdit):
         if self.editable == EditStates.UNEDITABLE:
             return
         menu = self.createStandardContextMenu()
-
 
         for action in menu.actions():
             if isinstance(action, QAction):

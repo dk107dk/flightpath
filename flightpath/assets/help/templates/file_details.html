@@ -23,6 +23,7 @@
             background-color: #{% if data.ui_dark %}494949{% else %}595959{% endif %};
             border:1px solid #494949;
             color:#fff;
+            padding: 3px 10px 3px 3px;
         }
         td.not-last {
             border-bottom:1px solid;
@@ -31,9 +32,14 @@
             color:#000;
             white-space: wrap;
             background-color: #{% if data.ui_dark %}eee{% else %}fff{% endif %};
+            padding: 3px 3px 3px 10px;
+        }
+        td.right.headers-cell {
+            padding: 0 0 10px 0;
         }
         td.data-col {
             color:#000;
+            padding: 5px 5px 5px 5px;
         }
         td.bottom {
             border-bottom:1px solid #494949;
@@ -46,7 +52,7 @@
                 font-weight:500;
                 font-size:12px;
                 text-align: center;
-                padding:4px 5px 5px 5px;
+                padding:4px 15px 5px 15px;
         }
 
    </style>
@@ -88,7 +94,7 @@
         <td class='right not-last'>{{data.lines_with_blanks}}</td>
     </tr>
     <tr>
-        <td class='left'>Duplicate lines (in sample)</td>
+        <td class='left'>Duplicate lines</td>
         <td class='right not-last'>{{data.duplicate_lines}}</td>
     </tr>
     <tr>
@@ -103,10 +109,10 @@
                                  Name
                          </th>
                          <th>
-                                 Unique values
+                                 Types seen
                          </th>
                          <th>
-                                 Types seen
+                                 Duplicate<br/>values
                          </th>
                           <th>
                                  Distinct
@@ -123,19 +129,19 @@
                      </tr>
                      {% for k, v in data.header_details.items() %}
                        <tr>
-                         <td class='data-col'>
+                         <td class='data-col number-col'>
                                  #{{v.number}}
                          </td>
-                         <td class='data-col'>
+                         <td class='data-col' style='padding-right:30px;'>
                                  {{v.name}}
-                         </td>
-                         <td class='data-col number-col'>
-                                 {{v.unique_values}}
                          </td>
                          <td class='data-col'>
                                  {{v.types}}
                          </td>
-                         <td class='data-col'>
+                         <td class='data-col number-col'>
+                                 {{v.duplicate_count}}
+                         </td>
+                         <td class='data-col number-col'>
                                  {{v.is_distinct}}
                          </td>
                          <td class='data-col number-col'>
@@ -144,7 +150,7 @@
                          <td class='data-col number-col'>
                                  {{v.max_val}}
                          </td>
-                         <td class='data-col'>
+                         <td class='data-col number-col'>
                                  {{v.is_not_none}}
                          </td>
                        </tr>

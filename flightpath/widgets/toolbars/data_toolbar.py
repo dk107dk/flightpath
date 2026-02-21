@@ -238,15 +238,12 @@ class DataToolbar(QToolBar):
         i = self.parent.content.tab_widget.currentIndex()
         w = self.parent.content.tab_widget.widget(i)
         path = w.objectName()
-        print(f"tdatatoolbar: path: {path}")
         if jsut.is_jsonl(path):
-            print(f"path IS jsonl: {path}")
             if self.delimiter:
                 self.delimiter.setEnabled(False)
             if self.quotechar:
                 self.quotechar.setEnabled(False)
         else:
-            print(f"path is NOT jsonl: {path}")
             if self.delimiter:
                 self.delimiter.setEnabled(True)
             if self.quotechar:

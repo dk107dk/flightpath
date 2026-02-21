@@ -33,7 +33,6 @@ class RawViewer(QWidget):
         self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         self.text_edit = RawTextEdit(main=main, parent=self, editable=editable)
-        #self.text_edit = QPlainTextEdit(self)
         self.text_edit.textChanged.connect(self.on_text_changed)
         self.text_edit.setLineWrapMode(QPlainTextEdit.NoWrap)
         #
@@ -78,6 +77,7 @@ class RawViewer(QWidget):
         #
 
     def on_text_changed(self) -> None:
+        print("raw_viewrr: on_text_changed")
         self.parent.mark_unsaved()
 
     #

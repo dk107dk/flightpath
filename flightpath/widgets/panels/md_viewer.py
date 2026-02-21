@@ -3,6 +3,8 @@ import traceback
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QPlainTextEdit
 from PySide6.QtCore import Qt, QFileInfo
+from PySide6.QtGui import  QKeySequence, QAction
+
 
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
@@ -43,6 +45,27 @@ class MdViewer(QWidget):
         self.path = None
         self.text_edit = None
         self.content_view = None
+
+
+        save_action = QAction("Save", self)
+        save_action.setShortcut(QKeySequence.Save)
+        save_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        save_action.triggered.connect(self.on_save)
+        self.addAction(save_action)
+
+        save_as_action = QAction("Save As", self)
+        save_as_action.setShortcut(QKeySequence.SaveAs)
+        save_as_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        save_as_action.triggered.connect(self.on_save_as)
+        self.addAction(save_as_action)
+
+        toggle_action = QAction("Toggle", self)
+        toggle_action.setShortcut("Ctrl+t")
+        toggle_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        toggle_action.triggered.connect(self.on_toggle)
+        self.addAction(toggle_action)
+
+
 
         self._make_editor()
         layout.addWidget(self.text_edit)

@@ -59,18 +59,6 @@ class CsvPathTextEdit(QPlainTextEdit):
         ask_question_ctrl = QShortcut(QKeySequence("Shift+Ctrl+Q"), self)
         ask_question_ctrl.activated.connect(self.on_ask_question)
 
-        #
-        # what is this? still used? no refs.
-        #
-        # we use the seqs to make sure we're not setting a doc to
-        # desaved when we should just be reacting to a shortcut
-        #
-        self.short_seqs = []
-        self.short_seqs.append(save_shortcut_ctrl.key())
-        self.short_seqs.append(save_shortcut_ctrl.key())
-        self.short_seqs.append(load_shortcut_ctrl.key())
-        self.short_seqs.append(append_shortcut_ctrl.key())
-
         self.load_dialog = None
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -78,8 +66,11 @@ class CsvPathTextEdit(QPlainTextEdit):
             return
         super().keyPressEvent(event)
         t = event.text()
-        if t and t != "":
-            self.desaved()
+        #
+        # not sure why t would exist but be ""
+        #
+        #if t and t != "":
+        self.desaved()
 
     def desaved(self) -> bool:
         if self.editable == EditStates.UNEDITABLE:
