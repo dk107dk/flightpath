@@ -294,6 +294,21 @@ class State:
                 os.makedirs(examples)
                 em = ExamplesMarshal(main)
                 em.add_examples(path=examples)
+            #
+            # create a barebones README.md
+            #
+            r = os.path.join(cwd, "README.md")
+            pname = os.path.basename(cwd)
+            if not os.path.exists(r):
+                with open(r, "w") as file:
+                    file.write(
+f"""# {pname} Project Docs
+
+Add your docs for the {pname} project here.
+
+*Use `ctrl-t` to toggle between Markdown and text.*
+"""
+                    )
 
 
     def _change_function_path(self, *, old_config:CsvPath_Config=None, new_config:CsvPath_Config) -> None:

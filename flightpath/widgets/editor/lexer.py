@@ -47,19 +47,19 @@ class Lexer:
 
     def lex(self) -> (TokenID, int, int):
         start = 0
-        print(f"{len(self.text)=}")
+        #print(f"{len(self.text)=}")
         while start < len(self.text):
-            print(f"{start=}")
+            #print(f"{start=}")
             for token in tokens:
                 if mo := token.pattern.match(self.text, start):
                     end = mo.end(0)
-                    print(f"{mo.group(0)=}")
+                    #print(f"{mo.group(0)=}")
                     yield token.ID, start, end
                     start = end
                     break
             else:
-                print(f"{start=}")
-                print(f"{self.text[start]=} NOT FOUND")
+                #print(f"{start=}")
+                #print(f"{self.text[start]=} NOT FOUND")
                 start += 1
         else:
             yield None, 0, 0

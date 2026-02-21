@@ -24,6 +24,12 @@ from flightpath.editable import EditStates
 class MdViewer(QWidget):
 
     def __init__(self, *, main, editable=EditStates.EDITABLE, displaying:bool=True):
+        #
+        # what is displaying?
+        # the displaying:bool argument determines if it is an .md or .txt file.
+        # odd, but workable. it doesn't affect the editability of the file.
+        #
+        #
         super().__init__()
         self.main = main
         self.editable = editable
@@ -214,6 +220,7 @@ class MdViewer(QWidget):
         self._save(path=self.path)
 
     def on_toggle(self) -> None:
+        saved = self.saved
         info = QFileInfo(self.path)
         if info.suffix() in ["md"]:
             editor = self.text_edit
@@ -231,6 +238,8 @@ class MdViewer(QWidget):
                 self.text_edit.setMarkdown(txt)
             editor.hide()
             editor.deleteLater()
+            if saved:
+                self.reset_saved()
         else:
             print(f"md_viewer: cannot toggle {info}")
 

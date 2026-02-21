@@ -25,8 +25,11 @@ class MdTextEdit(QTextEdit):
             return
         super().keyPressEvent(event)
         t = event.text()
-        #if t and t != "":
-        self.desaved()
+        if t and t != "":
+            #
+            # if we get here we're a "real" keystroke, not a ctrl or anything like that.
+            #
+            self.desaved()
 
     def desaved(self) -> bool:
         if self.editable == EditStates.UNEDITABLE:

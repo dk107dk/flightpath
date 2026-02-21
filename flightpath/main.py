@@ -718,8 +718,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if view is None:
             editable = editable if editable is not None else EditStates.EDITABLE
             #
-            # the displaying:bool argument determines if .md or .txt. odd, but workable.
-            # it doesn't affect the editability of the file.
+            # the displaying:bool argument determines if it is an .md or .txt file.
+            # odd, but workable. it doesn't affect the editability of the file.
             #
             displaying = True
             #

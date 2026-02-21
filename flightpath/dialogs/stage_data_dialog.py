@@ -238,10 +238,13 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         if gen_path is None:
             gen_path = self.template_ctl.text()
         parts = pathu.parts(self.path)
+      #  print(f"_update_actual_path: gen_path: {gen_path}: {parts}")
         if "" in parts:
             parts.remove("")
+      #  print(f"_update_actual_path: removed "": {parts}")
         for i, p in enumerate(parts):
             gen_path = gen_path.replace(f":{i}", p)
+      #      print(f"_update_actual_path: {i}: {p}: {gen_path}")
         gen_path = gen_path.replace(":filename", parts[len(parts)-1])
         gen_path = gen_path.lstrip("/")
         self.t_lab.setText(gen_path)

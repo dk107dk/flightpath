@@ -1,6 +1,8 @@
 from PySide6.QtWidgets import QMessageBox, QWidget, QInputDialog
 from PySide6.QtCore import QSize, Qt
 
+from flightpath.dialogs.error_dialog import ErrorDialog
+
 class MessageUtility:
 
     @classmethod
@@ -16,6 +18,10 @@ class MessageUtility:
         msg_box.setStandardButtons(QMessageBox.Ok)
         msg_box.exec()
 
+    @classmethod
+    def error(cls, *, msg:str, title:str="", errors_json=None) -> None:
+        ed = ErrorDialog(message=msg, title=title, errors=errors_json)
+        ed.exec()
 
     @classmethod
     def yes_no(cls, *, parent:QWidget, msg:str, title:str="") -> bool:
