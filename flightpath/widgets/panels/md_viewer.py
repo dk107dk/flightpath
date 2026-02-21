@@ -3,6 +3,8 @@ import traceback
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QPlainTextEdit
 from PySide6.QtCore import Qt, QFileInfo
+from PySide6.QtGui import  QKeySequence, QAction
+
 
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
@@ -22,6 +24,12 @@ from flightpath.editable import EditStates
 class MdViewer(QWidget):
 
     def __init__(self, *, main, editable=EditStates.EDITABLE, displaying:bool=True):
+        #
+        # what is displaying?
+        # the displaying:bool argument determines if it is an .md or .txt file.
+        # odd, but workable. it doesn't affect the editability of the file.
+        #
+        #
         super().__init__()
         self.main = main
         self.editable = editable
@@ -43,6 +51,27 @@ class MdViewer(QWidget):
         self.path = None
         self.text_edit = None
         self.content_view = None
+
+
+        save_action = QAction("Save", self)
+        save_action.setShortcut(QKeySequence.Save)
+        save_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        save_action.triggered.connect(self.on_save)
+        self.addAction(save_action)
+
+        save_as_action = QAction("Save As", self)
+        save_as_action.setShortcut(QKeySequence.SaveAs)
+        save_as_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        save_as_action.triggered.connect(self.on_save_as)
+        self.addAction(save_as_action)
+
+        toggle_action = QAction("Toggle", self)
+        toggle_action.setShortcut("Ctrl+t")
+        toggle_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        toggle_action.triggered.connect(self.on_toggle)
+        self.addAction(toggle_action)
+
+
 
         self._make_editor()
         layout.addWidget(self.text_edit)
@@ -78,7 +107,6 @@ class MdViewer(QWidget):
         #
         self.layout().addWidget(self.text_edit)
         self.main.show_now_or_later(self.text_edit)
-        #self.text_edit.show()
 
     def reset_saved(self) -> None:
         self.saved = True
@@ -86,6 +114,18 @@ class MdViewer(QWidget):
         name = self.main.content.tab_widget.tabText(i)
         name = name.replace("+", "")
         self.main.content.tab_widget.setTabText(i, name )
+
+    def desaved(self) -> bool:
+        if self.saved is True:
+            path = self.path
+            path = os.path.dirname(path)
+            i = self.main.content.tab_widget.currentIndex()
+            name = self.main.content.tab_widget.tabText(i)
+            name = name.replace("+ ", "")
+            self.main.content.tab_widget.setTabText(i, f"+ {name}" )
+            self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
+            self.saved = False
+
 
     #
     # do we need this here?
@@ -134,7 +174,6 @@ class MdViewer(QWidget):
         c = "cmd" if osut.is_mac() else "ctrl"
         self.main.statusBar().showMessage(f"{c}-s to save • Opened {path}")
         self.main.show_now_or_later(self.text_edit)
-        #self.text_edit.show()
 
     def clear(self):
         self.text_edit.hide()
@@ -145,7 +184,7 @@ class MdViewer(QWidget):
     def on_save_as(self, switch_local=False) -> None:
         if self.editable == EditStates.UNEDITABLE:
             return
-        thepath = self.text_edit.parent.path
+        thepath = self.path
         thepath = os.path.dirname(thepath)
         name = os.path.basename(self.path)
 
@@ -181,9 +220,9 @@ class MdViewer(QWidget):
         self._save(path=self.path)
 
     def on_toggle(self) -> None:
+        saved = self.saved
         info = QFileInfo(self.path)
         if info.suffix() in ["md"]:
-        #if info.suffix() in ["md", "txt"]:
             editor = self.text_edit
             if self.displaying is True:
                 self.displaying = False
@@ -199,6 +238,8 @@ class MdViewer(QWidget):
                 self.text_edit.setMarkdown(txt)
             editor.hide()
             editor.deleteLater()
+            if saved:
+                self.reset_saved()
         else:
             print(f"md_viewer: cannot toggle {info}")
 

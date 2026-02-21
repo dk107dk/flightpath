@@ -112,22 +112,31 @@ class CsvpathLoader:
         if confirm == QMessageBox.No:
             return
 
-
         name = self.load_dialog.path
         name = "" if not name else name.strip()
         ex = None
+        msg = None
         try:
             paths.paths_manager.add_named_paths_from_json(file_path=name)
         except Exception as e:
-            print(traceback.format_exc())
+            msg = traceback.format_exc()
             ex = e
-        if paths.has_errors():
-            if ex is not None:
-                meut.message(title="Errors", msg=f"There were errors: {ex}")
+        if ex is not None or paths.has_errors():
+            ja = None
+            if paths.has_errors():
+                if paths.errors and len(paths.errors) > 0:
+                    ja = []
+                    for e in paths.errors:
+                        ja.append(e.to_json())
+            if paths.errors is None:
+                msg = f"There were errors: {ex}"
+            elif len(paths.errors) == 1:
+                msg = f"There was {len(paths.errors)} error"
             else:
-                meut.message(title="Errors", msg="There were {paths.has_errors)} errors")
-        elif ex is not None:
-            meut.message(title="Errors", msg=f"There were errors: {ex}")
+                msg = f"There were {len(paths.errors)} errors"
+
+            meut.error(msg=msg, title="Error", errors_json=ja)
+
         else:
             self.main.sidebar._renew_sidebars()
         self._delete_load_dialog()

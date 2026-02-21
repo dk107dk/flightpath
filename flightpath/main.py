@@ -78,6 +78,7 @@ from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.style_utils import StyleUtility as stut
+from flightpath.util.json_utility import JsonUtility as jsut
 
 from flightpath.util.state import State
 from flightpath.inspect.inspector import Inspector
@@ -717,8 +718,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if view is None:
             editable = editable if editable is not None else EditStates.EDITABLE
             #
-            # the displaying:bool argument determines if .md or .txt. odd, but workable.
-            # it doesn't affect the editability of the file.
+            # the displaying:bool argument determines if it is an .md or .txt file.
+            # odd, but workable. it doesn't affect the editability of the file.
             #
             displaying = True
             #
@@ -847,7 +848,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # when  data _view is visible we show the sample tool bar
         #
-        self.content.toolbar.enable()
+        if jsut.is_jsonl(filepath):
+            self.content.toolbar.enable()
+            #self.content.toolbar.disable()
+        else:
+            self.content.toolbar.enable()
+
         self.show_now_or_later(self.content.toolbar)
         taut.select_tab(self.content.tab_widget, data_view)
 
@@ -1094,13 +1100,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.read_validate_and_display_file()
 
     def on_raw_source(self) -> None:
-        print(f"on_raw_sourceon_raw_sourceon_raw_source")
         index = self.content.tab_widget.currentIndex()
-        print(f"on_raw_source: {index}")
         t = self.content.tab_widget.widget(index)
-        print(f"on_raw_source: {t}")
         t.toggle_grid_raw()
-        print(f"on_raw_source: done")
 
     def on_file_info(self) -> None:
         index = self.content.tab_widget.currentIndex()
@@ -1197,7 +1199,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         dialog = QInputDialog()
         dialog.setFixedSize(QSize(420, 125))
-        dialog.setLabelText("Enter a name for the sample file:")
+        dialog.setLabelText("Enter a name for the file:")
         dialog.setTextValue(name)
         ok = dialog.exec()
         new_name = dialog.textValue()
@@ -1205,7 +1207,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         #
         if ok and new_name and new_name.strip() != "":
-            if not new_name.endswith(".csv"):
+            if not isinstance(data, str) and not new_name.endswith(".csv"):
                 new_name = f"{new_name}.csv"
             #
             # do the same subpath rejiggering in case the user added a subpath to name
@@ -1222,9 +1224,13 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             # minimal change to help us not overwrite
             #
             path = fiut.deconflicted_path(path, new_name)
-            with DataFileWriter(path=path) as file: # pylint: disable=E0110
-                writer = csv.writer(file.sink)
-                writer.writerows(data)
+            if isinstance(data, str):
+                with open(path, "w") as file:
+                    file.write(data)
+            else:
+                with DataFileWriter(path=path) as file: # pylint: disable=E0110
+                    writer = csv.writer(file.sink)
+                    writer.writerows(data)
             return path
         else:
             return None
@@ -1276,6 +1282,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.config.toolbar.button_close.setEnabled(False)
             self.config.toolbar.button_cancel_changes.setEnabled(True)
             self.config.toolbar.enable_save()
+
 
     def closeEvent(self, event):
         if (

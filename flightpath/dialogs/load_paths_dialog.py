@@ -50,7 +50,7 @@ class LoadPathsDialog(QDialog):
             self.setFixedHeight(100)
             self.setFixedWidth(650)
         else:
-            self.setFixedHeight(200)
+            self.setFixedHeight(170)
             self.setFixedWidth(650)
 
         main_layout = QVBoxLayout()
@@ -92,7 +92,7 @@ class LoadPathsDialog(QDialog):
 
         self.template_ctl = QLineEdit()
         tlabel = QLabel()
-        tlabel.setText("Template:")
+        tlabel.setText("Default template:")
         box = HelpIconPackager.add_help(main=self.sidebar.main, widget=self.template_ctl, on_help=self.on_help_template)
         if not self.json:
             form_layout.addRow(tlabel, box)

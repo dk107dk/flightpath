@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
+    QPushButton,
     QFormLayout,
     QComboBox
 )
@@ -19,8 +20,30 @@ class ExtensionsForm(BlankForm):
         self.csvpaths = QLineEdit()
         layout.addRow("Csvpath file extensions: ", self.csvpaths)
 
+        self.csvs.textChanged.connect(self._enable_reload)
+        self.csvpaths.textChanged.connect(self._enable_reload)
+
+        self.reload_button = QPushButton("Reload project files")
+        self.reload_button.clicked.connect(self._refresh)
+        layout.addRow("", self.reload_button)
+
+
         self.setLayout(layout)
         self._setup()
+
+    def _refresh(self) -> None:
+        self.main.save_config_changes()
+        self.main.sidebar._setup_tree(replace=True)
+        #
+        # the named-files could also change with the extensions, but not as likely.
+        # the named-paths even less likely.
+        #
+        # self.main.sidebar._renew_sidebars()
+        self.reload_button.setEnabled(False)
+
+
+    def _enable_reload(self) -> None:
+        self.reload_button.setEnabled(True)
 
     def add_to_config(self, config) -> None:
         config.add_to_config("extensions", "csv_files", self.csvs.text() )

@@ -8,7 +8,6 @@ from PySide6.QtWidgets import QApplication
 from csvpath.util.file_readers import DataFileReader
 from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
-from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.toolbars.data_toolbar import DataToolbar
 from flightpath.editable import EditStates
 from .data_worker_signals import DataWorkerSignals
@@ -105,23 +104,6 @@ class GeneralDataWorker(QRunnable):
             self.editable
         )
         self.signals.finished.emit(results)
-
-
-    """
-    def _all_headers(self, *, path:str, encoding:str="utf-8") -> list[str]:
-        with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar, encoding=encoding ) as file:
-            if not file.updates_headers:
-                return None
-            headers = []
-            for i, line in enumerate( file.next() ):
-                b = self.accept_line(i, line)
-                if b is True:
-                    for _ in file.current_headers:
-                        if _ not in headers:
-                            headers.append(_)
-            headers.sort()
-            return headers
-    """
 
     def _read(self, *, path:str, encoding:str="utf-8") -> tuple[list,list]:
         t = 0

@@ -1,11 +1,16 @@
+import os
 from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
     QFormLayout,
+    QPushButton,
     QComboBox
 )
 
 from csvpath.util.config import Config
+from csvpath.util.nos import Nos
+
+from flightpath.util.os_utility import OsUtility as osut
 from .blank_form import BlankForm
 
 class LoggingForm(BlankForm):
@@ -19,6 +24,10 @@ class LoggingForm(BlankForm):
         self.path = QLineEdit()
         layout.addRow("Log file path: ", self.path)
 
+        button = QPushButton("Open log dir")
+        layout.addRow("", button)
+        button.clicked.connect(self.on_click_open_dir)
+
         self.log_files_to_keep = QLineEdit()
         layout.addRow("Number of log files to keep: ", self.log_files_to_keep)
 
@@ -31,8 +40,29 @@ class LoggingForm(BlankForm):
         self.csvpaths_level = QComboBox()
         layout.addRow("CsvPaths log level: ", self.csvpaths_level)
 
+
         self.setLayout(layout)
         self._setup()
+
+    def on_click_open_dir(self) -> None:
+        path = self.config.get(section="logging", name="log_file", default="logs/csvpath.log")
+        path = os.path.dirname(path)
+        nos = Nos(path)
+        if not nos.exists():
+            print(f"LoggingForm: on_click_open: {path} doesn't exist. Creating it.")
+            nos.makedirs()
+        elif nos.isfile():
+            #
+            # TODO: this could, rarely, happen. we should alert the user of the misconfig.
+            #
+            print(f"LoggingForm: on_click_open: {path} is a file. Cannot open.")
+        else:
+            o = osut.file_system_open_cmd()
+            print(f"LoggingForm: on_click_open: opening {path} with {o}")
+            os.system(f'{o} "{path}"')
+        print(f"LoggingForm: on_click_open: done.")
+
+
 
     def add_to_config(self, config) -> None:
         config.add_to_config("logging", "handler", self.handler.currentText() )

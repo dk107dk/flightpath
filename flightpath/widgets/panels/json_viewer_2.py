@@ -140,9 +140,6 @@ class JsonViewer2(QWidget):
             return
         global_pos = self.view.viewport().mapToGlobal(position)
 
-        #
-        # exp!
-        #
         menu = self.view.createStandardContextMenu()
 
         save_action = QAction()
@@ -151,6 +148,24 @@ class JsonViewer2(QWidget):
         save_action.setShortcutVisibleInContextMenu(True)
         save_action.triggered.connect(self._save)
         menu.addAction(save_action)
+        #
+        # save as goes here
+        #
+        save_as_action = QAction()
+        save_as_action.setText("Save As")
+        #
+        # save_as_action is for the visible menu item
+        # save_as_action_s is for the invisible keyboard shortcut
+        # both are needed according to gemini. note that save_as_action_s doesn't
+        # have a triggered method.
+        #
+        save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
+        save_as_action_s = QShortcut(QKeySequence("Shift+Ctrl+S"), self)
+        save_as_action.triggered.connect(self._save_as)
+        save_as_action_s.activated.connect(self._save_as)
+
+        save_as_action.setShortcutVisibleInContextMenu(True)
+        menu.addAction(save_as_action)
 
         menu.addSeparator()
         for action in menu.actions():
@@ -173,10 +188,6 @@ class JsonViewer2(QWidget):
                     if t == "delete":
                         action.setShortcut(QKeySequence("Ctrl+d"))
                     action.setShortcutVisibleInContextMenu(True)
-
-
-        menu.addSeparator()
-
 
         pretty_print_action = QAction()
         pretty_print_action.setText("Beautify")
@@ -209,19 +220,27 @@ class JsonViewer2(QWidget):
             well_formed_action.triggered.connect(self._check)
             menu.addAction(well_formed_action)
 
-
         menu.exec(global_pos)
 
+    def _save_as(self) -> None:
+        path = os.path.dirname(self.path)
+        path, ok = meut.input(title="Save As", msg="Where should the new file live? ")
+        if ok and path:
+            self._do_save(path)
+
     def _save(self) -> None:
+        self._do_save(self.path)
+
+    def _do_save(self, path:str) -> None:
         if self.editable == EditStates.UNEDITABLE:
             return
-        if self.path is None:
+        if path is None:
             print("Error: cannot save json to file path None")
             return
         t = self.view.toPlainText()
         t = strut.sanitize_json(t)
 
-        info = QFileInfo(self.path)
+        info = QFileInfo(path)
         if info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
             try:
                 #
@@ -245,7 +264,7 @@ class JsonViewer2(QWidget):
                 # would be good to notify the user here
                 #
                 print(f"cannot format as json")
-        with DataFileWriter(path=self.path) as file:
+        with DataFileWriter(path=path) as file:
             file.write(t)
         #
         # reset the name w/o the +
@@ -258,9 +277,15 @@ class JsonViewer2(QWidget):
         if info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
             t = strut.jsonl_text_to_lines(self.view.toPlainText())
         else:
-            t = self._check(show_good_message=False)
-        self.view.setPlainText(t)
-        self._set_modified(True)
+            s = strut.sanitize_json(self.view.toPlainText())
+            try:
+                j = json.loads(s)
+                s = json.dumps(j, indent=2)
+                self.view.setPlainText(s)
+                self._set_modified(True)
+            except json.decoder.JSONDecodeError as e:
+                self._formatting_error(t, e)
+                return
 
     def _expand(self) -> str:
         info = QFileInfo(self.path)
@@ -271,7 +296,6 @@ class JsonViewer2(QWidget):
         t = self.view.toPlainText()
         expanded = ""
         for _ in t.split("\n"):
-            print(f"asline: {_}")
             try:
                 j = json.loads(_)
                 expanded += json.dumps(j, indent=2)
@@ -324,7 +348,6 @@ class JsonViewer2(QWidget):
         meut.warning(parent=self, msg=msg, title="Malformed JSON")
 
     def _error_location(self, t:str, e) -> tuple[int, int]:
-        print(f"serloc: {e}")
         try:
             estr = f"{e}"
             if estr.find("line "):
@@ -333,7 +356,6 @@ class JsonViewer2(QWidget):
                 ffrom = estr.rfind("(") + 1
                 to = estr.rfind(")")
                 char = estr[ffrom+5:to]
-                print(f"char: char")
                 char = int(char)
                 line = 0
                 line_char = 0
@@ -344,11 +366,9 @@ class JsonViewer2(QWidget):
                         line_char = 1
                     elif i == char:
                         break
-                print(f"serloc 2: {ffrom}, {to}, {char}, {line}, {line_char}")
                 return line, line_char
         except Exception as ex:
-            print(f"serloc 3: {ex}")
-            ...
+            return -1, f"{ex}"
         return None, None
 
     def open_file(self, *, path:str, data:str):
@@ -391,42 +411,3 @@ class JsonViewer2(QWidget):
 
 
 
-    #
-    # the below are from json and data viewer classes.
-    #not sure why we need them here yet.
-    # we only need them if we could be in json_viewer_2 and someone clicks the node so that it
-    # wants to open in data_viewer or json_viewer.
-    #
-    # we want that to never happen. we have to close and reopen the file if it is in the wrong viewer
-    #
-    # remove
-    #
-    def display_data(self, model):
-        """
-        self.table_view.setModel(model)
-        self.main.show_now_or_later(self.table_view)
-        self.main.show_now_or_later(self.parent.toolbar)
-        self.layout().setCurrentIndex(0)
-        """
-
-    #
-    # remove
-    #
-    #@Slot(tuple)
-    def on_row_or_column_edit(self, fromf:tuple[int,int]) -> None:
-        """
-        self.mark_unsaved()
-        """
-
-    #
-    # remove
-    #
-    #@Slot(tuple)
-    def on_edit_made(self, xy:tuple[int,int, Any, Any]) -> None:
-        """
-        if xy[2] != xy[3]:
-            self.mark_unsaved()
-            #
-            # other actions?
-            #
-        """

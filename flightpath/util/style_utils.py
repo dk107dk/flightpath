@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
 import darkdetect
 from flightpath.editable import EditStates
 from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit
-#from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 from flightpath.widgets.raw_text_edit import RawTextEdit
 from flightpath.widgets.md_text_edit import MdTextEdit
 
@@ -73,12 +72,9 @@ class StyleUtility:
         name = cls._name(widget)
         inst = inst or name == "KeyableTreeView"
         if inst:
-            color = StyleUtility.get_not_editable_color()
-            #color = StyleUtility.NOT_EDITABLE_DARK if darkdetect.isDark() else StyleUtility.NOT_EDITABLE
             if not widget.editable == EditStates.EDITABLE:
+                color = StyleUtility.get_not_editable_color()
                 widget.setStyleSheet(f"{name} {{ background-color: {color}; }}")
-            #if isinstance( widget, CsvPathTextEdit ):
-            #    CsvPathSyntaxHighlighter(widget.document())
         else:
             print(f"Unknown widget type: {widget.__class__.__name__}. Cannot determine editability for style.")
         #

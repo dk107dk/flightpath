@@ -11,6 +11,7 @@ from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.tabs_nonscrolling_tab_bar import NonScrollingTabBar
 from flightpath.util.tabs_utility import TabsUtility as taut
+from flightpath.util.json_utility import JsonUtility as jsut
 
 class ClosingTabs(QTabWidget):
     def __init__(self, main, *, parent=None):
@@ -46,10 +47,11 @@ class ClosingTabs(QTabWidget):
         # "Matches". but that would be a weird name and a subtle impact. can probably just
         # ignore so we don't have to check what tab bar we are in.
         #
-        if not t.objectName() == "Matches":
+        print(f"object asne: {t.objectName()}")
+        if  t.objectName() in ["Code", "Why", "Help Content"]:
             return
         menu = QMenu(self)
-        save_sample = QAction("Save sample", self)
+        save_sample = QAction("Save", self)
         menu.addAction(save_sample)
         save_sample.triggered.connect(lambda: self.on_save_sample(index))
         menu.popup(self.mapToGlobal(pos))
@@ -65,13 +67,21 @@ class ClosingTabs(QTabWidget):
         if nos.isfile():
             path = os.path.dirname(path)
         t = self.widget(index)
-        if not t.objectName() == "Matches":
+        ton = t.objectName()
+        if ton in ["Code", "Why", "Help Content"]:
             return
-        l = t.layout()
-        w = l.itemAt(0).widget()
-        m = w.model()
-        data = m.get_data()
-        self.main.save_sample(path=path, name="sample.csv", data=data)
+        if ton == "Matches":
+            l = t.layout()
+            w = l.itemAt(0).widget()
+            m = w.model()
+            data = m.get_data()
+            self.main.save_sample(path=path, name="sample.csv", data=data)
+        else:
+            l = t.layout()
+            w = l.itemAt(0).widget()
+            txt = w.toPlainText()
+            self.main.save_sample(path=path, name=ton, data=txt)
+
 
     @Slot(str)
     def close_tab(self, name:str) -> bool:
@@ -155,6 +165,8 @@ class ClosingTabs(QTabWidget):
         close_button.setStyleSheet("border: none;")
         close_button.clicked.connect(lambda: self.close_tab(widget.objectName()))
         self.tabBar().setTabButton(index, QTabBar.ButtonPosition.LeftSide, close_button)
+
+
 
     def on_tab_change(self):
         i = self.currentIndex()
