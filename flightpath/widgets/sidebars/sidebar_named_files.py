@@ -107,14 +107,6 @@ class SidebarNamedFiles(SidebarRightBase):
             print(f"error in named files: {type(e)}: {e}")
             meut.message(title=f"{type(e)} error loading named-files", msg=f"Named-files error: {e}")
 
-    """
-    def update_style(self) -> None:
-        try:
-            self.model.set_style(self.view.style())
-        except Exception as e:
-            print(f"error in named files: {type(e)}: {e}")
-    """
-
     #
     # moved from main
     #
@@ -125,7 +117,8 @@ class SidebarNamedFiles(SidebarRightBase):
             ...
             #self._show_welcome_but_do_not_deselect()
         else:
-            self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
+            ed = EditStates.EDITABLE if self.main.selected_file_path.endswith(".md") else EditStates.UNEDITABLE
+            self.main.read_validate_and_display_file(editable=ed)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
     def refresh(self) -> None:

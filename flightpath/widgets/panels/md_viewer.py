@@ -32,7 +32,11 @@ class MdViewer(QWidget):
         #
         super().__init__()
         self.main = main
-        self.editable = editable
+        #
+        # exp
+        #
+        self.editable = EditStates.EDITABLE
+        #self.editable = editable
         #
         # set the font size
         #
@@ -82,7 +86,10 @@ class MdViewer(QWidget):
             self.text_edit = MdTextEdit(main=self.main, parent=self, editable=self.editable)
         else:
             self.text_edit = RawTextEdit(main=self.main, parent=self, editable=self.editable)
-        self.text_edit.setReadOnly(self.editable == EditStates.UNEDITABLE)
+        #
+        # exp. didn't realize this was here. was functional?
+        #
+        #self.text_edit.setReadOnly(self.editable == EditStates.UNEDITABLE)
         self.content_view = self.text_edit
         #
         # remove widget
