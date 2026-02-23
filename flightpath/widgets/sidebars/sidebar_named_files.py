@@ -28,6 +28,8 @@ from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
+from flightpath.dialogs.activation_dialog import ActivationDialog
+
 
 from .sidebar_file_ref_maker import SidebarFileRefMaker
 from flightpath.util.help_finder import HelpFinder
@@ -136,6 +138,10 @@ class SidebarNamedFiles(SidebarRightBase):
         self.new_run_action.setText("New run")
         self.new_run_action.triggered.connect(self._new_run)
 
+        self.arrival_action = QAction()
+        self.arrival_action.setText("Arrival activation")
+        self.arrival_action.triggered.connect(self._set_activation)
+
         self.copy_path_action = QAction()
         self.copy_path_action.setText("Copy path")
         self.copy_path_action.triggered.connect(self._copy_path)
@@ -155,6 +161,7 @@ class SidebarNamedFiles(SidebarRightBase):
         # setup callbacks
         # add to menu
         self.context_menu.addAction(self.new_run_action)
+        self.context_menu.addAction(self.arrival_action)
         self.context_menu.addAction(self.find_data_action)
         self.context_menu.addAction(self.copy_path_action)
         self.context_menu.addAction(self.copy_action)
@@ -174,6 +181,7 @@ class SidebarNamedFiles(SidebarRightBase):
             #
             if nos.isfile():
                 self.copy_path_action.setVisible(True)
+                self.arrival_action.setVisible(False)
                 self.copy_action.setVisible(True)
                 self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(False)
@@ -181,11 +189,13 @@ class SidebarNamedFiles(SidebarRightBase):
             else:
                 self.copy_path_action.setVisible(True)
                 self.copy_action.setVisible(False)
+                self.arrival_action.setVisible(True)
                 self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
             if path and ( path.endswith("manifest.json") or path.endswith(".db") ):
                 self.copy_path_action.setVisible(False)
+                self.arrival_action.setVisible(False)
                 self.copy_action.setVisible(True)
                 self.find_data_action.setVisible(False)
                 self.delete_action.setVisible(False)
@@ -206,6 +216,12 @@ class SidebarNamedFiles(SidebarRightBase):
         ref = maker.new_run_ref()
         self.new_run_dialog = NewRunDialog(parent=self, named_paths=None, named_file=ref)
         self.main.show_now_or_later(self.new_run_dialog)
+
+    def _set_activation(self):
+        maker = SidebarFileRefMaker(parent=self, main=self.main)
+        name = maker.named_file_name()
+        self.activation_dialog = ActivationDialog(parent=self, main=self.main, named_file=name)
+        self.main.show_now_or_later(self.activation_dialog)
 
     def _find_data(self):
         find = FindFileByReferenceDialog(main=self.main)

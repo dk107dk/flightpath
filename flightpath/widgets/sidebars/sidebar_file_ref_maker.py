@@ -1,7 +1,4 @@
-#import sys
 import os
-#import re
-
 from csvpath.util.nos import Nos
 from csvpath.util.path_util import PathUtility as pathu
 
@@ -12,9 +9,26 @@ class SidebarFileRefMaker:
         self.main = main
         self.parent = parent
 
+# =========================
+
     def new_run_ref(self):
         ref = self._named_file_ref()
         return ref
+
+    def named_file_path(self) -> str:
+        index = self.parent.view.currentIndex()
+        if not index.isValid():
+            # could this ever happen?
+            return
+        path = self.parent.model.filePath(index)
+        return path
+
+    def named_file_name(self) -> str:
+        path = self.named_file_path()
+        name = self._named_file_name_for_path(path)
+        return name
+
+# =========================
 
     def _named_file_ref(self) -> str:
         index = self.parent.view.currentIndex()
