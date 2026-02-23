@@ -55,5 +55,44 @@ There are several error reporting channels and options.
     <td>This option shows up in runtime and results metadata. It simply marks the run as failed, without taking any other steps to affect the run or communicate with the user.</td>
 </tr>
 </table>
+&nbsp;
 
+### Error message pattern
+
+The fields included in error messages are configured in the `error pattern` setting. A pattern is a combination of placeholders and static text. There are several placeholders:
+* time - the timestamp when the error happened
+* file - the data file the csvpath statement is applied to
+* line - the line number (0-based) where the error happened
+* paths - the named-paths group of csvpath statements this statement belongs to, if any
+* instance - the identity of the statement or the statement's index number in the set of statements being run
+* chain - the "idchain" pointing to the match component that had the error
+* message - the main message content explaining the error
+
+An idchain is a parent-child path to a match component within a statement. Each layer of the idchain gives an index
+
+By default the pattern is:
+```
+    {{time}}:{{file}}:{{line}}:{{paths}}:{{instance}}:{{chain}}:  {{message}}
+```
+
+This is a simple csvpath statement with a error in the `add()` function:
+```python
+    ~ name:hello world validation-mode:print, no-raise ~
+    $[1][
+           @a = add("five", none())
+           print("$.variables.a")
+    ]
+```
+
+With the default error pattern it generates a printout like:
+
+```log
+    2026-02-23 21h14m56s-479442:test.csv:1::hello world:add[0]:  add requires one of: an integer, a decimal for argument 1
+```
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
 
