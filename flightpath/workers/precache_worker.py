@@ -7,8 +7,9 @@ from .precache_worker_signals import PreCacheWorkerSignals
 
 class PreCacheWorker(QRunnable):
 
-    def __init__(self, cwd:str):
+    def __init__(self, cwd:str, *, main):
         super().__init__()
+        self.main = main
         self.cwd = cwd
         self.signals = PreCacheWorkerSignals()
 
@@ -18,7 +19,7 @@ class PreCacheWorker(QRunnable):
             #
             # the project directory
             #
-            csvpaths = CsvPaths()
+            csvpaths = self.main.csvpaths
             csvpaths.config.set(section="cache", name="path", value=f"{self.cwd}{os.sep}cache")
             csvpaths.config.set(section="cache", name="use_cache", value=f"yes")
             cacher = csvpaths.file_manager.lines_and_headers_cacher

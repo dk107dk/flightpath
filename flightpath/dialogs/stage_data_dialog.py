@@ -31,7 +31,7 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
     def __init__(self, *, path, parent):
         super().__init__(None)
         self.sidebar = parent
-
+        self.main = parent.main
         self.setWindowTitle("Stage source data files")
 
         self.path = path
@@ -46,8 +46,7 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         self.setWindowModality(Qt.NonModal)
 
 
-        self.setFixedHeight(250)
-        self.setFixedWidth(650)
+        self.setFixedWidth(720)
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -56,8 +55,17 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         main_layout.addLayout(form_layout)
 
         file = Nos(self.path).isfile()
+        if file:
+            self.setFixedHeight(200)
+        else:
+            self.setFixedHeight(260)
+
+        # foods/:1/data/:0/:filename
+        self.template_ctl = QLineEdit()
+        self.template_ctl.textChanged.connect(self._update_actual_path)
 
         self.named_file_name_ctl = QLineEdit()
+        self.named_file_name_ctl.textChanged.connect(self._check_for_template)
 
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
@@ -86,16 +94,13 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         else:
             form_layout.addRow("Register files within: ", self.area)
 
-        # foods/:1/data/:0/:filename
-        self.template_ctl = QLineEdit()
-        self.template_ctl.textChanged.connect(self._update_actual_path)
 
         #
         # add a help icon for templates
         #
         box = HelpIconPackager.add_help(main=self.sidebar.main, widget=self.template_ctl, on_help=self.on_help_template)
         box.setFixedHeight(30)
-        form_layout.addRow("Template:", box)
+        form_layout.addRow("Template (used, not stored):", box)
 
         self._setup_t_gen_area()
         form_layout.addRow("Path will be: ", self.t_gen_area)
@@ -115,6 +120,18 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
 
         buttons.setLayout(buttons_layout)
         main_layout.addWidget(buttons)
+        self._csvpaths = None
+
+
+    def _check_for_template(self) -> None:
+        #t = self.template_ctl.text()
+        n = self.named_file_name_ctl.text()
+        try:
+            t = self.main.csvpaths.file_manager.describer.get_template(n)
+            t = t if t is not None else ""
+            self.template_ctl.setText(t)
+        except Exception:
+            self.template_ctl.setText("")
 
     def _set_separate_names(self) -> None:
         nos = Nos(self.path)

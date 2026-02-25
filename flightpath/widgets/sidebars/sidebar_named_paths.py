@@ -20,11 +20,14 @@ from csvpath.util.nos import Nos
 from csvpath.util.config import Config
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
+from csvpath.util.path_util import PathUtility as pathu
 
 from flightpath.widgets.clickable_label import ClickableLabel
 
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.dialogs.new_run_dialog import NewRunDialog
+from flightpath.dialogs.paths_template_dialog import PathsTemplateDialog
+from flightpath.dialogs.webhooks_dialog import WebhooksDialog
 
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.file_utility import FileUtility as fiut
@@ -44,6 +47,7 @@ class SidebarNamedPaths(SidebarRightBase):
         self.delete_action = None
         self.view = None
         self.setup()
+        self._template_dialog = None
 
     def setup(self) -> None:
         try:
@@ -109,16 +113,10 @@ class SidebarNamedPaths(SidebarRightBase):
             ...
             #self._show_welcome_but_do_not_deselect()
         else:
-            self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
+            ed = EditStates.EDITABLE if self.main.selected_file_path.endswith(".md") else EditStates.UNEDITABLE
+            self.main.read_validate_and_display_file(editable=ed)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
-    """
-    def update_style(self) -> None:
-        try:
-            self.model.set_style(self.view.style())
-        except Exception as e:
-            print(f"error in named-paths: {type(e)}: {e}")
-    """
 
     def refresh(self) -> None:
         if self.view:
@@ -132,53 +130,28 @@ class SidebarNamedPaths(SidebarRightBase):
         self.context_menu = QMenu(self)
 
         self.new_run_action = QAction()
-        self.new_run_action.setText(self.tr("New run"))
+        self.new_run_action.setText("New run")
         self.copy_action = QAction()
-        self.copy_action.setText(self.tr("Copy to working dir"))
+        self.copy_action.setText("Copy to working dir")
+        self.template_action = QAction()
+        self.template_action.setText("Set template")
+        self.webhook_action = QAction()
+        self.webhook_action.setText("Set webhooks")
         self.delete_action = QAction()
-        self.delete_action.setText(self.tr("Permanent delete"))
+        self.delete_action.setText("Permanent delete")
 
         self.new_run_action.triggered.connect(self._new_run)
         self.copy_action.triggered.connect(self._copy_back_to_cwd)
+        self.template_action.triggered.connect(self._template)
+        self.webhook_action.triggered.connect(self._webhooks)
         self.delete_action.triggered.connect(self._delete_file_navigator_item)
 
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.copy_action)
+        self.context_menu.addAction(self.template_action)
+        self.context_menu.addAction(self.webhook_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
-
-    """
-    def _copy_paths_back_to_cwd(self) -> None:
-        from_index = self.view.currentIndex()
-        if from_index.isValid():
-            from_path = self.model.filePath(from_index)
-            to_index = self.main.sidebar.file_navigator.currentIndex()
-            to_path = None
-            if to_index.isValid():
-                to_path = self.main.sidebar.proxy_model.filePath(to_index)
-            else:
-                to_path = self.main.state.cwd
-            to_nos = Nos(to_path)
-            if to_nos.isfile():
-                to_path = os.path.dirname(to_nos.path)
-            to_dir = to_path
-            from_name = os.path.basename(from_path)
-            to_nos.path = os.path.join(to_dir, from_name)
-            if to_nos.exists():
-                to_path = fiut.deconflicted_path(to_dir, from_name)
-                to_nos.path = to_path
-            if to_nos.exists():
-                QMessageBox.warning(self, "Error", f"Cannot copy file to {to_nos.path}")
-                return
-            try:
-                with DataFileReader(from_path) as ffrom:
-                    with DataFileWriter(path=to_nos.path) as tto:
-                        tto.write(ffrom.read())
-            except NotADirectoryError:
-                QMessageBox.warning(self, "Error", "Cannot copy item over another file")
-        else:
-            QMessageBox.warning(self, "Error", "Cannot copy item")
-    """
 
     @property
     def _paths_root(self) -> str:
@@ -203,7 +176,6 @@ class SidebarNamedPaths(SidebarRightBase):
             self.new_run_dialog.template = t
             self.new_run_dialog.template_ctl.setText(t)
         self.main.show_now_or_later(self.new_run_dialog)
-        #self.new_run_dialog.show()
 
 
     def _show_context_menu(self, position) -> None:
@@ -220,10 +192,14 @@ class SidebarNamedPaths(SidebarRightBase):
             if nos.isfile():
                 self.delete_action.setVisible(False)
                 self.new_run_action.setVisible(False)
+                self.template_action.setVisible(False)
+                self.webhook_action.setVisible(False)
                 self.copy_action.setVisible(True)
             else:
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
+                self.template_action.setVisible(True)
+                self.webhook_action.setVisible(True)
                 self.copy_action.setVisible(False)
             if path and ( path.endswith("manifest.json") or path.endswith(".db") ):
                 self.delete_action.setVisible(False)
@@ -231,6 +207,36 @@ class SidebarNamedPaths(SidebarRightBase):
                 self.copy_action.setVisible(True)
             if global_pos:
                 self.context_menu.exec(global_pos)
+
+
+    def _webhooks(self) -> None:
+        index = self.view.currentIndex()
+        if index.isValid():
+            path = self.model.filePath(index)
+            r = self.main.csvpath_config.get(section="inputs", name="csvpaths")
+            if not path.startswith(r):
+                raise ValueError(f"Path to item {path} doesn't start with {r}")
+            path = path[len(r)+1:]
+            name = pathu.parts(path)[0]
+            self._webhook_dialog = WebhooksDialog(main=self.main, name=name, parent=self)
+            # When the dialog finishes, drop the reference
+            self._webhook_dialog.finished.connect(lambda _: setattr(self, "_webhook_dialog", None))
+            self._webhook_dialog.show_dialog()
+
+
+    def _template(self) -> None:
+        index = self.view.currentIndex()
+        if index.isValid():
+            path = self.model.filePath(index)
+            r = self.main.csvpath_config.get(section="inputs", name="csvpaths")
+            if not path.startswith(r):
+                raise ValueError(f"Path to item {path} doesn't start with {r}")
+            path = path[len(r)+1:]
+            name = pathu.parts(path)[0]
+            self._template_dialog = PathsTemplateDialog(main=self.main, name=name, parent=self)
+            # When the dialog finishes, drop the reference
+            self._template_dialog.finished.connect(lambda _: setattr(self, "_template_dialog", None))
+            self._template_dialog.show_dialog()
 
     def _delete_file_navigator_item(self):
         index = self.view.currentIndex()

@@ -9,7 +9,7 @@ class FileRefCreator:
     def __init__(self, *, main, named_file=None) -> None:
         self.main = main
         self.named_file = named_file
-        self.paths = CsvPaths()
+        self.paths = main.csvpaths
 
     def get(self) -> str:
         name = self.named_file

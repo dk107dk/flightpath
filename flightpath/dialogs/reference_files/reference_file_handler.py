@@ -21,7 +21,7 @@ class ReferenceFileHandler:
     def __init__(self, *, parent):
         self.dialog = parent
         self.main = self.dialog.main
-        self.paths = CsvPaths()
+        self.paths = self.main.csvpaths
 
     #===== UTIL METHODS ================
 

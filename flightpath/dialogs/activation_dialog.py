@@ -44,7 +44,7 @@ class ActivationDialog(QDialog):
     def __init__(self, *, main, named_file, parent):
         super().__init__(parent)
         self.main = main
-        self.csvpaths = CsvPaths()
+        self.csvpaths = main.csvpaths
         self.sidebar = parent
         self.setWindowTitle(f"Run when new {named_file} data arrives")
 

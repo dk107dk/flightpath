@@ -11,7 +11,7 @@ pyside6 = ">=6.8.3"
 pygments = "^2.19.1"
 darkdetect = "^0.8.0"
 #csvpath = "^0.0.591"
-csvpath = { path = "../csvpath/builds/csvpath-0.0.592.tar.gz" }
+csvpath = { path = "../csvpath/builds/csvpath-0.0.594.tar.gz" }
 #
 # always use the local flightpath_server because we bundle it, not push it to PyPi
 #

@@ -44,8 +44,8 @@ class NewRunDialog(QDialog):
     def __init__(self, *, named_paths=None, named_file=None, parent):
         super().__init__(parent)
 
-        #self.csvpaths = CsvPaths()
         self.sidebar = parent
+        self.main = parent.main
         self.setWindowTitle("Run data through a named-paths group")
 
         self.template = None
@@ -184,7 +184,7 @@ class NewRunDialog(QDialog):
 
     @property
     def csvpaths(self) -> CsvPaths:
-        return CsvPaths()
+        return self.main.csvpaths
 
 
     def on_help_template(self) -> None:

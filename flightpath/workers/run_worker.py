@@ -11,10 +11,12 @@ class RunWorker(QRunnable):
         method:str,
         named_paths_name:str,
         named_file_name:str,
-        template:str
+        template:str,
+        main
     ) -> None:
         super().__init__()
-        self.csvpaths = CsvPaths()
+        self.main = main
+        self.csvpaths = main.csvpaths
         self.method = method
         self.named_paths_name = named_paths_name
         self.named_file_name = named_file_name

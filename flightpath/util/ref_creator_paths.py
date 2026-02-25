@@ -6,7 +6,7 @@ class PathsRefCreator:
     def __init__(self, *, main, named_paths=None) -> None:
         self.main = main
         self.named_paths = named_paths
-        self.paths = CsvPaths()
+        self.paths = main.csvpaths
 
     def _has_name(self, name:str) -> bool:
         try:

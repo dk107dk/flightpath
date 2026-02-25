@@ -229,7 +229,7 @@ class Welcome(QWidget):
         return box
 
     def update_run_button(self) -> None:
-        paths = CsvPaths()
+        paths = self.main.csvpaths
         try:
             if paths.file_manager.named_files_count == 0 or paths.paths_manager.total_named_paths == 0:
                 self.button_run.setEnabled(False)

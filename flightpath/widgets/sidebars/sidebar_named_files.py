@@ -23,12 +23,14 @@ from csvpath.util.nos import Nos
 from csvpath.util.config import Config
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
+from csvpath.util.path_util import PathUtility as pathu
 
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.dialogs.activation_dialog import ActivationDialog
+from flightpath.dialogs.files_template_dialog import FilesTemplateDialog
 
 
 from .sidebar_file_ref_maker import SidebarFileRefMaker
@@ -49,6 +51,7 @@ class SidebarNamedFiles(SidebarRightBase):
         self.main = main
         self.view = None
         self.setup()
+        self._template_dialog = None
 
     def setup(self) -> None:
         try:
@@ -142,6 +145,10 @@ class SidebarNamedFiles(SidebarRightBase):
         self.arrival_action.setText("Arrival activation")
         self.arrival_action.triggered.connect(self._set_activation)
 
+        self.template_action = QAction()
+        self.template_action.setText("Set template")
+        self.template_action.triggered.connect(self._template)
+
         self.copy_path_action = QAction()
         self.copy_path_action.setText("Copy path")
         self.copy_path_action.triggered.connect(self._copy_path)
@@ -158,10 +165,10 @@ class SidebarNamedFiles(SidebarRightBase):
         self.copy_action.setText(self.tr("Copy to working dir"))
         self.copy_action.triggered.connect(self._copy_back_to_cwd)
 
-        # setup callbacks
         # add to menu
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.arrival_action)
+        self.context_menu.addAction(self.template_action)
         self.context_menu.addAction(self.find_data_action)
         self.context_menu.addAction(self.copy_path_action)
         self.context_menu.addAction(self.copy_action)
@@ -182,6 +189,7 @@ class SidebarNamedFiles(SidebarRightBase):
             if nos.isfile():
                 self.copy_path_action.setVisible(True)
                 self.arrival_action.setVisible(False)
+                self.template_action.setVisible(False)
                 self.copy_action.setVisible(True)
                 self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(False)
@@ -189,6 +197,7 @@ class SidebarNamedFiles(SidebarRightBase):
             else:
                 self.copy_path_action.setVisible(True)
                 self.copy_action.setVisible(False)
+                self.template_action.setVisible(True)
                 self.arrival_action.setVisible(True)
                 self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(True)
@@ -203,6 +212,19 @@ class SidebarNamedFiles(SidebarRightBase):
             if global_pos:
                 self.context_menu.exec(global_pos)
 
+    def _template(self) -> None:
+        index = self.view.currentIndex()
+        if index.isValid():
+            path = self.model.filePath(index)
+            r = self.main.csvpath_config.get(section="inputs", name="files")
+            if not path.startswith(r):
+                raise ValueError(f"Path to item {path} doesn't start with {r}")
+            path = path[len(r)+1:]
+            name = pathu.parts(path)[0]
+            self._template_dialog = FilesTemplateDialog(main=self.main, name=name, parent=self)
+            # When the dialog finishes, drop the reference
+            self._template_dialog.finished.connect(lambda _: setattr(self, "_template_dialog", None))
+            self._template_dialog.show_dialog()
 
     def _copy_path(self) -> None:
         from_index = self.view.currentIndex()
