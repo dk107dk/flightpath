@@ -22,8 +22,9 @@ class LoadPathsDialog(QDialog):
     def __init__(self, *, path:str, parent:"Sidebar", loader:"CsvpathLoader"):
         super().__init__(None)
         self.sidebar = parent
+        self.main = parent.main
         self.loader = loader
-        self.csvpaths = CsvPaths()
+        self.csvpaths = parent.main.csvpaths
         self.mgr = self.csvpaths.paths_manager
         self.named_paths_names = self.mgr.named_paths_names
 
@@ -91,11 +92,15 @@ class LoadPathsDialog(QDialog):
             form_layout.addRow("Register files in: ", area)
 
         self.template_ctl = QLineEdit()
+
         tlabel = QLabel()
         tlabel.setText("Default template:")
         box = HelpIconPackager.add_help(main=self.sidebar.main, widget=self.template_ctl, on_help=self.on_help_template)
         if not self.json:
             form_layout.addRow(tlabel, box)
+
+        self.named_paths_name_ctl.textChanged.connect(self._check_for_template)
+
 
         self.cancel_button = QPushButton()
         self.cancel_button.setText("Cancel")
@@ -124,6 +129,22 @@ class LoadPathsDialog(QDialog):
         buttons_layout.addWidget(self.load_button)
         buttons.setLayout(buttons_layout)
         main_layout.addWidget(buttons)
+
+
+    def _check_for_template(self) -> None:
+        n = self.named_paths_name_ctl.text()
+        try:
+            if self.main.csvpaths.paths_manager.has_named_paths(n):
+                t = self.main.csvpaths.paths_manager.describer.get_template(n)
+                t = t if t is not None else ""
+                self.template_ctl.setText(t)
+            else:
+                self.template_ctl.setText("")
+        except Exception as ex:
+            print(f"{ex}")
+            self.template_ctl.setText("")
+
+
 
     def _name_check(self) -> None:
         t = self.named_paths_name_ctl.text()

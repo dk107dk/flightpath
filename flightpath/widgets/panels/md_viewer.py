@@ -222,6 +222,7 @@ class MdViewer(QWidget):
         self.reset_saved()
 
     def on_save(self) -> None:
+        print(f"---asdf: {self.editable}")
         if self.editable == EditStates.UNEDITABLE:
             return
         self._save(path=self.path)

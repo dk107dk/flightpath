@@ -44,6 +44,7 @@ from PySide6.QtCore import ( # pylint: disable=E0611
 from csvpath.util.config import Config as CsvPathConfig
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
+from csvpath import CsvPaths
 
 from flightpath.hidden import Hidden
 
@@ -149,6 +150,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # code to not put the app into exec.
         #
         self.main = None
+        self._csvpaths = None
+        self._csvpath_config = None
         self.main_top = None
         self.main_layout = None
         self.welcome = None
@@ -167,7 +170,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.rt_col = None
         self._help = None
         self._helper = None
-        self._csvpath_config = None
         self.threadpool = None
         self._selected_file_path = None
         self.last_main = None
@@ -224,9 +226,20 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         QTimer.singleShot(1000, self._run_precacher)
 
 
+    @property
+    def csvpaths(self) -> CsvPaths:
+        if self._csvpaths is None:
+            c = self.csvpath_config
+            if c is None:
+                raise ValueError("CsvPaths Config object cannot be None")
+            csvpaths = CsvPaths()
+            csvpaths.config.configpath = c.configpath
+            self._csvpaths = csvpaths
+        return self._csvpaths
+
     def _run_precacher(self) -> None:
         try:
-            worker = PreCacheWorker(self.state.cwd)
+            worker = PreCacheWorker(self.state.cwd, main=self)
             if self.threadpool:
                 worker.signals.messages.connect(self.statusBar().showMessage)
                 self.threadpool.start(worker, priority=QThread.LowestPriority.value)
@@ -329,6 +342,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def clear_csvpath_config(self) -> None:
         self._csvpath_config = None
+        self._csvpath = None
 
     @property
     def selected_file_path(self) -> str:
@@ -747,6 +761,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         else:
             view = view[1]
         view.editable = editable if editable else EditStates.EDITABLE
+        print(f"masin mdfv: {view}: {view.editable}")
         taut.select_tab(self.content.tab_widget, view)
         #
         # we show the right tabs because we may be showing
@@ -961,7 +976,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             method=method,
             named_paths_name=named_paths_name,
             named_file_name=named_file_name,
-            template=template
+            template=template,
+            main=self
         )
         #
         # clear any existing logs to .bak. we have to shutdown to be sure that the

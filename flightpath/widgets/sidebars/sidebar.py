@@ -17,7 +17,7 @@ from PySide6.QtGui import QPixmap, QIcon, QAction, QGuiApplication
 from PySide6.QtCore import Qt, QSize, QModelIndex, QThreadPool
 from PySide6.QtWidgets import QFileSystemModel
 
-from csvpath import CsvPaths
+#from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 from csvpath.util.path_util import PathUtility as pathu
 
@@ -436,7 +436,10 @@ class Sidebar(QWidget):
                 if path.endswith(".csv"):
                     self.line_number_action.setVisible(True)
                     self.line_number_action.setEnabled(False)
-                    csvpaths = CsvPaths()
+                    #
+                    # WARNING: THIS CSVPATHS DOESN'T KNOW WHERE IT IS
+                    #
+                    csvpaths = self.main.csvpaths
                     #
                     # we aren't necessarily using cache -- tho in local projects, why not? so we
                     # only set a path and use_cache temp. this whole operation is not super
@@ -627,7 +630,7 @@ class Sidebar(QWidget):
         recurse = self.stage_dialog.recurse_ctl.isChecked()
         name = self.stage_dialog.path
         nos = Nos(name)
-        paths = CsvPaths()
+        paths = self.main.csvpaths
         #
         # have to override the filesystem prohibit because it doesn't make sense
         # here. we are all local file-based atm and also control config.

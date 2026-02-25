@@ -5,7 +5,6 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QPushButton,
         QLabel,
         QDialog,
-        QLineEdit,
         QFormLayout,
         QComboBox,
         QInputDialog,

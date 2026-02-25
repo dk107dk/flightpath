@@ -4,7 +4,7 @@ import traceback
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
-from csvpath import CsvPaths
+#from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
 from flightpath.dialogs.load_paths_dialog import LoadPathsDialog
@@ -19,6 +19,8 @@ class CsvpathLoader:
 
     def load_paths(self, path) -> None:
         self.load_dialog = LoadPathsDialog(path=path, parent=self.main.sidebar, loader=self)
+        # When the dialog finishes, drop the reference
+        self.load_dialog.finished.connect(lambda _: setattr(self, "load_dialog", None))
         self.main.show_now_or_later(self.load_dialog)
 
     def do_append_named_paths_load(self) ->None:
@@ -57,7 +59,7 @@ class CsvpathLoader:
             named_paths_name = self.load_dialog.named_paths_name_ctl.text()
         if named_paths_name and named_paths_name.strip() == "":
             named_paths_name = None
-        paths = CsvPaths()
+        paths = self.main.csvpaths
         #
         # if the named-paths name exists, warn the user that they are adding a named-path to the group
         #
@@ -99,7 +101,7 @@ class CsvpathLoader:
             meut.message(title="Error", msg=f"Cannot load named-paths group: {e}")
 
     def do_load_json(self) -> None:
-        paths = CsvPaths()
+        paths = self.main.csvpaths
         #
         # warn the user that they are overwriting any existing named-path to the group.
         # this warning prompt must pop over the dialog, not under, or we get into problems.
@@ -153,7 +155,7 @@ class CsvpathLoader:
         if named_paths_name and named_paths_name.strip() == "":
             named_paths_name = None
         name = self.load_dialog.path
-        paths = CsvPaths()
+        paths = self.main.csvpaths
         #
         # if the named-paths name exists, warn the user that they are adding a named-path to the group
         #
