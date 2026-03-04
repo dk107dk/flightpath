@@ -1,4 +1,4 @@
-## Question
+## Ask AI a Question
 
 Use this dialog to ask your AI a question about CsvPath Language. Your AI is determined by the settings in the `llm` tab in the Config panel.
 

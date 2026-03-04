@@ -125,11 +125,17 @@ class DataToolbar(QToolBar):
         self.addWidget(self.raw_source)
         self._add_help(self.on_help_raw_source_toolbar)
         #
-        # switch to raw source view
+        # use AI to generate a csvpath
+        #
+        self.ai_gen = QPushButton("AI generator")
+        self.addWidget(self.ai_gen)
+        self._add_help(self.on_help_ai_gen_toolbar)
+        #
+        # generate a sample profile of the open data
         #
         self.file_info = QPushButton("File info")
         self.addWidget(self.file_info)
-        #self._add_help(self.on_help_raw_source_toolbar)
+        self._add_help(self.on_file_info_toolbar)
         #
         # let it move
         #
@@ -146,6 +152,7 @@ class DataToolbar(QToolBar):
         self.delimiter.activated.connect(self.parent.on_set_delimiter)
         self.quotechar.activated.connect(self.parent.on_set_quotechar)
         self.raw_source.clicked.connect(self.parent.on_raw_source)
+        self.ai_gen.clicked.connect(self.parent.on_ai_gen)
         self.file_info.clicked.connect(self.parent.on_file_info)
 
 
@@ -202,6 +209,20 @@ class DataToolbar(QToolBar):
         if not self.parent.helper.is_showing_help():
             self.parent.helper.on_click_help()
 
+
+    def on_file_info_toolbar(self) -> None:
+        md = HelpFinder(main=self.parent.main).help(f"data_view/file_info.md")
+        self._on_data_toolbar_help(md)
+
+    def _on_data_toolbar_help(self, md:str) -> None:
+        if md is None:
+            self.parent.helper.close_help()
+            return
+        self.parent.helper.get_help_tab().setMarkdown(md)
+        if not self.parent.helper.is_showing_help():
+            self.parent.helper.on_click_help()
+
+
     def on_help_raw_source_toolbar(self) -> None:
         md = HelpFinder(main=self.parent.main).help(f"data_view/raw_source.md")
         if md is None:
@@ -210,6 +231,11 @@ class DataToolbar(QToolBar):
         self.parent.helper.get_help_tab().setMarkdown(md)
         if not self.parent.helper.is_showing_help():
             self.parent.helper.on_click_help()
+
+    def on_help_ai_gen_toolbar(self) -> None:
+        md = HelpFinder(main=self.parent.main).help(f"data_view/ai_gen.md")
+        self._on_data_toolbar_help(md)
+
 
     def disable(self) -> None:
         if self.sampling:
@@ -224,6 +250,8 @@ class DataToolbar(QToolBar):
             self.quotechar.setEnabled(False)
         if self.raw_source:
             self.raw_source.setEnabled(False)
+        if self.ai_gen:
+            self.ai_gen.setEnabled(False)
         if self.file_info:
             self.file_info.setEnabled(False)
 
@@ -251,6 +279,8 @@ class DataToolbar(QToolBar):
 
         if self.raw_source:
             self.raw_source.setEnabled(True)
+        if self.ai_gen:
+            self.ai_gen.setEnabled(True)
         if self.file_info:
             self.file_info.setEnabled(True)
 

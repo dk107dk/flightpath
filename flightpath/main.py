@@ -48,31 +48,33 @@ from csvpath import CsvPaths
 
 from flightpath.hidden import Hidden
 
-from flightpath.util.gate_guard import GateGuard
+
+from flightpath.dialogs.generate_csvpath_dialog import GenerateCsvpathDialog
+
 from flightpath.workers.md_worker import MdWorker
 from flightpath.workers.csvpath_file_worker import CsvpathFileWorker
 from flightpath.workers.general_data_worker import GeneralDataWorker
 from flightpath.workers.json_data_worker import JsonDataWorker
+from flightpath.workers.run_worker import RunWorker
+from flightpath.workers.precache_worker import PreCacheWorker
+
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
-#from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
 from flightpath.widgets.panels.table_model import TableModel
-
 from flightpath.widgets.sidebars.sidebar import Sidebar
 from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.sidebars.sidebar_named_paths import SidebarNamedPaths
 from flightpath.widgets.sidebars.sidebar_archive import SidebarArchive
 from flightpath.widgets.sidebars.sidebar_functions import SidebarFunctions
 from flightpath.widgets.sidebars.sidebar_docs import SidebarDocs
-
 from flightpath.widgets.welcome.welcome import Welcome
 from flightpath.widgets.content.content import Content
 from flightpath.widgets.config.config import Config
-
 from flightpath.widgets.help.helper import Helper
 
+from flightpath.util.gate_guard import GateGuard
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.log_utility import LogUtility as lout
@@ -80,15 +82,13 @@ from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.json_utility import JsonUtility as jsut
-
-from flightpath.util.state import State
-from flightpath.inspect.inspector import Inspector
 from flightpath.util.html_generator import HtmlGenerator
+from flightpath.util.state import State
+
+from flightpath.inspect.inspector import Inspector
 from flightpath.editable import EditStates
 from flightpath_server.main import Main as ServerMain
 
-from flightpath.workers.run_worker import RunWorker
-from flightpath.workers.precache_worker import PreCacheWorker
 
 def run():
     #
@@ -143,6 +143,18 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def __init__(self):
         super().__init__()
+
+        if GateGuard.show_splash():
+            splashpath = fiut.make_app_path(f"assets{os.sep}images{os.sep}splash.png")
+            from flightpath.dialogs.splash_dialog import SplashDialog
+            dlg = SplashDialog(
+                image_path=splashpath,
+                license_url="https://github.com/csvpath/csvpath?tab=LGPL-2.1-1-ov-file#readme",
+                copyright_text="© 2025-2026 Atesta Analytics. All rights reserved.",
+            )
+            dlg.exec()
+
+
         #
         # please close will be True if the user chooses not to pick a
         # working directory on first startup. This is not expected to
@@ -1119,6 +1131,14 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         index = self.content.tab_widget.currentIndex()
         t = self.content.tab_widget.widget(index)
         t.toggle_grid_raw()
+
+    def on_ai_gen(self) -> None:
+        index = self.content.tab_widget.currentIndex()
+        t = self.content.tab_widget.widget(index)
+        path = t.objectName()
+        gen = GenerateCsvpathDialog(parent=self, main=self, path=path)
+        self.show_now_or_later(gen)
+
 
     def on_file_info(self) -> None:
         index = self.content.tab_widget.currentIndex()

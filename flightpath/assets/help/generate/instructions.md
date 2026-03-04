@@ -1,4 +1,4 @@
-## Instructions
+## AI Instructions
 
 Use this dialog to ask your AI to create one or more CsvPath Language validation statements. The statements will be based onthe sample data you provide and any instructions you include.
 

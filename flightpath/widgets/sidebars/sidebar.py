@@ -394,7 +394,8 @@ class Sidebar(QWidget):
                 self.save_file_action.setVisible(False)
                 self.load_paths_action.setVisible(False)
                 self.stage_data_action.setVisible(False)
-                if ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files") or ext.lower() == "json":
+                if ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files") \
+                        or ext.lower() == "json":
                     self.generate_action.setVisible(False)
                     self.load_paths_action.setVisible(True)
                 elif ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
