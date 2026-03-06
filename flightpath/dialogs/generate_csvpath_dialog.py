@@ -7,6 +7,7 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QDialog,
         QLineEdit,
         QFormLayout,
+        QApplication,
         QComboBox,
         QInputDialog,
         QSizePolicy,
@@ -49,7 +50,7 @@ class GenerateCsvpathDialog(QDialog):
         self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.NonModal)
 
-        self.setWindowTitle("Generate a CsvPath statement")
+        self.setWindowTitle("Generate CsvPath validation statements")
 
         self.run_button = QPushButton()
         self.run_button.setText("Generate")
@@ -69,8 +70,10 @@ class GenerateCsvpathDialog(QDialog):
         #
         #
         #
-        self.setFixedHeight(350)
-        self.setFixedWidth(650)
+        self.setMinimumHeight(350)
+        self.setMinimumWidth(650)
+        self.setSizeGripEnabled(True)
+
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
 
@@ -122,6 +125,14 @@ class GenerateCsvpathDialog(QDialog):
         )
         self.form_layout.addRow("AI instructions: ", box)
 
+        from flightpath.widgets.progress.ai_progress_widget import AIProgressWidget
+        c = self._generator_config()
+        self.turns = c.get(section="generations",name="turns_limit")
+        print(f"turns limitsx to: {self.turns}")
+        self.turns = 4 if self.turns is None or str(self.turns).strip() =="" else int(self.turns)
+        self.progress = AIProgressWidget(max_turns=self.turns)
+        self.form_layout.addRow("Review cycles: ", self.progress)
+
         buttons_layout = QHBoxLayout()
         buttons_layout.addWidget(self.cancel_button)
         buttons_layout.addWidget(self.run_button)
@@ -167,15 +178,33 @@ class GenerateCsvpathDialog(QDialog):
         md = HelpFinder(main=self.main).help("generate/instructions.md")
         self._show_help(md)
 
-    def do_generate(self) -> None:
+    def _on_generation(self, generation):
+        i = 1
+        if generation:
+            i += len(generation.generator.generations)
+        self.progress.set_turn(i, f"{i} reviews of up to {self.turns}...   ")
+        QApplication.processEvents()   # refresh UI since you're on main thread
+
+    def _generator_config(self):
         cc = self.main.csvpath_config
         path = os.path.dirname(cc.configpath)
         path = os.path.join(path, "generator.ini")
         print(f"generatorpath: {path}")
-        config = GeneratorConfig(path)
+        config = GeneratorConfig(cfg=cc, configpath=path)
+        return config
+
+    def do_generate(self) -> None:
+        self.run_button.setEnabled(False)
+        self.progress._label.setText("Requesting...    ")
+        QApplication.processEvents()   # refresh UI since you're on main thread
+        config = self._generator_config()
         generator = Generator(config)
+
+        generator.add_callback(self._on_generation)
+        self._on_generation(None)
+
         generator.version_key="validation"
-        generator.csvpath_config = cc
+        generator.csvpath_config = self.main.csvpath_config
         generator.csvpath_logger = self.main.logger
         generator.config.dump_config_info()
         generator.tools = [
@@ -185,21 +214,7 @@ class GenerateCsvpathDialog(QDialog):
         context = generator.config.get("version", "context")
         context = generator.context_manager.get_context(context)
         prompt = generator.prompt_manager.create_prompt()
-
-        n = self.sample_size.currentText()
-        n = int(n)
-        lines = []
-        print(f"getting nomorethan {n} lines sample from {self.path}")
-        with DataFileReader(self.path) as r:
-            for i, _ in enumerate(r.source):
-                _ = _.strip()
-                if _ == "":
-                    continue
-                lines.append(_)
-                if i > n:
-                    break
-
-        data = "\n".join(lines)
+        data = self._get_data()
         prompt.example = data
         prompt.rules = self.instructions.toPlainText()
         if prompt.rules is None:
@@ -207,7 +222,15 @@ class GenerateCsvpathDialog(QDialog):
 
         prompt.save()
         generation = generator.do_send(context=context, prompt=prompt, datapath=self.path)
+        #
+        # set the remaining dots to done
+        #
+        self.progress.complete()
+        #
+        # set the remaining dots to done
+        #
         text = generation.response_text
+        print(f"generation: see: {generation.my_root}")
 
         if not hasattr( self, "answer"):
             self.answer = ClassLoader.load(
@@ -231,7 +254,21 @@ class GenerateCsvpathDialog(QDialog):
 
 
 
-
+    def _get_data(self)->str:
+        n = self.sample_size.currentText()
+        n = int(n)
+        lines = []
+        print(f"getting nomorethan {n} lines sample from {self.path}")
+        with DataFileReader(self.path) as r:
+            for i, _ in enumerate(r.source):
+                _ = _.strip()
+                if _ == "":
+                    continue
+                lines.append(_)
+                if i > n:
+                    break
+        data = "\n".join(lines)
+        return data
 
 
     def on_save(self) -> None:

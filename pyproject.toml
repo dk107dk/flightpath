@@ -20,7 +20,7 @@ flightpath_server = { path = "./assets/flightpath_server-0.1.29.tar.gz" }
 #
 #
 #
-flightpath_generator = { path = "./assets/flightpath_generator-0.1.11.tar.gz"}
+flightpath_generator = { path = "./assets/flightpath_generator-0.1.15.tar.gz"}
 #
 # having troubles (suddenly?!) getting sftp to work in smart-open. this
 # didn't help. all dependencies are already present, as you'd think since

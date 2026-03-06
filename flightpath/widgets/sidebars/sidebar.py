@@ -362,10 +362,12 @@ class Sidebar(QWidget):
         if str(m).strip() == "":
             return False
         m = self.main.csvpath_config.get(section="llm", name="api_base")
+        """
         if m is None:
             return False
         if str(m).strip() == "":
             return False
+        """
         return True
 
     def _show_context_menu(self, position):
