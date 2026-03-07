@@ -6,6 +6,7 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QLabel,
         QDialog,
         QLineEdit,
+        QApplication,
         QFormLayout,
         QComboBox,
         QInputDialog,
@@ -66,8 +67,9 @@ class AskQuestionDialog(QDialog):
         #
         #
         #
-        self.setFixedHeight(350)
-        self.setFixedWidth(650)
+        self.setMinimumHeight(350)
+        self.setMinimumWidth(650)
+        self.setSizeGripEnabled(True)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
 
@@ -208,11 +210,13 @@ class AskQuestionDialog(QDialog):
         self._show_help(md)
 
     def do_generate(self) -> None:
+        self.run_button.setEnabled(False)
+        QApplication.processEvents()   # refresh UI since you're on main thread
+
         cc = self.main.csvpath_config
         path = os.path.dirname(cc.configpath)
         path = os.path.join(path, "generator.ini")
-        print(f"generatorpath: {path}")
-        config = GeneratorConfig(path)
+        config = GeneratorConfig(cfg=cc, configpath=path)
         generator = Generator(config)
         generator.version_key="question"
         generator.csvpath_config = cc
@@ -244,11 +248,7 @@ class AskQuestionDialog(QDialog):
         data = "\n".join(lines)
         prompt.example = data
         prompt.rules = self.question.toPlainText()
-
-        #print(f"promte: {prompt.to_json()}")
-
         prompt.save()
-        generator.tools = [ LiteLLMRunTool().tool_definition() ]
         generation = None
         try:
             generation = generator.do_send(context=context, prompt=prompt, datapath=data_path)

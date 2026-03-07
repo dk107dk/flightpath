@@ -1291,13 +1291,13 @@ files = [
 
 [[package]]
 name = "flightpath-generator"
-version = "0.1.15"
+version = "0.1.17"
 description = ""
 optional = false
 python-versions = ">3.10,<3.14"
 groups = ["main"]
 files = [
-    {file = "flightpath_generator-0.1.15.tar.gz", hash = "sha256:18e60c988e9749a7671429899a463c5fc0090149c0cf35199b2023600f39ba76"},
+    {file = "flightpath_generator-0.1.17.tar.gz", hash = "sha256:fd1df8896688aceeff124793719be4b32fd4a25c693a8a26201a8ebcef8f17d2"},
 ]
 
 [package.dependencies]
@@ -1309,7 +1309,7 @@ ratelimit = ">=2.2.1,<3.0.0"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_generator-0.1.15.tar.gz"
+url = "assets/flightpath_generator-0.1.17.tar.gz"
 
 [[package]]
 name = "flightpath-server"
@@ -6019,4 +6019,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.10,<3.14"
-content-hash = "b2903127684b194111e51930d402d622ed1d8d59fc1503cb62d4862232f14ad6"
+content-hash = "967f59ec5984240b21805cd234c01f5f1b8c235cadd2e4fe4425e1139139b15a"

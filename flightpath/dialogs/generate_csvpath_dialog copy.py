@@ -1,5 +1,4 @@
 import os
-import jsonpickle
 from PySide6.QtWidgets import ( # pylint: disable=E0611
         QVBoxLayout,
         QHBoxLayout,
@@ -119,21 +118,12 @@ class GenerateCsvpathDialog(QDialog):
         self.instructions = QPlainTextEdit()
         self.instructions.textChanged.connect(self.on_instructions_changed)
 
-        # exp
-        #from flightpath.widgets.tabs_closing import ClosingTabs
-        from PySide6.QtWidgets import QTabWidget
-        self.tabs = QTabWidget(parent=self)
-
-
         box = HelpIconPackager.add_help(
             main=self.main,
             widget=self.instructions,
             on_help=self.on_help_instructions
         )
-        self.tabs.addTab(box, "Instructions")
-        self.form_layout.addRow("Input and output: ", self.tabs)
-        #self.form_layout.addRow("AI instructions: ", box)
-        self.manifests = None
+        self.form_layout.addRow("AI instructions: ", box)
 
         c = self._generator_config()
         self.turns = c.get(section="generations",name="turns_limit")
@@ -180,15 +170,7 @@ class GenerateCsvpathDialog(QDialog):
     def _on_generation(self, generation):
         i = 1
         if generation:
-            gs = generation.generator.generations
-            i += len(gs)
-            #
-            # update manifest tab
-            #
-            turns = generation.generator.get_turns(text_list=False)
-            js = jsonpickle.encode(turns, unpicklable=False, indent=2)
-            self.manifests.setPlainText(js)
-
+            i += len(generation.generator.generations)
         s = "s"
         if i == 1:
             s = ""
@@ -206,14 +188,6 @@ class GenerateCsvpathDialog(QDialog):
     def do_generate(self) -> None:
         self.run_button.setEnabled(False)
         self.progress._label.setText("Requesting...    ")
-        #
-        # add a tab for showing progress by displaying the manifests of each generation
-        #
-        self.manifests = QPlainTextEdit()
-        self.tabs.addTab(self.manifests, "Progress")
-        self.tabs.setCurrentIndex(1)
-
-
         QApplication.processEvents()   # refresh UI since you're on main thread
         config = self._generator_config()
         generator = Generator(config)
