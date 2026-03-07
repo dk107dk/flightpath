@@ -2,6 +2,7 @@ import hashlib
 import os
 import argparse
 from .state import State
+from flightpath.util.file_utility import FileUtility as fiut
 #
 # if GateGuard matches a UUID in the state file (~/.flightpath) to a hashed version
 # of same we allow server mode. this is a not a security measure, obviously! it is
@@ -90,6 +91,26 @@ This requirement will be removed in a future release.
 
 """
 
+    @classmethod
+    def show_splash(cls) -> bool:
+        _ = f"assets{os.sep}check.txt"
+        path = fiut.app_path_no_check(_)
+        if not os.path.exists(path):
+            with open(path, "w") as file:
+                file.write("0")
+        with open(path, "r+") as file:
+            i = 1
+            t = file.read()
+            file.seek(0)
+            if t is not None:
+                try:
+                    i = int(t)
+                    file.write(str(i+1).strip())
+                    return i == 0 or i%10 == 0
+                except Exception:
+                    ...
+            file.write(str(i).strip())
+            return True
 
     @classmethod
     def has_ticket(cls) -> bool|None:

@@ -1,4 +1,4 @@
-## Sample Size
+## AI Sample Size
 
 This drop-down selects the number of lines of data to send to the AI backend to use in generating csvpath statements.
 

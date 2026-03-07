@@ -11,16 +11,16 @@ pyside6 = ">=6.8.3"
 pygments = "^2.19.1"
 darkdetect = "^0.8.0"
 #csvpath = "^0.0.591"
-csvpath = { path = "../csvpath/builds/csvpath-0.0.594.tar.gz" }
+csvpath = { path = "../csvpath/builds/csvpath-0.0.595.tar.gz" }
 #
 # always use the local flightpath_server because we bundle it, not push it to PyPi
 #
 #flightpath_server = "^0.1.17"
-flightpath_server = { path = "./assets/flightpath_server-0.1.28.tar.gz" }
+flightpath_server = { path = "./assets/flightpath_server-0.1.29.tar.gz" }
 #
 #
 #
-flightpath_generator = { path = "./assets/flightpath_generator-0.1.10.tar.gz"}
+flightpath_generator = { path = "./assets/flightpath_generator-0.1.17.tar.gz"}
 #
 # having troubles (suddenly?!) getting sftp to work in smart-open. this
 # didn't help. all dependencies are already present, as you'd think since
@@ -29,6 +29,7 @@ flightpath_generator = { path = "./assets/flightpath_generator-0.1.10.tar.gz"}
 #smart-open = {extras = ["all"], version = "^7.1.0"}
 httpx = "^0.28.1"
 tzdata = "^2025.2"
+jsonpickle = "^4.1.1"
 
 [tool.poetry.scripts]
 flightpath = "flightpath.main:run"
