@@ -121,7 +121,7 @@ class SplashDialog(QDialog):
         self._copyright_label.setObjectName("copyrightLabel")
         bottom_row.addWidget(self._copyright_label, stretch=1)
 
-        self._close_btn = QPushButton("Close")
+        self._close_btn = QPushButton("Continue")
         self._close_btn.setObjectName("closeBtn")
         self._close_btn.setFixedWidth(88)
         self._close_btn.setCursor(Qt.PointingHandCursor)

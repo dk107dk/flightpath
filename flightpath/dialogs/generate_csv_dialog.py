@@ -133,7 +133,7 @@ class GenerateCsvDialog(QDialog):
         path = os.path.dirname(cc.configpath)
         path = os.path.join(path, "generator.ini")
         print(f"generatorpath: {path}")
-        config = GeneratorConfig(path)
+        config = GeneratorConfig(cfg=cc, configpath=path)
         generator = Generator(config)
         generator.version_key="testdata"
         generator.csvpath_config = cc
@@ -144,23 +144,11 @@ class GenerateCsvDialog(QDialog):
         prompt = generator.prompt_manager.create_prompt()
 
         n = self.sample_size.currentText()
-        n = int(n)
-        lines = []
-        print(f"getting nomorethan {n} lines sample from {self.path}")
-        with DataFileReader(self.path) as r:
-            for i, _ in enumerate(r.source):
-                _ = _.strip()
-                if _ == "":
-                    continue
-                lines.append(_)
-                if i > n:
-                    break
+        with DataFileReader(self.path) as file:
+            data = file.source.read()
+            values = {"example":data, "number_of_lines":n}
+            prompt.example_values = values
 
-        data = "\n".join(lines)
-        prompt.example = "Use this example data to generate your CsvPath:\n{data}"
-        prompt.rules = self.instructions.toPlainText()
-
-        print(f"promte: {prompt.to_json()}")
 
         prompt.save()
         generation = generator.do_send(context=context, prompt=prompt, datapath=self.path)
@@ -174,8 +162,8 @@ class GenerateCsvDialog(QDialog):
         new_name = dialog.textValue()
         if ok and new_name:
             thedir = os.path.dirname(self.path)
-            if not new_name.endswith(".csvpath") and not new_name.endswith(".csvpaths"):
-                new_name += ".csvpaths"
+            if not new_name.endswith(".csv"):
+                new_name += ".csv"
 
             path = fiut.deconflicted_path( thedir, new_name )
             with DataFileWriter(path=path) as file:
