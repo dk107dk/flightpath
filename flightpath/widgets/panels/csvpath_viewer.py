@@ -74,6 +74,7 @@ class CsvpathViewer(QWidget):
         self.path = None
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        print(f"CsvpathViewer: mainss={main}")
         self.text_edit = CsvPathTextEdit(main=main, parent=self, editable=self.editable)
         #
         # consistent naming for stut

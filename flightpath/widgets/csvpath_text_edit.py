@@ -306,7 +306,8 @@ class CsvPathTextEdit(QPlainTextEdit):
        self._insert_mode("validation-mode: print, no-raise")
 
     def on_generate_data(self) -> None:
-        gen = GenerateCsvDialog(main=self.parent.main, path=self.parent.path)
+        print(f"Csvpathtextded: {self.main}")
+        gen = GenerateCsvDialog(main=self.main, path=self.parent.path)
         self.main.show_now_or_later(gen)
 
     def on_ask_question(self) -> None:

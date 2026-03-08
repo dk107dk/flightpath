@@ -12,6 +12,7 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QComboBox,
         QInputDialog,
         QSizePolicy,
+        QTabWidget,
         QScrollArea,
         QWidget,
         QPlainTextEdit,
@@ -118,13 +119,7 @@ class GenerateCsvpathDialog(QDialog):
         #
         self.instructions = QPlainTextEdit()
         self.instructions.textChanged.connect(self.on_instructions_changed)
-
-        # exp
-        #from flightpath.widgets.tabs_closing import ClosingTabs
-        from PySide6.QtWidgets import QTabWidget
         self.tabs = QTabWidget(parent=self)
-
-
         box = HelpIconPackager.add_help(
             main=self.main,
             widget=self.instructions,
@@ -132,7 +127,6 @@ class GenerateCsvpathDialog(QDialog):
         )
         self.tabs.addTab(box, "Instructions")
         self.form_layout.addRow("Input and output: ", self.tabs)
-        #self.form_layout.addRow("AI instructions: ", box)
         self.manifests = None
 
         c = self._generator_config()

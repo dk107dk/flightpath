@@ -37,7 +37,7 @@ class DataViewer(QWidget):
     QUOTECHARS = {"single-quotes":"'", "double-quotes":'"'}
 
 
-    def __init__(self, parent, *, editable:EditStates=EditStates.UNEDITABLE):
+    def __init__(self, parent, *, editable:EditStates=EditStates.UNEDITABLE, path:str=None):
         super().__init__()
         #
         # sets the font size
@@ -48,7 +48,8 @@ class DataViewer(QWidget):
         #
         self.parent = parent
         self.main = parent.main
-        self.path = self.main.selected_file_path
+        print(f"datavere: {parent}, {self.main}")
+        self.path = self.main.selected_file_path if path is None else path
         self.main_layout = QStackedLayout()
         self.setLayout(self.main_layout)
         self.table_view = QTableView()
@@ -58,7 +59,7 @@ class DataViewer(QWidget):
         stut.set_editable_background(self.table_view)
 
         self.table_view.hide()
-        self.raw_view = RawViewer(main=self.main, parent=self, editable=self.editable)
+        self.raw_view = RawViewer(main=self.main, parent=self, editable=self.editable, path=self.path)
         stut.set_editable_background(self.raw_view)
 
         self.main_layout.addWidget(self.table_view)
@@ -794,7 +795,12 @@ class DataViewer(QWidget):
     def display_data(self, model):
         self.table_view.setModel(model)
         self.main.show_now_or_later(self.table_view)
-        self.main.show_now_or_later(self.parent.toolbar)
+        #
+        # there are uses where we're not using main in a "normal" way. ideally
+        # this gets standard, but atm it is a distraction more than a problem.
+        #
+        if hasattr(self.parent, "toolbar"):
+            self.main.show_now_or_later(self.parent.toolbar)
         self.layout().setCurrentIndex(0)
 
     def clear(self, model):

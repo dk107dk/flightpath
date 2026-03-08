@@ -24,6 +24,7 @@ from flightpath.util.help_finder import HelpFinder
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.json_utility import JsonUtility as jsut
+from flightpath.util.data_const import DataConst
 
 class DataToolbar(QToolBar):
 
@@ -64,21 +65,21 @@ class DataToolbar(QToolBar):
         # the number for repeat openings?
         #
         self.rows = QComboBox()
-        self.rows.addItem(str(self.SMALL))
-        self.rows.addItem(str(self.MED))
-        self.rows.addItem(str(self.LARGE))
-        self.rows.addItem(str(self.LARGER))
+        self.rows.addItem(str(DataConst.SMALL))
+        self.rows.addItem(str(DataConst.MED))
+        self.rows.addItem(str(DataConst.LARGE))
+        self.rows.addItem(str(DataConst.LARGER))
         #
         # here all lines is a string. in the worker it is -1
         #
-        self.rows.addItem(self.ALL_LINES)
+        self.rows.addItem(DataConst.ALL_LINES)
         #
         # how should the lines be selected into the sample? again, should we save the setting?
         #
         self.sampling = QComboBox()
-        self.sampling.addItem(self.FIRST_N)
-        self.sampling.addItem(self.RANDOM_0)
-        self.sampling.addItem(self.RANDOM_ALL)
+        self.sampling.addItem(DataConst.FIRST_N)
+        self.sampling.addItem(DataConst.RANDOM_0)
+        self.sampling.addItem(DataConst.RANDOM_ALL)
         #
         # add sampling widgets
         #
@@ -105,17 +106,17 @@ class DataToolbar(QToolBar):
         # delimiter
         #
         self.delimiter = QComboBox()
-        self.delimiter.addItem(self.COMMA)
-        self.delimiter.addItem(self.TAB)
-        self.delimiter.addItem(self.PIPE)
-        self.delimiter.addItem(self.SEMICOLON)
+        self.delimiter.addItem(DataConst.COMMA)
+        self.delimiter.addItem(DataConst.TAB)
+        self.delimiter.addItem(DataConst.PIPE)
+        self.delimiter.addItem(DataConst.SEMICOLON)
         self.addWidget(self.delimiter)
         #
         # quotechar
         #
         self.quotechar = QComboBox()
-        self.quotechar.addItem(self.QUOTES)
-        self.quotechar.addItem(self.SINGLE_QUOTES)
+        self.quotechar.addItem(DataConst.QUOTES)
+        self.quotechar.addItem(DataConst.SINGLE_QUOTES)
         self.addWidget(self.quotechar)
         self._add_help(self.on_help_delimiter_toolbar)
         #
@@ -173,21 +174,21 @@ class DataToolbar(QToolBar):
 
     def delimiter_char(self) -> str:
         d = self.delimiter.currentText()
-        if d == self.COMMA:
+        if d == DataConst.COMMA:
             return ","
-        elif d == self.TAB:
+        elif d == DataConst.TAB:
             return "\t"
-        elif d == self.PIPE:
+        elif d == DataConst.PIPE:
             return "|"
-        elif d == self.SEMICOLON:
+        elif d == DataConst.SEMICOLON:
             return ";"
         return None
 
     def quotechar_char(self) -> str:
         q = self.quotechar.currentText()
-        if q == self.QUOTES:
+        if q == DataConst.QUOTES:
             return '"'
-        elif q == self.SINGLE_QUOTES:
+        elif q == DataConst.SINGLE_QUOTES:
             return "'"
         return None
 
