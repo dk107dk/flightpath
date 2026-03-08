@@ -13,7 +13,7 @@ from flightpath.editable import EditStates
 
 class RawViewer(QWidget):
 
-    def __init__(self, *, main, parent, editable=None):
+    def __init__(self, *, main, parent, editable=None, path:str=None):
         super().__init__()
         self.main = main
         self.parent = parent
@@ -24,7 +24,7 @@ class RawViewer(QWidget):
         #
         #
         #
-        self.path = main.selected_file_path
+        self.path = main.selected_file_path if path is None else path
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)

@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QApplication
 from csvpath.util.file_readers import DataFileReader
 from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
-from flightpath.widgets.toolbars.data_toolbar import DataToolbar
+from flightpath.util.data_const import DataConst
 from flightpath.editable import EditStates
 from .data_worker_signals import DataWorkerSignals
 
@@ -30,7 +30,7 @@ class GeneralDataWorker(QRunnable):
         self.filepath = filepath
         self.signals = DataWorkerSignals()
         self.sample_size:int = self._rows(rows) if rows else 50
-        self.sampling = sampling if sampling else DataToolbar.FIRST_N
+        self.sampling = sampling if sampling else DataConst.FIRST_N
         self.line_take = 0
         self.lines_to_take:list[int] = None
         self.delimiter = delimiter
@@ -60,15 +60,15 @@ class GeneralDataWorker(QRunnable):
         #
         # if sampling is every line and we are collecting all lines
         #
-        if (self.sampling == DataToolbar.FIRST_N):
+        if (self.sampling == DataConst.FIRST_N):
             self.line_take += 1
             return True
-        elif self.sampling == DataToolbar.RANDOM_0:
+        elif self.sampling == DataConst.RANDOM_0:
             if random.randint(0,1) % 2 == 0:
                 self.line_take += 1
                 return True
             return False
-        elif self.sampling == DataToolbar.RANDOM_ALL:
+        elif self.sampling == DataConst.RANDOM_ALL:
             if line_num == self.lines_to_take[len(self.lines_to_take)-1]:
                 self.line_take += 1
                 removed = self.lines_to_take.pop()
@@ -77,7 +77,7 @@ class GeneralDataWorker(QRunnable):
 
     def run(self):
         self.signals.messages.emit(QApplication.translate("DataWorker", "Reading file..."))
-        if self.sampling == DataToolbar.RANDOM_ALL and self.lines_to_take is None:
+        if self.sampling == DataConst.RANDOM_ALL and self.lines_to_take is None:
             self.prep_sampling()
         path = str(self.filepath)
         data = []

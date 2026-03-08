@@ -72,9 +72,9 @@ class FileUtility:
         p = cls.app_path_or_given(path)
         if path == p:
             if main:
-                main.log(f"Fiut: cannot find {path} at {t1} or {t2}")
+                main.log(f"Fiut: cannot find {path}")
             else:
-                print(f"Fiut: cannot find {path} at {t1} or {t2}")
+                print(f"Fiut: cannot find {path}")
             return None
         return p
 
