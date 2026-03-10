@@ -151,10 +151,11 @@ class ActivationDialog(QDialog):
             #
             #
             meut.message(title="No CsvPath statement groups", msg="You must load a named-paths group before you set an arrival activation")
-        #
-        # show the dialog
-        #
-        self.exec()
+        else:
+            #
+            # show the dialog
+            #
+            self.exec()
 
 
     def do_set(self) -> None:

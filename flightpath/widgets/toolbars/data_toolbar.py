@@ -47,9 +47,10 @@ class DataToolbar(QToolBar):
     SEMICOLON = "Semi-colon"
 
 
-    def __init__(self, parent):
+    def __init__(self, *, parent, main):
         super().__init__()
         self.parent = parent
+        self.main = main
         self.sampling = None
         self.rows = None
         self.save_sample = None
@@ -58,7 +59,7 @@ class DataToolbar(QToolBar):
         self._setup()
 
     def _setup(self):
-        self.parent.addToolBar(self)
+        self.main.addToolBar(self)
         self.save_sample = QPushButton("Save sample as")
         #
         # number of rows to show. we'll default to 50. should we find a way to save
@@ -147,14 +148,14 @@ class DataToolbar(QToolBar):
         #
         self.hide()
 
-        self.sampling.activated.connect(self.parent.on_reload_data)
-        self.rows.activated.connect(self.parent.on_data_rows_changed)
-        self.save_sample.clicked.connect(self.parent.on_save_sample)
-        self.delimiter.activated.connect(self.parent.on_set_delimiter)
-        self.quotechar.activated.connect(self.parent.on_set_quotechar)
-        self.raw_source.clicked.connect(self.parent.on_raw_source)
-        self.ai_gen.clicked.connect(self.parent.on_ai_gen)
-        self.file_info.clicked.connect(self.parent.on_file_info)
+        self.sampling.activated.connect(self.main.on_reload_data)
+        self.rows.activated.connect(self.main.on_data_rows_changed)
+        self.save_sample.clicked.connect(self.main.on_save_sample)
+        self.delimiter.activated.connect(self.main.on_set_delimiter)
+        self.quotechar.activated.connect(self.main.on_set_quotechar)
+        self.raw_source.clicked.connect(self.main.on_raw_source)
+        self.ai_gen.clicked.connect(self.main.on_ai_gen)
+        self.file_info.clicked.connect(self.main.on_file_info)
 
 
     def _add_help(self, callback) -> None:
@@ -193,48 +194,52 @@ class DataToolbar(QToolBar):
         return None
 
     def on_help_sample_toolbar(self) -> None:
-        md = HelpFinder(main=self.parent.main).help(f"data_view/samples.md")
+        md = HelpFinder(main=self.main).help(f"data_view/samples.md")
+        self._on_data_toolbar_help(md)
+        """
         if md is None:
-            self.parent.helper.close_help()
+            self.main.helper.close_help()
             return
-        self.parent.helper.get_help_tab().setMarkdown(md)
-        if not self.parent.helper.is_showing_help():
-            self.parent.helper.on_click_help()
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
+        """
 
     def on_help_delimiter_toolbar(self) -> None:
-        md = HelpFinder(main=self.parent.main).help(f"data_view/delimiter.md")
+        md = HelpFinder(main=self.main).help(f"data_view/delimiter.md")
+        self._on_data_toolbar_help(md)
+        """
         if md is None:
-            self.parent.helper.close_help()
+            self.main.helper.close_help()
             return
-        self.parent.helper.get_help_tab().setMarkdown(md)
-        if not self.parent.helper.is_showing_help():
-            self.parent.helper.on_click_help()
-
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
+        """
 
     def on_file_info_toolbar(self) -> None:
-        md = HelpFinder(main=self.parent.main).help(f"data_view/file_info.md")
+        md = HelpFinder(main=self.main).help(f"data_view/file_info.md")
         self._on_data_toolbar_help(md)
 
     def _on_data_toolbar_help(self, md:str) -> None:
         if md is None:
-            self.parent.helper.close_help()
+            self.main.helper.close_help()
             return
-        self.parent.helper.get_help_tab().setMarkdown(md)
-        if not self.parent.helper.is_showing_help():
-            self.parent.helper.on_click_help()
-
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
     def on_help_raw_source_toolbar(self) -> None:
-        md = HelpFinder(main=self.parent.main).help(f"data_view/raw_source.md")
+        md = HelpFinder(main=self.main).help(f"data_view/raw_source.md")
         if md is None:
-            self.parent.helper.close_help()
+            self.main.helper.close_help()
             return
-        self.parent.helper.get_help_tab().setMarkdown(md)
-        if not self.parent.helper.is_showing_help():
-            self.parent.helper.on_click_help()
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
 
     def on_help_ai_gen_toolbar(self) -> None:
-        md = HelpFinder(main=self.parent.main).help(f"data_view/ai_gen.md")
+        md = HelpFinder(main=self.main).help(f"data_view/ai_gen.md")
         self._on_data_toolbar_help(md)
 
 
@@ -264,8 +269,8 @@ class DataToolbar(QToolBar):
         if self.save_sample:
             self.save_sample.setEnabled(True)
 
-        i = self.parent.content.tab_widget.currentIndex()
-        w = self.parent.content.tab_widget.widget(i)
+        i = self.main.content.tab_widget.currentIndex()
+        w = self.main.content.tab_widget.widget(i)
         path = w.objectName()
         if jsut.is_jsonl(path):
             if self.delimiter:

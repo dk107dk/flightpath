@@ -1,3 +1,4 @@
+import traceback
 from PySide6.QtWidgets import ( # pylint: disable=E0611
         QWidget,
         QVBoxLayout,
@@ -13,6 +14,7 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
 )
 from PySide6.QtCore import Qt, Slot #pylint: disable=E0611
 
+from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 from csvpath.util.path_util import PathUtility as pathu
 
@@ -33,6 +35,7 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         self.sidebar = parent
         self.main = parent.main
         self.setWindowTitle("Stage source data files")
+        #self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.path = path
         self.errors = None
@@ -107,8 +110,8 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
 
         self.stage_button = QPushButton()
         self.cancel_button = QPushButton()
-        self.stage_button.setText(self.tr("Stage"))
-        self.cancel_button.setText(self.tr("Cancel"))
+        self.stage_button.setText("Stage")
+        self.cancel_button.setText("Cancel")
 
         self.stage_button.clicked.connect(self.sidebar.do_stage)
         self.cancel_button.clicked.connect(self.reject)
@@ -124,14 +127,15 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
 
 
     def _check_for_template(self) -> None:
-        #t = self.template_ctl.text()
         n = self.named_file_name_ctl.text()
-        try:
-            t = self.main.csvpaths.file_manager.describer.get_template(n)
-            t = t if t is not None else ""
-            self.template_ctl.setText(t)
-        except Exception:
-            self.template_ctl.setText("")
+        if n and str(n).strip() != "":
+            try:
+                t = self.main.csvpaths.file_manager.describer.get_template(n)
+                t = t if t is not None else ""
+                self.template_ctl.setText(t)
+            except Exception:
+                print(traceback.format_exc())
+                self.template_ctl.setText("")
 
     def _set_separate_names(self) -> None:
         nos = Nos(self.path)
@@ -226,7 +230,6 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         if "" in parts:
             parts.remove("")
         i = 0
-        print(f"stage_data_dialog: _source_path_click: parts: {parts}")
         try:
             i = parts.index(text)
         except ValueError:
@@ -255,17 +258,15 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         if gen_path is None:
             gen_path = self.template_ctl.text()
         parts = pathu.parts(self.path)
-      #  print(f"_update_actual_path: gen_path: {gen_path}: {parts}")
         if "" in parts:
             parts.remove("")
-      #  print(f"_update_actual_path: removed "": {parts}")
         for i, p in enumerate(parts):
             gen_path = gen_path.replace(f":{i}", p)
-      #      print(f"_update_actual_path: {i}: {p}: {gen_path}")
         gen_path = gen_path.replace(":filename", parts[len(parts)-1])
         gen_path = gen_path.lstrip("/")
         self.t_lab.setText(gen_path)
         self.t_lab.adjustSize()
 
     def show_dialog(self) -> None:
-        self.show()
+        self.exec()
+        #self.show()

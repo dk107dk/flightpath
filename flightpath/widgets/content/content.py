@@ -18,6 +18,7 @@ from flightpath.widgets.tabs_closing import ClosingTabs
 from flightpath.widgets.tabs_closing_holder import ClosingTabsHolder
 from flightpath.widgets.toolbars.data_toolbar import DataToolbar
 from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.editable import EditStates
 
 class Content(ClosingTabsHolder):
 
@@ -38,7 +39,7 @@ class Content(ClosingTabsHolder):
 
         ts = self.main.findChildren(QToolBar)
         if len( ts ) == 0:
-            self.toolbar = DataToolbar(parent=main)
+            self.toolbar = DataToolbar(parent=self, main=self.main)
         elif len( ts ) > 1:
             raise RuntimeError("Cannot have {len(ts)} toolbar instances")
         else:

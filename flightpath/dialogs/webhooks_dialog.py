@@ -214,5 +214,6 @@ class WebhooksDialog(QDialog):
 
 
     def show_dialog(self) -> None:
-        self.show()
+        self.exec()
+        #self.show()
 
