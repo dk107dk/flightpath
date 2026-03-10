@@ -89,5 +89,6 @@ class TemplateDialog(QDialog):
             self.set_button.setEnabled(False)
 
     def show_dialog(self) -> None:
-        self.show()
+        self.exec()
+        #self.show()
 

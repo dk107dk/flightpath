@@ -616,29 +616,32 @@ class Sidebar(QWidget):
 
 
     def do_stage(self) -> None:
+        #
+        # collect the vars needed
+        #
+        print(f"sidebar: do_stage: self.main.csvpath_config.configpath: {self.main.csvpath_config.configpath}")
+        print(f"sidebar: do_stage: self.main._csvpaths.config.configpath: {self.main._csvpaths.config.configpath}")
         template = self.stage_dialog.template_ctl.text()
-        template = template.strip()
+        template = template.strip() if template else None
         if template == "":
             template = None
         if template and not template.endswith(":filename"):
             meut.message(msg="The :filename token must be the last component of the template", title="Incomplete")
             return
-            #
-            # there's a fair chance this will be the desired template, but could
-            # easily not be. regardless, we need a :filename and we can delete and
-            # redo more simply than we can error and recover.
-            #
-            template = f"{template}/:filename"
         named_file_name = self.stage_dialog.named_file_name_ctl.text()
         recurse = self.stage_dialog.recurse_ctl.isChecked()
         name = self.stage_dialog.path
-        nos = Nos(name)
         paths = self.main.csvpaths
         #
         # have to override the filesystem prohibit because it doesn't make sense
         # here. we are all local file-based atm and also control config.
         #
         local = paths.config.set(section="inputs", name="allow_local_files", value=True)
+
+        #
+        # got all the vars
+        #
+        nos = Nos(name)
         try:
             if nos.isfile():
                 paths.file_manager.add_named_file(name=named_file_name, path=name, template=template)

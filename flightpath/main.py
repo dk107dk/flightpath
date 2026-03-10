@@ -50,6 +50,7 @@ from flightpath.hidden import Hidden
 
 
 from flightpath.dialogs.generate_csvpath_dialog import GenerateCsvpathDialog
+from flightpath.util.help_finder import HelpFinder
 
 from flightpath.workers.md_worker import MdWorker
 from flightpath.workers.csvpath_file_worker import CsvpathFileWorker
@@ -429,7 +430,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.build_number.setStyleSheet("QLabel {font-size:10px;color:#999}")
             self.statusBar().addPermanentWidget(self.build_number, 0)
         self.build_number.setText(build_number)
-        from flightpath.util.help_finder import HelpFinder
         md = HelpFinder(main=self.main).help("welcome/welcome.md")
         self.helper.get_help_tab().setMarkdown(md)
 

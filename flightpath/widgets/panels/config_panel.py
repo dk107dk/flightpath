@@ -34,6 +34,7 @@ from flightpath.widgets.forms.listeners_form import ListenersForm
 from flightpath.widgets.forms.logging_form import LoggingForm
 from flightpath.widgets.forms.results_form import ResultsForm
 from flightpath.widgets.forms.llm_form import LlmForm
+from flightpath.widgets.forms.offsets_form import OffsetsForm
 from flightpath.util.style_utils import StyleUtility as stut
 
 from csvpath.util.config import Config
@@ -129,7 +130,8 @@ class ConfigPanel(QWidget):
             ResultsForm(main=self.main),
             ServerForm(main=self.main),
             FunctionsForm(main=self.main),
-            LlmForm(main=self.main)
+            LlmForm(main=self.main),
+            OffsetsForm(main=self.main)
         ]
         for form in self.forms:
             self.forms_layout.addWidget(form)
@@ -207,6 +209,10 @@ class ConfigPanel(QWidget):
             self.main.config.show_help_for_form("llm", fallback=fallback)
             self.forms_layout.setCurrentIndex(13)
             self.title.setText("LLM")
+        if form == "offsets" or parent == "offsets":
+            self.main.config.show_help_for_form("offsets", fallback=fallback)
+            self.forms_layout.setCurrentIndex(14)
+            self.title.setText("Date offsets")
 
     @property
     def tree(self) -> QTreeWidget:
@@ -250,7 +256,18 @@ class ConfigPanel(QWidget):
     @property
     def core_sections(self) -> list[str]:
         return [
-            "config", "cache", "logging", "extensions", "errors", "functions", "results", "inputs", "listeners", "server", "llm"
+            "config",
+            "cache",
+            "logging",
+            "extensions",
+            "errors",
+            "functions",
+            "results",
+            "inputs",
+            "listeners",
+            "server",
+            "llm",
+            "offsets"
         ]
 
     @property
@@ -348,7 +365,6 @@ class ConfigPanel(QWidget):
         #
         for form in self.forms:
             try:
-                print(f"saving formx: {form}")
                 form.add_to_config(self.main.csvpath_config)
             except:
                 print(traceback.format_exc())

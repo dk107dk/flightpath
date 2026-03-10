@@ -227,12 +227,19 @@ class State:
         if not nos.exists():
             nos.makedirs()
         os.chdir(cwd)
+        print(f">>>> CWD: {cwd}")
         configfile = f".{os.sep}config{os.sep}config.ini"
         new_project = not os.path.exists(configfile)
+        print(f">>>> configfile: {configfile}")
+        print(f">>>> new_project: {new_project}")
         #
         #
         #
-        config = CsvPaths().config
+        paths = CsvPaths()
+        config = paths.config
+        print(f">>>> new config: {config}")
+        print(f">>>> new configpath 1: {config.configpath}")
+
         #
         # we need to remove any functions path from the last project
         # and add our new project's function path, if any.
@@ -243,6 +250,12 @@ class State:
         # we were not doing this, but it seems like the right place and time.
         #
         main.csvpath_config = config
+        #
+        # this line zeros out the csvpaths and the following line both creates
+        # a new one and sets its config to what we created above. I don't love
+        # this. is too opaque.
+        #
+        main._csvpaths = paths
         """
         #
         # invalidate the config form so it will rebuild
@@ -258,6 +271,7 @@ class State:
         # remember: setting config.configpath triggers a reload.
         #
         config.configpath = os.path.join(cwd, "config", "config.ini")
+        print(f">>>> new configpath 2: {config.configpath}")
         #
         # if the dir has no config it is a new project. CsvPath Framework
         # will generate a config file. We need to add an examples folder
@@ -310,6 +324,7 @@ Add your docs for the {pname} project here.
 """
                     )
 
+        print(f"main.csvpath_config: {main.csvpath_config.configpath}")
 
     def _change_function_path(self, *, old_config:CsvPath_Config=None, new_config:CsvPath_Config) -> None:
         if new_config is None:

@@ -181,26 +181,4 @@ class ErrorDialog(QDialog):
 QWIDGETSIZE_MAX = (1 << 24) - 1
 
 
-# ------------------------------------------------------------------
-# Quick smoke-test when run directly
-# ------------------------------------------------------------------
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
 
-    # Test 1: message only
-    d1 = ErrorDialog(None, "The operation could not be completed.")
-    d1.exec()
-
-    # Test 2: message + errors
-    sample_errors = [
-        {"code": 404, "field": "username", "message": "User not found"},
-        {"code": 422, "field": "email", "message": "Invalid email address format"},
-    ]
-    d2 = ErrorDialog(
-        None,
-        "Validation failed. Click 'Show Details' to inspect the errors returned by the server.",
-        errors=sample_errors,
-    )
-    d2.exec()
-
-    sys.exit(0)

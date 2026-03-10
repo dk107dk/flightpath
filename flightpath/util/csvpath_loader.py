@@ -193,8 +193,11 @@ class CsvpathLoader:
         return confirm
 
     def _delete_load_dialog(self):
-        self.load_dialog.close()
-        self.load_dialog.deleteLater()
-        self.load_dialog = None
+        try:
+            self.load_dialog.close()
+            self.load_dialog.deleteLater()
+            self.load_dialog = None
+        except Exception:
+            ...
 
 

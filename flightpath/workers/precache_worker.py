@@ -1,3 +1,4 @@
+import traceback
 import os
 from PySide6.QtCore import QObject, Signal, Slot, QRunnable, QThreadPool, QThread
 from PySide6.QtWidgets import QApplication
@@ -13,7 +14,6 @@ class PreCacheWorker(QRunnable):
         self.cwd = cwd
         self.signals = PreCacheWorkerSignals()
 
-    #@Slot()
     def run(self):
         try:
             #
@@ -41,9 +41,8 @@ class PreCacheWorker(QRunnable):
                         cacher.get_new_line_monitor(file)
 
         except Exception as e:
-            print(f"Error in precache worker: {type(e)}: {e}")
-            import traceback
             print(traceback.format_exc())
+            self.signals.finished.emit("A precaching error occured")
             return
         self.signals.finished.emit("Done precaching files")
 
