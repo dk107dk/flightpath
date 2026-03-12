@@ -118,20 +118,25 @@ class FileUtility:
                 # If the app is frozen, the base path is sys._MEIPASS
                 path = sys._MEIPASS
                 print(f"getingsx path 1: {path}")
-                path = os.path.dirname(path)
-                # this is the home of the exe
-                cls.APP_PATH = os.path.dirname(path)
+                #
+                # claude solution vvvv:
+                #
+                bundle_dir = os.path.dirname(sys.executable)
+                # On macOS: MyApp.app/Contents/MacOS/ → go up to Contents/
+                cls.APP_PATH = os.path.normpath(os.path.join(bundle_dir, '..'))
+                print(f"getingsx path 2: {path}")
+
             else:
                 # If running in a normal dev environment
                 # path = .../flightpath/util
                 path = os.path.dirname(__file__)
-                print(f"getingsx path 2: {path}")
+                print(f"getingsx path 3: {path}")
                 # path = .../flightpath
                 path = os.path.dirname(path)
                 # path = .../ (home of the app)
                 cls.APP_PATH = os.path.dirname(path)
 
-        print(f"getingsx path 3: {cls.APP_PATH}")
+        print(f"getingsx path 4: {cls.APP_PATH}")
         return cls.APP_PATH
 
 
