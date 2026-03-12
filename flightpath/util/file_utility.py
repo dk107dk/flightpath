@@ -96,37 +96,38 @@ class FileUtility:
         t1 = os.path.join( t, path)
         return t1
 
+    """
     @classmethod
     def app_path(cls) -> str:
         if cls.APP_PATH is None:
-            #
-            # exp. fix for tahoe
-            #
-            if sys.platform == "darwin" and hasattr(sys, "frozen"):
-                # sys.executable = <bundle>/Contents/MacOS/<exe>
-                macos_dir = os.path.dirname(sys.executable)
-                contents_dir = os.path.dirname(macos_dir)
-                resources_dir = os.path.join(contents_dir, "Resources")
-                cls.APP_PATH = resources_dir
-            else:
-                # Running from source
-                #cls.APP_PATH = os.path.dirname(os.path.dirname(__file__))
-                # up to util
-                path = os.path.dirname(__file__)
-                # up to flightpath
-                path = os.path.dirname(path)
-                # this is the home of the exe
-                cls.APP_PATH = os.path.dirname(path)
-
-            """
             # up to util
             path = os.path.dirname(__file__)
             # up to flightpath
             path = os.path.dirname(path)
             # this is the home of the exe
             cls.APP_PATH = os.path.dirname(path)
-            """
         return cls.APP_PATH
+    """
+
+
+    @classmethod
+    def app_path(cls) -> str:
+        if cls.APP_PATH is None:
+            if getattr(sys, 'frozen', False):
+                # If the app is frozen, the base path is sys._MEIPASS
+                cls.APP_PATH = sys._MEIPASS
+            else:
+                # If running in a normal dev environment
+                # path = .../flightpath/util
+                path = os.path.dirname(__file__)
+                # path = .../flightpath
+                path = os.path.dirname(path)
+                # path = .../ (home of the app)
+                cls.APP_PATH = os.path.dirname(path)
+
+        return cls.APP_PATH
+
+
 
     @classmethod
     def move_file_to_numbered(cls, path:str, dirpath:str=".") -> None:
