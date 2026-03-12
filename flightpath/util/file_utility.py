@@ -68,15 +68,21 @@ class FileUtility:
             return [name, '']
         return [name[0:e], name[e+1:]]
 
+#==============================
+
     @classmethod
     def make_app_path(cls, path, *, main=None) -> str:
+        print(f"fiut: mkapppath: path: {path}")
         p = cls.app_path_or_given(path)
+        print(f"fiut: mkapppath: p: {p}")
         if path == p:
             if main:
+                print(f"Fiut: cannot find {path}")
                 main.log(f"Fiut: cannot find {path}")
             else:
                 print(f"Fiut: cannot find {path}")
             return None
+        print(f"Fiut: mkapppath found path: {p}")
         return p
 
     @classmethod
@@ -84,16 +90,21 @@ class FileUtility:
         t1 = cls.app_path_no_check(path)
         if Nos(t1).exists():
             return t1
-        #t2 = os.path.join(cls.app_path(), path)
-        #if Nos(t2).exists():
-        #    return t2
         return path
 
     @classmethod
     def app_path_no_check(cls, path:str) -> str:
         ap = cls.app_path()
-        t = os.path.join(ap, "flightpath")
-        t1 = os.path.join( t, path)
+        #
+        # exp! added test to deal with tahoe change
+        #
+        if getattr(sys, 'frozen', False):
+            ...
+            print(f"fiut: app_path_no_check: NOT addingx 'flightpath': {t1}")
+        else:
+            t1 = os.path.join(ap, "flightpath")
+            print(f"fiut: app_path_no_check: addingx 'flightpath': {t1}")
+        t1 = os.path.join( t1, path)
         return t1
 
     """
@@ -116,24 +127,11 @@ class FileUtility:
             print(f"getingsx attr: {getattr(sys, 'frozen', False)}")
             if getattr(sys, 'frozen', False):
                 # If the app is frozen, the base path is sys._MEIPASS
-                path = sys._MEIPASS
-                print(f"getingsx path 1: {path}")
+                #path = sys._MEIPASS
                 #
-                # claude solution vvvv:
+                # mod claude solution vvvv:
                 #
                 bundle_dir = os.path.dirname(sys.executable)
-                # On macOS: MyApp.app/Contents/MacOS/ → go up to Contents/
-                from csvpath.util.nos import Nos
-                #cls.APP_PATH = bundle_dir
-                #nos = Nos(cls.APP_PATH)
-                #print(f"getingsx path 2a cls.APP_PATH exists: {cls.APP_PATH}: {nos.exists()}")
-                #
-                # just checking these
-                #
-                #t = os.path.join(cls.APP_PATH, "assets","images","splash.png")
-                #nos = Nos(t)
-                #print(f"getingsx path 2b exists: {t}: {nos.exists()}")
-                #t = os.path.join(os.path.dirname(cls.APP_PATH), "Resources", "assets","images","splash.png")
                 t = os.path.join(os.path.dirname(bundle_dir), "Resources")
                 nos = Nos(t)
                 print(f"getingsx path 2c exists: {t}: {nos.exists()}")
