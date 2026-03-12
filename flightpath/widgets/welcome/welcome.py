@@ -40,6 +40,7 @@ class Welcome(QWidget):
 
         image_label = QLabel(self)
         imgpath = fiut.make_app_path(f"assets{os.sep}images{os.sep}flightpath-gray.svg", main=main)
+        print(f"Welcome: central image path: {imgpath}")
         self.main.log(f"Welcome: central image path: {imgpath}")
         pixmap = QPixmap(imgpath)
         image_label.setPixmap(pixmap)
