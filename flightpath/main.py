@@ -237,6 +237,15 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # kickoff a precache worker to collect some info about files
         #
         QTimer.singleShot(1000, self._run_precacher)
+        self.update_opens()
+
+
+    def update_opens(self) -> None:
+        data = self.state.data
+        i = data.get("opens")
+        i = int(i) +1 if isinstance(i, int) else 1
+        data["opens"] = i
+        self.state.data = data
 
 
     @property

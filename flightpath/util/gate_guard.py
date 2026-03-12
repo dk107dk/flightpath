@@ -93,24 +93,14 @@ This requirement will be removed in a future release.
 
     @classmethod
     def show_splash(cls) -> bool:
-        _ = f"assets{os.sep}check.txt"
-        path = fiut.app_path_no_check(_)
-        if not os.path.exists(path):
-            with open(path, "w") as file:
-                file.write("0")
-        with open(path, "r+") as file:
-            i = 1
-            t = file.read()
-            file.seek(0)
-            if t is not None:
-                try:
-                    i = int(t)
-                    file.write(str(i+1).strip())
-                    return i == 0 or i%10 == 0
-                except Exception:
-                    ...
-            file.write(str(i).strip())
+        state = State().data
+        if not state:
+            state = {}
+        i = state.get("opens")
+        i = int(i) if isinstance(i, int) else 0
+        if i == 0 or i % 10 == 0:
             return True
+        return False
 
     @classmethod
     def has_ticket(cls) -> bool|None:
