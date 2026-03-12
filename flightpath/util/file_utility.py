@@ -98,9 +98,10 @@ class FileUtility:
         #
         # exp! added test to deal with tahoe change
         #
+        t1 = None
         if getattr(sys, 'frozen', False):
             ...
-            print(f"fiut: app_path_no_check: NOT addingx 'flightpath': {t1}")
+            print(f"fiut: app_path_no_check: NOT addingx 'flightpath': {ap}")
         else:
             t1 = os.path.join(ap, "flightpath")
             print(f"fiut: app_path_no_check: addingx 'flightpath': {t1}")
