@@ -113,18 +113,25 @@ class FileUtility:
     @classmethod
     def app_path(cls) -> str:
         if cls.APP_PATH is None:
+            print(f"getingsx attr: {getattr(sys, 'frozen', False)}")
             if getattr(sys, 'frozen', False):
                 # If the app is frozen, the base path is sys._MEIPASS
-                cls.APP_PATH = sys._MEIPASS
+                path = sys._MEIPASS
+                print(f"getingsx path 1: {path}")
+                path = os.path.dirname(path)
+                # this is the home of the exe
+                cls.APP_PATH = os.path.dirname(path)
             else:
                 # If running in a normal dev environment
                 # path = .../flightpath/util
                 path = os.path.dirname(__file__)
+                print(f"getingsx path 2: {path}")
                 # path = .../flightpath
                 path = os.path.dirname(path)
                 # path = .../ (home of the app)
                 cls.APP_PATH = os.path.dirname(path)
 
+        print(f"getingsx path 3: {cls.APP_PATH}")
         return cls.APP_PATH
 
 
