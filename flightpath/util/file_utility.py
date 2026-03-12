@@ -123,16 +123,19 @@ class FileUtility:
                 #
                 bundle_dir = os.path.dirname(sys.executable)
                 # On macOS: MyApp.app/Contents/MacOS/ → go up to Contents/
+                from csvpath.util.nos import Nos
                 cls.APP_PATH = bundle_dir
-                print(f"getingsx path 2a cls.APP_PATH exists: {cls.APP_PATH}: {Nos(cls.APP_PATH).exists()}")
+                nos = Nos(cls.APP_PATH)
+                print(f"getingsx path 2a cls.APP_PATH exists: {cls.APP_PATH}: {nos.exists()}")
                 #
                 # just checking these
                 #
-                from csvpath.util.nos import Nos
                 t = os.path.join(cls.APP_PATH, "assets","images","splash.png")
-                print(f"getingsx path 2b exists: {t}: {Nos(t).exists()}")
+                nos = Nos(t)
+                print(f"getingsx path 2b exists: {t}: {nos.exists()}")
                 t = os.path.join(os.path.dirname(cls.APP_PATH), "Resources", "assets","images","splash.png")
-                print(f"getingsx path 2c exists: {t}: {Nos(t).exists()}")
+                nos = Nos(t)
+                print(f"getingsx path 2c exists: {t}: {nos.exists()}")
 
             else:
                 # If running in a normal dev environment
