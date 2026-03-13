@@ -144,11 +144,17 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def __init__(self):
         super().__init__()
+        self.setup_ai_flag = False
 
-        if GateGuard.show_splash():
+        state = State().data
+        noai = State().data.get("llm", {}).get("model", "").strip() == ""
+        guard = GateGuard.show_splash()
+        print(f"state data: noai: {noai}, guard: {guard}")
+        if noai is True or guard is True:
             splashpath = fiut.make_app_path(f"assets{os.sep}images{os.sep}splash.png")
             from flightpath.dialogs.splash_dialog import SplashDialog
             dlg = SplashDialog(
+                main=self,
                 image_path=splashpath,
                 license_url="https://github.com/csvpath/csvpath?tab=LGPL-2.1-1-ov-file#readme",
                 copyright_text="© 2025-2026 Atesta Analytics. All rights reserved.",
@@ -238,7 +244,17 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         QTimer.singleShot(1000, self._run_precacher)
         self.update_opens()
+        if self.setup_ai_flag is True:
+            ...
+            print(f"setting up Ai")
+            self.open_config()
 
+            self.config.config_panel.forms_layout.setCurrentIndex(13)
+            fallback = f"config{os.sep}about.md"
+            self.config.show_help_for_form("llm", fallback=fallback)
+
+            return
+        print("not setting up ai")
 
     def update_opens(self) -> None:
         data = self.state.data

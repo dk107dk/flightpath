@@ -21,4 +21,26 @@ $[*][
 	track(#transactionId, #transactionCreatedDateTime)
 ]
 
+---- CSVPATH ----
+
+~
+   This csvpath statement prints out the duplicate line numbers when a duplicate value is seen.
+
+   It is a good example where using a when/do to limit an expensive operation can potentially payoff.
+   Here we can use gt(size(@seen), 1) to limit the number of printouts to just the lines we're interested
+   in. If sales.csv were hundreds of thousands or millions of lines long one unnecessary printout per line
+   would become a bottleneck.
+
+   id: list duplicated lines
+   test-data: examples/duplicates/sales.csv
+   validation-mode:raise, print
+~
+
+$[1*][
+	has_dups.dups.nocontrib(#transactionId)
+	@seen = get(@dups, fingerprint(#transactionId))
+
+	gt(size(@seen), 1) ->
+	    print("line $.csvpath.line_number: $.headers.transactionId was seen on $.variables.seen")
+]
 

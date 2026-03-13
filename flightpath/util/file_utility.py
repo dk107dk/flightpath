@@ -72,17 +72,18 @@ class FileUtility:
 
     @classmethod
     def make_app_path(cls, path, *, main=None) -> str:
-        print(f"fiut: mkapppath: path: {path}")
+        #print(f"fiut: mkapppath: path: {path}")
         p = cls.app_path_or_given(path)
-        print(f"fiut: mkapppath: p: {p}")
+        #print(f"fiut: mkapppath: p: {p}")
         if path == p:
             if main:
-                print(f"Fiut: cannot find {path}")
+                #print(f"Fiut: cannot find {path}")
                 main.log(f"Fiut: cannot find {path}")
             else:
-                print(f"Fiut: cannot find {path}")
+                ...
+                #print(f"Fiut: cannot find {path}")
             return None
-        print(f"Fiut: mkapppath found path: {p}")
+        #print(f"Fiut: mkapppath found path: {p}")
         return p
 
     @classmethod
@@ -102,10 +103,10 @@ class FileUtility:
         if getattr(sys, 'frozen', False):
             ...
             t1 = ap
-            print(f"fiut: app_path_no_check: NOT addingx 'flightpath': {t1}")
+            #print(f"fiut: app_path_no_check: NOT addingx 'flightpath': {t1}")
         else:
             t1 = os.path.join(ap, "flightpath")
-            print(f"fiut: app_path_no_check: addingx 'flightpath': {t1}")
+            #print(f"fiut: app_path_no_check: addingx 'flightpath': {t1}")
         t1 = os.path.join( t1, path)
         return t1
 
@@ -122,11 +123,10 @@ class FileUtility:
         return cls.APP_PATH
     """
 
-
     @classmethod
     def app_path(cls) -> str:
         if cls.APP_PATH is None:
-            print(f"getingsx attr: {getattr(sys, 'frozen', False)}")
+            #print(f"getingsx attr: {getattr(sys, 'frozen', False)}")
             if getattr(sys, 'frozen', False):
                 # If the app is frozen, the base path is sys._MEIPASS
                 #path = sys._MEIPASS
@@ -136,19 +136,18 @@ class FileUtility:
                 bundle_dir = os.path.dirname(sys.executable)
                 t = os.path.join(os.path.dirname(bundle_dir), "Resources")
                 nos = Nos(t)
-                print(f"getingsx path 2c exists: {t}: {nos.exists()}")
+                #print(f"getingsx path 2c exists: {t}: {nos.exists()}")
                 cls.APP_PATH = t
             else:
                 # If running in a normal dev environment
                 # path = .../flightpath/util
                 path = os.path.dirname(__file__)
-                print(f"getingsx path 3: {path}")
+                #print(f"getingsx path 3: {path}")
                 # path = .../flightpath
                 path = os.path.dirname(path)
                 # path = .../ (home of the app)
                 cls.APP_PATH = os.path.dirname(path)
-
-        print(f"getingsx path 4: {cls.APP_PATH}")
+        #print(f"getingsx path 4: {cls.APP_PATH}")
         return cls.APP_PATH
 
 

@@ -118,7 +118,6 @@ class State:
         #
         if self._state_path is None:
             self._state_path = os.path.join(self.home, self.STATE_FILE_NAME)
-            print(f"State file path: {self._state_path}")
             if not os.path.exists(self._state_path):
                 import getpass
                 current_user = getpass.getuser()
@@ -147,7 +146,6 @@ class State:
 
     @state_path.setter
     def state_path(self, state_path:str) -> None:
-        print(f"Setting state path to {state_path}")
         self._state_path = state_path
 
     @property
@@ -227,19 +225,13 @@ class State:
         if not nos.exists():
             nos.makedirs()
         os.chdir(cwd)
-        print(f">>>> CWD: {cwd}")
         configfile = f".{os.sep}config{os.sep}config.ini"
         new_project = not os.path.exists(configfile)
-        print(f">>>> configfile: {configfile}")
-        print(f">>>> new_project: {new_project}")
         #
         #
         #
         paths = CsvPaths()
         config = paths.config
-        print(f">>>> new config: {config}")
-        print(f">>>> new configpath 1: {config.configpath}")
-
         #
         # we need to remove any functions path from the last project
         # and add our new project's function path, if any.
@@ -271,7 +263,6 @@ class State:
         # remember: setting config.configpath triggers a reload.
         #
         config.configpath = os.path.join(cwd, "config", "config.ini")
-        print(f">>>> new configpath 2: {config.configpath}")
         #
         # if the dir has no config it is a new project. CsvPath Framework
         # will generate a config file. We need to add an examples folder
@@ -324,7 +315,6 @@ Add your docs for the {pname} project here.
 """
                     )
 
-        print(f"main.csvpath_config: {main.csvpath_config.configpath}")
 
     def _change_function_path(self, *, old_config:CsvPath_Config=None, new_config:CsvPath_Config) -> None:
         if new_config is None:
@@ -339,11 +329,7 @@ Add your docs for the {pname} project here.
         path = "" if not path else path.strip()
         if path != "":
             dirpath = os.path.dirname(path)
-            print(f"adding {dirpath} to sys.path for proj ")
             sys.path.append(dirpath)
-        print(f"paths in sys.path for proj: ")
-        for _ in sys.path:
-            print(f"_: {_}")
 
 
 

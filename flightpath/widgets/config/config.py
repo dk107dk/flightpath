@@ -41,6 +41,11 @@ class Config(QWidget):
         layout.addWidget(self.toolbar)
 
         self.panels = QWidget(self)
+        #
+        # this doesn't need to be a stacked layout. we never add another widget to the stack.
+        # the config panel also has a stacked layout that we do use. this unnecessary stack
+        # doesn't seem to slow us down, so I'm not changing it atm. but feel free to.
+        #
         self.stacked_layout = QStackedLayout()
         self.panels.setLayout(self.stacked_layout)
 

@@ -25,6 +25,9 @@ class WebhooksDialog(QDialog):
         self.main = main
         self.csvpaths = main.csvpaths
         self.sidebar = parent
+
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+
         self.setWindowTitle(f"Configure webhooks for {name}")
 
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)

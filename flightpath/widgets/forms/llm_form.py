@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
     QFormLayout,
-    QComboBox,
+    QCheckBox,
     QLabel
 )
 
@@ -22,6 +22,10 @@ class LlmForm(BlankForm):
         self.key = QLineEdit()
         layout.addRow("API key: ", self.key)
 
+        self.checkbox = QCheckBox("")
+        self.checkbox.setChecked(True)
+        layout.addRow("Use for all projects: ", self.checkbox)
+
         self.setLayout(layout)
         self._setup()
 
@@ -29,20 +33,71 @@ class LlmForm(BlankForm):
         self.model.textChanged.connect(self.main.on_config_changed)
         self.base.textChanged.connect(self.main.on_config_changed)
         self.key.textChanged.connect(self.main.on_config_changed)
+        self.checkbox.stateChanged.connect(self.main.on_config_changed)
 
     def add_to_config(self, config) -> None:
-        config.add_to_config("llm", "model", self.model.text() )
-        config.add_to_config("llm", "api_base", self.base.text() )
-        config.add_to_config("llm", "api_key", self.key.text() )
+        config.add_to_config("llm", "model", self.model.text().strip() )
+        config.add_to_config("llm", "api_base", self.base.text().strip() )
+        config.add_to_config("llm", "api_key", self.key.text().strip() )
+        if self.checkbox.isChecked():
+            data = self.main.state.data
+            ai = data.get("llm")
+            if ai is None:
+                ai = {}
+                data["llm"] = ai
+            ai["model"] = self.model.text().strip()
+            ai["api_base"] = self.base.text().strip()
+            ai["api_key"] = self.key.text().strip()
+            self.main.state.data = data
+
+    def _llm_config_matches_state(self) -> bool:
+        data = self.main.state.data
+        ai = data.get("llm", {})
+
+        _ = self.config.get(section="llm", name="model", default="")
+        if _ == "":
+            return False
+        if ai.get("model") != _:
+            return False
+
+        _ = self.config.get(section="llm", name="api_base", default="")
+        if _ == "":
+            return False
+        if ai.get("api_base") != _:
+            return False
+
+        _ = self.config.get(section="llm", name="api_key", default="")
+        if _ == "":
+            return False
+        if ai.get("api_key") != _:
+            return False
+
+        return True
+
 
     def populate(self):
+        #
+        # we'll populate from .flightpath but not save. if the user doesn't hit save
+        # config.ini will still have blanks, but we'll check .flightpath when AI is
+        # actually used, so there won't be a gap.
+        #
+        data = self.main.state.data
+        ai = data.get("llm", {})
         config = self.config
-        _ = config.get(section="llm", name="model")
+
+        _ = config.get(section="llm", name="model", default="")
+        _ = ai.get("model", "") if _ == "" else _
         self.model.setText(_)
-        _ = config.get(section="llm", name="api_base")
+
+        _ = config.get(section="llm", name="api_base", default="")
+        _ = ai.get("api_base", "") if _ == "" else _
         self.base.setText(_)
-        _ = config.get(section="llm", name="api_key")
+
+        _ = config.get(section="llm", name="api_key", default="")
+        _ = ai.get("api_key", "") if _ == "" else _
         self.key.setText(_)
+
+        self.checkbox.setChecked(self._llm_config_matches_state())
 
     @property
     def fields(self) -> list[str]:

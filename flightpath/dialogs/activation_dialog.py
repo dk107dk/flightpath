@@ -22,10 +22,10 @@ from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.message_utility import MessageUtility as meut
 
 class ActivationDialog(QDialog):
-    COLLECT_SERIAL = "collect serially"
-    FF_SERIAL = "fast-forward serially"
-    COLLECT_BY_LINE = "collect breadth-first"
-    FF_BY_LINE = "fast-forward breadth-first"
+    COLLECT_SERIAL = "collect_paths"
+    FF_SERIAL = "fast-forward_paths"
+    COLLECT_BY_LINE = "collect_by_line"
+    FF_BY_LINE = "fast-forward_by_line"
 
     METHODS = {}
     METHODS[COLLECT_SERIAL] = "collect_paths"

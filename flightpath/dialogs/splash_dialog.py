@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from flightpath.util.state import State
 
 class SplashDialog(QDialog):
     """
@@ -40,13 +41,13 @@ class SplashDialog(QDialog):
 
     def __init__(
         self,
-        parent=None,
+        main=None,
         image_path: str = "",
         license_url: str = "https://www.gnu.org/licenses/lgpl-3.0.html",
         copyright_text: str = "© 2024 Atesta Analytics. All rights reserved.",
     ):
-        super().__init__(parent)
-
+        super().__init__()
+        self.main = main
         self._license_url = license_url
         self._copyright_text = copyright_text
         self._image_path = image_path
@@ -104,7 +105,7 @@ class SplashDialog(QDialog):
         # License link
         self._license_link = QLabel(
             f'<a href="{self._license_url}" style="color:#7a9cbf;">'
-            f"View FlightPath Data and CsvPath Framework license (LGPL)</a>"
+            f"FlightPath is licensed under the LGPL</a>"
         )
         self._license_link.setObjectName("licenseLink")
         self._license_link.setOpenExternalLinks(False)
@@ -121,6 +122,22 @@ class SplashDialog(QDialog):
         self._copyright_label.setObjectName("copyrightLabel")
         bottom_row.addWidget(self._copyright_label, stretch=1)
 
+        #
+        # exp
+        #
+        # check if ai setup
+        #
+        if State().data.get("llm", {}).get("model", "").strip() == "":
+            self._ai_btn = QPushButton("Setup AI")
+            self._ai_btn.setObjectName("aiBtn")
+            self._ai_btn.setFixedWidth(88)
+            self._ai_btn.setCursor(Qt.PointingHandCursor)
+            self._ai_btn.clicked.connect(self.accept_ai)
+            bottom_row.addWidget(self._ai_btn, alignment=Qt.AlignVCenter)
+
+        #
+        #
+        #
         self._close_btn = QPushButton("Continue")
         self._close_btn.setObjectName("closeBtn")
         self._close_btn.setFixedWidth(88)
@@ -130,6 +147,10 @@ class SplashDialog(QDialog):
 
         footer_layout.addLayout(bottom_row)
         root.addWidget(footer)
+
+    def accept_ai(self) -> None:
+        self.main.setup_ai_flag = True
+        self.accept()
 
     # ------------------------------------------------------------------ #
     #  Styling                                                             #
@@ -190,6 +211,29 @@ class SplashDialog(QDialog):
                 background: #1e2530;
                 border-color: #3a4250;
             }
+
+
+            /* ── AI button ─────────────────────────────────────────── */
+            QPushButton#aiBtn {
+                background: #252b36;
+                color: #c8d0db;
+                border: 1px solid #3a4250;
+                border-radius: 3px;
+                padding: 5px 14px;
+                font-size: 12px;
+                font-weight: 500;
+            }
+            QPushButton#aiBtn:hover {
+                background: #2e3646;
+                border-color: #4e5f78;
+                color: #e2e8f0;
+            }
+            QPushButton#aiBtn:pressed {
+                background: #1e2530;
+                border-color: #3a4250;
+            }
+
+
             """
         )
 

@@ -619,8 +619,8 @@ class Sidebar(QWidget):
         #
         # collect the vars needed
         #
-        print(f"sidebar: do_stage: self.main.csvpath_config.configpath: {self.main.csvpath_config.configpath}")
-        print(f"sidebar: do_stage: self.main._csvpaths.config.configpath: {self.main._csvpaths.config.configpath}")
+        #print(f"sidebar: do_stage: self.main.csvpath_config.configpath: {self.main.csvpath_config.configpath}")
+        #print(f"sidebar: do_stage: self.main._csvpaths.config.configpath: {self.main._csvpaths.config.configpath}")
         template = self.stage_dialog.template_ctl.text()
         template = template.strip() if template else None
         if template == "":

@@ -151,7 +151,7 @@ class SidebarArchive(SidebarRightBase):
         self.new_run_action.triggered.connect(self._new_run)
 
         self.repeat_run_action = QAction()
-        self.repeat_run_action.setText(self.tr("Repeat run"))
+        self.repeat_run_action.setText("Repeat run")
         self.repeat_run_action.triggered.connect(self._repeat_run)
 
         self.find_data_action = QAction()
@@ -163,11 +163,11 @@ class SidebarArchive(SidebarRightBase):
         self.copy_path_action.triggered.connect(self._copy_path)
 
         self.copy_action = QAction()
-        self.copy_action.setText(self.tr("Copy to working dir"))
+        self.copy_action.setText("Copy to working dir")
         self.copy_action.triggered.connect(self._copy_back_to_cwd)
 
         self.delete_action = QAction()
-        self.delete_action.setText(self.tr("Permanent delete"))
+        self.delete_action.setText("Permanent delete")
         self.delete_action.triggered.connect(self._delete_file_navigator_item)
 
         self.context_menu.addAction(self.repeat_run_action)
@@ -315,7 +315,7 @@ class SidebarArchive(SidebarRightBase):
             if global_pos:
                 self.context_menu.exec(global_pos)
 
-    def _find_data(self):
+    def _find_data(self) -> None:
         find = FindFileByReferenceDialog(main=self.main)
         self.main.show_now_or_later(find)
 

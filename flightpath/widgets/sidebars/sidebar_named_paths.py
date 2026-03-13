@@ -25,8 +25,10 @@ from csvpath.util.path_util import PathUtility as pathu
 from flightpath.widgets.clickable_label import ClickableLabel
 
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
+
 from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.dialogs.paths_template_dialog import PathsTemplateDialog
+from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.dialogs.webhooks_dialog import WebhooksDialog
 
 from flightpath.widgets.help.plus_help import HelpHeaderView
@@ -45,9 +47,9 @@ class SidebarNamedPaths(SidebarRightBase):
         self.new_run_action = None
         self.copy_action = None
         self.delete_action = None
+        self.find_data_action = None
         self.view = None
         self.setup()
-        self._template_dialog = None
 
     def setup(self) -> None:
         try:
@@ -131,25 +133,35 @@ class SidebarNamedPaths(SidebarRightBase):
 
         self.new_run_action = QAction()
         self.new_run_action.setText("New run")
+        self.new_run_action.triggered.connect(self._new_run)
+
         self.copy_action = QAction()
         self.copy_action.setText("Copy to working dir")
+        self.copy_action.triggered.connect(self._copy_back_to_cwd)
+
         self.template_action = QAction()
         self.template_action.setText("Set template")
+        self.template_action.triggered.connect(self._template)
+
         self.webhook_action = QAction()
         self.webhook_action.setText("Set webhooks")
+        self.webhook_action.triggered.connect(self._webhooks)
+
         self.delete_action = QAction()
         self.delete_action.setText("Permanent delete")
-
-        self.new_run_action.triggered.connect(self._new_run)
-        self.copy_action.triggered.connect(self._copy_back_to_cwd)
-        self.template_action.triggered.connect(self._template)
-        self.webhook_action.triggered.connect(self._webhooks)
         self.delete_action.triggered.connect(self._delete_file_navigator_item)
+
+        self.find_data_action = QAction()
+        self.find_data_action.setText("Find data")
+        self.find_data_action.triggered.connect(self._find_data)
+
+
 
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.copy_action)
         self.context_menu.addAction(self.template_action)
         self.context_menu.addAction(self.webhook_action)
+        self.context_menu.addAction(self.find_data_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
 
@@ -189,22 +201,35 @@ class SidebarNamedPaths(SidebarRightBase):
             #
             # individual files may not be deleted, but we can allow dir deletes for cleanup
             #
-            if nos.isfile():
+            if nos.isfile() and path.endswith("definition.json"):
+                self.delete_action.setVisible(False)
+                self.new_run_action.setVisible(True)
+                self.webhook_action.setVisible(True)
+                self.copy_action.setVisible(True)
+                self.template_action.setVisible(True)
+                self.find_data_action.setVisible(True)
+            elif nos.isfile():
                 self.delete_action.setVisible(False)
                 self.new_run_action.setVisible(False)
-                self.template_action.setVisible(False)
                 self.webhook_action.setVisible(False)
                 self.copy_action.setVisible(True)
+                self.template_action.setVisible(False)
+                self.find_data_action.setVisible(True)
             else:
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
-                self.template_action.setVisible(True)
                 self.webhook_action.setVisible(True)
                 self.copy_action.setVisible(False)
+                self.template_action.setVisible(True)
+                self.find_data_action.setVisible(True)
             if path and ( path.endswith("manifest.json") or path.endswith(".db") ):
                 self.delete_action.setVisible(False)
                 self.new_run_action.setVisible(False)
                 self.copy_action.setVisible(True)
+                self.find_data_action.setVisible(False)
+                self.webhook_action.setVisible(False)
+                self.template_action.setVisible(False)
+
             if global_pos:
                 self.context_menu.exec(global_pos)
 
@@ -218,10 +243,8 @@ class SidebarNamedPaths(SidebarRightBase):
                 raise ValueError(f"Path to item {path} doesn't start with {r}")
             path = path[len(r)+1:]
             name = pathu.parts(path)[0]
-            self._webhook_dialog = WebhooksDialog(main=self.main, name=name, parent=self)
-            # When the dialog finishes, drop the reference
-            self._webhook_dialog.finished.connect(lambda _: setattr(self, "_webhook_dialog", None))
-            self._webhook_dialog.show_dialog()
+            dialog = WebhooksDialog(main=self.main, name=name, parent=self)
+            dialog.show_dialog()
 
 
     def _template(self) -> None:
@@ -233,12 +256,14 @@ class SidebarNamedPaths(SidebarRightBase):
                 raise ValueError(f"Path to item {path} doesn't start with {r}")
             path = path[len(r)+1:]
             name = pathu.parts(path)[0]
-            self._template_dialog = PathsTemplateDialog(main=self.main, name=name, parent=self)
-            # When the dialog finishes, drop the reference
-            self._template_dialog.finished.connect(lambda _: setattr(self, "_template_dialog", None))
-            self._template_dialog.show_dialog()
+            dialog = PathsTemplateDialog(main=self.main, name=name, parent=self)
+            dialog.show_dialog()
 
-    def _delete_file_navigator_item(self):
+    def _find_data(self) -> None:
+        find = FindFileByReferenceDialog(main=self.main)
+        self.main.show_now_or_later(find)
+
+    def _delete_file_navigator_item(self) -> None:
         index = self.view.currentIndex()
         if index.isValid():
             path = self.model.filePath(index)

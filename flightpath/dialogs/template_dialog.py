@@ -24,9 +24,11 @@ class TemplateDialog(QDialog):
         self.main = main
         self.csvpaths = main.csvpaths
         self.sidebar = parent
+
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+
         self.setWindowTitle(f"Add a template to {name}")
 
-        self.method = None
         self.name = name
         self.set_button = QPushButton()
         self.set_button.setText("Set")

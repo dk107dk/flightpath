@@ -6,7 +6,6 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QPushButton,
         QLabel,
         QDialog,
-        QLineEdit,
         QFormLayout,
         QApplication,
         QComboBox,
@@ -15,8 +14,7 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
         QTabWidget,
         QScrollArea,
         QWidget,
-        QPlainTextEdit,
-        QMessageBox
+        QPlainTextEdit
 )
 from PySide6.QtCore import Qt, QSize
 from csvpath.util.file_readers import DataFileReader

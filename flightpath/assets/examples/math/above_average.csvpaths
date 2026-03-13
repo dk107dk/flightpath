@@ -17,8 +17,10 @@
    id: find average
    test-data: examples/math/Automobiles_Annual_Imports_and_Exports_Port_Authority_of_NY.csv
 ~
-
-$[1*][ @ave = average(#2) ]
+$[1*][
+ @ave = average(#2)
+ last() -> print("see the Variables tab for the value of @ave: $.variables.ave")
+]
 
 ---- CSVPATH ----
 

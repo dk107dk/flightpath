@@ -93,12 +93,16 @@ This requirement will be removed in a future release.
 
     @classmethod
     def show_splash(cls) -> bool:
+        #
+        # we show the splash every 10 opens, incl. the first. the
+        # main window may choose to show on some other schedule, e.g.
+        # if AI config not set. gate guard is more general purpose.
+        #
         state = State().data
-        if not state:
-            state = {}
-        i = state.get("opens")
-        i = int(i) if isinstance(i, int) else 0
-        if i == 0 or i % 10 == 0:
+        opens = state.get("opens", 0)
+        if not isinstance(opens, int):
+            opens = int(opens)
+        if opens == 0 or opens % 10 == 0:
             return True
         return False
 
@@ -117,7 +121,6 @@ This requirement will be removed in a future release.
         )
         args = parser.parse_args()
 
-        print(f"GateGuard: running server-mode: {args.server_mode}")
         if args.server_mode is False:
             return False
         #
@@ -134,7 +137,6 @@ This requirement will be removed in a future release.
         state = State()
         data = state.data
         key = data.get("server_mode_ticket")
-        print(f"Found server ticket: {key}")
         key = str(key)
         ret = False
         #
@@ -144,7 +146,6 @@ This requirement will be removed in a future release.
             if key == key.upper():
                 key = str(os.getenv(key))
             h = hashlib.sha256(key.encode()).hexdigest()
-            print(f"Server ticket hash: {h}")
             ret = h == GateGuard.TICKET_HASH
         except Exception as ex:
             print(f"Error: {type(ex)}: {ex}")
