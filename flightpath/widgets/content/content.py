@@ -34,8 +34,8 @@ class Content(ClosingTabsHolder):
         TabWidgetOverlayButton(self.tab_widget, self, main)
         layout.addWidget(self.tab_widget)
         layout.setContentsMargins(1, 3, 1, 2)
-
         self.setLayout(layout)
+        self._do_i_close_reentry_block = False
 
         ts = self.main.findChildren(QToolBar)
         if len( ts ) == 0:
@@ -82,28 +82,34 @@ class Content(ClosingTabsHolder):
         )
 
     def do_i_close(self, i:int) -> bool:
-        widget = self.tab_widget.widget(i)
-        cmod = isinstance(widget, CsvpathViewer) and not widget.saved
-        jmod = isinstance(widget, JsonViewer2) and widget.modified
-        mmod = isinstance(widget, MdViewer) and not widget.saved
-        dmod = isinstance(widget, DataViewer) and not widget.saved
-        mod = cmod or jmod or mmod or dmod
-        if mod:
-            #
-            # bring tab into view
-            #
-            self.tab_widget.setTabVisible(i, True)
-            self.tab_widget.setCurrentIndex(i)
-            self.main.main_layout.setCurrentIndex(1)
-            #
-            # confirm
-            #
-            path = widget.objectName()
-            if path.startswith(self.main.state.cwd):
-                path = path[len(self.main.state.cwd) + 1:]
-            if not meut.yesNo(parent=self, title="Close file", msg=f"Close {path} without saving?"):
-                return False
-        return True
+        if self._do_i_close_reentry_block is True:
+            return
+        self._do_i_close_reentry_block = True
+        try:
+            widget = self.tab_widget.widget(i)
+            cmod = isinstance(widget, CsvpathViewer) and not widget.saved
+            jmod = isinstance(widget, JsonViewer2) and widget.modified
+            mmod = isinstance(widget, MdViewer) and not widget.saved
+            dmod = isinstance(widget, DataViewer) and not widget.saved
+            mod = cmod or jmod or mmod or dmod
+            if mod:
+                #
+                # bring tab into view
+                #
+                self.tab_widget.setTabVisible(i, True)
+                self.tab_widget.setCurrentIndex(i)
+                self.main.main_layout.setCurrentIndex(1)
+                #
+                # confirm
+                #
+                path = widget.objectName()
+                if path.startswith(self.main.state.cwd):
+                    path = path[len(self.main.state.cwd) + 1:]
+                return meut.yesNo(parent=self, title="Close file", msg=f"Close {path} without saving?")
+            return True
+        finally:
+            self._do_i_close_reentry_block = False
+
 
     def close_all_tabs(self):
         #

@@ -21,15 +21,13 @@ class WebhooksDialog(QDialog):
 
 
     def __init__(self, *, main, name, parent):
-        super().__init__(parent)
+        super().__init__(None)
         self.main = main
         self.csvpaths = main.csvpaths
         self.sidebar = parent
 
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-
         self.setWindowTitle(f"Configure webhooks for {name}")
-
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.NonModal)
 
@@ -50,8 +48,6 @@ class WebhooksDialog(QDialog):
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         self.all_url = QLineEdit()
         self.valid_url = QLineEdit()
@@ -217,6 +213,5 @@ class WebhooksDialog(QDialog):
 
 
     def show_dialog(self) -> None:
-        self.exec()
-        #self.show()
+        self.show()
 

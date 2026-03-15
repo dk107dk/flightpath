@@ -123,7 +123,7 @@ class DataToolbar(QToolBar):
         #
         # switch to raw source view
         #
-        self.raw_source = QPushButton("Toggle raw source")
+        self.raw_source = QPushButton("Toggle source")
         self.addWidget(self.raw_source)
         self._add_help(self.on_help_raw_source_toolbar)
         #

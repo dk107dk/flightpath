@@ -3,6 +3,7 @@ import time
 import darkdetect
 from csvpath import CsvPath
 from csvpath import CsvPaths
+from csvpath.util.nos import Nos
 from csvpath.util.file_readers import DataFileReader
 from csvpath.matching.functions.lines.dups import CountDups
 class Inspector:
@@ -62,6 +63,7 @@ class Inspector:
 
         info = {}
         info["ui_dark"] = darkdetect.isDark()
+        info["name"] = os.path.basename(Nos(self.filepath).strip_protocol(self.filepath))
         info["file"] = self.filepath
         info["sample_size"] = self.sample_size
         info["from_line"] = self.from_line

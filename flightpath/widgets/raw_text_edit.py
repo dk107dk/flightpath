@@ -8,6 +8,7 @@ from csvpath.util.nos import Nos
 
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.os_utility import OsUtility as osut
+from flightpath.util.key_utility import KeyUtility as keut
 
 from flightpath.editable import EditStates
 
@@ -24,11 +25,7 @@ class RawTextEdit(QPlainTextEdit):
         if self.editable == EditStates.UNEDITABLE:
             return
         super().keyPressEvent(event)
-        t = event.text()
-        if t and t != "":
-            #
-            # if we get here we're a "real" keystroke, not a ctrl or anything like that.
-            #
+        if keut.is_edit_key(event):
             self.desaved()
 
     def desaved(self) -> bool:

@@ -1,8 +1,9 @@
 import os
 
-from PySide6.QtWidgets import QTabWidget, QPushButton, QStyle, QTabBar, QWidget, QMenu
-from PySide6.QtGui import QIcon, QAction
-from PySide6.QtCore import Slot, Qt
+from PySide6.QtWidgets import QTabWidget, QPushButton, QStyle, QTabBar, QWidget, QMenu, QFileDialog, QTextEdit
+from PySide6.QtGui import QIcon, QAction, QPageLayout, QPageSize
+from PySide6.QtPrintSupport import QPrinter
+from PySide6.QtCore import Slot, Qt, QMarginsF
 
 from csvpath.util.nos import Nos
 
@@ -48,7 +49,14 @@ class ClosingTabs(QTabWidget):
         # ignore so we don't have to check what tab bar we are in.
         #
         print(f"object asne: {t.objectName()}")
-        if  t.objectName() in ["Code", "Why", "Help Content"]:
+        if  t.objectName() in ["Code"]:
+            return
+        if  t.objectName() in ["Why", "Help Content", "FileInfo"]:
+            menu = QMenu(self)
+            save_sample = QAction("Save to PDF", self)
+            menu.addAction(save_sample)
+            save_sample.triggered.connect(lambda: self.on_save_pdf(index))
+            menu.popup(self.mapToGlobal(pos))
             return
         menu = QMenu(self)
         save_sample = QAction("Save", self)
@@ -56,12 +64,48 @@ class ClosingTabs(QTabWidget):
         save_sample.triggered.connect(lambda: self.on_save_sample(index))
         menu.popup(self.mapToGlobal(pos))
 
+    def on_save_pdf(self, index:int, landscape=False) -> None:
+        t = self.widget(index)
+        print(f"on_save_pdfK: {t}")
+        ton = t.objectName()
+        if ton == "FileInfo":
+            landscape = True
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export PDF",
+            "",
+            "PDF Files (*.pdf);;All Files (*)"
+        )
+        if path:
+            if not path.lower().endswith('.pdf'):
+                path += '.pdf'
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOutputFormat(QPrinter.PdfFormat)
+
+            margins = QMarginsF(0, 0, 0, 0)
+
+            orientation = QPageLayout.Orientation.Landscape if landscape is True else QPageLayout.Orientation.Portrait
+            layout = QPageLayout(QPageSize(QPageSize.A4), orientation, margins)
+            layout.setMode(QPageLayout.FullPageMode)
+
+            printer.setPageLayout(layout)
+            printer.setPageMargins(margins)
+            printer.setOutputFileName(path)
+
+            document = None
+            if isinstance(t, QTextEdit):
+                document = t.document()
+            else:
+                item = t.layout().itemAt(0)
+                document = item.widget().document()
+            document.setTextWidth(600)
+
+            document.print_(printer)
+
+
     def on_save_sample(self, index:int) -> None:
         if index == -1:
-            return  # Clicked outside of any tab
-        #
-        # find directory
-        #
+            return
         path = self.main.selected_file_path
         nos = Nos(path)
         if nos.isfile():
@@ -95,6 +139,8 @@ class ClosingTabs(QTabWidget):
         #
         # confirm if needed
         #
+        if t is None:
+            raise ValueError(f"Tab named {name} cannot be None")
         if self.parent and hasattr( self.parent, "do_i_close"):
             if not self.parent.do_i_close(t[0]):
                 return False
@@ -165,8 +211,6 @@ class ClosingTabs(QTabWidget):
         close_button.setStyleSheet("border: none;")
         close_button.clicked.connect(lambda: self.close_tab(widget.objectName()))
         self.tabBar().setTabButton(index, QTabBar.ButtonPosition.LeftSide, close_button)
-
-
 
     def on_tab_change(self):
         i = self.currentIndex()

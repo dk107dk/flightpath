@@ -17,7 +17,7 @@ class SaveCsvToDialog(QDialog):
 
         self.main = main
         self.path = path
-        self.setWindowTitle("Save to")
+        self.setWindowTitle("Save sample to")
         self.setFixedSize(QSize(520, 150))
 
         layout = QVBoxLayout(self)

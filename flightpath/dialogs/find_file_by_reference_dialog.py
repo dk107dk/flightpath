@@ -22,7 +22,6 @@ from PySide6.QtWidgets import ( # pylint: disable=E0611
 from PySide6.QtGui import QClipboard, QStandardItemModel, QStandardItem, QAction
 from PySide6.QtCore import Qt # pylint: disable=E0611
 
-#from csvpath import CsvPaths
 from csvpath.util.references.files_reference_finder_2 import FilesReferenceFinder2 as FilesReferenceFinder
 from csvpath.util.references.results_reference_finder_2 import ResultsReferenceFinder2 as ResultsReferenceFinder
 from csvpath.util.path_util import PathUtility as pathu
@@ -279,6 +278,7 @@ class FindFileByReferenceDialog(QDialog):
             self.named_x_name.addItem(name)
 
     def show_dialog(self) -> None:
+        #self.show()
         self.exec()
 
     def _on_copy(self) -> None:

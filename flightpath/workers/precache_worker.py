@@ -35,11 +35,13 @@ class PreCacheWorker(QRunnable):
                     #
                     if os.path.dirname(file).endswith(f"{os.sep}cache"):
                         continue
-
                     if file.lower().endswith(".csv"):
                         self.signals.messages.emit(f"Precaching {file}")
-                        cacher.get_new_line_monitor(file)
-
+                        try:
+                            cacher.get_new_line_monitor(file)
+                        except Exception as e:
+                            print(traceback.format_exc())
+                            self.signals.finished.emit(f"Precaching error in {file}")
         except Exception as e:
             print(traceback.format_exc())
             self.signals.finished.emit("A precaching error occured")
