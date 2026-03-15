@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
     QComboBox,
+    QLabel,
     QMenu,
     QMessageBox,
     QInputDialog,
@@ -256,6 +257,8 @@ class Sidebar(QWidget):
         # reconnect the nav so we react to clicking on files
         #
         self.file_navigator.clicked.connect(self.main.on_tree_click)
+
+
         if replace and old:
             self.layout().replaceWidget(old, self.file_navigator)
         else:
@@ -775,26 +778,32 @@ class Sidebar(QWidget):
     def _edit_as_json(self) -> None:
         index = self.file_navigator.selectionModel().selectedIndexes()
         if len(index) < 1:
-            print(f"_edit_as_json: no index. returning")
             return
         index = index[0]
         path = None
         if not index.isValid():
-            print(f"_edit_as_json: invalid index. returning")
             return
         path = self.proxy_model.filePath(index)
+        self._do_edit_as_json(path)
+
+    def _do_edit_as_json(self, path:str) -> None:
+        if path is None:
+            raise ValueError("Path cannot be none")
         nos = Nos(path)
         if not nos.isfile():
-            print(f"_edit_as_json: {path} is not a file. returning")
             return
+        print(f"_do_edit_as_json: path: {path}")
         #
         # do we have one already?
         # if we have the file already open we need to close it
         #
         data_view = taut.find_tab(self.main.content.tab_widget, path)
+        print(f"_do_edit_as_json: data_view: {data_view}")
         if data_view is not None:
             self.main.content.tab_widget.close_tab(path)
+            print(f"_do_edit_as_json: after close")
         self.main.spin_up_json_worker(path=path, editable=EditStates.EDITABLE)
+        print(f"_do_edit_as_json: done")
 
 
 
@@ -822,8 +831,8 @@ class Sidebar(QWidget):
                     content = """# Title
 *(hit control-t to toggle to raw markdown editing)*
                     """
-                #elif ns[1] in ["jsonl", "ndjson", "jsonlines"]:
-                #    content = """{"":""}"""
+                elif ns[1] == "txt":
+                    content = ""
                 elif ns[1] in self.main.csvpath_config.get(section="extensions", name="csv_files"):
                     content = ","
                 elif ns[1] in self.main.csvpath_config.get(section="extensions", name="csvpath_files"):

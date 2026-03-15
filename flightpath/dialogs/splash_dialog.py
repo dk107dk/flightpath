@@ -105,7 +105,7 @@ class SplashDialog(QDialog):
         # License link
         self._license_link = QLabel(
             f'<a href="{self._license_url}" style="color:#7a9cbf;">'
-            f"FlightPath is licensed under the LGPL</a>"
+            f"FlightPath Data is licensed under the LGPL</a>"
         )
         self._license_link.setObjectName("licenseLink")
         self._license_link.setOpenExternalLinks(False)

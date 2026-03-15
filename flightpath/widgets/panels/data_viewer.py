@@ -484,17 +484,11 @@ class DataViewer(QWidget):
 
     def toggle_grid_raw(self):
         i = self.current_view_index
-        #i = self.layout().currentIndex()
         i = 0 if i == 1 else 1
-        #
         if i == 1:
-        #
             self.show_raw()
-        #
         else:
-        #
             self.show_grid()
-        #
         self.layout().setCurrentIndex(i)
 
     def show_grid(self) -> None:

@@ -5,6 +5,7 @@ from PySide6.QtGui import QColor, QPainter, QTextFormat, QFontDatabase, QTextBlo
 from flightpath.editable import EditStates
 from flightpath.widgets.editor.syntax import JsonHighlighter
 from flightpath.util.style_utils import StyleUtility as stut
+from flightpath.util.key_utility import KeyUtility as keut
 
 class LineNumberArea(QWidget):
     def __init__(self, editor):
@@ -41,21 +42,22 @@ class Editor(QPlainTextEdit):
         self.update_line_number_area_width()
         self.highlight_current_line()
 
-
     def keyPressEvent(self, event: QKeyEvent):
-        if event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
+        if keut.has_control_key(event):
             super().keyPressEvent(event)
             return
         if self.parentWidget().editable == EditStates.UNEDITABLE:
             return
         else:
-            self.parentWidget()._set_modified(True)
+            if keut.is_edit_key(event):
+                self.parentWidget()._set_modified(True)
         super().keyPressEvent(event)
         cursor: QTextCursor = self.textCursor()
         line = cursor.blockNumber()
         column = cursor.positionInBlock()
         msg = f"[{line+1}, {column}]"
         self.parentWidget().main.statusBar().showMessage(msg)
+
 
 
 

@@ -105,6 +105,8 @@ class JsonViewer2(QWidget):
         # set to True when the file has changed and needs to be saved
         #
         self.modified = False
+        self._expanded = False
+
 
 
 
@@ -189,22 +191,17 @@ class JsonViewer2(QWidget):
                         action.setShortcut(QKeySequence("Ctrl+d"))
                     action.setShortcutVisibleInContextMenu(True)
 
-        pretty_print_action = QAction()
-        pretty_print_action.setText("Beautify")
-        pretty_print_action.setShortcut(QKeySequence("Ctrl+b"))
-        pretty_print_action.setShortcutVisibleInContextMenu(True)
-        pretty_print_action.triggered.connect(self._pretty)
-        menu.addAction(pretty_print_action)
 
         info = QFileInfo(self.path)
         if info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
             expand_action = QAction()
-            expand_action.setText("Expand")
+            expand_action.setText("Expand to JSON")
             expand_action.setShortcut(QKeySequence("Ctrl+e"))
             expand_action.setShortcutVisibleInContextMenu(True)
             expand_action.triggered.connect(self._expand)
             menu.addAction(expand_action)
-
+            if self._expanded is True:
+                expand_action.setText("Contract to JSONL")
             check_jsonl = QAction()
             check_jsonl.setText("Check well-formedness")
             check_jsonl.setShortcut(QKeySequence("Ctrl+l"))
@@ -213,6 +210,13 @@ class JsonViewer2(QWidget):
             menu.addAction(check_jsonl)
 
         else:
+            pretty_print_action = QAction()
+            pretty_print_action.setText("Beautify")
+            pretty_print_action.setShortcut(QKeySequence("Ctrl+b"))
+            pretty_print_action.setShortcutVisibleInContextMenu(True)
+            pretty_print_action.triggered.connect(self._pretty)
+            menu.addAction(pretty_print_action)
+
             well_formed_action = QAction()
             well_formed_action.setText("Check well-formedness")
             well_formed_action.setShortcut(QKeySequence("Ctrl+f"))
@@ -276,6 +280,8 @@ class JsonViewer2(QWidget):
         t = None
         if info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
             t = strut.jsonl_text_to_lines(self.view.toPlainText())
+            self.view.setPlainText(t)
+            self._expanded = False
         else:
             s = strut.sanitize_json(self.view.toPlainText())
             try:
@@ -292,18 +298,23 @@ class JsonViewer2(QWidget):
         t = None
         if not info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
             return
-
-        t = self.view.toPlainText()
-        expanded = ""
-        for _ in t.split("\n"):
-            try:
-                j = json.loads(_)
-                expanded += json.dumps(j, indent=2)
-            except:
-                expanded += _
-            expanded += "\n"
-        self.view.setPlainText(expanded)
-        self._set_modified(True)
+        if self._expanded:
+            self._pretty()
+            self._set_modified(True)
+            self._expanded = False
+        else:
+            t = self.view.toPlainText()
+            expanded = ""
+            for _ in t.split("\n"):
+                try:
+                    j = json.loads(_)
+                    expanded += json.dumps(j, indent=2)
+                except:
+                    expanded += _
+                expanded += "\n"
+            self.view.setPlainText(expanded)
+            self._set_modified(True)
+            self._expanded = True
 
     def _check_lines(self) -> str:
         info = QFileInfo(self.path)

@@ -1,9 +1,8 @@
-# pylint: disable=C0302
-""" The main window and application startup (at bottom, below classes) """
+from pathlib import Path
 import sys
 import os
 import csv
-
+import traceback
 from pathlib import Path
 
 import darkdetect
@@ -599,7 +598,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def _connects(self) -> None:
         #
-        # CAUTION!
+        # TODO / CAUTION!
         # be aware that this setup method is called at every project change
         # that means we are accumulating connects. atm, not a big problem. but
         # near-term need to refactor.
@@ -870,44 +869,82 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         table_model = TableModel(data=data, editable=(editable == EditStates.EDITABLE))
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(1)
+
+        """
+        from csvpath.util.log_utility import LogUtility as lout
+        lout.log_brief_trace()
+        print("asdssss")
+        """
+
         #
         # need to add a tab
         #   need to check if a tab already exists?
         #
         obj_name = filepath
         data_view = taut.find_tab(self.content.tab_widget, filepath)
+        dv = None
+        #
+        # hang to the tuple for a min. in case we have a json viewer
+        #
         if data_view is None:
-            data_view = DataViewer(parent=self.content, editable=editable)
-            data_view.setObjectName(obj_name)
+            dv = DataViewer(parent=self.content, editable=editable)
+            dv.setObjectName(obj_name)
             #
             # make sure we have the lines so the raw_viewer can take the same
             #
-            data_view.lines_to_take = lines_to_take
+            dv.lines_to_take = lines_to_take
             name = os.path.basename(filepath)
-            self.content.tab_widget.addTab(data_view, name)
+            self.content.tab_widget.addTab(dv, name)
         else:
             #
-            # find_tab -> (index, widget)
+            # if we have a dataviewer2 it is because we opened using right-click edit as json.
+            # then we clicked the file name in a regular way. ideally the jsonviewer2 should be
+            # replaced by a dataviewer.
             #
-            data_view = data_view[1]
-        table_model.signals.edit_made.connect( data_view.on_edit_made )
-        table_model.signals.columns_inserted.connect( data_view.on_row_or_column_edit )
-        table_model.signals.columns_deleted.connect( data_view.on_row_or_column_edit )
-        table_model.signals.rows_inserted.connect( data_view.on_row_or_column_edit )
-        table_model.signals.rows_deleted.connect( data_view.on_row_or_column_edit )
-
-        data_view.display_data(table_model)
-        #
-        # when  data _view is visible we show the sample tool bar
-        #
-        if jsut.is_jsonl(filepath):
-            self.content.toolbar.enable()
-            #self.content.toolbar.disable()
-        else:
-            self.content.toolbar.enable()
-
-        self.show_now_or_later(self.content.toolbar)
-        taut.select_tab(self.content.tab_widget, data_view)
+            if isinstance(data_view[1], JsonViewer2):
+                #
+                # close the json view. it will prompt to save. we should be Ok with getting
+                # prompted i think.
+                #
+                #
+                # remove old view
+                #
+                self.content.tab_widget.close_tab(filepath)
+                #
+                # create the new view
+                #
+                dv = DataViewer(parent=self.content, editable=editable)
+                dv.setObjectName(obj_name)
+            else:
+                #
+                # find_tab -> (index, widget)
+                #
+                dv = data_view[1]
+        try:
+            #
+            # make sure we have the lines so the raw_viewer can take the same
+            #
+            dv.lines_to_take = lines_to_take
+            name = os.path.basename(filepath)
+            self.content.tab_widget.addTab(dv, name)
+            table_model.signals.edit_made.connect( dv.on_edit_made )
+            table_model.signals.columns_inserted.connect( dv.on_row_or_column_edit )
+            table_model.signals.columns_deleted.connect( dv.on_row_or_column_edit )
+            table_model.signals.rows_inserted.connect( dv.on_row_or_column_edit )
+            table_model.signals.rows_deleted.connect( dv.on_row_or_column_edit )
+            dv.display_data(table_model)
+            #
+            # when  data _view is visible we show the sample tool bar
+            #
+            if jsut.is_jsonl(filepath):
+                self.content.toolbar.enable()
+            else:
+                self.content.toolbar.enable()
+            self.show_now_or_later(self.content.toolbar)
+            taut.select_tab(self.content.tab_widget, dv)
+        except Exception as e:
+            print(traceback.format_exc())
+            print(f"Error in update views at signals connect on: {type(dv)} showing {filepath}")
 
 
     def on_data_rows_changed(self) -> None:
@@ -1087,7 +1124,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # file view by hand. regardless for now, just switching to canonical and
         # moving on.
         #
-        #self.selected_file_path = file_info.filePath()
         self.selected_file_path = file_info.canonicalFilePath()
         nos = Nos(self.selected_file_path)
         if not nos.isfile():
@@ -1100,6 +1136,36 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             editable = EditStates.EDITABLE
         else:
             editable = EditStates.UNEDITABLE
+        #
+        # if we are swapping one open view for another based on a tree click (e.g.
+        # jsonl open as json with a click on the same file to open in grid) do we
+        # need to check here and close the original first, before continuing? if
+        # we don't, it would seem that we have a problem where there could be multiple
+        # tabs for the same path.
+        #
+
+        #
+        # are we checking for an open tab, or just reloading?
+        #
+        t = taut.find_tab(self.content.tab_widget, nos.path)
+        if t is not None:
+            #
+            #
+            #
+            print(f"on_tree_click: found t: {t}")
+            if isinstance(t[1], JsonViewer2):
+                #
+                # close so we can reopen
+                #
+                print(f"on_tree_click: t is a jsonl. closing it.")
+                self.content.tab_widget.close_tab(nos.path)
+            else:
+                print(f"on_tree_click: we have a t so selecting it and done.")
+                taut.select_tab(self.content.tab_widget, t[0])
+                return
+        #
+        #
+        #
         self.read_validate_and_display_file(editable=editable)
         self.statusBar().showMessage(f"  {self.selected_file_path}")
         #
@@ -1155,7 +1221,16 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def on_raw_source(self) -> None:
         index = self.content.tab_widget.currentIndex()
         t = self.content.tab_widget.widget(index)
-        t.toggle_grid_raw()
+        path= t.objectName()
+        filepath = Path(path)
+        ext = filepath.suffix
+        print(f"on_rawasor: ext: {ext}")
+        if ext in [".jsonl", ".jsonlines", ".ndjson"]:
+            self.sidebar._do_edit_as_json(path)
+            print(f"on_rawasor: ext: _do_edit_as_json done")
+        else:
+            t.toggle_grid_raw()
+            print(f"on_rawasor: ext: toggle_grid_raw done")
 
     def on_ai_gen(self) -> None:
         index = self.content.tab_widget.currentIndex()

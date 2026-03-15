@@ -9,15 +9,17 @@ from csvpath.util.nos import Nos
 from csvpath.managers.paths.paths_manager import PathsManager
 
 from flightpath.util.csvpath_loader import CsvpathLoader
-from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.syntax.span_utility import SpanUtility as sput
-from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 from flightpath.dialogs.generate_csv_dialog import GenerateCsvDialog
 from flightpath.dialogs.ask_question_dialog import AskQuestionDialog
 
 from flightpath.editable import EditStates
+
+from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.util.file_utility import FileUtility as fiut
+from flightpath.util.syntax.span_utility import SpanUtility as sput
+from flightpath.util.key_utility import KeyUtility as keut
+from flightpath.util.os_utility import OsUtility as osut
 
 class CsvPathTextEdit(QPlainTextEdit):
 
@@ -64,13 +66,9 @@ class CsvPathTextEdit(QPlainTextEdit):
     def keyPressEvent(self, event: QKeyEvent):
         if self.editable == EditStates.UNEDITABLE:
             return
+        if keut.is_edit_key(event):
+            self.desaved()
         super().keyPressEvent(event)
-        t = event.text()
-        #
-        # not sure why t would exist but be ""
-        #
-        #if t and t != "":
-        self.desaved()
 
     def desaved(self) -> bool:
         if self.editable == EditStates.UNEDITABLE:
