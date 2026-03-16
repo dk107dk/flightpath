@@ -86,10 +86,7 @@ class Sidebar(QWidget):
         #
         #
         #
-        #self._setup_tree()
         self._set_project_from_state()
-
-
         self.open_config_box = self._help_button(
             text="Open config",
             on_click=self.main.open_config,
@@ -227,6 +224,8 @@ class Sidebar(QWidget):
             exts.append("*.md")
         if "*.txt" not in exts:
             exts.append("*.txt")
+        if "*.log" not in exts:
+            exts.append("*.log")
         #
         # TODO: find the current key dirs in config and filter out
         #
@@ -622,8 +621,6 @@ class Sidebar(QWidget):
         #
         # collect the vars needed
         #
-        #print(f"sidebar: do_stage: self.main.csvpath_config.configpath: {self.main.csvpath_config.configpath}")
-        #print(f"sidebar: do_stage: self.main._csvpaths.config.configpath: {self.main._csvpaths.config.configpath}")
         template = self.stage_dialog.template_ctl.text()
         template = template.strip() if template else None
         if template == "":
@@ -792,20 +789,14 @@ class Sidebar(QWidget):
         nos = Nos(path)
         if not nos.isfile():
             return
-        print(f"_do_edit_as_json: path: {path}")
         #
         # do we have one already?
         # if we have the file already open we need to close it
         #
         data_view = taut.find_tab(self.main.content.tab_widget, path)
-        print(f"_do_edit_as_json: data_view: {data_view}")
         if data_view is not None:
             self.main.content.tab_widget.close_tab(path)
-            print(f"_do_edit_as_json: after close")
         self.main.spin_up_json_worker(path=path, editable=EditStates.EDITABLE)
-        print(f"_do_edit_as_json: done")
-
-
 
 
     def _new_file_navigator_item(self):

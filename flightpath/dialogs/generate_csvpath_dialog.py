@@ -105,7 +105,7 @@ class GenerateCsvpathDialog(QDialog):
         self.sample_size.setFixedWidth(55)
         for _ in [10,50,100]:
             self.sample_size.addItem(str(_))
-        self.sample_size.editTextChanged.connect(self.on_sample_size_change)
+        self.sample_size.currentTextChanged.connect(self.on_sample_size_change)
         box = HelpIconPackager.add_help(
             main=self.main,
             widget=self.sample_size,
@@ -230,23 +230,29 @@ class GenerateCsvpathDialog(QDialog):
         if prompt.rules is None:
             prompt.rules = ""
 
-        prompt.save()
-        generation = generator.do_send(context=context, prompt=prompt, datapath=self.path)
-        #
-        # set the remaining dots to done
-        #
+        text = None
+        if True:
+            prompt.save()
+            generation = generator.do_send(context=context, prompt=prompt, datapath=self.path)
+            #
+            # set the remaining dots to done
+            #
+            self.progress.complete()
+            #
+            # set the remaining dots to done
+            #
+            text = generation.response_text
+            print(f"generation: see: {generation.my_root}")
+        else:
+            text = "Done!!!"
+
         self.progress.complete()
-        #
-        # set the remaining dots to done
-        #
-        text = generation.response_text
-        print(f"generation: see: {generation.my_root}")
 
         if not hasattr( self, "answer"):
             self.answer = ClassLoader.load(
                 "from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit",
                 args=[],
-                kwargs={"main":self.main, "parent":self, "editable":EditStates.EDITABLE}
+                kwargs={"main":self.main, "parent":None, "editable":EditStates.UNEDITABLE}
             )
             self.answer.setLineWrapMode(QPlainTextEdit.NoWrap)
             self.answer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -269,6 +275,7 @@ class GenerateCsvpathDialog(QDialog):
         print(f"getting nomorethan {n} lines sample from {self.path}")
         with DataFileReader(self.path) as r:
             for i, _ in enumerate(r.source):
+                _ = str(_)
                 _ = _.strip()
                 if _ == "":
                     continue

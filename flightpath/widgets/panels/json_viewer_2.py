@@ -228,7 +228,7 @@ class JsonViewer2(QWidget):
 
     def _save_as(self) -> None:
         path = os.path.dirname(self.path)
-        path, ok = meut.input(title="Save As", msg="Where should the new file live? ")
+        path, ok = meut.input(title="Save As", msg="Where should the new file live? ", text=path)
         if ok and path:
             self._do_save(path)
 

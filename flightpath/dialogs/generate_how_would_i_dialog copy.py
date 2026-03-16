@@ -93,7 +93,7 @@ class GenerateHowWouldIDialog(QDialog):
         self.sample_size.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         for _ in [50,100,250,500,1000]:
             self.sample_size.addItem(str(_))
-        self.sample_size.editTextChanged.connect(self.on_sample_size_change)
+        self.sample_size.currentTextChanged.connect(self.on_sample_size_change)
         box = HelpIconPackager.add_help(
             main=self.main,
             widget=self.sample_size,
@@ -104,7 +104,6 @@ class GenerateHowWouldIDialog(QDialog):
         # instructions to the AI
         #
         self.instructions = QPlainTextEdit()
-        #self.instructions.setEditable(True)
         self.instructions.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.instructions.textChanged.connect(self.on_instructions_changed)
 

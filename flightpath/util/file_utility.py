@@ -110,19 +110,6 @@ class FileUtility:
         t1 = os.path.join( t1, path)
         return t1
 
-    """
-    @classmethod
-    def app_path(cls) -> str:
-        if cls.APP_PATH is None:
-            # up to util
-            path = os.path.dirname(__file__)
-            # up to flightpath
-            path = os.path.dirname(path)
-            # this is the home of the exe
-            cls.APP_PATH = os.path.dirname(path)
-        return cls.APP_PATH
-    """
-
     @classmethod
     def app_path(cls) -> str:
         if cls.APP_PATH is None:
@@ -149,8 +136,6 @@ class FileUtility:
                 cls.APP_PATH = os.path.dirname(path)
         #print(f"getingsx path 4: {cls.APP_PATH}")
         return cls.APP_PATH
-
-
 
     @classmethod
     def move_file_to_numbered(cls, path:str, dirpath:str=".") -> None:

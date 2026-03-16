@@ -155,7 +155,6 @@ class AskQuestionDialog(QDialog):
         csvpath = None
         with DataFileReader(self.path) as file:
             csvpath = file.read()
-        print(f"ask: _get_data_path: csvpath: {csvpath}")
         stmt = None
         c = None
         for _ in csvpath.split("---- CSVPATH ----"):
@@ -166,7 +165,6 @@ class AskQuestionDialog(QDialog):
         if stmt is None:
             return None
         path = self.parent.parent._get_filepath(stmt, c)
-        print(f"ask: _get_data_path: path: {path}")
         return path
 
 
@@ -238,7 +236,7 @@ class AskQuestionDialog(QDialog):
         print(f"getting nomorethan {n} lines sample from {data_path}")
         with DataFileReader(data_path) as r:
             for i, _ in enumerate(r.source):
-                _ = _.strip()
+                _ = str(_).strip()
                 if _ == "":
                     continue
                 lines.append(_)
@@ -250,22 +248,27 @@ class AskQuestionDialog(QDialog):
         prompt.rules = self.question.toPlainText()
         prompt.save()
         generation = None
-        try:
-            generation = generator.do_send(context=context, prompt=prompt, datapath=data_path)
-        except Exception as ex:
-            print(f"Error: {ex}")
-            ...
-        if generation is None:
-            text = f"Cannot ask a question. Is your config set correctly?"
+        text = None
+        print("starting to generate... or not.")
+        if True:
+            try:
+                generation = generator.do_send(context=context, prompt=prompt, datapath=data_path)
+            except Exception as ex:
+                print(f"Error: {ex}")
+                ...
+            if generation is None:
+                text = f"Cannot ask a question. Is your config set correctly?"
+            else:
+                text = generation.response_text
+            print(f"generatedtext: {text}")
         else:
-            text = generation.response_text
-        print(f"generatedtext: {text}")
+            text = "done!"
 
         if not hasattr( self, "answer"):
             self.answer = ClassLoader.load(
                 "from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit",
                 args=[],
-                kwargs={"main":self.main, "parent":self.parent, "editable":EditStates.EDITABLE}
+                kwargs={"main":self.main, "parent":None, "editable":EditStates.UNEDITABLE}
             )
             self.answer.setLineWrapMode(QPlainTextEdit.NoWrap)
             self.answer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)

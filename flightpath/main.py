@@ -148,7 +148,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         state = State().data
         noai = State().data.get("llm", {}).get("model", "").strip() == ""
         guard = GateGuard.show_splash()
-        print(f"state data: noai: {noai}, guard: {guard}")
         if noai is True or guard is True:
             splashpath = fiut.make_app_path(f"assets{os.sep}images{os.sep}splash.png")
             from flightpath.dialogs.splash_dialog import SplashDialog
@@ -212,7 +211,15 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # down.
         #
         self.launch_shows = []
-
+        #
+        # files that are being opened based on clicks could be requested
+        # multiple times due to qt internals. this list keeps us from starting
+        # two opens on the same file.
+        #
+        self._is_opening = []
+        #
+        #
+        #
         if not self.state_check():
             return
         # state_check does this
@@ -244,16 +251,11 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         QTimer.singleShot(1000, self._run_precacher)
         self.update_opens()
         if self.setup_ai_flag is True:
-            ...
-            print(f"setting up Ai")
             self.open_config()
-
             self.config.config_panel.forms_layout.setCurrentIndex(13)
             fallback = f"config{os.sep}about.md"
             self.config.show_help_for_form("llm", fallback=fallback)
-
             return
-        print("not setting up ai")
 
     def update_opens(self) -> None:
         data = self.state.data
@@ -710,12 +712,15 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 self.sidebar_docs = SidebarDocs(main=self, functions=self.sidebar_functs.functions)
                 self.rt_col_helpers.addWidget(self.sidebar_docs)
 
+
+
     @Slot(tuple)
     def update_json_views(self, worker_data):
         try:
             filepath, data, editable = worker_data   # pylint: disable=W0612
             if isinstance( data, Exception ):
                 meut.message(icon=QMessageBox.Critical, title="File opening error", msg=f"Error: {data}")
+                self._clear_is_opening(filepath)
                 return
             self.last_main = self.main_layout.currentIndex()
             #
@@ -738,75 +743,75 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self._rt_tabs_hide()
         except Exception as e:
             print(f"Error opening json: {type(e)}: {e}")
-        print(f"main: done with update_json_views, tabs: {self.content.tab_widget}")
-        print(f"main: done with update_json_views, tabs: {self.content.tab_widget.count()}")
-        print(f"main: done with update_json_views, main_layout: {self.main_layout}")
-        print(f"main: done with update_json_views, main_layout index: {self.main_layout.currentIndex()}")
-
+        finally:
+            self._clear_is_opening(filepath)
 
     @Slot(tuple)
     def update_md_views(self, worker_data):
         filepath, data, editable = worker_data # pylint: disable=W0612
-        if isinstance( data, Exception ):
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle("File opening error")
-            msg_box.setText(f"Error: {data}")
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.exec()
-            return
-        self.last_main = self.main_layout.currentIndex()
-        #
-        # show code/data tabs' panel
-        #
-        self.main_layout.setCurrentIndex(1)
-        self.content.toolbar.disable()
-        #
-        #
-        #
-        view = taut.find_tab(self.content.tab_widget, filepath)
-        if view is None:
-            editable = editable if editable is not None else EditStates.EDITABLE
+        try:
+            if isinstance( data, Exception ):
+                msg_box = QMessageBox()
+                msg_box.setIcon(QMessageBox.Critical)
+                msg_box.setWindowTitle("File opening error")
+                msg_box.setText(f"Error: {data}")
+                msg_box.setStandardButtons(QMessageBox.Ok)
+                msg_box.exec()
+                self._clear_is_opening(filepath)
+                return
+            self.last_main = self.main_layout.currentIndex()
             #
-            # the displaying:bool argument determines if it is an .md or .txt file.
-            # odd, but workable. it doesn't affect the editability of the file.
+            # show code/data tabs' panel
             #
-            displaying = True
+            self.main_layout.setCurrentIndex(1)
+            self.content.toolbar.disable()
             #
-            # being over careful because this is just a fix, not new work
             #
-            try:
-                _, ext = os.path.splitext(filepath)
-                if ext == "txt":
-                    displaying = False
-            except Exception:
-                ...
-            view = MdViewer(main=self, editable=editable, displaying=displaying)
-            view.setObjectName(filepath)
             #
-            # TODO: oddly, we use the worker to open and then just open again
-            # this is a legacy of something validation related. it exists
-            # in csvpath and json files too.
+            view = taut.find_tab(self.content.tab_widget, filepath)
+            if view is None:
+                editable = editable if editable is not None else EditStates.EDITABLE
+                #
+                # the displaying:bool argument determines if it is an .md or .txt file.
+                # odd, but workable. it doesn't affect the editability of the file.
+                #
+                displaying = True
+                #
+                # being over careful because this is just a fix, not new work
+                #
+                try:
+                    _, ext = os.path.splitext(filepath)
+                    if ext in ["log", "txt"]:
+                        displaying = False
+                except Exception as e:
+                    print(traceback.format_exc())
+                    ...
+                view = MdViewer(main=self, editable=editable, displaying=displaying)
+                view.setObjectName(filepath)
+                #
+                # TODO: oddly, we use the worker to open and then just open again
+                # this is a legacy of something validation related. it exists
+                # in csvpath and json files too.
+                #
+                view.open_file(path=filepath, data=data)
+                self.content.tab_widget.addTab(view, os.path.basename(filepath) )
+                save = "cmd-s" if osut.is_mac() else "ctrl-s"
+                shortcuts = f"{save} to save"
+                i = taut.find_tab(self.content.tab_widget, filepath)
+                self.content.tab_widget.setTabToolTip(i[0], shortcuts)
+            else:
+                view = view[1]
+            view.editable = editable if editable else EditStates.EDITABLE
+            taut.select_tab(self.content.tab_widget, view)
             #
-            view.open_file(path=filepath, data=data)
-            self.content.tab_widget.addTab(view, os.path.basename(filepath) )
-            save = "cmd-s" if osut.is_mac() else "ctrl-s"
-            shortcuts = f"{save} to save"
-            i = taut.find_tab(self.content.tab_widget, filepath)
-            self.content.tab_widget.setTabToolTip(i[0], shortcuts)
-        else:
-            view = view[1]
-        view.editable = editable if editable else EditStates.EDITABLE
-        print(f"masin mdfv: {view}: {view.editable}")
-        taut.select_tab(self.content.tab_widget, view)
-        #
-        # we show the right tabs because we may be showing
-        # information relating to them in some way. if this
-        # feels odd in practice we can be more careful in
-        # when/if we do it.
-        #
-        self._rt_tabs_show()
-
+            # we show the right tabs because we may be showing
+            # information relating to them in some way. if this
+            # feels odd in practice we can be more careful in
+            # when/if we do it.
+            #
+            self._rt_tabs_show()
+        finally:
+            self._clear_is_opening(filepath)
 
     @Slot(tuple)
     def update_csvpath_views(self, worker_data):
@@ -818,46 +823,50 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             msg_box.setText(f"Error: {data}")
             msg_box.setStandardButtons(QMessageBox.Ok)
             msg_box.exec()
+            self._clear_is_opening(filepath)
             return
-        self.last_main = self.main_layout.currentIndex()
-        #
-        # show code/data tabs' panel
-        #
-        self.main_layout.setCurrentIndex(1)
-        #
-        # hide grid, source tabs
-        # when csvpath source_view is visible we hide the sample tool bar
-        #
-        self.content.toolbar.disable()
-        #
-        #
-        #
-        csvpath_view = taut.find_tab(self.content.tab_widget, filepath)
-        if csvpath_view is None:
-            editable = editable if editable is not None else EditStates.EDITABLE
-            csvpath_view = CsvpathViewer(main=self, editable=editable)
-            csvpath_view.setObjectName(filepath)
-            csvpath_view.open_file(path=filepath, data=data)
-            self.content.tab_widget.addTab(csvpath_view, os.path.basename(filepath) )
+        try:
+            self.last_main = self.main_layout.currentIndex()
+            #
+            # show code/data tabs' panel
+            #
+            self.main_layout.setCurrentIndex(1)
+            #
+            # hide grid, source tabs
+            # when csvpath source_view is visible we hide the sample tool bar
+            #
+            self.content.toolbar.disable()
+            #
+            #
+            #
+            csvpath_view = taut.find_tab(self.content.tab_widget, filepath)
+            if csvpath_view is None:
+                editable = editable if editable is not None else EditStates.EDITABLE
+                csvpath_view = CsvpathViewer(main=self, editable=editable)
+                csvpath_view.setObjectName(filepath)
+                csvpath_view.open_file(path=filepath, data=data)
+                self.content.tab_widget.addTab(csvpath_view, os.path.basename(filepath) )
 
-            save = "cmd-s" if osut.is_mac() else "ctrl-s"
-            run = "cmd-r" if osut.is_mac() else "ctrl-r"
-            shortcuts = f"{save} to save, {run} to run"
-            i = taut.find_tab(self.content.tab_widget, filepath)
-            self.content.tab_widget.setTabToolTip(i[0], shortcuts)
+                save = "cmd-s" if osut.is_mac() else "ctrl-s"
+                run = "cmd-r" if osut.is_mac() else "ctrl-r"
+                shortcuts = f"{save} to save, {run} to run"
+                i = taut.find_tab(self.content.tab_widget, filepath)
+                self.content.tab_widget.setTabToolTip(i[0], shortcuts)
 
-        else:
-            csvpath_view = csvpath_view[1]
-        csvpath_view.editable = editable if editable else EditStates.EDITABLE
-        taut.select_tab(self.content.tab_widget, csvpath_view)
-        #
-        # we show the right tabs in order to show the functions and docs
-        #
-        self._rt_tabs_show()
+            else:
+                csvpath_view = csvpath_view[1]
+            csvpath_view.editable = editable if editable else EditStates.EDITABLE
+            taut.select_tab(self.content.tab_widget, csvpath_view)
+            #
+            # we show the right tabs in order to show the functions and docs
+            #
+            self._rt_tabs_show()
+        finally:
+            self._clear_is_opening(filepath)
 
     @Slot(tuple)
     def update_views(self, worker_data):
-        msg, lines, filepath, data, lines_to_take, editable = worker_data # pylint: disable=W0612
+        msg, lines, filepath, data, lines_to_take, editable, largefile = worker_data # pylint: disable=W0612
         if isinstance( lines, Exception ):
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
@@ -865,7 +874,16 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             msg_box.setText(f"Error: {lines}")
             msg_box.setStandardButtons(QMessageBox.Ok)
             msg_box.exec()
+            self._clear_is_opening(filepath)
             return
+        if largefile is True:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setWindowTitle("Large file warning")
+            msg_box.setText(f"FlightPath is optimized for samples, not large files. Only 66,000 lines loaded.")
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            msg_box.exec()
+
         table_model = TableModel(data=data, editable=(editable == EditStates.EDITABLE))
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(1)
@@ -873,7 +891,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         """
         from csvpath.util.log_utility import LogUtility as lout
         lout.log_brief_trace()
-        print("asdssss")
         """
 
         #
@@ -945,7 +962,15 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         except Exception as e:
             print(traceback.format_exc())
             print(f"Error in update views at signals connect on: {type(dv)} showing {filepath}")
+        finally:
+            self._clear_is_opening(filepath)
 
+
+
+
+    def _clear_is_opening(self, path:str) -> None:
+        if path in self._is_opening:
+            self._is_opening.remove(path)
 
     def on_data_rows_changed(self) -> None:
         t = self.content.toolbar.rows.currentText()
@@ -977,7 +1002,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         return self.read_validate_and_display_file_for_path(self.selected_file_path, editable=editable, finished_callback=finished_callback)
 
     def read_validate_and_display_file_for_path(self, path:str, editable=EditStates.EDITABLE, *, finished_callback=None) -> QRunnable:
-        print(f"read_validate_and_display_file_for_path 1: {path}: {editable}")
+        if path in self._is_opening:
+            return
+        self._is_opening.append(path)
         #
         # callbacks passed into this method should be watched closely. the find data by ref dialog
         # had trouble getting them to behave correctly.
@@ -1010,14 +1037,17 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             self.threadpool.start(worker)
         elif isfile and info.suffix() == "json":
             self.spin_up_json_worker(path=path, editable=editable, finished_callback=finished_callback)
-        elif isfile and info.suffix() in ["md", "html", "txt"]:
+        elif isfile and info.suffix() in ["md", "html", "txt","log"]:
             self.spin_up_md_worker(path=path, editable=editable, finished_callback=finished_callback)
+            print(f"aftsa")
         elif not info.isFile():
             meut.message(title="File opening error", msg=f"Cannot open {path}")
         else:
-            print("Error: main.read_validate_and_display_file_for_path: cannot open file")
+            meut.warning(parent=self, msg=f"Unknown file type {info.suffix()}", title="Cannot Open")
             self.clear_views()
         return worker
+
+
 
     def spin_up_md_worker(self, *, path, editable, finished_callback=None) -> QRunnable:
         worker = MdWorker(path, self, editable=editable)
@@ -1036,9 +1066,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         worker.signals.messages.connect(self.statusBar().showMessage)
         self.threadpool.start(worker)
         return worker
-
-
-
 
     def run_paths(self, *,
         method:str,
@@ -1116,7 +1143,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         source_index = self.sidebar.proxy_model.mapToSource(index)
         if not source_index.isValid():
             return
-
         file_info = self.sidebar.file_model.fileInfo(source_index)
         #
         # file_info.filePath sometimes allows a // to prefix the path on Mac. not
@@ -1131,7 +1157,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         info = QFileInfo(self.selected_file_path)
         editable = info.suffix() in self.csvpath_config.get(section="extensions", name="csvpath_files")
         editable = editable or info.suffix() in self.csvpath_config.get(section="extensions", name="csv_files")
-        editable = editable or info.suffix() in ["json", "md", "txt"]
+        editable = editable or info.suffix() in ["json", "md", "txt", "log"]
         if editable is True:
             editable = EditStates.EDITABLE
         else:
@@ -1143,8 +1169,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         # we don't, it would seem that we have a problem where there could be multiple
         # tabs for the same path.
         #
-
-        #
         # are we checking for an open tab, or just reloading?
         #
         t = taut.find_tab(self.content.tab_widget, nos.path)
@@ -1152,16 +1176,14 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             #
             #
             #
-            print(f"on_tree_click: found t: {t}")
             if isinstance(t[1], JsonViewer2):
                 #
                 # close so we can reopen
                 #
-                print(f"on_tree_click: t is a jsonl. closing it.")
                 self.content.tab_widget.close_tab(nos.path)
             else:
-                print(f"on_tree_click: we have a t so selecting it and done.")
                 taut.select_tab(self.content.tab_widget, t[0])
+                self.main_layout.setCurrentIndex(1)
                 return
         #
         #
@@ -1224,13 +1246,10 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         path= t.objectName()
         filepath = Path(path)
         ext = filepath.suffix
-        print(f"on_rawasor: ext: {ext}")
         if ext in [".jsonl", ".jsonlines", ".ndjson"]:
             self.sidebar._do_edit_as_json(path)
-            print(f"on_rawasor: ext: _do_edit_as_json done")
         else:
             t.toggle_grid_raw()
-            print(f"on_rawasor: ext: toggle_grid_raw done")
 
     def on_ai_gen(self) -> None:
         index = self.content.tab_widget.currentIndex()
@@ -1316,6 +1335,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
 
     def save_sample(self, *, path:str, name:str, data:str) -> str:
+        print(f"main.savesample: path: {path}")
+        print(f"main.savesample: data: {data}")
+        print(f"main.savesample: name: {name}")
         #
         # if the app entered a subpath somehow pull it off name, into path, and check if it exists
         #

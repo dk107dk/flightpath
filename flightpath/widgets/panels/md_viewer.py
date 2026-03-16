@@ -140,7 +140,7 @@ class MdViewer(QWidget):
     def open_file(self, *, path:str, data:str) -> None:
         self.path = path
         info = QFileInfo(path)
-        if not info.suffix() in ["md", "txt", "html"]:
+        if not info.suffix() in ["md", "txt", "html", "log"]:
             self.text_edit.hide()
             return
         self.text_edit.clear()
@@ -170,7 +170,7 @@ class MdViewer(QWidget):
             self.editable = EditStates.UNEDITABLE
             self.text_edit.setReadOnly(True)
             self.text_edit.display = "rich"
-        elif info.suffix() == "txt":
+        elif info.suffix() in ["txt", "log"]:
             #
             # this is good as is. if editable editing works, ctrl-s, save( as) works.
             #

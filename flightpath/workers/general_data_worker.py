@@ -14,6 +14,10 @@ from .data_worker_signals import DataWorkerSignals
 
 class GeneralDataWorker(QRunnable):
 
+    LARGE_FILE = True
+    NOT_LARGE_FILE = False
+    LARGE_FILE_LIMIT = 66000
+
     def __init__(
         self,
         filepath,
@@ -46,11 +50,19 @@ class GeneralDataWorker(QRunnable):
         return i
 
     def accept_line(self, line_num:int, line:list[str]) -> bool:
+        if self.line_take > self.LARGE_FILE_LIMIT:
+            #
+            # we need to warn that the file is getting too big
+            #
+            #from flightpath.util.message_utility import MessageUtility as meut
+            #meut.message(msg="FlightPath is optimized for sampling, not editing large files. Stop loading here?", title="Large file warning")
+            return False
         #
         # -1 means "All lines"
         # None means stop here
         #
         if self.sample_size == -1:
+            self.line_take += 1
             return True
         #
         # if we've taken the number of lines requested we're done
@@ -84,15 +96,16 @@ class GeneralDataWorker(QRunnable):
         lines:list[int] = []
         lines_to_take = self.lines_to_take[:] if self.lines_to_take else None
         totallines = 0
+        largefile = self.NOT_LARGE_FILE
         try:
-            data, lines, totallines = self._read(path=path)
+            data, lines, totallines, largefile = self._read(path=path)
         except UnicodeDecodeError as u:
             self.signals.messages.emit(f"  Encoding error. Trying 'windows-1252'.")
-            data, lines, totallines = self._read(path=path,  encoding="windows-1252")
+            data, lines, totallines, largefile = self._read(path=path,  encoding="windows-1252")
         except Exception as e:
             print(traceback.format_exc())
             self.signals.messages.emit(f" Erroring opening {path}")
-            self.signals.finished.emit((f"Error", e, None, None, None))
+            self.signals.finished.emit((f"Error", e, None, None, None, None))
             return
         self.signals.messages.emit(f"  Opened {path}")
         results = (
@@ -101,11 +114,12 @@ class GeneralDataWorker(QRunnable):
             path,
             data,
             lines_to_take,
-            self.editable
+            self.editable,
+            largefile
         )
         self.signals.finished.emit(results)
 
-    def _read(self, *, path:str, encoding:str="utf-8") -> tuple[list,list]:
+    def _read(self, *, path:str, encoding:str="utf-8") -> tuple[list,list,bool]:
         t = 0
         i = 0
         lines:list[int] = []
@@ -118,6 +132,8 @@ class GeneralDataWorker(QRunnable):
         with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar, encoding=encoding ) as file:
             for line in file.next():
                 b = self.accept_line(i, line)
+                if b is False and self.line_take > self.LARGE_FILE_LIMIT:
+                    return (data, lines, i, self.LARGE_FILE)
                 i += 1
                 if b is True:
                     lines.append(i-1)
@@ -126,7 +142,7 @@ class GeneralDataWorker(QRunnable):
                 elif b is None:
                     i = 0 if i <= 0 else i -1
                     break
-        return (data, lines, i)
+        return (data, lines, i, self.NOT_LARGE_FILE)
 
     def prep_sampling(self) -> None:
         needed = 0
