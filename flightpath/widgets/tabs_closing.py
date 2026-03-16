@@ -48,7 +48,6 @@ class ClosingTabs(QTabWidget):
         # "Matches". but that would be a weird name and a subtle impact. can probably just
         # ignore so we don't have to check what tab bar we are in.
         #
-        print(f"object asne: {t.objectName()}")
         if  t.objectName() in ["Code"]:
             return
         if  t.objectName() in ["Why", "Help Content", "FileInfo"]:
@@ -66,7 +65,6 @@ class ClosingTabs(QTabWidget):
 
     def on_save_pdf(self, index:int, landscape=False) -> None:
         t = self.widget(index)
-        print(f"on_save_pdfK: {t}")
         ton = t.objectName()
         if ton == "FileInfo":
             landscape = True
@@ -114,7 +112,23 @@ class ClosingTabs(QTabWidget):
         ton = t.objectName()
         if ton in ["Code", "Why", "Help Content"]:
             return
-        if ton == "Matches":
+        if ton.startswith("Printouts"):
+            ton = f"{ton}.txt"
+            l = t.layout()
+            w = l.itemAt(0).widget()
+            txt = w.toPlainText()
+            self.main.save_sample(path=path, name=ton, data=txt)
+        elif ton == "Log":
+            l = t.layout()
+            w = l.itemAt(0).widget()
+            txt = w.toPlainText()
+            self.main.save_sample(path=path, name="run.log", data=txt)
+        elif ton in ["Errors", "Variables"]:
+            l = t.layout()
+            w = l.itemAt(0).widget()
+            txt = w.toPlainText()
+            self.main.save_sample(path=path, name=f"{ton}.json", data=txt)
+        elif ton == "Matches":
             l = t.layout()
             w = l.itemAt(0).widget()
             m = w.model()

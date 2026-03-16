@@ -48,7 +48,6 @@ class DataViewer(QWidget):
         #
         self.parent = parent
         self.main = parent.main
-        print(f"datavere: {parent}, {self.main}")
         self.path = self.main.selected_file_path if path is None else path
         self.main_layout = QStackedLayout()
         self.setLayout(self.main_layout)
@@ -95,6 +94,12 @@ class DataViewer(QWidget):
         toggle_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         toggle_action.triggered.connect(self.toggle_grid_raw)
         self.addAction(toggle_action)
+
+        generate_action = QAction("Generate csvpath", self)
+        generate_action.setShortcut("Ctrl+g")
+        generate_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        generate_action.triggered.connect(self.main.sidebar._generate_csvpath)
+        self.addAction(generate_action)
 
         #
         # context menu
@@ -204,6 +209,13 @@ class DataViewer(QWidget):
             toggle_action.setShortcut(QKeySequence("Ctrl+T"))
             toggle_action.setShortcutVisibleInContextMenu(True)
             context_menu.addAction(toggle_action)
+
+            generate_action = QAction()
+            generate_action.setText("Generate csvpath")
+            generate_action.triggered.connect(self.main.sidebar._generate_csvpath)
+            generate_action.setShortcut(QKeySequence("Ctrl+G"))
+            generate_action.setShortcutVisibleInContextMenu(True)
+            context_menu.addAction(generate_action)
 
 
             context_menu.exec(global_position)
@@ -549,8 +561,15 @@ class DataViewer(QWidget):
             self.reset_saved()
 
     def on_save_as(self, switch_local=False, *, info=None) -> None:
+        #
+        # should we not be able to save-as to from uneditable to editable?
+        # seems like it would be reasonable. we own the file, it just isn't
+        # writable, so why not make a copy?
+        #
         if self.editable == EditStates.UNEDITABLE:
             return
+        #
+        # NOTE: vvvv seems to be preempted by ^^^^
         #
         # if we are in an inputs or archive we're going to want to
         # send the copy to the left-hand side file tree.
@@ -584,15 +603,14 @@ class DataViewer(QWidget):
             thepath = self.path
             thepath = os.path.dirname(thepath)
 
-        msg = "Where should the new file live? "
-        if info is not None:
-            msg = f"{info}\n\n{msg}"
         name = os.path.basename(self.path)
         #
         # have to ask for the delimiter and quote char in order to save in the desired format
         # it should start with the settings in the toolbar.
         #
         dialog = SaveCsvToDialog(parent=self, path=self.path, main=self.main)
+        dialog.show()
+        """
         if dialog.exec() == QDialog.Accepted:
             t = dialog.get_path()
             delimiter = dialog.get_delimiter()
@@ -601,7 +619,7 @@ class DataViewer(QWidget):
             b = os.path.basename(t)
             t = fiut.deconflicted_path( d, b )
             self._save(path=t, delimiter=delimiter, quotechar=quotechar)
-
+        """
     @property
     def current_view_index(self) -> int:
         return self.layout().currentIndex()
@@ -614,7 +632,6 @@ class DataViewer(QWidget):
         # if the parent isn't editable we shouldn't get here, but if we did we need to
         # be sure to not save.
         #
-        print(f"data_viewer: onsave: view active index: {self.current_view_index}")
         if self.editable == EditStates.UNEDITABLE:
             self._copy_back_question()
             return
@@ -627,7 +644,6 @@ class DataViewer(QWidget):
             self.path.endswith(".jsonlines")
         ):
             msg = "Saving JSONL converts the data to CSV."
-            #meut.message(msg=msg)
             self.on_save_as(info=msg)
             return
         if self.path.startswith(ap) or self.path.startswith(ncp):
@@ -638,31 +654,20 @@ class DataViewer(QWidget):
     def _save(self, *, path:str, delimiter:str=None, quotechar:str=None) -> None:
         if path is None:
             raise ValueError("Path cannot be None")
-        ns = fiut.split_filename(path)
         exts = self.main.csvpath_config.get(section="extensions", name="csv_files")
-        if ns[1] not in exts:
-            meut.warning(parent=self, title="Bad Filename", msg="The path must end in a data format extension")
+        self._save_one_of(path=path, delimiter=delimiter, quotechar=quotechar, exts=exts)
+
+    def _save_one_of(self, *,  path:str, delimiter:str=None, quotechar:str=None, exts:list[str]) -> None:
+        ns = fiut.split_filename(path)
+        found = False
+        for _ in exts:
+            if path.endswith(_):
+                found = True
+        if found is not True:
+            meut.warning(parent=self, title="Bad Filename", msg=f"The path must end in one of these data format extensions: {exts}")
             self.on_save_as()
             return
         self._save_csv(path=path, delimiter=delimiter, quotechar=quotechar)
-
-    def _save_jsonl(self, path:str) -> None:
-        #
-        # is this used anywhere or dead?
-        # don't see it.
-        #
-        raise Exception("Triggered code block")
-        #
-        # this should all go. but waiting for attention.
-        #
-        lines = JsonlLineSpooler(path=path)
-        for _ in range(self.table_view.model().rowCount()):
-            line = [
-                self.table_view.model().data(self.table_view.model().index(_, col), Qt.ItemDataRole.DisplayRole)
-                for col in range(self.table_view.model().columnCount())
-            ]
-            lines.append(line)
-        lines.close()
 
     def _save_csv(self, *, path:str, delimiter:str=None, quotechar:str=None) -> None:
         if self.current_view_index == 0:
@@ -713,12 +718,11 @@ class DataViewer(QWidget):
             delimiter=delimiter,
             quotechar=quotechar
         ) # we don't use a Result object
-        #lines = CsvLineSpooler(None, path=path) # we don't use a Result object
-        for _ in range(self.table_view.model().rowCount()):
-            line = [
-                self.table_view.model().data(self.table_view.model().index(_, col), Qt.ItemDataRole.DisplayRole)
-                for col in range(self.table_view.model().columnCount())
-            ]
+        model = self.table_view.model()
+        cols = model.columnCount()
+        rows = self.table_view.model().rowCount()
+        for _ in range(rows):
+            line = model.data_row(_)
             lines.append(line)
         lines.close()
         #

@@ -92,6 +92,20 @@ class TableModel(QAbstractTableModel):
     def get_data(self) -> list:
         return self._data
 
+    def data_row(self, index):
+        #
+        # getting data index by index using data(index,role) is slow!
+        # this method is much faster. no downside seen so far.
+        #
+        if self._data is None:
+            raise ValueError("No data available")
+        if index is None:
+            raise ValueError("Index cannot be None")
+        if index > len(self._data):
+            raise ValueError(f"Index {index} is too large")
+        value = self._data[index]
+        return value
+
     def data(self, index, role):
         if not index.isValid():
             return None

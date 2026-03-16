@@ -23,13 +23,20 @@ from flightpath.util.os_utility import OsUtility as osut
 
 class CsvPathTextEdit(QPlainTextEdit):
 
-    def __init__(self, *, main, parent, editable=EditStates.EDITABLE) -> None:
+
+    def __init__(self, *, main, parent=None, editable=EditStates.EDITABLE) -> None:
         super().__init__()
         self.main = main
-        self.parent = parent
+        self.parent = parent if parent else self
         self.editable = editable
         self.icon = None
+        #
+        # if we are our own parent this has no effect. when we are used outside
+        # the context of being an editor panel we are our own parent. e.g. when
+        # used in a Q&A or other AI dialog
+        #
         self.parent.saved = True
+
         #
         #
         #
@@ -62,6 +69,20 @@ class CsvPathTextEdit(QPlainTextEdit):
         ask_question_ctrl.activated.connect(self.on_ask_question)
 
         self.load_dialog = None
+
+    @property
+    def saved(self) -> bool:
+        if self.parent and self.parent != self:
+            return self.parent.saved
+        else:
+            return True
+
+    @saved.setter
+    def saved(self, s:bool) -> None:
+        if self.parent and self.parent != self:
+            self.parent.saved = s
+        else:
+            ...
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.editable == EditStates.UNEDITABLE:
@@ -173,7 +194,6 @@ class CsvPathTextEdit(QPlainTextEdit):
         ask_question_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(ask_question_action)
         menu.addSeparator()
-
 
         #
         # submenus
@@ -304,16 +324,16 @@ class CsvPathTextEdit(QPlainTextEdit):
        self._insert_mode("validation-mode: print, no-raise")
 
     def on_generate_data(self) -> None:
-        print(f"Csvpathtextded: {self.main}")
         gen = GenerateCsvDialog(main=self.main, path=self.parent.path)
         self.main.show_now_or_later(gen)
 
     def on_ask_question(self) -> None:
-        gen = AskQuestionDialog(parent=self, main=self.parent.main, path=self.parent.path)
+        print(f"self.parentx: {self.parent}")
+        gen = AskQuestionDialog(parent=self, main=self.main, path=self.parent.path)
         self.main.show_now_or_later(gen)
 
     def on_load(self) -> None:
-        loader = CsvpathLoader(self.parent.main)
+        loader = CsvpathLoader(self.main)
         loader.load_paths(self.parent.path)
 
     def on_save_as(self, switch_local=False) -> None:
@@ -372,6 +392,8 @@ class CsvPathTextEdit(QPlainTextEdit):
             self.parent.reset_saved()
 
     def _copy_back_question(self, action="edit") -> None:
+        if self.parent is None or self.parent == self:
+            return
         yes = meut.yesNo( parent=self, msg=f"You can't {action} here. Copy back to project?", title="Copy file to project?")
         if yes is True:
             try:

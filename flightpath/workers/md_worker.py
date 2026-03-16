@@ -1,4 +1,4 @@
-
+import traceback
 from PySide6.QtCore import QObject, Signal, Slot, QRunnable
 from PySide6.QtWidgets import QApplication
 from csvpath.util.file_readers import DataFileReader
@@ -18,6 +18,9 @@ class MdWorker(QRunnable):
         self.signals = DataWorkerSignals()
 
     def run(self):
+        #
+        # mdworker also handles other text types, e.g. .txt files
+        #
         try:
             nos = Nos(self.filepath)
             if not nos.exists():
@@ -27,7 +30,7 @@ class MdWorker(QRunnable):
             with DataFileReader(self.filepath) as file:
                 data = file.source.read()
         except Exception as e:
-            print(f"Error: {type(e)}: {e}")
+            print(traceback.format_exc())
             self.signals.messages.emit(f"  Erroring opening {self.filepath}")
             self.signals.finished.emit(("Error", e, None))
             return

@@ -85,16 +85,18 @@ class LlmForm(BlankForm):
         ai = data.get("llm", {})
         config = self.config
 
+        local = False
         _ = config.get(section="llm", name="model", default="")
+        local = local if _ == "" else True
         _ = ai.get("model", "") if _ == "" else _
         self.model.setText(_)
 
         _ = config.get(section="llm", name="api_base", default="")
-        _ = ai.get("api_base", "") if _ == "" else _
+        _ = ai.get("api_base", "") if _ == "" and local is False else _
         self.base.setText(_)
 
         _ = config.get(section="llm", name="api_key", default="")
-        _ = ai.get("api_key", "") if _ == "" else _
+        _ = ai.get("api_key", "") if _ == "" and local is False else _
         self.key.setText(_)
 
         self.checkbox.setChecked(self._llm_config_matches_state())
