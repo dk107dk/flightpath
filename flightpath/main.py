@@ -74,6 +74,8 @@ from flightpath.widgets.content.content import Content
 from flightpath.widgets.config.config import Config
 from flightpath.widgets.help.helper import Helper
 
+from flightpath.widgets.ai import ActivitySelector, QueryFormWidget, QueryAccordionItem, QueryAccordionWidget, QueryTabWidget
+
 from flightpath.util.gate_guard import GateGuard
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.tabs_utility import TabsUtility as taut
@@ -532,10 +534,15 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.sidebar_rt_bottom = SidebarArchive(main=self, config=self.csvpath_config, role=3)
         self.rt_col.addWidget(self.sidebar_rt_bottom)
         #
+        # make the AI tab
+        #
+        self.ai_query_tab = QueryTabWidget(main=self)
+        #
         # add two tabs to tab widget
         #
-        self.rt_tab_widget.addTab(self.rt_col, "Data Management")
-        self.rt_tab_widget.addTab(self.rt_col_helpers, "Language Helpers")
+        self.rt_tab_widget.addTab(self.rt_col, "Data")
+        self.rt_tab_widget.addTab(self.rt_col_helpers, "Language")
+        self.rt_tab_widget.addTab(self.ai_query_tab, "AI")
         #
         # functions and docs setup below in the tab displaying logic.
         #
@@ -654,6 +661,8 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def _rt_tabs_show(self) -> None:
         self.show_now_or_later(self.rt_tab_widget.tabBar())
+        self.ai_query_tab.form.use_doc_checkbox.setChecked(False)
+        self.ai_query_tab.form.on_use_doc(Qt.CheckState.Unchecked)
         #self.rt_tab_widget.tabBar().show()
 
     def question_config_close(self) -> None:
@@ -707,8 +716,14 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             else:
                 self._rt_tabs_show()
             if self.rt_col_helpers.count() == 0:
+                #
+                # functs is the tree of functions and other help text
+                #
                 self.sidebar_functs = SidebarFunctions(main=self)
                 self.rt_col_helpers.addWidget(self.sidebar_functs)
+                #
+                # add docs below functions. this panel displays content selected in the tree above it
+                #
                 self.sidebar_docs = SidebarDocs(main=self, functions=self.sidebar_functs.functions)
                 self.rt_col_helpers.addWidget(self.sidebar_docs)
 
