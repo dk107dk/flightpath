@@ -25,7 +25,6 @@ class TabsUtility:
                 return i
         return -1
 
-
     @classmethod
     def tab_index_by_name(cls, tabs:QTabWidget, name:str) -> int:
         i = cls.tab_index_by_name_if(tabs, name)
@@ -41,9 +40,6 @@ class TabsUtility:
                 return i
         return -1
 
-
-
-
     @classmethod
     def tabs(cls, tabs:QTabWidget) -> list[QWidget]:
         ts = []
@@ -51,7 +47,6 @@ class TabsUtility:
             widget = tabs.widget(i)
             ts.append(widget)
         return ts
-
 
     @classmethod
     def has_type(cls, tabs:QTabWidget, clsx) -> bool:

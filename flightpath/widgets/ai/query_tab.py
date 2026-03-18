@@ -8,6 +8,7 @@ from flightpath.workers.ai_generate_csvpath_worker import AiGenerateCsvpathWorke
 from flightpath.workers.dispatcher import JobDispatcher
 from flightpath.workers.jobs.ai_generate_csvpath_job import AiGenerateCsvpathJob
 from flightpath.util.feedback_utility import FeedbackUtility as feut
+from flightpath.util.generator_utility import GeneratorUtility as geut
 
 
 class QueryTabWidget(QWidget):
@@ -29,8 +30,27 @@ class QueryTabWidget(QWidget):
         self.accordion.itemClicked.connect(self.on_item_clicked)
         self.accordion.itemCloseRequested.connect(self.on_item_close_requested)
 
+    def enable_for_extension(self, e:str) -> None:
+        self.form.activity_selector.enable_for_extension(e)
+        if(
+           e in self.main.csvpath_config.get(section="extensions", name="csv_files")
+            or e in self.main.csvpath_config.get(section="extensions", name="csvpath_files")
+        ):
+            self.form.prompt_title.setEnabled(True)
+            self.form.instructions.setEnabled(True)
+            self.form.use_doc_checkbox.setChecked(True)
+            self.form.use_doc_checkbox.setEnabled(True)
+            self.form.submit_btn.setEnabled(True)
+        else:
+            self.form.prompt_title.setEnabled(False)
+            self.form.instructions.setEnabled(False)
+            self.form.use_doc_checkbox.setChecked(False)
+            self.form.use_doc_checkbox.setEnabled(False)
+            self.form.submit_btn.setEnabled(False)
 
     def on_query_submitted(self, params):
+        config = geut.new_generator_config(self.main)
+        turns_limit = config.get(section="generations", name="turns_limit", default="2")
         metadata = {
             "id": id(params),
             "params": params,
@@ -38,20 +58,26 @@ class QueryTabWidget(QWidget):
             "status": "running",
             "document_path": params.get("document_path"),
             "results": None,
+            "turns_limit": turns_limit
         }
+        import json
+        print(json.dumps(metadata, indent=2))
+
+        params["number_of_lines"] = 25
 
         item = self.accordion.add_item(
             title=params.get("title", "Untitled Query"),
             activity=params["activity"],
             status_color=QColor("#ffd43b"),
-            metadata=metadata,
+            metadata=metadata
         )
+
         worker = JobDispatcher.get_worker(main=self.main, me=self, mdata=metadata)
         #
         # connect signals. all dispatched ai workers need to support the same.
         #
         worker.signals.turn.connect(lambda js: self.on_turn_update(item, js))
-        worker.signals.finished.connect(lambda text: self.on_worker_finished(item, metadata, text))
+        worker.signals.finished.connect(lambda generation: self.on_worker_finished(item, metadata, generation))
         worker.signals.error.connect(lambda msg: self.on_worker_error(item, metadata, msg))
 
         self.threadpool.start(worker)
@@ -66,8 +92,9 @@ class QueryTabWidget(QWidget):
             # working on something.
             #
 
-    def on_worker_finished(self, item, metadata, text):
-        metadata["results"] = text
+    def on_worker_finished(self, item, metadata, generation):
+        print(f"querytab: on_worker_finished: item: {item}, metadata: {metadata}, generation: {generation}")
+        metadata["results"] = generation
         metadata["status"] = "complete"
         item.status_dot.setColor(QColor("#40c057"))  # green
         #item.title_label.setText("Complete")
@@ -86,19 +113,35 @@ class QueryTabWidget(QWidget):
     #
     def on_item_clicked(self, metadata: dict):
         self.form.load_params(metadata["params"])
+        feut.clear_feedback(self.main)
         #
-        # show any logging. this would be the generation summaries
+        # show result text
+        #
+        response = f"{metadata["id"]}.response"
+        generation = metadata.get("results")
+        tracking = f"{metadata["id"]}.tracking"
+        #
+        if generation:
+            view = QPlainTextEdit()
+            view.setPlainText(generation.response_text)
+            view.setReadOnly(True)
+            feut.add_feedback_tab(main=self.main, tab_id=response, name="Results", tab=view)
+        #
+        # log info
         #
         if "log" in metadata["params"]:
             js = metadata["params"]["log"]
         else:
-            js = "No query logging available"
-        feut.clear_feedback(self.main)
+            js = "No tracking available"
         view = QPlainTextEdit()
         view.setPlainText(js)
         view.setReadOnly(True)
-        feut.add_feedback_tab(main=self.main, tab_id=metadata["id"], name="Tracking", tab=view)
-
+        feut.add_feedback_tab(main=self.main, tab_id=tracking, name="Tracking", tab=view)
+        #
+        # display feedback
+        #
+        feut.switch_to_feedback(self.main, response if generation else tracking)
+        feut.open_feedback(self.main)
 
     def on_item_close_requested(self, metadata: dict):
         self.accordion.remove_item(metadata)

@@ -1,7 +1,11 @@
 from PySide6.QtCore import QRunnable
 
 from flightpath.workers.jobs.ai_generate_csvpath_job import AiGenerateCsvpathJob
-from flightpath.workers.ai_generate_csvpath_worker import AiGenerateCsvpathWorker
+from flightpath.workers.jobs.ai_generate_data_job import AiGenerateDataJob
+from flightpath.workers.jobs.ai_ask_question_job import AiAskQuestionJob
+
+from flightpath.workers.ai_worker import AiWorker
+
 from flightpath.workers.jobs.job import Job
 
 class JobDispatcher:
@@ -31,34 +35,29 @@ class JobDispatcher:
             main=main,
             mdata=mdata
         )
-        w =  AiGenerateCsvpathWorker(job)
+        w =  AiWorker(job)
+        #w =  AiGenerateCsvpathWorker(job)
         return w
 
     @classmethod
     def testdata(cls, *, me, main, mdata:dict) -> Job:
-        """
-        job = AiGenerateCsvJob(
+        job = AiGenerateDataJob(
             parent=me,
             main=main,
-            path=mdata.get("params", {}).params.get("document_path"),
-            instructions=mdata.get("params", {}).params.get("body")
+            mdata=mdata
         )
-        w =  AiGenerateCsvWorker(job)
+        w =  AiWorker(job)
         return w
-        """
 
     @classmethod
     def question(cls, *, me, main, mdata:dict) -> Job:
-        """
-        job = AiQuestionCsvpathJob(
+        job = AiAskQuestionJob(
             parent=me,
             main=main,
-            path=mdata.get("params", {}).params.get("document_path"),
-            instructions=mdata.get("params", {}).params.get("body")
+            mdata=mdata
         )
-        w =  AiQuestionCsvpathWorker(job)
+        w =  AiWorker(job)
         return w
-        """
 
     @classmethod
     def improve(cls, *, me, main, mdata:dict) -> Job:

@@ -3,6 +3,9 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QCheckBox, QHBoxLayout, QPlainTextEdit, QScrollArea
 )
 
+from csvpath.util.file_readers import DataFileReader
+from csvpath.util.nos import Nos
+
 from flightpath.widgets.ai.activity_selector import ActivitySelector
 
 class QueryFormWidget(QWidget):
@@ -17,7 +20,7 @@ class QueryFormWidget(QWidget):
         layout.setSpacing(2)
 
         # activity selector
-        self.activity_selector = ActivitySelector(self)
+        self.activity_selector = ActivitySelector(parent=self, main=main)
         layout.addWidget(self.activity_selector)
         #
         # fields update as needed when selector changes
@@ -25,9 +28,9 @@ class QueryFormWidget(QWidget):
         self.prompt_title = QLineEdit(self)
         self.prompt_title.setPlaceholderText("Name your request…")
         layout.addWidget(self.prompt_title)
-        self.prompt_body = QPlainTextEdit(self)
-        self.prompt_body.setPlaceholderText("Enter your question or instructions…")
-        layout.addWidget(self.prompt_body)
+        self.instructions = QPlainTextEdit(self)
+        self.instructions.setPlaceholderText("Enter your question or instructions…")
+        layout.addWidget(self.instructions)
         #
         # document context checkbox controls doc path visibility
         #
@@ -70,12 +73,19 @@ class QueryFormWidget(QWidget):
             self.doc_path_text.setText("")
 
     def _on_submit(self):
+        #
+        # get the turns limit from generator.ini
+        #
         params = {
             "activity": self._current_activity,
             "title": self.prompt_title.text(),
-            "body": self.prompt_body.toPlainText(),
+            "instructions": self.instructions.toPlainText(),
             "use_document": self.use_doc_checkbox.isChecked(),
+            #
+            #
+            #
             "document_path": self.doc_path_text.text() if self.doc_path.isVisible() else None,
+            "example": self.get_example_from_path_if(self.doc_path_text.text())
         }
         self.querySubmitted.emit(params)
 
@@ -83,9 +93,9 @@ class QueryFormWidget(QWidget):
         #
         # we do this when an accordian item is clicked
         #
-        self.activity_selector.setActivity(params.get("activity", "create"))
+        self.activity_selector.set_activity(params.get("activity", "create"))
         self.prompt_title.setText(params.get("title", ""))
-        self.prompt_body.setPlainText(params.get("body", ""))
+        self.instructions.setPlainText(params.get("instructions", ""))
         self.use_doc_checkbox.setChecked(bool(params.get("document_path")))
         self.set_document_context(params.get("document_path"))
         #
@@ -93,6 +103,11 @@ class QueryFormWidget(QWidget):
         # but we'll do that from the query tab where we caught the event.
         #
 
+    def get_example_from_path_if(self, path:str) -> str:
+        if Nos(path).exists():
+            with DataFileReader(path) as file:
+                return file.source.read()
+        return ""
 
     def set_document_context(self, path: str | None):
         if path:
