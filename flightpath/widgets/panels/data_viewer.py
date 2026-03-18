@@ -96,9 +96,9 @@ class DataViewer(QWidget):
         self.addAction(toggle_action)
 
         generate_action = QAction("Generate csvpath", self)
-        generate_action.setShortcut("Ctrl+g")
+        generate_action.setShortcut("Shift+Ctrl+g")
         generate_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-        generate_action.triggered.connect(self.main.sidebar._generate_csvpath)
+        generate_action.triggered.connect(self.main.on_ai_gen_csvpath)
         self.addAction(generate_action)
 
         #
@@ -212,8 +212,8 @@ class DataViewer(QWidget):
 
             generate_action = QAction()
             generate_action.setText("Generate csvpath")
-            generate_action.triggered.connect(self.main.sidebar._generate_csvpath)
-            generate_action.setShortcut(QKeySequence("Ctrl+G"))
+            generate_action.triggered.connect(self.main.on_ai_gen_csvpath)
+            generate_action.setShortcut(QKeySequence("Shift+Ctrl+G"))
             generate_action.setShortcutVisibleInContextMenu(True)
             context_menu.addAction(generate_action)
 

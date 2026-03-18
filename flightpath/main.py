@@ -74,6 +74,8 @@ from flightpath.widgets.content.content import Content
 from flightpath.widgets.config.config import Config
 from flightpath.widgets.help.helper import Helper
 
+from flightpath.widgets.ai.query_tab import QueryTabWidget
+
 from flightpath.widgets.ai import ActivitySelector, QueryFormWidget, QueryAccordionItem, QueryAccordionWidget, QueryTabWidget
 
 from flightpath.util.gate_guard import GateGuard
@@ -540,9 +542,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         # add two tabs to tab widget
         #
-        self.rt_tab_widget.addTab(self.rt_col, "Data")
-        self.rt_tab_widget.addTab(self.rt_col_helpers, "Language")
+        self.rt_tab_widget.addTab(self.rt_col, "Ops")
         self.rt_tab_widget.addTab(self.ai_query_tab, "AI")
+        self.rt_tab_widget.addTab(self.rt_col_helpers, "Help")
         #
         # functions and docs setup below in the tab displaying logic.
         #
@@ -605,6 +607,9 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def _on_data_toolbar_hide(self) -> None:
         self.content.toolbar.hide()
 
+    def on_content_tab_changed(self) -> None:
+        self._on_rt_tab_changed()
+
     def _connects(self) -> None:
         #
         # TODO / CAUTION!
@@ -614,6 +619,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         #
         self.rt_tab_widget.currentChanged.connect(self._on_rt_tab_changed)
         self.main_layout.currentChanged.connect(self._on_stack_change)
+        self.content.tab_widget.currentChanged.connect(self.on_content_tab_changed)
         #
         # this toggles help. if no help is showing welcome.md should be shown.
         #
@@ -653,7 +659,19 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
 
     def _on_rt_tab_changed(self) -> None:
         print(f"rt_tab_changed. not reacting.")
-        ...
+        #
+        # find if we're looking at the AI tab. if we are, find the currently visible doc's path.
+        # if the doc is .csv/data set the buttons accordingly. if csvpath, likewise. if neither,
+        # disable the buttons
+        #
+        i = self.rt_tab_widget.currentIndex()
+        w = self.rt_tab_widget.widget(i)
+        if isinstance(w, QueryTabWidget):
+            di = self.content.tab_widget.currentIndex()
+            doc = self.content.tab_widget.widget(di)
+            e = Path(doc.objectName()).suffix
+            e = e.lstrip(".")
+            w.enable_for_extension(e)
 
     def _rt_tabs_hide(self) -> None:
         self.rt_tab_widget.tabBar().setCurrentIndex(0)
@@ -1266,13 +1284,29 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         else:
             t.toggle_grid_raw()
 
-    def on_ai_gen(self) -> None:
+    def on_ai_gen_csvpath(self) -> None:
+        self.on_ai_gen("validation")
+
+    def on_ai_gen_data(self) -> None:
+        self.on_ai_gen("testdata")
+
+    def on_ai_ask_question(self) -> None:
+        self.on_ai_gen("question")
+
+    def on_ai_improve(self) -> None:
+        self.on_ai_gen("improve")
+
+
+    def on_ai_gen(self, activity="validation") -> None:
         index = self.content.tab_widget.currentIndex()
         t = self.content.tab_widget.widget(index)
         path = t.objectName()
-        gen = GenerateCsvpathDialog(parent=self, main=self, path=path)
-        self.show_now_or_later(gen)
-
+        self.rt_tab_widget.setCurrentIndex(1)
+        #
+        # pick the right activity
+        #
+        t = self.rt_tab_widget.widget(1)
+        t.form.activity_selector.set_activity(activity)
 
     def on_file_info(self) -> None:
         index = self.content.tab_widget.currentIndex()

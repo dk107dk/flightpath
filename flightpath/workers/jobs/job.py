@@ -8,4 +8,15 @@ class Job(ABC):
             raise ValueError("Main cannot be None")
         self.main = main
 
+    @abstractmethod
+    def example(self) -> None:
+        ...
+
+    @abstractmethod
+    def version(self) -> str:
+        ...
+
+    @abstractmethod
+    def do_generate() -> None:
+        ...
 

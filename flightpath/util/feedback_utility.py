@@ -1,7 +1,9 @@
 
 from flightpath.util.tabs_utility import TabsUtility as taut
 #
-# this is intended to be a simpler more focused wrapper for widgets/help/Helper
+# this is intended to be a simpler more focused static wrapper for
+# widgets/help/Helper. for help things Helper may still be the place
+# to look.
 #
 class FeedbackUtility:
 
@@ -30,6 +32,26 @@ class FeedbackUtility:
             tab.setObjectName(name)
             main.helper.help_and_feedback.addTab(tab, name)
 
+    @classmethod
+    def switch_to_feedback(self, main, name:str) -> None:
+        t = taut.tab_index_by_name_if(main.helper.help_and_feedback, name)
+        if t and t >= 0:
+            taut.select_tab(main.helper.help_and_feedback, t)
 
+    @classmethod
+    def open_feedback(self, main) -> None:
+        main.main.setSizes([1, 1])
 
+    @classmethod
+    def close_feedback(self, main) -> None:
+        main.main.setSizes([1, 0])
+
+    @classmethod
+    def is_showing_feedback(self, main) -> bool:
+        ss = main.main.sizes()
+        if ss is None:
+            return False
+        if len(ss) <= 1:
+            return False
+        return ss[1] > 0
 
