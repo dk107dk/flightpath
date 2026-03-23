@@ -19,10 +19,8 @@ class FeedbackUtility:
         if tab_id is not None:
             tab_id = str(tab_id)
             old = taut.tab_index_by_name_if(main.helper.help_and_feedback, tab_id)
-            print(f"FeedbackUtility.add_feedback_tab: old: {old}")
             if old is not None and old != -1:
                 t = taut.find_tab(main.helper.help_and_feedback, tab_id)
-                print(f"FeedbackUtility.add_feedback_tab: t: {t}")
                 if t:
                     main.helper.help_and_feedback.removeTab(t[0])
                     t[1].deleteLater()

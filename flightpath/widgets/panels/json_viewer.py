@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import tempfile
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -70,6 +71,14 @@ class JsonViewer(QWidget):
         self.editable = editable
         self._shown_no_edit_msg = None
         #
+        # function is an optional indicator of what this view is showing. e.g. "variables" or
+        # "errors". it is used to save back a viewer that is not backed by a file. when you
+        # save, the data is serialized to a file that doesn't have a name and the user may not
+        # have the opportunity to give one. in that case, if we have function, we'd use that
+        # to create a reasonable name, e.g. "variables.json".
+        #
+        self.function = None
+        #
         # sets the font size
         #
         stut.set_common_style(self)
@@ -121,6 +130,14 @@ class JsonViewer(QWidget):
         #
         self.modified = False
 
+
+    @property
+    def function_name(self) -> str:
+        if self.function is None or str(self.function).strip() == "":
+            return "data.json"
+        if self.function.endswith(".json"):
+            return self.function
+        return f"{self.function}.json"
 
     def on_double_click(self, index):
         if self.editable == EditStates.UNEDITABLE:
@@ -222,9 +239,28 @@ class JsonViewer(QWidget):
         if yes is True:
             try:
                 name = self.objectName()
-                to_path = fiut.copy_results_back_to_cwd(main=self.main, from_path=name)
-                self.main.read_validate_and_display_file_for_path(to_path)
-                self.main.content.tab_widget.close_tab(name)
+                print(f"jsonviewer:_copy_back_question: name: {name}")
+                if not name or str(name).strip() == "":
+                    #
+                    # we're probably a vars or errors results tab with no file backing us up
+                    #
+                    with tempfile.NamedTemporaryFile(mode='w', delete=True, suffix=".json") as file:
+                        _data = json.dumps(self.model.to_json(), indent=2)
+                        file.write(_data)
+                        file.flush()
+                        to_path = fiut.copy_results_back_to_cwd(
+                            main=self.main,
+                            from_path=file.name,
+                            use_name=self.function_name
+                        )
+                        self.main.read_validate_and_display_file_for_path(to_path)
+                        #
+                        # no tab to close
+                        #self.main.content.tab_widget.close_tab(name)
+                else:
+                    to_path = fiut.copy_results_back_to_cwd(main=self.main, from_path=name)
+                    self.main.read_validate_and_display_file_for_path(to_path)
+                    self.main.content.tab_widget.close_tab(name)
             except Exception:
                 import traceback
                 print(traceback.format_exc())
@@ -403,16 +439,16 @@ class JsonViewer(QWidget):
         self._set_modified(True)
 
     def open_file(self, *, path:str, data:str):
-        self.path = path
-        info = QFileInfo(path)
+        if path:
+            self.path = path
         #
         # do we really want / need to double check if we're handling a file?
         #
-        nos = Nos(path)
-        if not nos.isfile() or info.suffix() != "json":
+        if path and (Nos(path).isfile() is False or QFileInfo(path).suffix() != "json"):
             self.view.hide()
             return
-        self.model.load(data)
+        _ = json.loads(data)
+        self.model.load(_)
         self.main.show_now_or_later(self.view)
         self.view.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
         self.view.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)

@@ -16,6 +16,8 @@ from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
 from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit
 from flightpath.widgets.panels.table_model import TableModel
+from flightpath.widgets.panels.json_viewer import JsonViewer
+
 from flightpath.workers.one_off_run import OneOffRunWorker
 from flightpath.util.printer import CapturePrinter
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
@@ -490,20 +492,37 @@ lines = path.collect()
         es = [e.to_json() for e in es]
         layout = QVBoxLayout()
         errors.setLayout(layout)
+
+        errors_view = JsonViewer(self.main, EditStates.UNEDITABLE)
+        errors_view.function = "errors"
+        sdata = json.dumps(es)
+        errors_view.open_file(path=None, data=sdata)
+
+        """
         errors_view = QPlainTextEdit()
         errors_str = json.dumps(es, indent=2)
         errors_view.setPlainText(errors_str)
         errors_view.setReadOnly(True)
+        """
         layout.addWidget(errors_view)
         layout.setContentsMargins(0, 0, 0, 0)
 
     def _display_variables(self, variables:QWidget, vdata:dict) -> None:
         layout = QVBoxLayout()
         variables.setLayout(layout)
+        #
+        # exp!
+        #
+        variables_view = JsonViewer(self.main, EditStates.UNEDITABLE)
+        variables_view.function = "variables"
+        sdata = json.dumps(vdata)
+        variables_view.open_file(path=None, data=sdata)
+        """
         variables_view = QPlainTextEdit()
         variables_str = json.dumps(vdata, indent=2)
         variables_view.setPlainText(variables_str)
         variables_view.setReadOnly(True)
+        """
         layout.addWidget(variables_view)
         layout.setContentsMargins(0, 0, 0, 0)
 

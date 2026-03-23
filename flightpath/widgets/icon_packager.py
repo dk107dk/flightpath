@@ -31,7 +31,8 @@ class IconPackager:
         box = QWidget()
         box_layout = QHBoxLayout(box)
         box_layout.setContentsMargins(0, 0, 0, 0)
-        box_layout.addWidget(widget)
+        box_layout.addWidget(widget, stretch=1)
+        #box_layout.addWidget(widget)
 
         if not isinstance(on_click, list):
             on_click = [on_click]
@@ -47,8 +48,8 @@ class IconPackager:
             icon = ClickableLabel(icon_path=p)
             icon.setPixmap(pixmap)
             main.show_now_or_later(icon)
-            #icon.show()
-            box_layout.addWidget(icon)
+            box_layout.addWidget(icon, stretch=0)
+            #box_layout.addWidget(icon)
             icon.icon_pixmap = pixmap
             icon.click_callback = on_click[i]
         return box

@@ -12,7 +12,12 @@ class FileUtility:
     APP_PATH = None
 
     @classmethod
-    def copy_results_back_to_cwd(self, *, main, from_path:str) -> str:
+    def copy_results_back_to_cwd(self, *, main, from_path:str, use_name=None) -> str:
+        #
+        # if use_name we attempt to use that as the new file name, with deconflicting.
+        # this is helpful if you are using a named temp file because the named temp is
+        # not a useful name for the final file.
+        #
         to_index = main.sidebar.file_navigator.currentIndex()
         to_path = None
         if to_index.isValid():
@@ -22,7 +27,7 @@ class FileUtility:
         to_nos = Nos(to_path)
         if to_nos.isfile():
             to_path = os.path.dirname(to_path)
-        to_path = FileUtility.deconflicted_path(to_path, f"{os.path.basename(from_path)}")
+        to_path = FileUtility.deconflicted_path(to_path, use_name if use_name is not None else f"{os.path.basename(from_path)}")
         to_nos.path = to_path
         with DataFileReader(from_path) as ffrom:
             with DataFileWriter(path=to_path) as tto:

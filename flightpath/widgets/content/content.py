@@ -10,7 +10,6 @@ from PySide6.QtCore import Slot
 
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
-#from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.tab_overlay import TabWidgetOverlayButton
