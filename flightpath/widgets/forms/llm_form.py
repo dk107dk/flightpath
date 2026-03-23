@@ -14,7 +14,7 @@ class LlmForm(BlankForm):
         super().__init__(*args, **kwargs)
         layout = QFormLayout()
         self.model = QLineEdit()
-        layout.addRow(f"Model: ", self.model)
+        layout.addRow(f"AI Model: ", self.model)
 
         self.base = QLineEdit()
         layout.addRow("API base: ", self.base)

@@ -62,6 +62,7 @@ from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
+from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.table_model import TableModel
 from flightpath.widgets.sidebars.sidebar import Sidebar
 from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
@@ -658,7 +659,6 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         self.statusBar().showMessage(self.state.cwd)
 
     def _on_rt_tab_changed(self) -> None:
-        print(f"rt_tab_changed. not reacting.")
         #
         # find if we're looking at the AI tab. if we are, find the currently visible doc's path.
         # if the doc is .csv/data set the buttons accordingly. if csvpath, likewise. if neither,
@@ -669,9 +669,14 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
         if isinstance(w, QueryTabWidget):
             di = self.content.tab_widget.currentIndex()
             doc = self.content.tab_widget.widget(di)
-            e = Path(doc.objectName()).suffix
-            e = e.lstrip(".")
-            w.enable_for_extension(e)
+            if doc is not None:
+                e = Path(doc.objectName()).suffix
+                e = e.lstrip(".")
+                w.enable_for_extension(e)
+        w = self.rt_tab_widget.widget(1)
+        w.form.assure_state()
+        #_on_activity_changed
+
 
     def _rt_tabs_hide(self) -> None:
         self.rt_tab_widget.tabBar().setCurrentIndex(0)
@@ -765,16 +770,26 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             #
             json_view = taut.find_tab(self.content.tab_widget, filepath)
 
+            print(f"main: update json viewss: jsongview: {json_view}, filepath: {filepath}")
             if json_view is None:
-                json_view = JsonViewer2(self, editable)
-                json_view.open_file(path=filepath, data=data)
-                json_view.setObjectName(filepath)
-                self.content.tab_widget.addTab(json_view, os.path.basename(filepath) )
+                if filepath.endswith("manifest.json") and EditStates.UNEDITABLE == editable:
+                    json_view = JsonViewer(self, editable)
+                    import json
+                    data = json.dumps(data, indent=2)
+                    json_view.open_file(path=filepath, data=data)
+                    json_view.setObjectName(filepath)
+                    self.content.tab_widget.addTab(json_view, os.path.basename(filepath) )
+                else:
+                    json_view = JsonViewer2(self, editable)
+                    json_view.open_file(path=filepath, data=data)
+                    json_view.setObjectName(filepath)
+                    self.content.tab_widget.addTab(json_view, os.path.basename(filepath) )
             else:
                 json_view = json_view[1]
             taut.select_tab(self.content.tab_widget, json_view)
             self._rt_tabs_hide()
         except Exception as e:
+            print( traceback.format_exc())
             print(f"Error opening json: {type(e)}: {e}")
         finally:
             self._clear_is_opening(filepath)
@@ -1293,14 +1308,12 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
     def on_ai_ask_question(self) -> None:
         self.on_ai_gen("question")
 
-    def on_ai_improve(self) -> None:
-        self.on_ai_gen("improve")
-
+    def on_ai_explain(self) -> None:
+        self.on_ai_gen("explain")
 
     def on_ai_gen(self, activity="validation") -> None:
         index = self.content.tab_widget.currentIndex()
         t = self.content.tab_widget.widget(index)
-        path = t.objectName()
         self.rt_tab_widget.setCurrentIndex(1)
         #
         # pick the right activity

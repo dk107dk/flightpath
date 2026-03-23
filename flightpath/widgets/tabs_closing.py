@@ -1,4 +1,5 @@
 import os
+import json
 
 from PySide6.QtWidgets import QTabWidget, QPushButton, QStyle, QTabBar, QWidget, QMenu, QFileDialog, QTextEdit
 from PySide6.QtGui import QIcon, QAction, QPageLayout, QPageSize
@@ -126,7 +127,12 @@ class ClosingTabs(QTabWidget):
         elif ton in ["Errors", "Variables"]:
             l = t.layout()
             w = l.itemAt(0).widget()
-            txt = w.toPlainText()
+            #
+            # exp
+            #
+            j = w.model.to_json()
+            txt = json.dumps(j)
+            #txt = w.toPlainText()
             self.main.save_sample(path=path, name=f"{ton}.json", data=txt)
         elif ton == "Matches":
             l = t.layout()
@@ -134,6 +140,12 @@ class ClosingTabs(QTabWidget):
             m = w.model()
             data = m.get_data()
             self.main.save_sample(path=path, name="sample.csv", data=data)
+        elif isinstance(t, QTextEdit):
+            print(f"found a qutext ed")
+            txt = t.toMarkdown()
+            print(f"md: txt: {txt}")
+            self.main.save_sample(path=path, name=ton, data=txt)
+            print(f"done saving")
         else:
             l = t.layout()
             w = l.itemAt(0).widget()

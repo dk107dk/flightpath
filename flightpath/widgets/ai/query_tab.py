@@ -1,14 +1,16 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QApplication, QTextEdit
 from PySide6.QtGui import QColor
 from PySide6.QtCore import QThreadPool
 
+from csvpath.util.file_readers import DataFileReader
+from csvpath.util.nos import Nos
+
 from flightpath.widgets.ai.query_form import QueryFormWidget
 from flightpath.widgets.ai.query_accordion import QueryAccordionWidget
-from flightpath.workers.ai_generate_csvpath_worker import AiGenerateCsvpathWorker
 from flightpath.workers.dispatcher import JobDispatcher
 from flightpath.workers.jobs.ai_generate_csvpath_job import AiGenerateCsvpathJob
 from flightpath.util.feedback_utility import FeedbackUtility as feut
-from flightpath.util.generator_utility import GeneratorUtility as geut
+from flightpath.util.test_data_utility import TestDataUtility as tdut
 
 
 class QueryTabWidget(QWidget):
@@ -30,16 +32,26 @@ class QueryTabWidget(QWidget):
         self.accordion.itemClicked.connect(self.on_item_clicked)
         self.accordion.itemCloseRequested.connect(self.on_item_close_requested)
 
+
+
     def enable_for_extension(self, e:str) -> None:
         self.form.activity_selector.enable_for_extension(e)
+
+        #
+        # we need the doc checkbox only if "question" or "explain", not "testdata" or "validate"
+        # this isn't there yet
+        #
+        if(e in self.main.csvpath_config.get(section="extensions", name="csvpath_files")):
+            self.form.use_doc_checkbox.setChecked(True)
+            self.form.use_doc_checkbox.setEnabled(True)
+        #
+        #
         if(
            e in self.main.csvpath_config.get(section="extensions", name="csv_files")
             or e in self.main.csvpath_config.get(section="extensions", name="csvpath_files")
         ):
             self.form.prompt_title.setEnabled(True)
             self.form.instructions.setEnabled(True)
-            self.form.use_doc_checkbox.setChecked(True)
-            self.form.use_doc_checkbox.setEnabled(True)
             self.form.submit_btn.setEnabled(True)
         else:
             self.form.prompt_title.setEnabled(False)
@@ -49,8 +61,6 @@ class QueryTabWidget(QWidget):
             self.form.submit_btn.setEnabled(False)
 
     def on_query_submitted(self, params):
-        config = geut.new_generator_config(self.main)
-        turns_limit = config.get(section="generations", name="turns_limit", default="2")
         metadata = {
             "id": id(params),
             "params": params,
@@ -58,27 +68,33 @@ class QueryTabWidget(QWidget):
             "status": "running",
             "document_path": params.get("document_path"),
             "results": None,
-            "turns_limit": turns_limit
+            "turns_limit": params.get("turns_limit")
         }
+        """
         import json
         print(json.dumps(metadata, indent=2))
-
-        params["number_of_lines"] = 25
-
+        """
+        #
+        # get this from a user-driven form control?
+        #
+        activity = self.form.activity_selector.activity
         item = self.accordion.add_item(
             title=params.get("title", "Untitled Query"),
-            activity=params["activity"],
+            activity=activity,
             status_color=QColor("#ffd43b"),
             metadata=metadata
         )
-
+        instructions = metadata.get("params").get("instructions")
+        if self.form._current_activity == "question" and str(instructions).strip() == "":
+            self.on_worker_error(item, metadata, "You must provide a question or constrant for the AI to help with.")
+            return
         worker = JobDispatcher.get_worker(main=self.main, me=self, mdata=metadata)
-        #
-        # connect signals. all dispatched ai workers need to support the same.
-        #
-        worker.signals.turn.connect(lambda js: self.on_turn_update(item, js))
         worker.signals.finished.connect(lambda generation: self.on_worker_finished(item, metadata, generation))
+
+        worker.signals.turn.connect(lambda js: self.on_turn_update(item, js))
+
         worker.signals.error.connect(lambda msg: self.on_worker_error(item, metadata, msg))
+        item.worker = worker
 
         self.threadpool.start(worker)
 
@@ -93,16 +109,51 @@ class QueryTabWidget(QWidget):
             #
 
     def on_worker_finished(self, item, metadata, generation):
-        print(f"querytab: on_worker_finished: item: {item}, metadata: {metadata}, generation: {generation}")
+        if generation is None:
+            self.on_worker_error(item, metadata, "Invalid result metadata: no generation")
+            return
+        if generation.errors is not None:
+            self.on_worker_error(item, metadata, generation.errors)
+            return
+        if generation.generator.exceptions and len(generation.generator.exceptions) > 0:
+            errors = ""
+            for _ in generation.generator.exceptions:
+                errors = f"{errors}\n{_}"
+            self.on_worker_error(item, metadata, errors)
+            return
+        print(f"querytab.on_worker_finished: {item}, {metadata}, {generation}")
         metadata["results"] = generation
         metadata["status"] = "complete"
         item.status_dot.setColor(QColor("#40c057"))  # green
-        #item.title_label.setText("Complete")
+        self._beep()
+        item.worker = None
+
+    def _beep(self) -> None:
+        try:
+            QApplication.beep()
+        except Exception:
+            print(f"beep error")
+            ...
 
     def on_worker_error(self, item, metadata, msg):
         metadata["status"] = "error"
         item.status_dot.setColor(QColor("#fa5252"))  # red
+        QApplication.beep()
         item.title_label.setText("Error")
+        self._beep()
+        #
+        # put the error in the Tracking tab
+        #
+        view = QPlainTextEdit()
+        view.setPlainText(msg)
+        view.setReadOnly(True)
+        error = f"{metadata["id"]}.error"
+        feut.add_feedback_tab(main=self.main, tab_id=error, name="Error", tab=view)
+        #
+        # display feedback
+        #
+        feut.switch_to_feedback(self.main, error)
+        feut.open_feedback(self.main)
 
     #
     # do we want the user to have to click a link within the item, or is it
@@ -122,10 +173,12 @@ class QueryTabWidget(QWidget):
         tracking = f"{metadata["id"]}.tracking"
         #
         if generation:
-            view = QPlainTextEdit()
-            view.setPlainText(generation.response_text)
+            view = QTextEdit()
+            view.setMarkdown(generation.response_text)
             view.setReadOnly(True)
             feut.add_feedback_tab(main=self.main, tab_id=response, name="Results", tab=view)
+        else:
+            print(f"on_item_clicked: no generation available from metadata")
         #
         # log info
         #

@@ -68,6 +68,10 @@ class CsvPathTextEdit(QPlainTextEdit):
         ask_question_ctrl = QShortcut(QKeySequence("Shift+Ctrl+Q"), self)
         ask_question_ctrl.activated.connect(self.on_ask_question)
 
+        explain_ctrl = QShortcut(QKeySequence("Shift+Ctrl+E"), self)
+        explain_ctrl.activated.connect(self.on_explain)
+
+
         self.load_dialog = None
 
     @property
@@ -193,6 +197,12 @@ class CsvPathTextEdit(QPlainTextEdit):
         ask_question_action.setShortcut(QKeySequence("Shift+Ctrl+Q"))
         ask_question_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(ask_question_action)
+
+        explain_action = QAction("Explain this", self)
+        explain_action.triggered.connect(self.on_explain)
+        explain_action.setShortcut(QKeySequence("Shift+Ctrl+E"))
+        explain_action.setShortcutVisibleInContextMenu(True)
+        menu.addAction(explain_action)
         menu.addSeparator()
 
         #
@@ -328,11 +338,9 @@ class CsvPathTextEdit(QPlainTextEdit):
 
     def on_ask_question(self) -> None:
         self.main.on_ai_ask_question()
-        """
-        print(f"self.parentx: {self.parent}")
-        gen = AskQuestionDialog(parent=self, main=self.main, path=self.parent.path)
-        self.main.show_now_or_later(gen)
-        """
+
+    def on_explain(self) -> None:
+        self.main.on_ai_explain()
 
     def on_load(self) -> None:
         loader = CsvpathLoader(self.main)

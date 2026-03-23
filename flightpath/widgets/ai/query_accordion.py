@@ -1,15 +1,18 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QFrame
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, Qt
 
 from flightpath.widgets.ai.query_accordion_item import QueryAccordionItem
 
+# was
 class QueryAccordionWidget(QWidget):
     itemClicked = Signal(object)
     itemCloseRequested = Signal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -28,6 +31,15 @@ class QueryAccordionWidget(QWidget):
         layout.addWidget(self.scroll)
 
         self._items = []
+        self.setObjectName("acc")
+        self.setStyleSheet("QWidget { background-color:#fafafa;border-top:0px solid #ddd; }")
+
+
+    @property
+    def items(self) -> list:
+        if self._items is None:
+            self._items = []
+        return self._items
 
     def add_item(self, title: str, activity: str, status_color: QColor, metadata: dict):
         item = QueryAccordionItem(title, activity, status_color, metadata, self.container)

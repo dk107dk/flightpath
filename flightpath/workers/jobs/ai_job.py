@@ -32,10 +32,11 @@ class AiJob(Job):
         self._values = vs
 
     def _on_generation(self, generation):
-            if generation and self.on_turn_update:
-                turns = generation.generator.get_turns(text_list=False)
-                js = jsonpickle.encode(turns, unpicklable=False, indent=2)
-                self.on_turn_update(js)
+        print(f"AiJob._on_generation: {generation}: {self.on_turn_update}")
+        if generation and self.on_turn_update:
+            turns = generation.generator.get_turns(text_list=False)
+            js = jsonpickle.encode(turns, unpicklable=False, indent=2)
+            self.on_turn_update(js)
 
     def do_generate(self) -> None:
         print(f"job: do_generate: starting")
@@ -64,6 +65,7 @@ class AiJob(Job):
             # the prompt example is the csv or csvpath context
             #
             prompt.example = self.example
+            print(f"asdjob: example: {prompt.example}")
             #
             # the prompt rules are any instructions from the user
             #
@@ -82,18 +84,30 @@ class AiJob(Job):
             # object. all the generations are saved, mostly as json, in a set
             # of several files.
             #
+            #print(f"\n\n  >>>>>>>>> WARNING: NOT starting generations")
+            generation = None
+            #
             generation = generator.do_send(context=context, prompt=prompt, datapath=self.path)
+            #
+            if generation:
+                print(f"done with generations: last generation: {generation}: {generation.name}")
+            else:
+                raise ValueError("No generation returned")
             #
             # response_text is the plain text response from the assistant
             #
             if self.on_complete:
+                print(f"AiJob: calling back on_complete: {self.on_complete}: generation: {generation}")
                 self.on_complete(generation)
-
+                print(f"AiJob: done with callback")
+            else:
+                raise Exception(f"No on_complete call back set. Cannot handle final generation: {generation}.")
         except Exception as e:
             print(traceback.format_exc())
             if self.on_error:
                 self.on_error(str(e))
-
+            else:
+                raise
 
 
 

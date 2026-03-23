@@ -15,7 +15,10 @@ class AiWorker(QRunnable):
         self.signals = AiWorkerSignals()
 
         self.job.on_turn_update = self.signals.turn.emit
+
+        print(f"AiWorker: init: setting oncmplete: {self.signals.finished.emit}")
         self.job.on_complete = self.signals.finished.emit
+
         self.job.on_error = self.signals.error.emit
 
     @Slot()

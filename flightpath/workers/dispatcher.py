@@ -3,6 +3,7 @@ from PySide6.QtCore import QRunnable
 from flightpath.workers.jobs.ai_generate_csvpath_job import AiGenerateCsvpathJob
 from flightpath.workers.jobs.ai_generate_data_job import AiGenerateDataJob
 from flightpath.workers.jobs.ai_ask_question_job import AiAskQuestionJob
+from flightpath.workers.jobs.ai_explain_job import AiExplainJob
 
 from flightpath.workers.ai_worker import AiWorker
 
@@ -24,8 +25,8 @@ class JobDispatcher:
             return cls.testdata(main=main, me=me, mdata=mdata)
         if activity == "question":
             return cls.question(main=main, me=me, mdata=mdata)
-        if activity == "improve":
-            return cls.improve(main=main, me=me, mdata=mdata)
+        if activity == "explain":
+            return cls.explain(main=main, me=me, mdata=mdata)
         raise ValueError(f"Unknown activity: {activity}")
 
     @classmethod
@@ -36,7 +37,6 @@ class JobDispatcher:
             mdata=mdata
         )
         w =  AiWorker(job)
-        #w =  AiGenerateCsvpathWorker(job)
         return w
 
     @classmethod
@@ -60,7 +60,13 @@ class JobDispatcher:
         return w
 
     @classmethod
-    def improve(cls, *, me, main, mdata:dict) -> Job:
-        raise Exception("not implemented")
+    def explain(cls, *, me, main, mdata:dict) -> Job:
+        job = AiExplainJob(
+            parent=me,
+            main=main,
+            mdata=mdata
+        )
+        w =  AiWorker(job)
+        return w
 
 
