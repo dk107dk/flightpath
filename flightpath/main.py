@@ -48,7 +48,6 @@ from csvpath import CsvPaths
 from flightpath.hidden import Hidden
 
 
-from flightpath.dialogs.generate_csvpath_dialog import GenerateCsvpathDialog
 from flightpath.util.help_finder import HelpFinder
 
 from flightpath.workers.md_worker import MdWorker

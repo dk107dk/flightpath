@@ -12,6 +12,35 @@ class FileUtility:
     APP_PATH = None
 
     @classmethod
+    def join_local_overlapped(cls, pathone, pathtwo) -> str:
+        if pathone is None:
+            raise ValueError("pathone cannot be None")
+        if pathtwo is None:
+            raise ValueError("pathtwo cannot be None")
+        if "://" in pathone:
+            raise ValueError(f"pathone must be local, not {pathone}")
+        if "://" in pathtwo:
+            raise ValueError(f"pathtwo must be local, not {pathtwo}")
+        #
+        # if pathone ends in the start of pathtwo, remove the start of pathtwo before
+        # joining.
+        #
+        print(f"fiut.join_overlapped: pathone: {pathone}")
+        print(f"fiut.join_overlapped: pathtwo: {pathtwo}")
+        partsone = pathu.parts(pathone)
+        partstwo = pathu.parts(pathtwo)
+        print(f"fiut.join_overlapped: partsone: {partsone}")
+        print(f"fiut.join_overlapped: partstwo: {partstwo}")
+
+        while partsone[len(partsone) -1] == partstwo[0]:
+            partsone = partsone[0:len(partsone) -1]
+        _ = partsone + partstwo
+        print(f"fiut.join_overlapped: _: {_}")
+        ret = os.sep.join(_)
+        print(f"fiut.join_overlapped: ret: {ret}")
+        return ret
+
+    @classmethod
     def copy_results_back_to_cwd(self, *, main, from_path:str, use_name=None) -> str:
         #
         # if use_name we attempt to use that as the new file name, with deconflicting.
