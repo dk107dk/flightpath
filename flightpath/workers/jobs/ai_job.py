@@ -65,7 +65,6 @@ class AiJob(Job):
             # the prompt example is the csv or csvpath context
             #
             prompt.example = self.example
-            print(f"asdjob: example: {prompt.example}")
             #
             # the prompt rules are any instructions from the user
             #
