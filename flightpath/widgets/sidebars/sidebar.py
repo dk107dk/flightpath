@@ -24,7 +24,6 @@ from csvpath.util.path_util import PathUtility as pathu
 
 from flightpath.widgets.config.config import Config
 from flightpath.dialogs.stage_data_dialog import StageDataDialog
-from flightpath.dialogs.generate_csvpath_dialog import GenerateCsvpathDialog
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.custom_tree_view import CustomTreeView
@@ -278,7 +277,8 @@ class Sidebar(QWidget):
         self.stage_data_action = QAction()
         self.load_paths_action = QAction()
         self.run_action = QAction()
-        self.generate_action = QAction()
+        self.generate_csvpath_action = QAction()
+        self.generate_csv_action = QAction()
         self.explain_action = QAction()
         #
         #
@@ -307,7 +307,8 @@ class Sidebar(QWidget):
         self.stage_data_action.setText("Stage data")
         self.load_paths_action.setText("Load csvpaths")
         self.edit_jsonl_action.setText("Edit as JSON")
-        self.generate_action.setText("Generate csvpath")
+        self.generate_csvpath_action.setText("Generate csvpath")
+        self.generate_csv_action.setText("Generate CSV")
         self.explain_action.setText("Explain this")
         #
         #
@@ -329,7 +330,8 @@ class Sidebar(QWidget):
         self.copy_action.triggered.connect(self._copy)
         self.paste_action.triggered.connect(self._paste)
         self.edit_jsonl_action.triggered.connect(self._edit_as_json)
-        self.generate_action.triggered.connect(self._generate_csvpath)
+        self.generate_csvpath_action.triggered.connect(self._generate_csvpath)
+        self.generate_csv_action.triggered.connect(self._generate_csv)
         self.explain_action.triggered.connect(self._on_explain)
 
         self.context_menu.addAction(self.edit_jsonl_action)
@@ -354,10 +356,11 @@ class Sidebar(QWidget):
         self.context_menu.addAction(self.stage_data_action)
         self.context_menu.addAction(self.load_paths_action)
         self.context_menu.addAction(self.explain_action)
+        self.context_menu.addAction(self.generate_csvpath_action)
+        self.context_menu.addAction(self.generate_csv_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.line_number_action)
 
-        self.context_menu.addAction(self.generate_action)
 
     def _has_llm(self)->bool:
         m = self.main.csvpath_config.get(section="llm", name="model")
@@ -417,21 +420,25 @@ class Sidebar(QWidget):
                 self.stage_data_action.setVisible(False)
                 if ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files") \
                         or ext.lower() == "json":
-                    self.generate_action.setVisible(False)
                     self.load_paths_action.setVisible(True)
                     self.explain_action.setVisible(True)
-                    if self._has_llm():
-                        self.explain_action.setEnabled(True)
-                    else:
-                        self.explain_action.setEnabled(False)
+                    self.explain_action.setEnabled(self._has_llm())
+                    self.generate_csvpath_action.setVisible(False)
+                    self.generate_csvpath_action.setEnabled(self._has_llm())
+                    self.generate_csv_action.setVisible(True)
+                    self.generate_csv_action.setEnabled(self._has_llm())
                 elif ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
-                    self.generate_action.setVisible(self._has_llm())
+                    self.generate_csvpath_action.setVisible(True)
+                    self.generate_csvpath_action.setEnabled(self._has_llm())
+                    self.generate_csv_action.setVisible(False)
+                    self.generate_csv_action.setEnabled(self._has_llm())
                     self.stage_data_action.setVisible(True)
                     self.load_paths_action.setVisible(False)
                     self.explain_action.setEnabled(False)
                     self.explain_action.setVisible(False)
                 else:
-                    self.generate_action.setVisible(False)
+                    self.generate_csvpath_action.setVisible(False)
+                    self.generate_csv_action.setVisible(False)
                     self.load_paths_action.setVisible(False)
                     self.explain_action.setEnabled(False)
                     self.explain_action.setVisible(False)
@@ -517,7 +524,8 @@ class Sidebar(QWidget):
             # needs to happen.
             #
             self.rename_action.setVisible(False)
-            self.generate_action.setVisible(False)
+            self.generate_csvpath_action.setVisible(False)
+            self.generate_csv_action.setVisible(False)
 
             self.paste_action.setVisible(True)
             if self.cutted or self.copied:
@@ -615,8 +623,35 @@ class Sidebar(QWidget):
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
-            gen = GenerateCsvpathDialog(parent=self, main=self.main, path=path)
-            self.main.show_now_or_later(gen)
+        #
+        # open file do this first because if any reason we blow up better
+        # to not have the ai tab showing without a file to act on.
+        #
+        self.main.read_validate_and_display_file_for_path(path)
+        #
+        # make sure tabs are visible and ai tab selected
+        #
+        self.main._rt_tabs_show()
+        self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
+        self.main.on_ai_gen_csvpath()
+
+    def _generate_csv(self) -> None:
+        index = self.file_navigator.currentIndex()
+        if index.isValid():
+            path = self.proxy_model.filePath(index)
+        #
+        # open file do this first because if any reason we blow up better
+        # to not have the ai tab showing without a file to act on.
+        #
+        self.main.read_validate_and_display_file_for_path(path)
+        #
+        # make sure tabs are visible and ai tab selected
+        #
+        self.main._rt_tabs_show()
+        self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
+        self.main.on_ai_gen_data()
+
+
 
     def _load_paths(self) -> None:
         index = self.file_navigator.currentIndex()

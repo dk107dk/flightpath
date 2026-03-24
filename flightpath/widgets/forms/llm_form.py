@@ -1,12 +1,18 @@
+import os
 from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
     QFormLayout,
     QCheckBox,
+    QPushButton,
     QLabel
 )
 
-from csvpath.util.config import Config
+from flightpath.util.generator_utility import GeneratorUtility as geut
+from flightpath.util.os_utility import OsUtility as osut
+from flightpath.util.file_utility import FileUtility as fiut
+
+from csvpath.util.nos import Nos
 from .blank_form import BlankForm
 
 class LlmForm(BlankForm):
@@ -26,8 +32,34 @@ class LlmForm(BlankForm):
         self.checkbox.setChecked(True)
         layout.addRow("Use for all projects: ", self.checkbox)
 
+
+        button = QPushButton("Open metadata dir")
+        layout.addRow("", button)
+        button.clicked.connect(self.on_click_open)
+
+
         self.setLayout(layout)
         self._setup()
+
+    def on_click_open(self) -> None:
+        gconfig = geut.new_generator_config(main=self.main)
+        path = gconfig.configpath
+        path = os.path.dirname(path)
+        cpath = gconfig.get(section="storage", name="root")
+        path = fiut.join_local_overlapped(path, cpath)
+        nos = Nos(path)
+        if not nos.exists():
+            nos.makedirs()
+        elif nos.isfile():
+            #
+            # TODO: this could, rarely, happen. we should alert the user of the misconfig.
+            #
+            print(f"LlmForm: on_click_open: {path} is a file. Cannot open.")
+        else:
+            o = osut.file_system_open_cmd()
+            os.system(f'{o} "{path}"')
+
+
 
     def _setup(self) -> None:
         self.model.textChanged.connect(self.main.on_config_changed)

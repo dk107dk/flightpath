@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import os
 
 from csvpath.util.nos import Nos
@@ -6,6 +7,30 @@ from csvpath.util.nos import Nos
 from flightpath.util.file_utility import FileUtility as fiut
 
 class TestFiut(unittest.TestCase):
+
+    def test_join_local_overlapped_1(self) -> None:
+        pathone = "/a/b/c/d"
+        pathtwo = "d/e/f.ini"
+        joined = fiut.join_local_overlapped(pathone, pathtwo)
+        assert joined == "/a/b/c/d/e/f.ini"
+
+    def test_join_local_overlapped_2(self) -> None:
+        pathone = "s3://a/b/c/d"
+        pathtwo = "d/e/f.ini"
+        with pytest.raises(ValueError):
+            fiut.join_local_overlapped(pathone, pathtwo)
+
+    def test_join_local_overlapped_3(self) -> None:
+        pathone = "/a/b/c/d"
+        pathtwo = "f.ini"
+        joined = fiut.join_local_overlapped(pathone, pathtwo)
+        assert joined == "/a/b/c/d/f.ini"
+
+    def test_join_local_overlapped_4(self) -> None:
+        pathone = "/fish/blue"
+        pathtwo = "rodents/red.ini"
+        joined = fiut.join_local_overlapped(pathone, pathtwo)
+        assert joined == "/fish/blue/rodents/red.ini"
 
     def test_deconflict_name_1(self):
         aname = "test.txt"

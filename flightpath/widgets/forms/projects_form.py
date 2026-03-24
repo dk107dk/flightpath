@@ -23,9 +23,9 @@ class ProjectsForm(BlankForm):
         self.project_dir = QLineEdit()
         self.project_dir.setReadOnly(True)
         layout.addRow("Name of projects directory: ", self.project_dir)
+
         button = QPushButton("Open projects dir")
         layout.addRow("", button)
-
         button.clicked.connect(self.on_click_open)
 
         self.setLayout(layout)

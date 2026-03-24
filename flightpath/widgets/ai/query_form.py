@@ -1,6 +1,16 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QCheckBox, QHBoxLayout, QPlainTextEdit, QScrollArea
+    QWidget,
+    QVBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QCheckBox,
+    QHBoxLayout,
+    QPlainTextEdit,
+    QComboBox,
+    QFormLayout,
+    QScrollArea
 )
 
 from csvpath.util.file_readers import DataFileReader
@@ -60,9 +70,24 @@ class QueryFormWidget(QWidget):
 
         self.doc_path.setWidget(self.doc_path_text)
         layout.addWidget(self.doc_path)
-
-
-
+        #
+        # if we are generating data we need to know how many lines to generate.
+        # the combo will only show when the clickbox is not showing.
+        #
+        self.lines_count = QComboBox()
+        self.lines_count.addItem("25")
+        self.lines_count.addItem("100")
+        self.lines_count.addItem("250")
+        self.lines = QWidget()
+        lines_form = QFormLayout()
+        lines_form.setContentsMargins(0, 0, 0, 0)
+        lines_form.addRow("Lines", self.lines_count)
+        self.lines.setLayout(lines_form)
+        layout.addWidget(self.lines)
+        self.lines.setVisible(False)
+        #
+        #
+        #
         self.submit_btn = QPushButton("Submit", self)
         box = HelpIconPackager.add_help(main=self.main, widget=self.submit_btn, on_help=self.on_ai_help)
         box.setMinimumWidth(150)
@@ -90,7 +115,10 @@ class QueryFormWidget(QWidget):
             self.submit_btn.setText("Submit")
         else:
             self.submit_btn.setEnabled(False)
-            self.submit_btn.setText("Name your request above")
+            if self.activity_selector.activity == "question":
+                self.submit_btn.setText("Name your question to continue")
+            else:
+                self.submit_btn.setText("Name your request to continue")
 
     def assure_state(self) -> None:
         fs = fiut.split_filename(self.main.selected_file_path)
@@ -111,8 +139,11 @@ class QueryFormWidget(QWidget):
         if mode == "question":
             self.instructions.setPlaceholderText("Ask your question…")
             self.prompt_title.setPlaceholderText("Name your question…")
-        else:
+        elif mode in ["validation", "explain"]:
             self.instructions.setPlaceholderText("Enter any instructions…")
+            self.prompt_title.setPlaceholderText("Name your request…")
+        else:
+            self.instructions.setPlaceholderText("Any instructions for data generation…")
             self.prompt_title.setPlaceholderText("Name your request…")
         if mode in ["testdata", "validation"]:
             self.doc_path.hide()
@@ -120,6 +151,8 @@ class QueryFormWidget(QWidget):
         else:
             self.use_doc_checkbox.show()
             self.on_use_doc( self.use_doc_checkbox.isChecked() )
+
+        self.lines.setVisible(mode == "testdata")
 
         self.instructions.viewport().update()
         #
@@ -196,7 +229,12 @@ class QueryFormWidget(QWidget):
             # we need to tell the AI how many turns it has so it can wrap up and answer
             # in a timely way
             #
-            "turns_limit": turns_limit
+            "turns_limit": turns_limit,
+            #
+            # number of lines is used in data generation. not used otherwise, atm, but doesn't
+            # hurt to include it.
+            #
+            "number_of_lines": self.lines_count.currentText()
         }
         self.querySubmitted.emit(params)
 

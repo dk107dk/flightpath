@@ -48,7 +48,6 @@ from csvpath import CsvPaths
 from flightpath.hidden import Hidden
 
 
-from flightpath.dialogs.generate_csvpath_dialog import GenerateCsvpathDialog
 from flightpath.util.help_finder import HelpFinder
 
 from flightpath.workers.md_worker import MdWorker
@@ -787,7 +786,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
             else:
                 json_view = json_view[1]
             taut.select_tab(self.content.tab_widget, json_view)
-            self._rt_tabs_hide()
+            self.main._rt_tabs_show()
         except Exception as e:
             print( traceback.format_exc())
             print(f"Error opening json: {type(e)}: {e}")
@@ -1007,6 +1006,7 @@ class MainWindow(QMainWindow): # pylint: disable=R0902, R0904
                 self.content.toolbar.enable()
             self.show_now_or_later(self.content.toolbar)
             taut.select_tab(self.content.tab_widget, dv)
+            self.main._rt_tabs_show()
         except Exception as e:
             print(traceback.format_exc())
             print(f"Error in update views at signals connect on: {type(dv)} showing {filepath}")
