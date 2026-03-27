@@ -7,10 +7,16 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">3.10,<3.14"
-pyside6 = ">=6.8.3"
-pygments = "^2.19.1"
-darkdetect = "^0.8.0"
-csvpath = "^0.0.598"
+pyside6 = "6.11.0"
+pygments = "2.19.2"
+darkdetect = "0.8.0"
+httpx = "0.28.1"
+tzdata = "2025.3"
+jsonpickle = "4.1.1"
+#
+#
+#
+csvpath = "0.0.598"
 #csvpath = { path = "../csvpath/builds/csvpath-0.0.597.tar.gz" }
 #
 # always use the local flightpath_server because we bundle it, not push it to PyPi
@@ -20,30 +26,25 @@ flightpath_server = { path = "./assets/flightpath_server-0.1.32.tar.gz" }
 #
 #
 #
-flightpath_generator = { path = "./assets/flightpath_generator-0.1.30.tar.gz"}
+flightpath_generator = { path = "./assets/flightpath_generator-0.1.31.tar.gz"}
 #
 # having troubles (suddenly?!) getting sftp to work in smart-open. this
 # didn't help. all dependencies are already present, as you'd think since
 # it was working.
 #
 #smart-open = {extras = ["all"], version = "^7.1.0"}
-httpx = "^0.28.1"
-tzdata = "^2025.2"
-jsonpickle = "^4.1.1"
 
 [tool.poetry.scripts]
 flightpath = "flightpath.main:run"
 
 [tool.poetry.group.dev.dependencies]
-pytest-qt = "^4.4.0"
-black = "^25.1.0"
-mypy = "^1.15.0"
-pyinstaller = "^6.13.0"
-pillow = "^11.2.1"
-pylint = "^3.3.6"
-pytest = "^8.3.5"
-#csvpath = { path = "../csvpath/builds/csvpath-0.0.539.tar.gz" }
-#flightpath_server = { path = "../flightpath_server/dist/flightpath_server-0.1.0.tar.gz" }
+pytest-qt = "4.5.0"
+black = "25.12.0"
+mypy = "1.19.1"
+pyinstaller = "6.19.0"
+pillow = "11.3.0"
+pylint = "3.3.9"
+pytest = "8.4.2"
 
 [[tool.poetry.source]]
 name = "csvpath"
