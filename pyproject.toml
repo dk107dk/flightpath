@@ -39,13 +39,13 @@ flightpath = "flightpath.main:run"
 
 [tool.poetry.group.dev.dependencies]
 pytest-qt = "4.5.0"
-black = "25.12.0"
 mypy = "1.19.1"
 pyinstaller = "6.19.0"
 pillow = "11.3.0"
 pylint = "3.3.9"
 pytest = "8.4.2"
 pre-commit = "^4.5.1"
+ruff = "^0.15.8"
 
 [[tool.poetry.source]]
 name = "csvpath"
