@@ -1,0 +1,39 @@
+repos:
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.15.8  # Use the latest version
+  hooks:
+    - id: ruff-check
+      args: [ --fix ]
+    - id: ruff-format
+#-   repo: https://github.com/psf/black
+#    rev: 22.10.0
+#    hooks:
+#    -   id: black
+#-   repo: https://github.com/pre-commit/mirrors-mypy
+#    rev: 'v1.8.0'  # Use the sha / tag you want to point at
+#    hooks:
+#    -   id: mypy
+#-   repo: https://github.com/pre-commit/pre-commit-hooks
+#    rev: v2.0.0
+#    hooks:
+#    -   id: flake8
+#        exclude: ^csvpath/matching/productions/equality\.py$
+#- repo: local
+#  hooks:
+#    - id: pylint
+#      name: pylint
+#      entry: poetry run pylint
+#      language: system
+#      types: [python]
+#      args:
+#        [
+#          "-rn", # Only display messages
+#          "-sn", # Don't display the score
+#          "--rcfile=.pylintrc", # Use your pylint config file
+#        ]
+
+-   repo: https://github.com/python-poetry/poetry
+    rev: '2.1.4'  # add version here
+    hooks:
+    -   id: poetry-check
+    -   id: poetry-lock
