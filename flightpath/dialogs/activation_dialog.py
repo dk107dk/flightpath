@@ -1,25 +1,19 @@
-from PySide6.QtWidgets import ( # pylint: disable=E0611
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QLabel,
-        QDialog,
-        QLineEdit,
-        QFormLayout,
-        QComboBox,
-        QSizePolicy,
-        QWidget,
-        QPlainTextEdit,
-        QMessageBox
+from PySide6.QtWidgets import (  # pylint: disable=E0611
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QDialog,
+    QFormLayout,
+    QComboBox,
+    QSizePolicy,
 )
-from PySide6.QtCore import Qt # pylint: disable=E0611
+from PySide6.QtCore import Qt  # pylint: disable=E0611
 
-from csvpath import CsvPaths
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
-from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.message_utility import MessageUtility as meut
+
 
 class ActivationDialog(QDialog):
     COLLECT_SERIAL = "collect_paths"
@@ -33,13 +27,7 @@ class ActivationDialog(QDialog):
     METHODS[COLLECT_BY_LINE] = "collect_by_line"
     METHODS[FF_BY_LINE] = "fast_forward_by_line"
 
-    METHOD_NAMES = [
-                COLLECT_SERIAL,
-                FF_SERIAL,
-                COLLECT_BY_LINE,
-                FF_BY_LINE
-            ]
-
+    METHOD_NAMES = [COLLECT_SERIAL, FF_SERIAL, COLLECT_BY_LINE, FF_BY_LINE]
 
     def __init__(self, *, main, named_file, parent):
         super().__init__(parent)
@@ -83,7 +71,9 @@ class ActivationDialog(QDialog):
         #
         self.named_paths_name_ctl = QComboBox()
         self.named_paths_name_ctl.setEditable(True)
-        self.named_paths_name_ctl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.named_paths_name_ctl.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Preferred
+        )
         names = self.csvpaths.paths_manager.named_paths_names
         names.sort()
         for _ in names:
@@ -93,7 +83,7 @@ class ActivationDialog(QDialog):
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.named_paths_name_ctl,
-            on_help=self.on_help_named_paths
+            on_help=self.on_help_named_paths,
         )
         form_layout.addRow("Named-paths name: ", box)
 
@@ -105,10 +95,12 @@ class ActivationDialog(QDialog):
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.run_method_ctl,
-            on_help=self.on_help_run_method
+            on_help=self.on_help_run_method,
         )
         box.layout().addStretch()
-        form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        form_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
+        )
         form_layout.addRow("Run method: ", box)
 
         buttons_layout = QHBoxLayout()
@@ -150,13 +142,15 @@ class ActivationDialog(QDialog):
             #
             #
             #
-            meut.message(title="No CsvPath statement groups", msg="You must load a named-paths group before you set an arrival activation")
+            meut.message(
+                title="No CsvPath statement groups",
+                msg="You must load a named-paths group before you set an arrival activation",
+            )
         else:
             #
             # show the dialog
             #
             self.exec()
-
 
     def do_set(self) -> None:
         npn = self.named_paths_name_ctl.currentText()
@@ -176,5 +170,3 @@ class ActivationDialog(QDialog):
         a[describer.RUN_METHOD] = method
         describer.store_json(self.named_file_name, j)
         self.close()
-
-

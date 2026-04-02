@@ -1,13 +1,7 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QPushButton,
-    QFormLayout,
-    QComboBox
-)
+from PySide6.QtWidgets import QLineEdit, QPushButton, QFormLayout
 
-from csvpath.util.config import Config
 from .blank_form import BlankForm
+
 
 class ExtensionsForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -27,7 +21,6 @@ class ExtensionsForm(BlankForm):
         self.reload_button.clicked.connect(self._refresh)
         layout.addRow("", self.reload_button)
 
-
         self.setLayout(layout)
         self._setup()
 
@@ -41,17 +34,16 @@ class ExtensionsForm(BlankForm):
         # self.main.sidebar._renew_sidebars()
         self.reload_button.setEnabled(False)
 
-
     def _enable_reload(self) -> None:
         self.reload_button.setEnabled(True)
 
     def add_to_config(self, config) -> None:
-        config.add_to_config("extensions", "csv_files", self.csvs.text() )
+        config.add_to_config("extensions", "csv_files", self.csvs.text())
         #
         #
         #
         paths = self.csvpaths.text()
-        config.add_to_config("extensions", "csvpath_files", paths )
+        config.add_to_config("extensions", "csvpath_files", paths)
         #
         #
         #
@@ -82,4 +74,3 @@ class ExtensionsForm(BlankForm):
     @property
     def tabs(self) -> list[str]:
         return []
-

@@ -1,34 +1,20 @@
-import sys
 import os
 import json
 import re
-import traceback
-from pathlib import Path
 
-from PySide6.QtWidgets import (
-    QPushButton,
-    QWidget,
-    QComboBox,
-    QMenu,
-    QMessageBox,
-    QVBoxLayout,
-    QApplication
-)
+from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout, QApplication
 
 from PySide6.QtGui import QAction
-from PySide6.QtCore import Qt, QSize, QModelIndex
-from PySide6.QtWidgets import QTreeView, QAbstractItemView, QSizePolicy, QHeaderView
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTreeView, QAbstractItemView, QHeaderView
 
 from csvpath.util.nos import Nos
 from csvpath.util.path_util import PathUtility as pathu
 from csvpath.util.config import Config
 from csvpath.util.file_readers import DataFileReader
-from csvpath.util.file_writers import DataFileWriter
 
-from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.widgets.help.plus_help import HelpHeaderView
-from flightpath.util.file_utility import FileUtility as fiut
 from .sidebar_archive_ref_maker import SidebarArchiveRefMaker
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.util.message_utility import MessageUtility as meut
@@ -36,13 +22,13 @@ from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
 
-class SidebarArchive(SidebarRightBase):
 
-    def __init__(self, *, role=1, main, config:Config):
+class SidebarArchive(SidebarRightBase):
+    def __init__(self, *, role=1, main, config: Config):
         super().__init__()
         self.role = role
         self.main = main
-        #self.config = config
+        # self.config = config
         self.archive_path = None
         self.setMinimumWidth(300)
         self.context_menu = None
@@ -58,7 +44,9 @@ class SidebarArchive(SidebarRightBase):
             layout.setSpacing(0)
             layout.setContentsMargins(1, 1, 1, 1)
 
-            self.archive_path = self.main.csvpath_config.get(section="results", name="archive")
+            self.archive_path = self.main.csvpath_config.get(
+                section="results", name="archive"
+            )
             nos = Nos(self.archive_path)
             if not nos.dir_exists():
                 #
@@ -66,9 +54,13 @@ class SidebarArchive(SidebarRightBase):
                 #
                 nos.makedir()
             self.view = QTreeView()
-            self.view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
+            self.view.setSelectionBehavior(
+                QAbstractItemView.SelectionBehavior.SelectItems
+            )
             self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            self.view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+            self.view.setHorizontalScrollMode(
+                QAbstractItemView.ScrollMode.ScrollPerPixel
+            )
             self.view.setWordWrap(False)
             self.view.setAnimated(False)
             self.view.setAllColumnsShowFocus(True)
@@ -78,7 +70,13 @@ class SidebarArchive(SidebarRightBase):
             header = self.view.header()
             header.setStretchLastSection(True)
             header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-            self.model = TreeModel(headers=["Archive"], data=nos, parent=self, title="Archived results", sidebar=self)
+            self.model = TreeModel(
+                headers=["Archive"],
+                data=nos,
+                parent=self,
+                title="Archived results",
+                sidebar=self,
+            )
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
             self.view.updateGeometries()
@@ -87,7 +85,11 @@ class SidebarArchive(SidebarRightBase):
             #
             #
             #
-            self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_archive_help))
+            self.view.setHeader(
+                HelpHeaderView(
+                    self.view, on_help=self.main.helper.on_click_archive_help
+                )
+            )
             self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
             self.view.header().setFixedHeight(24)
             self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
@@ -106,7 +108,9 @@ class SidebarArchive(SidebarRightBase):
             self.view.clicked.connect(self.on_archive_tree_click)
             self.setLayout(layout)
         except Exception as e:
-            meut.message(title=f"{type(e)} error loading named-paths", msg=f"Archive error: {e}")
+            meut.message(
+                title=f"{type(e)} error loading named-paths", msg=f"Archive error: {e}"
+            )
 
     #
     # moved from main
@@ -116,11 +120,10 @@ class SidebarArchive(SidebarRightBase):
         nos = Nos(self.main.selected_file_path)
         if not nos.isfile():
             ...
-            #self._show_welcome_but_do_not_deselect()
+            # self._show_welcome_but_do_not_deselect()
         else:
             self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
-
 
     """
     def update_style(self) -> None:
@@ -185,15 +188,14 @@ class SidebarArchive(SidebarRightBase):
             clipboard = QApplication.instance().clipboard()
             clipboard.setText(path)
 
-
-    def _results_mani_path_for_path(self, path:str) -> str:
+    def _results_mani_path_for_path(self, path: str) -> str:
         if path is None:
             raise ValueError("Path cannot be None")
         print(f"sidebar arch: _resultx_mani_path_for_path: path: {path}")
         #
         # we need the archive path as one thing; otherwise, we're likely to have trouble with the protocol.
         #
-        apath = path[len(self.archive_path)+1:]
+        apath = path[len(self.archive_path) + 1 :]
         parts = pathu.parts(apath)
         parts = [self.archive_path] + parts
         sep = pathu.sep(path)
@@ -216,7 +218,7 @@ class SidebarArchive(SidebarRightBase):
         print(f"sidebar arch: done: {ret}, {maniparts}")
         return ret
 
-    def _find_manifest_below(self, maniparts:list[str], path:str) -> None:
+    def _find_manifest_below(self, maniparts: list[str], path: str) -> None:
         nos = Nos(path)
         lst = nos.listdir(recurse=True, files_only=True)
         mani = None
@@ -230,14 +232,13 @@ class SidebarArchive(SidebarRightBase):
         else:
             raise ValueError(f"Cannot find manifest below {path}")
 
-    def _is_archive_manifest(self, path:str) -> bool:
+    def _is_archive_manifest(self, path: str) -> bool:
         config = self.main.csvpath_config
         archive = config.get(section="results", name="archive")
         arcmani = f"{archive}{os.sep}manifest.json"
         if path and path.strip() == arcmani:
             return True
         return False
-
 
     def _has_reference(self, path) -> bool:
         print(f"sidebar arch: _has_reference: path 1: {path}")
@@ -305,7 +306,7 @@ class SidebarArchive(SidebarRightBase):
                 self.find_data_action.setVisible(True)
                 self.copy_path_action.setVisible(True)
                 self.copy_action.setVisible(False)
-            if path and ( path.endswith("manifest.json") or path.endswith(".db") ):
+            if path and (path.endswith("manifest.json") or path.endswith(".db")):
                 self.delete_action.setVisible(False)
                 self.new_run_action.setVisible(False)
                 self.repeat_run_action.setVisible(False)
@@ -384,7 +385,7 @@ class SidebarArchive(SidebarRightBase):
                     # TODO: this will have to change because we don't want to dismiss
                     # content that is being worked on from the working dir side
                     #
-                    #if is_selected:
+                    # if is_selected:
                     #    self.window().show_welcome_screen()
                     self.window().statusBar().showMessage("{path} deleted")
                     #
@@ -394,7 +395,7 @@ class SidebarArchive(SidebarRightBase):
                     # and if we did that the refresh might slow down potentially a lot. so long-term,
                     # seems like we should capture what is registered and manually add it. no fun. :/
                     #
-                    #self.main._setup_central_widget()
+                    # self.main._setup_central_widget()
                     self.main.renew_sidebar_archive()
                     #
                     # do we reset the connects for on click?
@@ -404,5 +405,3 @@ class SidebarArchive(SidebarRightBase):
                     #   self.sidebar_rt_bottom.view.clicked.connect(self.on_archive_tree_click)
                     #
                     #
-
-

@@ -1,9 +1,5 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QLabel
-)
+from PySide6.QtWidgets import QWidget, QLineEdit, QFormLayout
+
 
 class ScriptsTab(QWidget):
     def __init__(self, form):
@@ -35,10 +31,10 @@ class ScriptsTab(QWidget):
 
     def add_to_config(self, config) -> None:
         run_scripts = self.run_scripts.text()
-        self.form.config.add_to_config(self.section, "run_scripts", run_scripts )
+        self.form.config.add_to_config(self.section, "run_scripts", run_scripts)
 
         shell = self.shell.text()
-        self.form.config.add_to_config(self.section, "shell", shell )
+        self.form.config.add_to_config(self.section, "shell", shell)
 
     def populate(self):
         config = self.form.config
@@ -47,6 +43,3 @@ class ScriptsTab(QWidget):
 
         shell = config.get(section=self.section, name="shell", default="/bin/bash")
         self.shell.setText(shell)
-
-
-

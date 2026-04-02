@@ -1,13 +1,9 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QPushButton,
-    QFormLayout
-)
+from PySide6.QtWidgets import QLineEdit, QPushButton, QFormLayout
 
 from csvpath.matching.functions.function_factory import FunctionFactory
 
 from .blank_form import BlankForm
+
 
 class FunctionsForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -35,13 +31,12 @@ class FunctionsForm(BlankForm):
 
     def add_to_config(self, config) -> None:
         path = self.imports_dir_path.text()
-        config.add_to_config("functions", "imports", path )
+        config.add_to_config("functions", "imports", path)
 
     def populate(self):
         config = self.config
         imports_path = config.get(section="functions", name="imports", default="")
         self.imports_dir_path.setText(imports_path)
-
 
     @property
     def fields(self) -> list[str]:
@@ -58,4 +53,3 @@ class FunctionsForm(BlankForm):
     @property
     def tabs(self) -> list[str]:
         return []
-

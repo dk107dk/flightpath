@@ -1,14 +1,12 @@
 import os
-import time
 import darkdetect
 from csvpath import CsvPath
-from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 from csvpath.util.file_readers import DataFileReader
-from csvpath.matching.functions.lines.dups import CountDups
-class Inspector:
 
-    def __init__(self, *, main, filepath:str) -> None:
+
+class Inspector:
+    def __init__(self, *, main, filepath: str) -> None:
         """
         print(f"\n\n\n")
         from csvpath.util.code import Code
@@ -42,11 +40,11 @@ class Inspector:
         return self._vars
 
     @vars.setter
-    def vars(self, v:dict) -> None:
+    def vars(self, v: dict) -> None:
         self._vars = v
 
     @property
-    def info(self) -> dict[str, str|int|float|bool|None]:
+    def info(self) -> dict[str, str | int | float | bool | None]:
         if self._info is None:
             c = self.csvpath_str
             path = CsvPath()
@@ -58,12 +56,13 @@ class Inspector:
             self._info = self._populate(self.vars)
         return self._info
 
-
-    def _populate(self, vs:dict) -> dict:
+    def _populate(self, vs: dict) -> dict:
 
         info = {}
         info["ui_dark"] = darkdetect.isDark()
-        info["name"] = os.path.basename(Nos(self.filepath).strip_protocol(self.filepath))
+        info["name"] = os.path.basename(
+            Nos(self.filepath).strip_protocol(self.filepath)
+        )
         info["file"] = self.filepath
         info["sample_size"] = self.sample_size
         info["from_line"] = self.from_line
@@ -83,7 +82,7 @@ class Inspector:
             d["name"] = header
             d["number"] = i
             d["duplicate_count"] = self.duplicate_count(i, header)
-            d[f"types"] = self.header_types(i, header)
+            d["types"] = self.header_types(i, header)
             d["is_distinct"] = self.is_distinct(i, header)
             d["min_val"] = self.min_val(i, header)
             d["max_val"] = self.max_val(i, header)
@@ -107,15 +106,15 @@ class Inspector:
         return self._from_line
 
     @from_line.setter
-    def from_line(self, l:int) -> None:
-        self._from_line = l
+    def from_line(self, li: int) -> None:
+        self._from_line = li
 
     @property
     def sample_size(self) -> int:
         return self._sample_size
 
     @sample_size.setter
-    def sample_size(self, s:int) -> None:
+    def sample_size(self, s: int) -> None:
         self._sample_size = s
 
     @property
@@ -143,7 +142,7 @@ class Inspector:
             # so it isn't a problem. leaving it as a reminder that that kind of
             # thing could happen elsewhere.
             #
-            #header = header.replace('\ufeff', "")
+            # header = header.replace('\ufeff', "")
             header = i
             m = f"""{m} \n\tpush.distinct("{header}_types", datatype(#{header}))"""
             m = f"""{m} \n\thas_dups(#{header}) -> counter.{header}_dups() """
@@ -177,7 +176,7 @@ class Inspector:
             if s is None:
                 s = f"0-{self._sample_size}"
             else:
-                s = f"{self._from_line}-{self._from_line+self._sample_size}"
+                s = f"{self._from_line}-{self._from_line + self._sample_size}"
         else:
             if s is None:
                 s = "*"
@@ -185,7 +184,7 @@ class Inspector:
                 s = f"{s}*"
         return s
 
-    def compile_csvpath(self, filepath:str) -> str:
+    def compile_csvpath(self, filepath: str) -> str:
         match = self.compile_match()
         scan = self.compile_scan()
         pathstr = f"""
@@ -198,15 +197,15 @@ ${filepath}[{scan}][
         return pathstr
 
     @property
-    def total_lines(self) -> int|None:
+    def total_lines(self) -> int | None:
         return self.path.line_monitor._physical_end_line_count
 
     @property
-    def data_lines(self) -> int|None:
+    def data_lines(self) -> int | None:
         return self.path.line_monitor._data_end_line_count
 
     @property
-    def blank_lines(self) -> int|None:
+    def blank_lines(self) -> int | None:
         return self.total_lines - self.data_lines
 
     @property
@@ -227,37 +226,35 @@ ${filepath}[{scan}][
     def duplicate_lines(self) -> int:
         return self.vars.get("total_duplicate_lines")
 
+    # -======================================
+    #
+    # "lines_with_blanks"
+    # not( all() ) -> counter.blank_headers()
+    #
+    # types
+    # multitype columns: push("types", )
+    #
 
-#-======================================
-#
-# "lines_with_blanks"
-# not( all() ) -> counter.blank_headers()
-#
-# types
-# multitype columns: push("types", )
-#
+    #
+    # [ push.distinct("coltypes", type()) ]
+    #
 
-#
-# [ push.distinct("coltypes", type()) ]
-#
-
-    def duplicate_count(self, i:int, header:str) -> int:
+    def duplicate_count(self, i: int, header: str) -> int:
         t = self.vars.get(f"{i}_dups")
         return t
 
-    def header_types(self, i:int, header:str) -> list[str]:
+    def header_types(self, i: int, header: str) -> list[str]:
         t = self.vars.get(f"{i}_types")
         t = str(t)
         t = t.replace("'", "")
         return t
 
-    def is_distinct(self, i:int, header) -> int:
+    def is_distinct(self, i: int, header) -> int:
         t = f"{i}_dups"
         r = self.vars.get(t)
         return r is not None and r == 0
 
-
-    def min_val(self, i:int, header) -> int|float:
+    def min_val(self, i: int, header) -> int | float:
         ts = self.header_types(i, header)
         if not ts:
             return ""
@@ -270,7 +267,7 @@ ${filepath}[{scan}][
             return float(i)
         return ""
 
-    def max_val(self, i:int, header) -> int|float:
+    def max_val(self, i: int, header) -> int | float:
         _ = self.header_types(i, header)
         if not _:
             return ""
@@ -283,11 +280,8 @@ ${filepath}[{scan}][
             return float(i)
         return ""
 
-    def is_not_none(self, i:int, header) -> bool:
+    def is_not_none(self, i: int, header) -> bool:
         t = self.vars.get(f"{i}_types")
         if t is None:
             return False
         return "none" not in t
-
-
-

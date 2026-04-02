@@ -1,9 +1,5 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QLabel
-)
+from PySide6.QtWidgets import QWidget, QLineEdit, QFormLayout
+
 
 class SqliteTab(QWidget):
     def __init__(self, form):
@@ -29,14 +25,11 @@ class SqliteTab(QWidget):
     def server_fields_count(self) -> int:
         return len(self.server_fields)
 
-
     def add_to_config(self, config) -> None:
         db = self.db.text()
-        self.form.config.add_to_config(self.section, "db", db )
+        self.form.config.add_to_config(self.section, "db", db)
 
     def populate(self):
         config = self.form.config
         db = config.get(section=self.section, name="db", default="")
         self.db.setText(db)
-
-

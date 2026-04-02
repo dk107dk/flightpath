@@ -1,9 +1,5 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QLabel
-)
+from PySide6.QtWidgets import QWidget, QLineEdit, QFormLayout
+
 
 class SftpTab(QWidget):
     def __init__(self, form):
@@ -42,20 +38,18 @@ class SftpTab(QWidget):
     def server_fields_count(self) -> int:
         return len(self.server_fields)
 
-
     def add_to_config(self, config) -> None:
         server = self.server.text()
         self.form.config.add_to_config(self.section, "server", server)
 
         port = self.port.text()
-        self.form.config.add_to_config(self.section, "port", port )
+        self.form.config.add_to_config(self.section, "port", port)
 
         username = self.username.text()
-        self.form.config.add_to_config(self.section, "username", username )
+        self.form.config.add_to_config(self.section, "username", username)
 
         password = self.password.text()
-        self.form.config.add_to_config(self.section, "password", password )
-
+        self.form.config.add_to_config(self.section, "password", password)
 
     def populate(self):
         config = self.form.config
@@ -70,7 +64,3 @@ class SftpTab(QWidget):
 
         password = config.get(section=self.section, name="password", default="")
         self.password.setText(password)
-
-
-
-

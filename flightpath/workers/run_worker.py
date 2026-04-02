@@ -1,18 +1,16 @@
-import os
-from PySide6.QtCore import QObject, Signal, Slot, QRunnable
-from PySide6.QtWidgets import QApplication
-from csvpath import CsvPaths
+from PySide6.QtCore import QRunnable
 from .run_worker_signals import RunWorkerSignals
 
 
 class RunWorker(QRunnable):
-
-    def __init__(self, *,
-        method:str,
-        named_paths_name:str,
-        named_file_name:str,
-        template:str,
-        main
+    def __init__(
+        self,
+        *,
+        method: str,
+        named_paths_name: str,
+        named_file_name: str,
+        template: str,
+        main,
     ) -> None:
         super().__init__()
         self.main = main
@@ -23,9 +21,11 @@ class RunWorker(QRunnable):
         self.template = template
         self.signals = RunWorkerSignals()
 
-    #@Slot()
+    # @Slot()
     def run(self):
-        self.signals.messages.emit(f"Running file {self.named_file_name} against {self.named_paths_name}")
+        self.signals.messages.emit(
+            f"Running file {self.named_file_name} against {self.named_paths_name}"
+        )
         #
         # do run on paths
         #
@@ -36,13 +36,14 @@ class RunWorker(QRunnable):
             # not sure how this could happen
             #
             return
-        #print(f"runworker: pathsname: {self.named_paths_name}")
-        #print(f"runworker: filename: {self.named_file_name}")
-        #print(f"runworker: template: {self.template}")
-        #print(f"runworker: method: {a}")
-        ref = a(pathsname=self.named_paths_name, filename=self.named_file_name, template=self.template)
+        # print(f"runworker: pathsname: {self.named_paths_name}")
+        # print(f"runworker: filename: {self.named_file_name}")
+        # print(f"runworker: template: {self.template}")
+        # print(f"runworker: method: {a}")
+        ref = a(
+            pathsname=self.named_paths_name,
+            filename=self.named_file_name,
+            template=self.template,
+        )
         self.signals.messages.emit(f"Completed run {ref}")
-        self.signals.finished.emit( (ref, paths))
-
-
-
+        self.signals.finished.emit((ref, paths))

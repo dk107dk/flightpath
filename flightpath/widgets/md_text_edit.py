@@ -1,19 +1,14 @@
 import os
-from PySide6.QtWidgets import QTextEdit, QMenu
-from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut
-from PySide6.QtCore import Qt, QFileInfo
+from PySide6.QtWidgets import QTextEdit
+from PySide6.QtGui import QAction, QKeyEvent, QKeySequence
 
-from csvpath.util.file_writers import DataFileWriter
-from csvpath.util.nos import Nos
 
-from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.key_utility import KeyUtility as keut
 
 from flightpath.editable import EditStates
 
-class MdTextEdit(QTextEdit):
 
+class MdTextEdit(QTextEdit):
     def __init__(self, *, main, parent, editable=EditStates.EDITABLE) -> None:
         super().__init__()
         self.main = main
@@ -37,7 +32,7 @@ class MdTextEdit(QTextEdit):
             i = self.main.content.tab_widget.currentIndex()
             name = self.main.content.tab_widget.tabText(i)
             name = name.replace("+ ", "")
-            self.main.content.tab_widget.setTabText(i, f"+ {name}" )
+            self.main.content.tab_widget.setTabText(i, f"+ {name}")
             self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
             self.parent.saved = False
         return True
@@ -67,7 +62,6 @@ class MdTextEdit(QTextEdit):
                     if t == "delete":
                         action.setShortcut(QKeySequence("Ctrl+d"))
                     action.setShortcutVisibleInContextMenu(True)
-
 
         #
         # separator and toggle raw edit
@@ -106,5 +100,3 @@ class MdTextEdit(QTextEdit):
         # Clean up
         #
         del menu
-
-

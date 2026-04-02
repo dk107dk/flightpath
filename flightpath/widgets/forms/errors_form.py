@@ -1,14 +1,7 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QComboBox,
-    QHBoxLayout,
-    QCheckBox
-)
+from PySide6.QtWidgets import QLineEdit, QFormLayout, QComboBox, QHBoxLayout, QCheckBox
 
-from csvpath.util.config import Config
 from .blank_form import BlankForm
+
 
 class ErrorsForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -43,7 +36,6 @@ class ErrorsForm(BlankForm):
 
         layout.addRow("CsvPath errors: ", self.h_layout_csvpath)
 
-
         self.h_layout_csvpaths = QHBoxLayout()
         self.csvpaths_raise = QCheckBox("raise")
         self.h_layout_csvpaths.addWidget(self.csvpaths_raise)
@@ -66,8 +58,8 @@ class ErrorsForm(BlankForm):
         self._setup()
 
     def add_to_config(self, config) -> None:
-        config.add_to_config("errors", "pattern", self.pattern.text() )
-        config.add_to_config("errors", "use_format", self.use_format.currentText() )
+        config.add_to_config("errors", "pattern", self.pattern.text())
+        config.add_to_config("errors", "use_format", self.use_format.currentText())
 
         csvpath_policy = []
         if self.csvpath_raise.isChecked():
@@ -95,7 +87,6 @@ class ErrorsForm(BlankForm):
             csvpaths_policy.append("collect")
         config.csvpaths_errors_policy = csvpaths_policy
 
-
     def _setup(self) -> None:
         self.use_format.activated.connect(self.main.on_config_changed)
         self.pattern.textChanged.connect(self.main.on_config_changed)
@@ -111,7 +102,6 @@ class ErrorsForm(BlankForm):
         self.csvpaths_stop.stateChanged.connect(self.main.on_config_changed)
         self.csvpaths_fail.stateChanged.connect(self.main.on_config_changed)
         self.csvpaths_collect.stateChanged.connect(self.main.on_config_changed)
-
 
     def populate(self):
         config = self.config
@@ -160,4 +150,3 @@ class ErrorsForm(BlankForm):
     @property
     def tabs(self) -> list[str]:
         return []
-

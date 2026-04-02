@@ -1,5 +1,10 @@
 from PySide6.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QFrame, QStyle
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QLabel,
+    QPushButton,
+    QStyle,
 )
 from PySide6.QtGui import QColor, QPainter, QBrush
 from PySide6.QtCore import Qt, Signal, QSize
@@ -37,7 +42,14 @@ class QueryAccordionItem(QWidget):
     clicked = Signal(object)
     closeRequested = Signal(object)
 
-    def __init__(self, title: str, activity: str, status_color: QColor, metadata: dict, parent=None):
+    def __init__(
+        self,
+        title: str,
+        activity: str,
+        status_color: QColor,
+        metadata: dict,
+        parent=None,
+    ):
         super().__init__(parent)
         self._metadata = metadata
 
@@ -47,17 +59,17 @@ class QueryAccordionItem(QWidget):
 
         header = QWidget(self)
         header.setObjectName("ai_item")
-        #header.setStyleSheet("QWidget#ai_item { border: 0px; }")
-        header.setStyleSheet("""
+        # header.setStyleSheet("QWidget#ai_item { border: 0px; }")
+        header.setStyleSheet(
+            """
 QWidget#ai_item {
     background-color: #eeeeee;
     border: 1px solid #999;
     border-radius:5px;
     min-height:33px;
     padding:2px 5px 2px 5px;
-}""".replace("\n",""))
-
-
+}""".replace("\n", "")
+        )
 
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(0, 0, 0, 0)
@@ -73,12 +85,16 @@ QWidget#ai_item {
         self.icon_label.setStyleSheet("QLabel { border: 0px;background-color:none }")
 
         self.title_label = QLabel(title, header)
-        self.title_label.setStyleSheet("font-weight: 500;border:0px;background-color:none; ")
+        self.title_label.setStyleSheet(
+            "font-weight: 500;border:0px;background-color:none; "
+        )
 
         self.close_button = QPushButton()
         self.close_button.setFixedSize(25, 22)
         self.close_button.setFocusPolicy(Qt.NoFocus)
-        self.close_button.setStyleSheet("background-color: transparent; border: none; margin: 0 10px 0px 0;")
+        self.close_button.setStyleSheet(
+            "background-color: transparent; border: none; margin: 0 10px 0px 0;"
+        )
         pixmapi = QStyle.StandardPixmap.SP_TitleBarCloseButton
         icon = self.close_button.style().standardIcon(pixmapi)
         self.close_button.setIcon(icon)
@@ -91,10 +107,10 @@ QWidget#ai_item {
 
         main_layout.addWidget(header)
 
-        #line = QFrame(self)
-        #line.setFrameShape(QFrame.HLine)
-        #line.setStyleSheet("QFrame { background-color: #999; border: none;height:1px; }")
-        #main_layout.addWidget(line)
+        # line = QFrame(self)
+        # line.setFrameShape(QFrame.HLine)
+        # line.setStyleSheet("QFrame { background-color: #999; border: none;height:1px; }")
+        # main_layout.addWidget(line)
 
         header.mousePressEvent = self._on_header_clicked
         self.close_button.clicked.connect(self._on_close_clicked)
@@ -105,7 +121,7 @@ QWidget#ai_item {
         return self._worker
 
     @worker.setter
-    def worker(self, worker:AiWorker) -> None:
+    def worker(self, worker: AiWorker) -> None:
         self._worker = worker
 
     @property
@@ -117,4 +133,3 @@ QWidget#ai_item {
 
     def _on_close_clicked(self):
         self.closeRequested.emit(self._metadata)
-

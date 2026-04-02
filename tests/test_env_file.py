@@ -2,14 +2,14 @@ import os
 import unittest
 from flightpath.widgets.forms.config_form import ConfigForm
 
-class TestConfigForm(unittest.TestCase):
 
+class TestConfigForm(unittest.TestCase):
     def test_make_path(self):
         _ = os.sep
         cwd = f"{_}d{_}k{_}fp{_}cp"
         current_project = "cp"
 
-        path = f" "
+        path = " "
         path = ConfigForm.make_path(path=path, cwd=cwd, current_project=current_project)
         assert path == "env"
 
@@ -17,7 +17,7 @@ class TestConfigForm(unittest.TestCase):
         path = ConfigForm.make_path(path=path, cwd=cwd, current_project=current_project)
         assert path == "env"
 
-        path = f"env"
+        path = "env"
         path = ConfigForm.make_path(path=path, cwd=cwd, current_project=current_project)
         assert path == "env"
 
@@ -25,7 +25,7 @@ class TestConfigForm(unittest.TestCase):
         path = ConfigForm.make_path(path=path, cwd=cwd, current_project=current_project)
         assert path == f"{cwd}{_}config{_}env.json"
 
-        path = f"env.json "
+        path = "env.json "
         path = ConfigForm.make_path(path=path, cwd=cwd, current_project=current_project)
         assert path == f"{cwd}{_}config{_}env.json"
 
@@ -52,8 +52,3 @@ class TestConfigForm(unittest.TestCase):
         path = f"{cwd}{_}fish{_}env.json"
         path = ConfigForm.make_path(path=path, cwd=cwd, current_project=current_project)
         assert path == f"{cwd}{_}config{_}fish{_}env.json"
-
-
-
-
-

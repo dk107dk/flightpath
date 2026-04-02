@@ -1,13 +1,12 @@
 from PySide6.QtWidgets import QTextEdit
-from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtWidgets import QWidget
 
 from flightpath.util.help_finder import HelpFinder
 from flightpath.widgets.tabs_closing import ClosingTabs
 from flightpath.widgets.tabs_closing_holder import ClosingTabsHolder
 
-class Helper(ClosingTabsHolder):
 
+class Helper(ClosingTabsHolder):
     def __init__(self, main) -> None:
         super().__init__()
         self.main = main
@@ -22,7 +21,6 @@ class Helper(ClosingTabsHolder):
             self.help_and_feedback = None
         self.help_and_feedback = ClosingTabs(main=self.main, parent=self)
 
-
     def do_i_close(self, t) -> bool:
         #
         # we don't allow save-as help/ad-hoc runs
@@ -34,13 +32,13 @@ class Helper(ClosingTabsHolder):
         return self._help
 
     @help.setter
-    def help(self, t:QTextEdit) -> None:
+    def help(self, t: QTextEdit) -> None:
         self._help = t
 
     def assure_help_tab(self) -> None:
         self.help_and_feedback.setCurrentWidget(self.get_help_tab())
         self.main.show_now_or_later(self.help_and_feedback)
-        #self.help_and_feedback.show()
+        # self.help_and_feedback.show()
 
     def get_help_tab_if(self) -> QWidget:
         t = self.help_and_feedback.findChild(QWidget, "Help Content")
@@ -109,7 +107,3 @@ class Helper(ClosingTabsHolder):
         self.get_help_tab().setMarkdown(md)
         if not self.is_showing_help():
             self.on_click_help()
-
-
-
-

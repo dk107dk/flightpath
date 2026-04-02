@@ -1,26 +1,13 @@
-import sys
-import os
-from pathlib import Path
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 
-from PySide6.QtWidgets import (
-    QPushButton,
-    QWidget,
-    QComboBox,
-    QMenu,
-    QMessageBox,
-    QVBoxLayout
-)
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTreeView, QAbstractItemView, QHeaderView
 
-from PySide6.QtGui import QPixmap, QIcon, QAction
-from PySide6.QtCore import Qt, QSize, QModelIndex
-from PySide6.QtWidgets import QFileSystemModel, QTreeView, QAbstractItemView, QSizePolicy, QHeaderView
-
-from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.json_tree_model.json_model import JsonModel
 from flightpath.util.functions.function_collector import FunctionCollector
 
-class SidebarFunctions(QWidget):
 
+class SidebarFunctions(QWidget):
     FUNCTIONS = "Functions"
     MODES = "Modes"
     REFERENCES = "Reference types"
@@ -41,7 +28,7 @@ class SidebarFunctions(QWidget):
                 SidebarFunctions.REFERENCES,
                 SidebarFunctions.KEYWORDS,
                 SidebarFunctions.RUNTIME,
-                SidebarFunctions.QUALIFIERS
+                SidebarFunctions.QUALIFIERS,
             ]
         if SidebarFunctions.KEYWORD_NAMES is None:
             names = {}
@@ -52,7 +39,7 @@ class SidebarFunctions(QWidget):
             names["$"] = "dollar"
             names["+"] = "plus"
             names["*"] = "star"
-            names["\""] = "quotes"
+            names['"'] = "quotes"
             names["."] = "dot"
             names["'"] = "single_quotes"
             names["#"] = "hash"
@@ -111,7 +98,7 @@ class SidebarFunctions(QWidget):
         names = self.functions.function_names
         names = {
             SidebarFunctions.FUNCTIONS: names,
-            SidebarFunctions.QUALIFIERS:[
+            SidebarFunctions.QUALIFIERS: [
                 "asbool",
                 "decrease",
                 "distinct",
@@ -123,9 +110,9 @@ class SidebarFunctions(QWidget):
                 "onchange",
                 "onmatch",
                 "renew",
-                "strict"
+                "strict",
             ],
-            SidebarFunctions.MODES:[
+            SidebarFunctions.MODES: [
                 "error-mode",
                 "explain-mode",
                 "files-mode",
@@ -136,7 +123,7 @@ class SidebarFunctions(QWidget):
                 "source-mode",
                 "transfer-mode",
                 "unmatched-mode",
-                "validation-mode"
+                "validation-mode",
             ],
             SidebarFunctions.REFERENCES: [
                 "csvpath",
@@ -145,7 +132,7 @@ class SidebarFunctions(QWidget):
                 "headers",
                 "metadata",
                 "results",
-                "variables"
+                "variables",
             ],
             SidebarFunctions.KEYWORDS: SidebarFunctions.KEYWORD_NAMES,
             SidebarFunctions.RUNTIME: [
@@ -166,8 +153,8 @@ class SidebarFunctions(QWidget):
                 "scan_part",
                 "stopped",
                 "total_lines",
-                "valid"
-            ]
+                "valid",
+            ],
         }
         self.model.load(names)
 
@@ -178,7 +165,10 @@ class SidebarFunctions(QWidget):
         # exp!
         #
         from flightpath.widgets.help.plus_help import HelpHeaderView
-        self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_docs_help))
+
+        self.view.setHeader(
+            HelpHeaderView(self.view, on_help=self.main.helper.on_click_docs_help)
+        )
         self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.view.header().setFixedHeight(24)
         self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
@@ -196,11 +186,13 @@ class SidebarFunctions(QWidget):
             if self.bucket_name is None:
                 return
             if self.is_function(self.bucket_name, self.function_name):
-                self.docs.display_function_for_name(self.bucket_name, self.function_name)
+                self.docs.display_function_for_name(
+                    self.bucket_name, self.function_name
+                )
             else:
                 self.docs.display_info(self.bucket_name, self.function_name)
 
-    def is_function(self, bucket:str, name:str) -> bool:
+    def is_function(self, bucket: str, name: str) -> bool:
         ret = bucket not in SidebarFunctions.BUCKETS
         return ret
 
@@ -211,6 +203,3 @@ class SidebarFunctions(QWidget):
                 layout.removeWidget(self.view)
             self.view.deleteLater()
             self.setup()
-
-
-

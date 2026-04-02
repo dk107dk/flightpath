@@ -1,28 +1,14 @@
-import sys
-import os
-from pathlib import Path
+from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout
 
-from PySide6.QtWidgets import (
-    QPushButton,
-    QWidget,
-    QComboBox,
-    QMenu,
-    QMessageBox,
-    QVBoxLayout
-)
-
-from PySide6.QtGui import QPixmap, QIcon, QAction
-from PySide6.QtCore import Qt, QSize, QModelIndex
-from PySide6.QtWidgets import QFileSystemModel, QTreeView, QAbstractItemView, QSizePolicy, QHeaderView
+from PySide6.QtGui import QAction
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTreeView, QAbstractItemView, QHeaderView
 
 from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 from csvpath.util.config import Config
-from csvpath.util.file_readers import DataFileReader
-from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.path_util import PathUtility as pathu
 
-from flightpath.widgets.clickable_label import ClickableLabel
 
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 
@@ -32,17 +18,16 @@ from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReference
 from flightpath.dialogs.webhooks_dialog import WebhooksDialog
 
 from flightpath.widgets.help.plus_help import HelpHeaderView
-from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
 
-class SidebarNamedPaths(SidebarRightBase):
 
-    def __init__(self, *, main, role=1, config:Config):
+class SidebarNamedPaths(SidebarRightBase):
+    def __init__(self, *, main, role=1, config: Config):
         super().__init__()
         self.main = main
-        #self.config = config
+        # self.config = config
         self.setMinimumWidth(300)
         self.new_run_action = None
         self.copy_action = None
@@ -53,7 +38,9 @@ class SidebarNamedPaths(SidebarRightBase):
 
     def setup(self) -> None:
         try:
-            named_paths_path = self.main.csvpath_config.get(section="inputs", name="csvpaths")
+            named_paths_path = self.main.csvpath_config.get(
+                section="inputs", name="csvpaths"
+            )
             nos = Nos(named_paths_path)
             layout = self.layout()
             if layout is None:
@@ -66,9 +53,13 @@ class SidebarNamedPaths(SidebarRightBase):
                 #
                 nos.makedir()
             self.view = QTreeView()
-            self.view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
+            self.view.setSelectionBehavior(
+                QAbstractItemView.SelectionBehavior.SelectItems
+            )
             self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            self.view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+            self.view.setHorizontalScrollMode(
+                QAbstractItemView.ScrollMode.ScrollPerPixel
+            )
             self.view.setWordWrap(False)
             self.view.setAnimated(False)
             self.view.setAllColumnsShowFocus(True)
@@ -78,7 +69,13 @@ class SidebarNamedPaths(SidebarRightBase):
             header = self.view.header()
             header.setStretchLastSection(True)
             header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-            self.model = TreeModel(headers=["Csvpath groups"], data=nos, parent=self, title="Loaded named-paths groups", sidebar=self)
+            self.model = TreeModel(
+                headers=["Csvpath groups"],
+                data=nos,
+                parent=self,
+                title="Loaded named-paths groups",
+                sidebar=self,
+            )
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
             self.view.updateGeometries()
@@ -86,7 +83,11 @@ class SidebarNamedPaths(SidebarRightBase):
             #
             #
             #
-            self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_named_paths_help))
+            self.view.setHeader(
+                HelpHeaderView(
+                    self.view, on_help=self.main.helper.on_click_named_paths_help
+                )
+            )
             self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
             self.view.header().setFixedHeight(24)
             self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
@@ -102,8 +103,10 @@ class SidebarNamedPaths(SidebarRightBase):
             self.view.clicked.connect(self.on_named_paths_tree_click)
             self.setLayout(layout)
         except Exception as e:
-            meut.message(title=f"{type(e)} error loading named-paths", msg=f"Named-paths error: {e}")
-
+            meut.message(
+                title=f"{type(e)} error loading named-paths",
+                msg=f"Named-paths error: {e}",
+            )
 
     #
     # moved from main
@@ -113,12 +116,15 @@ class SidebarNamedPaths(SidebarRightBase):
         nos = Nos(self.main.selected_file_path)
         if not nos.isfile():
             ...
-            #self._show_welcome_but_do_not_deselect()
+            # self._show_welcome_but_do_not_deselect()
         else:
-            ed = EditStates.EDITABLE if self.main.selected_file_path.endswith(".md") else EditStates.UNEDITABLE
+            ed = (
+                EditStates.EDITABLE
+                if self.main.selected_file_path.endswith(".md")
+                else EditStates.UNEDITABLE
+            )
             self.main.read_validate_and_display_file(editable=ed)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
-
 
     def refresh(self) -> None:
         if self.view:
@@ -155,8 +161,6 @@ class SidebarNamedPaths(SidebarRightBase):
         self.find_data_action.setText("Find data")
         self.find_data_action.triggered.connect(self._find_data)
 
-
-
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.copy_action)
         self.context_menu.addAction(self.template_action)
@@ -174,7 +178,7 @@ class SidebarNamedPaths(SidebarRightBase):
         path = self.model.filePath(index)
         named_paths = None
         if path.startswith(self._paths_root):
-            named_paths = path[len(self._paths_root) + 1:]
+            named_paths = path[len(self._paths_root) + 1 :]
         else:
             # shouldn't happen but what if it did?
             ...
@@ -188,7 +192,6 @@ class SidebarNamedPaths(SidebarRightBase):
             self.new_run_dialog.template = t
             self.new_run_dialog.template_ctl.setText(t)
         self.main.show_now_or_later(self.new_run_dialog)
-
 
     def _show_context_menu(self, position) -> None:
         index = self.view.indexAt(position)
@@ -222,7 +225,7 @@ class SidebarNamedPaths(SidebarRightBase):
                 self.copy_action.setVisible(False)
                 self.template_action.setVisible(True)
                 self.find_data_action.setVisible(True)
-            if path and ( path.endswith("manifest.json") or path.endswith(".db") ):
+            if path and (path.endswith("manifest.json") or path.endswith(".db")):
                 self.delete_action.setVisible(False)
                 self.new_run_action.setVisible(False)
                 self.copy_action.setVisible(True)
@@ -233,7 +236,6 @@ class SidebarNamedPaths(SidebarRightBase):
             if global_pos:
                 self.context_menu.exec(global_pos)
 
-
     def _webhooks(self) -> None:
         index = self.view.currentIndex()
         if index.isValid():
@@ -241,11 +243,10 @@ class SidebarNamedPaths(SidebarRightBase):
             r = self.main.csvpath_config.get(section="inputs", name="csvpaths")
             if not path.startswith(r):
                 raise ValueError(f"Path to item {path} doesn't start with {r}")
-            path = path[len(r)+1:]
+            path = path[len(r) + 1 :]
             name = pathu.parts(path)[0]
             dialog = WebhooksDialog(main=self.main, name=name, parent=self)
             dialog.show_dialog()
-
 
     def _template(self) -> None:
         index = self.view.currentIndex()
@@ -254,7 +255,7 @@ class SidebarNamedPaths(SidebarRightBase):
             r = self.main.csvpath_config.get(section="inputs", name="csvpaths")
             if not path.startswith(r):
                 raise ValueError(f"Path to item {path} doesn't start with {r}")
-            path = path[len(r)+1:]
+            path = path[len(r) + 1 :]
             name = pathu.parts(path)[0]
             dialog = PathsTemplateDialog(main=self.main, name=name, parent=self)
             dialog.show_dialog()
@@ -284,7 +285,7 @@ class SidebarNamedPaths(SidebarRightBase):
                     # TODO: this will have to change because we don't want to dismiss
                     # content that is being worked on from the working dir side
                     #
-                    #if is_selected:
+                    # if is_selected:
                     #    self.window().show_welcome_screen()
                     self.window().statusBar().showMessage(f"{path} deleted")
                     #
@@ -294,9 +295,5 @@ class SidebarNamedPaths(SidebarRightBase):
                     # and if we did that the refresh might slow down potentially a lot. so long-term,
                     # seems like we should capture what is registered and manually add it. no fun. :/
                     #
-                    #self.main._setup_central_widget()
+                    # self.main._setup_central_widget()
                     self.main.renew_sidebar_named_paths()
-
-
-
-

@@ -1,10 +1,6 @@
 import os
-import json
-import sys
 import traceback
-from typing import Type
 
-from pathlib import Path
 from PySide6.QtCore import Qt, QModelIndex
 from PySide6.QtWidgets import (
     QWidget,
@@ -12,12 +8,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QStackedLayout,
-    QApplication,
     QTreeWidget,
     QTreeWidgetItem,
-    QListWidget,
-    QListWidgetItem,
-    QFormLayout
 )
 
 from flightpath.widgets.forms.blank_form import BlankForm
@@ -37,11 +29,8 @@ from flightpath.widgets.forms.llm_form import LlmForm
 from flightpath.widgets.forms.offsets_form import OffsetsForm
 from flightpath.util.style_utils import StyleUtility as stut
 
-from csvpath.util.config import Config
-
 
 class ConfigPanel(QWidget):
-
     TREE_STYLE = """
             QTreeWidget {
                 border: 1px solid #d0d0d0;
@@ -93,7 +82,7 @@ class ConfigPanel(QWidget):
         #
         # what if we did setup forms only when the config first view?
         #
-        #self.setup_forms()
+        # self.setup_forms()
         self.ready = False
         #
         #
@@ -131,7 +120,7 @@ class ConfigPanel(QWidget):
             ServerForm(main=self.main),
             FunctionsForm(main=self.main),
             LlmForm(main=self.main),
-            OffsetsForm(main=self.main)
+            OffsetsForm(main=self.main),
         ]
         for form in self.forms:
             self.forms_layout.addWidget(form)
@@ -139,7 +128,6 @@ class ConfigPanel(QWidget):
             if populate is True:
                 form.populate()
         self.ready = True
-
 
     def populate_all_forms(self) -> None:
         if self.ready is False or self.forms is None:
@@ -151,7 +139,7 @@ class ConfigPanel(QWidget):
         for form in self.forms:
             form.populate()
 
-    def switch_form(self, index:QModelIndex):
+    def switch_form(self, index: QModelIndex):
         form = index.data()
         parent = None
         fallback = f"config{os.sep}about.md"
@@ -185,7 +173,10 @@ class ConfigPanel(QWidget):
             self.main.config.show_help_for_form("inputs", fallback=fallback)
             self.forms_layout.setCurrentIndex(7)
             self.title.setText("Inputs")
-        elif form in ["integrations", "listeners"] or parent in ["integrations", "listeners"]:
+        elif form in ["integrations", "listeners"] or parent in [
+            "integrations",
+            "listeners",
+        ]:
             self.main.config.show_help_for_form("listeners", fallback=fallback)
             self.forms_layout.setCurrentIndex(8)
             self.title.setText("Integrations")
@@ -267,7 +258,7 @@ class ConfigPanel(QWidget):
             "listeners",
             "server",
             "llm",
-            "offsets"
+            "offsets",
         ]
 
     @property
@@ -282,7 +273,7 @@ class ConfigPanel(QWidget):
         t = sum(form.server_fields_count for form in forms)
         return t
 
-    def get_form(self, cls:str) -> BlankForm:
+    def get_form(self, cls: str) -> BlankForm:
         for _ in self.forms:
             if str(type(_)).find(cls) > -1:
                 return _
@@ -293,7 +284,7 @@ class ConfigPanel(QWidget):
     @property
     def forms_by_section(self) -> list:
         forms = self.forms
-        formnames = {form.section:form for form in forms}
+        formnames = {form.section: form for form in forms}
         formnames = dict(sorted(formnames.items()))
         forms = [formnames[name] for name in formnames]
         return forms
@@ -321,7 +312,7 @@ class ConfigPanel(QWidget):
         return self._sections
 
     @property
-    def configurables(self) -> dict[str,list[str]]:
+    def configurables(self) -> dict[str, list[str]]:
         if self._configurables is None:
             self._configurables = {}
             for s in self.top_config_sections:
@@ -352,7 +343,7 @@ class ConfigPanel(QWidget):
                 self._configurables[s] = items
         return self._configurables
 
-    def save_all_forms(self) -> None: # , filepath: Path
+    def save_all_forms(self) -> None:  # , filepath: Path
         named_files = self.main.csvpath_config.get(section="inputs", name="files")
 
         named_paths = self.main.csvpath_config.get(section="inputs", name="csvpaths")
@@ -366,7 +357,7 @@ class ConfigPanel(QWidget):
         for form in self.forms:
             try:
                 form.add_to_config(self.main.csvpath_config)
-            except:
+            except Exception:
                 print(traceback.format_exc())
         self.main.csvpath_config.save_config()
         #
@@ -382,9 +373,9 @@ class ConfigPanel(QWidget):
         #
         if named_files != self.main.csvpath_config.get(section="inputs", name="files"):
             self.main.sidebar_rt_top.refresh()
-        if named_paths != self.main.csvpath_config.get(section="inputs", name="csvpaths"):
+        if named_paths != self.main.csvpath_config.get(
+            section="inputs", name="csvpaths"
+        ):
             self.main.sidebar_rt_mid.refresh()
         if archive != self.main.csvpath_config.get(section="results", name="archive"):
             self.main.sidebar_rt_bottom.refresh()
-
-

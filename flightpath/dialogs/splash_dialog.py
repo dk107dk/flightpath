@@ -11,8 +11,9 @@ Usage:
     dialog.exec()
 """
 
+import os
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtGui import QDesktopServices, QFont, QPixmap
+from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -25,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 from flightpath.util.state import State
+
 
 class SplashDialog(QDialog):
     """
@@ -82,7 +84,8 @@ class SplashDialog(QDialog):
             pix = QPixmap(self._image_path)
             if not pix.isNull():
                 pix = pix.scaled(
-                    550, 380,
+                    550,
+                    380,
                     Qt.IgnoreAspectRatio,
                     Qt.SmoothTransformation,
                 )

@@ -2,18 +2,15 @@
 # SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 from __future__ import annotations
 
-import json
-import sys
 from typing import Any
-from PySide6.QtWidgets import QTreeView, QApplication, QHeaderView
-from PySide6.QtCore import QAbstractItemModel, QModelIndex, QObject, Qt, QFileInfo
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, QObject, Qt
 from .json_tree_item import TreeItem
 
-class JsonModel(QAbstractItemModel):
 
+class JsonModel(QAbstractItemModel):
     def __init__(self, parent: QObject = None, column_mode=2):
         super().__init__(parent)
-        self._column_mode=column_mode
+        self._column_mode = column_mode
         self._rootItem = TreeItem()
         self._headers = ("key", "value")
 
@@ -46,7 +43,7 @@ class JsonModel(QAbstractItemModel):
         return self._headers
 
     @headers.setter
-    def headers(self, headers:tuple[str]) ->None:
+    def headers(self, headers: tuple[str]) -> None:
         #
         # set two headers even if in column_mode=1. the second can be blank.
         # not digging into why because workaround.
@@ -54,13 +51,13 @@ class JsonModel(QAbstractItemModel):
         self._headers = headers
 
     def clear(self):
-        """ Clear data from the model """
+        """Clear data from the model"""
         self.load({})
 
     def load(self, document: dict):
-        assert isinstance(
-            document, (dict, list, tuple)
-        ), "`document` must be of dict, list or tuple, " f"not {type(document)}"
+        assert isinstance(document, (dict, list, tuple)), (
+            f"`document` must be of dict, list or tuple, not {type(document)}"
+        )
 
         self.beginResetModel()
         self._rootItem = TreeItem.load(document, column_mode=self._column_mode)
@@ -79,7 +76,7 @@ class JsonModel(QAbstractItemModel):
                 return item.value
         elif role == Qt.ItemDataRole.EditRole:
             if index.column() == 0:
-                ... # do we need to return something here if the value is empty -- i.e. it was just added?
+                ...  # do we need to return something here if the value is empty -- i.e. it was just added?
             if index.column() == 1:
                 return item.value
 
@@ -152,7 +149,7 @@ class JsonModel(QAbstractItemModel):
                 ch = item.child(i)
                 document[ch.key] = self.to_json(ch)
             return document
-        elif item.value_type == list:
+        elif item.value_type is list:
             document = []
             for i in range(nchild):
                 ch = item.child(i)
@@ -160,5 +157,3 @@ class JsonModel(QAbstractItemModel):
             return document
         else:
             return item.value
-
-

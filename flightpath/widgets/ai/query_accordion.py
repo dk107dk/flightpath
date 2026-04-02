@@ -1,8 +1,9 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QFrame
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal
 
 from flightpath.widgets.ai.query_accordion_item import QueryAccordionItem
+
 
 # was
 class QueryAccordionWidget(QWidget):
@@ -11,8 +12,6 @@ class QueryAccordionWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
-
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -32,8 +31,9 @@ class QueryAccordionWidget(QWidget):
 
         self._items = []
         self.setObjectName("acc")
-        self.setStyleSheet("QWidget { background-color:#fafafa;border-top:0px solid #ddd; }")
-
+        self.setStyleSheet(
+            "QWidget { background-color:#fafafa;border-top:0px solid #ddd; }"
+        )
 
     @property
     def items(self) -> list:
@@ -42,7 +42,9 @@ class QueryAccordionWidget(QWidget):
         return self._items
 
     def add_item(self, title: str, activity: str, status_color: QColor, metadata: dict):
-        item = QueryAccordionItem(title, activity, status_color, metadata, self.container)
+        item = QueryAccordionItem(
+            title, activity, status_color, metadata, self.container
+        )
         self.vbox.insertWidget(self.vbox.count() - 1, item)
         self._items.append(item)
 
@@ -53,9 +55,10 @@ class QueryAccordionWidget(QWidget):
 
     def remove_item(self, metadata: dict):
         for item in list(self._items):
-            if item.metadata is metadata or item.metadata.get("id") == metadata.get("id"):
+            if item.metadata is metadata or item.metadata.get("id") == metadata.get(
+                "id"
+            ):
                 self._items.remove(item)
                 item.setParent(None)
                 item.deleteLater()
                 break
-

@@ -1,4 +1,3 @@
-import sys
 import os
 import json
 import tempfile
@@ -10,8 +9,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QSizePolicy,
     QMenu,
-    QAbstractItemView
-
+    QAbstractItemView,
 )
 from PySide6.QtCore import Qt, QFileInfo
 from PySide6.QtGui import QAction, QKeyEvent, QShortcut, QKeySequence
@@ -30,9 +28,16 @@ from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.file_collector import FileCollector
 from flightpath.editable import EditStates
 
-class KeyableTreeView(QTreeView):
 
-    def __init__(self, parent=None, *, key_callback=None, save_callback=None, editable=EditStates.EDITABLE):
+class KeyableTreeView(QTreeView):
+    def __init__(
+        self,
+        parent=None,
+        *,
+        key_callback=None,
+        save_callback=None,
+        editable=EditStates.EDITABLE,
+    ):
         super().__init__(parent)
         try:
             self.key_callback = key_callback
@@ -46,6 +51,7 @@ class KeyableTreeView(QTreeView):
             stut.set_editable_background(self)
         except Exception:
             import traceback
+
             print(traceback.format_exc())
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -55,8 +61,7 @@ class KeyableTreeView(QTreeView):
 
 
 class JsonViewer(QWidget):
-
-    def __init__(self, main, editable=EditStates.EDITABLE, path:str=None):
+    def __init__(self, main, editable=EditStates.EDITABLE, path: str = None):
         super().__init__()
         #
         # for a left-hand side file the path cannot be None. we need to know
@@ -89,7 +94,11 @@ class JsonViewer(QWidget):
         self.setLayout(layout)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.view = KeyableTreeView(key_callback=self.key_click, save_callback=self._save, editable=self.editable)
+        self.view = KeyableTreeView(
+            key_callback=self.key_click,
+            save_callback=self._save,
+            editable=self.editable,
+        )
         self.content_view = self.view
 
         #
@@ -108,7 +117,7 @@ class JsonViewer(QWidget):
         #
         #
         self.context_menu = None
-        #if self.editable == EditStates.EDITABLE:
+        # if self.editable == EditStates.EDITABLE:
         self.view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.view.customContextMenuRequested.connect(self._show_context_menu)
         self._setup_view_context_menu()
@@ -129,7 +138,6 @@ class JsonViewer(QWidget):
         # set to True when the file has changed and needs to be saved
         #
         self.modified = False
-
 
     @property
     def function_name(self) -> str:
@@ -155,7 +163,10 @@ class JsonViewer(QWidget):
                 return
             if self.editable == EditStates.NO_SAVE_NO_CTX:
                 if self._shown_no_edit_msg is None:
-                    meut.message(title="Not Editable", msg="This file is not editable. Any changes you make will be discarded.")
+                    meut.message(
+                        title="Not Editable",
+                        msg="This file is not editable. Any changes you make will be discarded.",
+                    )
                     self._shown_no_edit_msg = True
                 # we can let them edit, but not save
                 return
@@ -166,11 +177,13 @@ class JsonViewer(QWidget):
                 parent=self,
                 cwd=self.main.state.cwd,
                 title="Please pick a csvpath to add",
-                file_type_filter=FileCollector.csvpaths_filter(self.main.csvpath_config)
+                file_type_filter=FileCollector.csvpaths_filter(
+                    self.main.csvpath_config
+                ),
             )
             item.value = path
 
-    def _set_modified(self, t:bool) -> None:
+    def _set_modified(self, t: bool) -> None:
         if self.editable == EditStates.NO_SAVE_NO_CTX:
             self.modified = False
             return
@@ -179,8 +192,12 @@ class JsonViewer(QWidget):
         if tab is None:
             print(f"Error: cannot find view tab in main.content for {self.path}")
             return
-        name = f"+ {os.path.basename(self.path)}" if t is True else os.path.basename(self.path)
-        self.main.content.tab_widget.setTabText( tab[0], name)
+        name = (
+            f"+ {os.path.basename(self.path)}"
+            if t is True
+            else os.path.basename(self.path)
+        )
+        self.main.content.tab_widget.setTabText(tab[0], name)
 
     def key_click(self, event):
         if self.editable == EditStates.UNEDITABLE:
@@ -190,7 +207,6 @@ class JsonViewer(QWidget):
         else:
             self._set_modified(True)
         super().keyPressEvent(event)
-
 
     def _setup_view_context_menu(self):
         self.context_menu = QMenu(self)
@@ -235,7 +251,11 @@ class JsonViewer(QWidget):
         self.context_menu.addAction(self.save_action)
 
     def _copy_back_question(self) -> None:
-        yes = meut.yesNo( parent=self, msg="You can't edit here. Copy back to project?", title="Copy file to project?")
+        yes = meut.yesNo(
+            parent=self,
+            msg="You can't edit here. Copy back to project?",
+            title="Copy file to project?",
+        )
         if yes is True:
             try:
                 name = self.objectName()
@@ -244,25 +264,30 @@ class JsonViewer(QWidget):
                     #
                     # we're probably a vars or errors results tab with no file backing us up
                     #
-                    with tempfile.NamedTemporaryFile(mode='w', delete=True, suffix=".json") as file:
+                    with tempfile.NamedTemporaryFile(
+                        mode="w", delete=True, suffix=".json"
+                    ) as file:
                         _data = json.dumps(self.model.to_json(), indent=2)
                         file.write(_data)
                         file.flush()
                         to_path = fiut.copy_results_back_to_cwd(
                             main=self.main,
                             from_path=file.name,
-                            use_name=self.function_name
+                            use_name=self.function_name,
                         )
                         self.main.read_validate_and_display_file_for_path(to_path)
                         #
                         # no tab to close
-                        #self.main.content.tab_widget.close_tab(name)
+                        # self.main.content.tab_widget.close_tab(name)
                 else:
-                    to_path = fiut.copy_results_back_to_cwd(main=self.main, from_path=name)
+                    to_path = fiut.copy_results_back_to_cwd(
+                        main=self.main, from_path=name
+                    )
                     self.main.read_validate_and_display_file_for_path(to_path)
                     self.main.content.tab_widget.close_tab(name)
             except Exception:
                 import traceback
+
                 print(traceback.format_exc())
 
     def _show_context_menu(self, position):
@@ -403,7 +428,7 @@ class JsonViewer(QWidget):
             parent=self,
             cwd=self.main.state.cwd,
             title="Please pick a csvpath to add",
-            file_type_filter=FileCollector.csvpaths_filter(self.main.csvpath_config)
+            file_type_filter=FileCollector.csvpaths_filter(self.main.csvpath_config),
         )
         self.model.beginResetModel()
         item = TreeItem(parent)
@@ -434,11 +459,10 @@ class JsonViewer(QWidget):
 
     def _delete_item(self) -> None:
         index = self.view.currentIndex()
-        item = index.internalPointer()
         self.model.remove(index)
         self._set_modified(True)
 
-    def open_file(self, *, path:str, data:str):
+    def open_file(self, *, path: str, data: str):
         if path:
             self.path = path
         #
@@ -456,6 +480,3 @@ class JsonViewer(QWidget):
 
     def clear(self):
         self.view.hide()
-
-
-

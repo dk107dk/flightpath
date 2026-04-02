@@ -7,17 +7,14 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QVBoxLayout,
     QPushButton,
-    QMessageBox,
     QTableWidget,
     QTableWidgetItem,
-    QLabel
 )
 
 from csvpath.util.box import Box
-from csvpath.util.nos import Nos
 from csvpath.util.config_env import ConfigEnv
-from flightpath.util.os_utility import OsUtility as osut
 from .blank_form import BlankForm
+
 
 class EnvForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -76,7 +73,6 @@ class EnvForm(BlankForm):
         self.refresh_table()
         self.main.show_now_or_later(self.table)
 
-
     def _os(self) -> bool:
         source = self.config.get(section="config", name="var_sub_source")
         return str(source).strip() == "env"
@@ -88,7 +84,7 @@ class EnvForm(BlankForm):
             ce = ConfigEnv(config=self.config)
             return ce.env
 
-    def _delete_key(self, name:str) -> None:
+    def _delete_key(self, name: str) -> None:
         if self._os():
             if name in os.environ:
                 del os.environ[name]
@@ -99,7 +95,7 @@ class EnvForm(BlankForm):
                 del env[name]
             ConfigEnv(config=self.config).write_env_file(env)
 
-    def _set_key(self, name:str, value:str) -> None:
+    def _set_key(self, name: str, value: str) -> None:
         if self._os():
             os.environ[name] = value
             self.main.state.set_env(name, value)
@@ -108,12 +104,11 @@ class EnvForm(BlankForm):
             env[name] = value
             ConfigEnv(config=self.config).write_env_file(env)
 
-    def _has_key(self, name:str) -> bool:
+    def _has_key(self, name: str) -> bool:
         if self._os():
             return name in os.environ
         else:
             return name in self.envs()
-
 
     def _on_click_reload_helpers(self) -> None:
         #
@@ -214,4 +209,3 @@ class EnvForm(BlankForm):
     @property
     def tabs(self) -> list[str]:
         return []
-

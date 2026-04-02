@@ -2,36 +2,23 @@ import os
 
 from PySide6.QtCore import Qt
 
-from PySide6.QtWidgets import (
-        QWidget,
-        QVBoxLayout,
-        QHBoxLayout,
-        QTableView,
-        QLabel,
-        QAbstractItemView,
-        QToolBar,
-        QPushButton,
-        QComboBox,
-        QFrame
-)
+from PySide6.QtWidgets import QToolBar, QPushButton, QComboBox
 
 from PySide6.QtGui import QPixmap, QPainter
-from PySide6.QtGui import QColor, QPalette
 from PySide6.QtSvg import QSvgRenderer
 
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.json_utility import JsonUtility as jsut
 from flightpath.util.data_const import DataConst
 
-class DataToolbar(QToolBar):
 
-    SMALL:int = 50
-    MED:int = 250
-    LARGE:int = 1000
-    LARGER:int = 5000
+class DataToolbar(QToolBar):
+    SMALL: int = 50
+    MED: int = 250
+    LARGE: int = 1000
+    LARGER: int = 5000
     ALL_LINES = "All lines"
 
     FIRST_N = "First-n lines"
@@ -45,7 +32,6 @@ class DataToolbar(QToolBar):
     TAB = "Tab"
     PIPE = "Pipe"
     SEMICOLON = "Semi-colon"
-
 
     def __init__(self, *, parent, main):
         super().__init__()
@@ -91,18 +77,22 @@ class DataToolbar(QToolBar):
         # add help
         #
         self.help = ClickableLabel()
-        self.help.setStyleSheet("ClickableLabel { margin-left:5px;font-weight:100;color:#eeaa55;margin-right:20px; }")
-        svg_renderer = QSvgRenderer(fiut.make_app_path(f"assets{os.sep}icons{os.sep}help.svg"))
+        self.help.setStyleSheet(
+            "ClickableLabel { margin-left:5px;font-weight:100;color:#eeaa55;margin-right:20px; }"
+        )
+        svg_renderer = QSvgRenderer(
+            fiut.make_app_path(f"assets{os.sep}icons{os.sep}help.svg")
+        )
         if not svg_renderer.isValid():
             print("Failed to load SVG file")
-        pixmap = QPixmap(16,16)
+        pixmap = QPixmap(16, 16)
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
         svg_renderer.render(painter)
         painter.end()
         self.help.setPixmap(pixmap)
         self.addWidget(self.help)
-        self.help.clicked.connect( self.on_help_sample_toolbar )
+        self.help.clicked.connect(self.on_help_sample_toolbar)
         #
         # delimiter
         #
@@ -157,21 +147,24 @@ class DataToolbar(QToolBar):
         self.ai_gen.clicked.connect(self.main.on_ai_gen)
         self.file_info.clicked.connect(self.main.on_file_info)
 
-
     def _add_help(self, callback) -> None:
         self.help = ClickableLabel()
-        self.help.setStyleSheet("ClickableLabel { margin-left:5px;font-weight:100;color:#eeaa55;margin-right:20px; }")
-        svg_renderer = QSvgRenderer(fiut.make_app_path(f"assets{os.sep}icons{os.sep}help.svg"))
+        self.help.setStyleSheet(
+            "ClickableLabel { margin-left:5px;font-weight:100;color:#eeaa55;margin-right:20px; }"
+        )
+        svg_renderer = QSvgRenderer(
+            fiut.make_app_path(f"assets{os.sep}icons{os.sep}help.svg")
+        )
         if not svg_renderer.isValid():
             print("Failed to load SVG file")
-        pixmap = QPixmap(16,16)
+        pixmap = QPixmap(16, 16)
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
         svg_renderer.render(painter)
         painter.end()
         self.help.setPixmap(pixmap)
         self.addWidget(self.help)
-        self.help.clicked.connect( callback )
+        self.help.clicked.connect(callback)
 
     def delimiter_char(self) -> str:
         d = self.delimiter.currentText()
@@ -194,7 +187,7 @@ class DataToolbar(QToolBar):
         return None
 
     def on_help_sample_toolbar(self) -> None:
-        md = HelpFinder(main=self.main).help(f"data_view/samples.md")
+        md = HelpFinder(main=self.main).help("data_view/samples.md")
         self._on_data_toolbar_help(md)
         """
         if md is None:
@@ -206,7 +199,7 @@ class DataToolbar(QToolBar):
         """
 
     def on_help_delimiter_toolbar(self) -> None:
-        md = HelpFinder(main=self.main).help(f"data_view/delimiter.md")
+        md = HelpFinder(main=self.main).help("data_view/delimiter.md")
         self._on_data_toolbar_help(md)
         """
         if md is None:
@@ -218,10 +211,10 @@ class DataToolbar(QToolBar):
         """
 
     def on_file_info_toolbar(self) -> None:
-        md = HelpFinder(main=self.main).help(f"data_view/file_info.md")
+        md = HelpFinder(main=self.main).help("data_view/file_info.md")
         self._on_data_toolbar_help(md)
 
-    def _on_data_toolbar_help(self, md:str) -> None:
+    def _on_data_toolbar_help(self, md: str) -> None:
         if md is None:
             self.main.helper.close_help()
             return
@@ -230,7 +223,7 @@ class DataToolbar(QToolBar):
             self.main.helper.on_click_help()
 
     def on_help_raw_source_toolbar(self) -> None:
-        md = HelpFinder(main=self.main).help(f"data_view/raw_source.md")
+        md = HelpFinder(main=self.main).help("data_view/raw_source.md")
         if md is None:
             self.main.helper.close_help()
             return
@@ -239,9 +232,8 @@ class DataToolbar(QToolBar):
             self.main.helper.on_click_help()
 
     def on_help_ai_gen_toolbar(self) -> None:
-        md = HelpFinder(main=self.main).help(f"data_view/ai_gen.md")
+        md = HelpFinder(main=self.main).help("data_view/ai_gen.md")
         self._on_data_toolbar_help(md)
-
 
     def disable(self) -> None:
         if self.sampling:
@@ -289,4 +281,3 @@ class DataToolbar(QToolBar):
             self.ai_gen.setEnabled(True)
         if self.file_info:
             self.file_info.setEnabled(True)
-

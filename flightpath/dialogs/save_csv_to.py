@@ -1,19 +1,18 @@
 import os
 from PySide6.QtWidgets import (
-        QDialog,
-        QWidget,
-        QVBoxLayout,
-        QFormLayout,
-        QComboBox,
-        QLabel,
-        QPushButton,
-        QLineEdit,
-        QDialogButtonBox
+    QDialog,
+    QWidget,
+    QVBoxLayout,
+    QFormLayout,
+    QComboBox,
+    QLineEdit,
+    QDialogButtonBox,
 )
 from PySide6.QtCore import QSize, Qt
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
+
 
 class SaveCsvToDialog(QDialog):
     def __init__(self, *, parent=None, main, path):
@@ -22,7 +21,6 @@ class SaveCsvToDialog(QDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.NonModal)
-
 
         self.main = main
         self.path = path
@@ -37,7 +35,6 @@ class SaveCsvToDialog(QDialog):
         self.path_ctrl.setText(self.path)
         layout.addWidget(self.path_ctrl)
 
-
         form = QWidget()
         form_layout = QFormLayout()
         form_layout.setContentsMargins(3, 3, 3, 3)
@@ -50,7 +47,6 @@ class SaveCsvToDialog(QDialog):
         self.delimiter.addItems(["Comma", "Pipe", "Semi-colon", "Tab"])
         self.delimiter.currentTextChanged.connect(self.on_delimiter_change)
 
-
         self.quotechar = QComboBox()
         self.quotechar.setFixedSize(140, 27)
         self.quotechar.addItems(["Double quotes", "Single quotes"])
@@ -60,15 +56,13 @@ class SaveCsvToDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         box = HelpIconPackager.add_help(
-            main=self.main,
-            widget=buttons,
-            on_help=self.on_help
+            main=self.main, widget=buttons, on_help=self.on_help
         )
         form_layout.addRow("Delimiter: ", self.delimiter)
         form_layout.addRow("Quotechar: ", self.quotechar)
-        layout.addWidget(box) #, alignment=Qt.AlignLeft
+        layout.addWidget(box)  # , alignment=Qt.AlignLeft
 
-        #self.path_ctrl.textChanged.connect(self._show_hide)
+        # self.path_ctrl.textChanged.connect(self._show_hide)
 
     #
     # do we want this? we're always saving to csv.
@@ -80,7 +74,6 @@ class SaveCsvToDialog(QDialog):
         else:
             self.delimiter.setEnabled(False)
             self.quotechar.setEnabled(False)
-
 
     def on_help(self) -> None:
         md = HelpFinder(main=self.main).help("jsonl/save_as.md")
@@ -124,8 +117,10 @@ class SaveCsvToDialog(QDialog):
         quotechar = self.get_quotechar()
         d = os.path.dirname(t)
         b = os.path.basename(t)
-        t = fiut.deconflicted_path( d, b )
-        self.my_parent._save_one_of(path=t, delimiter=delimiter, quotechar=quotechar, exts=exts)
+        t = fiut.deconflicted_path(d, b)
+        self.my_parent._save_one_of(
+            path=t, delimiter=delimiter, quotechar=quotechar, exts=exts
+        )
         self.accept()
 
     def get_path(self) -> str:
@@ -136,6 +131,3 @@ class SaveCsvToDialog(QDialog):
 
     def get_quotechar(self) -> str:
         return self.quotechar.currentText()
-
-
-

@@ -1,32 +1,33 @@
-import os
 import traceback
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
-#from csvpath import CsvPaths
+# from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
 from flightpath.dialogs.load_paths_dialog import LoadPathsDialog
 from flightpath.util.message_utility import MessageUtility as meut
 
-class CsvpathLoader:
 
+class CsvpathLoader:
     def __init__(self, main):
         super().__init__()
         self.main = main
         self.load_dialog = None
 
     def load_paths(self, path) -> None:
-        self.load_dialog = LoadPathsDialog(path=path, parent=self.main.sidebar, loader=self)
+        self.load_dialog = LoadPathsDialog(
+            path=path, parent=self.main.sidebar, loader=self
+        )
         # When the dialog finishes, drop the reference
         self.load_dialog.finished.connect(lambda _: setattr(self, "load_dialog", None))
         self.main.show_now_or_later(self.load_dialog)
 
-    def do_append_named_paths_load(self) ->None:
+    def do_append_named_paths_load(self) -> None:
         self.do_load(overwrite=False)
 
-    def do_overwrite_named_paths_load(self) ->None:
+    def do_overwrite_named_paths_load(self) -> None:
         self.do_load(overwrite=True)
 
     def do_load(self, *, overwrite=True) -> None:
@@ -50,7 +51,10 @@ class CsvpathLoader:
             template = None
         elif not template.endswith(":run_dir"):
             self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
-            meut.message(title="Incorrect Template", msg="A named-path group template must end in :run_dir")
+            meut.message(
+                title="Incorrect Template",
+                msg="A named-path group template must end in :run_dir",
+            )
             self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, True)
             self.load_dialog.show()
             return
@@ -66,13 +70,15 @@ class CsvpathLoader:
         try:
             if paths.paths_manager.has_named_paths(named_paths_name):
                 if not self._check_ok_to_proceed(overwrite):
-                    print(f"loading 67")
+                    print("loading 67")
                     return
             name = self.load_dialog.path
             name = "" if not name else name.strip()
             if Nos(name).isfile():
-                ext = name[name.rfind(".")+1:]
-                if ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files"):
+                ext = name[name.rfind(".") + 1 :]
+                if ext in self.main.csvpath_config.get(
+                    section="extensions", name="csvpath_files"
+                ):
                     #
                     # added append=(not overwrite) to do an append when the form requires.
                     # however, atm, the append is only available on add_named_files(). the
@@ -80,17 +86,21 @@ class CsvpathLoader:
                     # testing and a local release so we can use it. till then, this will
                     # break
                     #
-                    print(f"loading 85: {named_paths_name}, {name}, {template}, {overwrite}")
+                    print(
+                        f"loading 85: {named_paths_name}, {name}, {template}, {overwrite}"
+                    )
                     #
                     # have to override the filesystem prohibit because it doesn't make sense
                     # here. we are all local file-based atm and also control config.
                     #
-                    local = paths.config.set(section="inputs", name="allow_local_files", value=True)
-                    ret = paths.paths_manager.add_named_paths_from_file(
+                    paths.config.set(
+                        section="inputs", name="allow_local_files", value=True
+                    )
+                    paths.paths_manager.add_named_paths_from_file(
                         name=named_paths_name,
                         file_path=name,
                         template=template,
-                        append=(not overwrite)
+                        append=(not overwrite),
                     )
                 else:
                     raise ValueError(f"Unknown file type: {name}")
@@ -110,7 +120,9 @@ class CsvpathLoader:
         self.load_dialog.show()
 
         msg = "Ok to overwrite any existing named-paths groups referenced in your JSON?"
-        confirm = QMessageBox.question( self.main, "Load Paths", msg, QMessageBox.Yes | QMessageBox.No)
+        confirm = QMessageBox.question(
+            self.main, "Load Paths", msg, QMessageBox.Yes | QMessageBox.No
+        )
         if confirm == QMessageBox.No:
             return
 
@@ -162,7 +174,9 @@ class CsvpathLoader:
         if paths.paths_manager.has_named_paths(named_paths_name):
             if not self._check_ok_to_proceed(overwrite):
                 return
-        paths.paths_manager.add_named_paths_from_dir(name=named_paths_name, directory=name, template=template)
+        paths.paths_manager.add_named_paths_from_dir(
+            name=named_paths_name, directory=name, template=template
+        )
         #
         # have to check if the named-paths group has a definition file. if not
         # we need to create one.
@@ -173,13 +187,13 @@ class CsvpathLoader:
         self._renew_sidebars()
         self._delete_load_dialog()
 
-    def _check_ok_to_proceed(self, overwrite:bool) -> bool:
+    def _check_ok_to_proceed(self, overwrite: bool) -> bool:
         self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
         self.load_dialog.show()
         msg = (
-                "Are you sure you want to overwrite an existing named-paths group?"
-                if overwrite else
-                "Are you sure you want to append to an existing named-paths group?"
+            "Are you sure you want to overwrite an existing named-paths group?"
+            if overwrite
+            else "Are you sure you want to append to an existing named-paths group?"
         )
         confirm = QMessageBox.question(
             self.main.sidebar,
@@ -199,5 +213,3 @@ class CsvpathLoader:
             self.load_dialog = None
         except Exception:
             ...
-
-

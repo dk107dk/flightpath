@@ -1,7 +1,4 @@
-import sys
-
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPlainTextEdit, QLabel
-from PySide6.QtGui import QFont, QShortcut, QKeySequence
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QLabel
 from PySide6.QtCore import Qt
 
 from csvpath.util.file_readers import DataFileReader
@@ -11,9 +8,9 @@ from flightpath.widgets.raw_text_edit import RawTextEdit
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.editable import EditStates
 
-class RawViewer(QWidget):
 
-    def __init__(self, *, main, parent, editable=None, path:str=None):
+class RawViewer(QWidget):
+    def __init__(self, *, main, parent, editable=None, path: str = None):
         super().__init__()
         self.main = main
         self.parent = parent
@@ -58,14 +55,14 @@ class RawViewer(QWidget):
         self.parent.toggle_grid_raw()
 
     def on_save(self) -> None:
-        print(f"raw_viewer: on_save")
+        print("raw_viewer: on_save")
         self.parent.on_save()
         #
         # we also need to refresh the grid so it is synched up when we toggle back.
         #
 
     def on_save_as(self) -> None:
-        print(f"raw_viewer: on_save_as")
+        print("raw_viewer: on_save_as")
         ap = self.main.csvpath_config.archive_path
         ncp = self.main.csvpath_config.inputs_csvpaths_path
         if self.parent.path.startswith(ap) or self.parent.path.startswith(ncp):
@@ -113,6 +110,3 @@ class RawViewer(QWidget):
     def clear(self):
         self.main.show_now_or_later(self.text_edit)
         self.text_edit.hide()
-
-
-

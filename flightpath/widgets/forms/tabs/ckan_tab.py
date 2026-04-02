@@ -1,9 +1,5 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QLabel
-)
+from PySide6.QtWidgets import QWidget, QLineEdit, QFormLayout
+
 
 class CkanTab(QWidget):
     def __init__(self, form):
@@ -35,18 +31,17 @@ class CkanTab(QWidget):
 
     def add_to_config(self, config) -> None:
         server = self.server.text()
-        self.form.config.add_to_config(self.section, "server", server )
+        self.form.config.add_to_config(self.section, "server", server)
 
         api_token = self.api_token.text()
-        self.form.config.add_to_config(self.section, "api_token", api_token )
+        self.form.config.add_to_config(self.section, "api_token", api_token)
 
     def populate(self):
         config = self.form.config
-        server = config.get(section=self.section, name="server", default="localhost:8443")
+        server = config.get(
+            section=self.section, name="server", default="localhost:8443"
+        )
         self.server.setText(server)
 
         api_token = config.get(section=self.section, name="api_token", default="")
         self.api_token.setText(api_token)
-
-
-

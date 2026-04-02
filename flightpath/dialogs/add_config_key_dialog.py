@@ -1,19 +1,19 @@
-from PySide6.QtWidgets import ( # pylint: disable=E0611
-        QWidget,
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QLabel,
-        QDialog,
-        QLineEdit,
-        QFormLayout
+from PySide6.QtWidgets import (  # pylint: disable=E0611
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QDialog,
+    QLineEdit,
+    QFormLayout,
 )
-from PySide6.QtCore import Qt # pylint: disable=E0611
+from PySide6.QtCore import Qt  # pylint: disable=E0611
 
 from flightpath.widgets.json_tree_model.json_tree_item import TreeItem
 
-class AddConfigKeyDialog(QDialog):
 
+class AddConfigKeyDialog(QDialog):
     def __init__(self, *, main, tree, parent_item):
         super().__init__(main)
         self.main = main
@@ -62,7 +62,7 @@ class AddConfigKeyDialog(QDialog):
         self.show_dialog()
 
     def _add(self):
-        print(f"add_config_key_dialog: adding")
+        print("add_config_key_dialog: adding")
         self.tree.beginResetModel()
         item = TreeItem(self.parent)
         item.key = self.key_ctl.text()

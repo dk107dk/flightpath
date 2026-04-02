@@ -1,28 +1,25 @@
 import os
 import traceback
-from pathlib import Path
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QMessageBox
 
 from csvpath.util.nos import Nos
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
 
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.message_utility import MessageUtility as meut
+
 
 #
 # long overdue start on making the right side windows more DRY
 #
 class SidebarRightBase(QWidget):
-
     def update_style(self) -> None:
         try:
             self.model.set_style(self.view.style())
         except Exception as e:
             print(f"{type(e)} error in archive: {e}")
             print(traceback.format_exc())
-
 
     def _copy_back_to_cwd(self) -> None:
         from_index = self.view.currentIndex()
@@ -54,5 +51,3 @@ class SidebarRightBase(QWidget):
                 QMessageBox.warning(self, "Error", "Cannot copy item over another file")
         else:
             QMessageBox.warning(self, "Error", "Cannot copy item")
-
-

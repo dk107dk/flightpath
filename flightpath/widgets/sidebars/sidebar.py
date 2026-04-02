@@ -1,35 +1,33 @@
-import sys
 import os
-from pathlib import Path
 
 from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
     QComboBox,
-    QLabel,
     QMenu,
     QMessageBox,
     QInputDialog,
     QVBoxLayout,
-    QSizePolicy
+    QSizePolicy,
 )
 
-from PySide6.QtGui import QPixmap, QIcon, QAction, QGuiApplication
-from PySide6.QtCore import Qt, QSize, QModelIndex, QThreadPool
+from PySide6.QtGui import QPixmap, QAction, QGuiApplication
+from PySide6.QtCore import Qt, QSize, QModelIndex
 from PySide6.QtWidgets import QFileSystemModel
 
-#from csvpath import CsvPaths
+# from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 from csvpath.util.path_util import PathUtility as pathu
 
-from flightpath.widgets.config.config import Config
 from flightpath.dialogs.stage_data_dialog import StageDataDialog
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.custom_tree_view import CustomTreeView
 from flightpath.widgets.sidebars.sidebar_named_paths import SidebarNamedPaths
 from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
-from flightpath.widgets.file_tree_model.directory_filter_proxy_model import DirectoryFilterProxyModel
+from flightpath.widgets.file_tree_model.directory_filter_proxy_model import (
+    DirectoryFilterProxyModel,
+)
 from flightpath.util.csvpath_loader import CsvpathLoader
 from flightpath.util.help_finder import HelpFinder
 from flightpath.editable import EditStates
@@ -65,21 +63,23 @@ class Sidebar(QWidget):
         self.icon_label.setPixmap(pixmap)
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(self.icon_label)
-        self.icon_label.setStyleSheet("background-color: #ffffff;border:1px solid #c9c9c9;")
+        self.icon_label.setStyleSheet(
+            "background-color: #ffffff;border:1px solid #c9c9c9;"
+        )
 
         self.projects = QComboBox()
         size = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.projects.setSizePolicy(size)
 
         self.projects.activated.connect(self.on_project_changed)
-        self.projects.setStyleSheet("QComboBox { margin:1px; height:23px; padding-left:5px;}")
+        self.projects.setStyleSheet(
+            "QComboBox { margin:1px; height:23px; padding-left:5px;}"
+        )
         #
         #
         #
         box = HelpIconPackager.add_help(
-            main=self.main,
-            widget=self.projects,
-            on_help=self.on_click_cwd_help
+            main=self.main, widget=self.projects, on_help=self.on_click_cwd_help
         )
         layout.addWidget(box)
         #
@@ -89,7 +89,7 @@ class Sidebar(QWidget):
         self.open_config_box = self._help_button(
             text="Open config",
             on_click=self.main.open_config,
-            on_help=self.on_click_open_config_help
+            on_help=self.on_click_open_config_help,
         )
         layout.addWidget(self.open_config_box)
         #
@@ -112,7 +112,9 @@ class Sidebar(QWidget):
         # we need to clear the Config panel and reload it or let it lazy load
         #
         if proj == self.NEW_PROJECT:
-            proj, ok = meut.input(title=self.NEW_PROJECT, msg="Enter the new project's name")
+            proj, ok = meut.input(
+                title=self.NEW_PROJECT, msg="Enter the new project's name"
+            )
             if ok and proj and proj.strip() != "":
                 self.main.state.current_project = proj
                 self.main.load_state_and_cd()
@@ -140,7 +142,6 @@ class Sidebar(QWidget):
         #
         self.main.on_color_scheme_changed()
 
-
     def _build_combo(self) -> None:
         self.projects.clear()
         proj = self.main.state.current_project
@@ -154,7 +155,7 @@ class Sidebar(QWidget):
         #
         # csvpath has a clear test: /Users/davidkershaw/dev/csvpath/tests/dirs/test_dirs_local.py
         #
-        #ps = [p for p in lst if not Nos(os.path.join(projs, p)).isfile()]
+        # ps = [p for p in lst if not Nos(os.path.join(projs, p)).isfile()]
         #
         ps = lst
         ps.sort()
@@ -165,16 +166,15 @@ class Sidebar(QWidget):
         self.projects.insertSeparator(self.projects.count())
         self.projects.addItem(Sidebar.NEW_PROJECT)
 
-
     @property
     def last_file_index(self) -> QModelIndex:
         return self._last_file_index
 
     @last_file_index.setter
-    def last_file_index(self, i:QModelIndex) -> None:
+    def last_file_index(self, i: QModelIndex) -> None:
         self._last_file_index = i
 
-    def _help_button(self, *, text:str, on_click, on_help) -> QWidget:
+    def _help_button(self, *, text: str, on_click, on_help) -> QWidget:
         button = QPushButton()
         button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         button.setStyleSheet("QPushButton { margin-top:1px; height:23px; }")
@@ -201,7 +201,9 @@ class Sidebar(QWidget):
         self.file_model = QFileSystemModel()
         self.file_model.setRootPath(self.main.state.cwd)
 
-        pathses = self.main.csvpath_config.get(section="extensions", name="csvpath_files")
+        pathses = self.main.csvpath_config.get(
+            section="extensions", name="csvpath_files"
+        )
         fileses = self.main.csvpath_config.get(section="extensions", name="csv_files")
         pathses = pathses if isinstance(pathses, list) else [pathses]
         fileses = fileses if isinstance(fileses, list) else [fileses]
@@ -234,19 +236,23 @@ class Sidebar(QWidget):
         # exp. don't show the std background dirs
         #
         self.proxy_model = DirectoryFilterProxyModel(
-            excluded_dirs=['config', 'logs', 'cache', 'archive', 'inputs', 'logs_bak'],
-            sidebar=self
+            excluded_dirs=["config", "logs", "cache", "archive", "inputs", "logs_bak"],
+            sidebar=self,
         )
         self.proxy_model.setSourceModel(self.file_model)
         self.proxy_model.sort(0, Qt.AscendingOrder)
         self.file_navigator.setModel(self.proxy_model)
-        self.file_navigator.setRootIndex(self.proxy_model.mapFromSource(self.file_model.index(self.main.state.cwd)))
+        self.file_navigator.setRootIndex(
+            self.proxy_model.mapFromSource(self.file_model.index(self.main.state.cwd))
+        )
         #
         # this is alpha-sort descending. :/
         #
         self.file_navigator.setSortingEnabled(True)
 
-        self._show_only_name_column_in_file_navigator(self.file_model, self.file_navigator)
+        self._show_only_name_column_in_file_navigator(
+            self.file_model, self.file_navigator
+        )
         self.file_navigator.setHeaderHidden(True)
         self.file_navigator.setContextMenuPolicy(Qt.CustomContextMenu)
         self.file_navigator.customContextMenuRequested.connect(self._show_context_menu)
@@ -255,7 +261,6 @@ class Sidebar(QWidget):
         # reconnect the nav so we react to clicking on files
         #
         self.file_navigator.clicked.connect(self.main.on_tree_click)
-
 
         if replace and old:
             self.layout().replaceWidget(old, self.file_navigator)
@@ -361,8 +366,7 @@ class Sidebar(QWidget):
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.line_number_action)
 
-
-    def _has_llm(self)->bool:
+    def _has_llm(self) -> bool:
         m = self.main.csvpath_config.get(section="llm", name="model")
         if m is None:
             return False
@@ -374,7 +378,7 @@ class Sidebar(QWidget):
     #
     #
     #
-    def _on_explain(self, activity:str=None) -> None:
+    def _on_explain(self, activity: str = None) -> None:
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
@@ -411,15 +415,20 @@ class Sidebar(QWidget):
             if nos.isfile():
                 self.new_file_action.setVisible(False)
                 self.new_folder_action.setVisible(False)
-                ext = path[path.rfind(".")+1:]
+                ext = path[path.rfind(".") + 1 :]
                 #
                 # turn off load/stage/save operations. then (re)enable, if approprate.
                 #
                 self.save_file_action.setVisible(False)
                 self.load_paths_action.setVisible(False)
                 self.stage_data_action.setVisible(False)
-                if ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files") \
-                        or ext.lower() == "json":
+                if (
+                    ext
+                    in self.main.csvpath_config.get(
+                        section="extensions", name="csvpath_files"
+                    )
+                    or ext.lower() == "json"
+                ):
                     self.load_paths_action.setVisible(True)
                     self.explain_action.setVisible(True)
                     self.explain_action.setEnabled(self._has_llm())
@@ -427,7 +436,9 @@ class Sidebar(QWidget):
                     self.generate_csvpath_action.setEnabled(self._has_llm())
                     self.generate_csv_action.setVisible(True)
                     self.generate_csv_action.setEnabled(self._has_llm())
-                elif ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
+                elif ext in self.main.csvpath_config.get(
+                    section="extensions", name="csv_files"
+                ):
                     self.generate_csvpath_action.setVisible(True)
                     self.generate_csvpath_action.setEnabled(self._has_llm())
                     self.generate_csv_action.setVisible(False)
@@ -442,10 +453,16 @@ class Sidebar(QWidget):
                     self.load_paths_action.setVisible(False)
                     self.explain_action.setEnabled(False)
                     self.explain_action.setVisible(False)
-                if(
-                   ext in self.main.csvpath_config.get(section="extensions", name="csvpath_files")
-                   or ext in self.main.csvpath_config.get(section="extensions", name="csv_files")
-                   or ext in ["md", "json", "txt"]
+                if (
+                    ext
+                    in self.main.csvpath_config.get(
+                        section="extensions", name="csvpath_files"
+                    )
+                    or ext
+                    in self.main.csvpath_config.get(
+                        section="extensions", name="csv_files"
+                    )
+                    or ext in ["md", "json", "txt"]
                 ):
                     #
                     # always visible. shouldn't have to reset visible here, but for now it
@@ -484,18 +501,22 @@ class Sidebar(QWidget):
                     # efficient but it won't be noticable to the user and this settings shell game
                     # doesn't add much. longer term a file info panel in rt-col or a floating label?
                     #
-                    cdir = csvpaths.config.get(section="cache", name="path")
-                    cuse = csvpaths.config.get(section="cache", name="use_cache")
-                    csvpaths.config.set(section="cache", name="path", value=f"{self.main.state.cwd}{os.sep}cache")
-                    csvpaths.config.set(section="cache", name="use_cache", value=f"yes")
-                    c = csvpaths.file_manager.lines_and_headers_cacher.get_new_line_monitor(path).physical_end_line_count
+                    csvpaths.config.set(
+                        section="cache",
+                        name="path",
+                        value=f"{self.main.state.cwd}{os.sep}cache",
+                    )
+                    csvpaths.config.set(section="cache", name="use_cache", value="yes")
+                    c = csvpaths.file_manager.lines_and_headers_cacher.get_new_line_monitor(
+                        path
+                    ).physical_end_line_count
                     self.line_number_action.setText(f"{c} lines")
                 else:
                     self.line_number_action.setVisible(False)
-                if(
-                   path.endswith(".jsonl") or
-                   path.endswith(".ndjson") or
-                   path.endswith(".jsonlines")
+                if (
+                    path.endswith(".jsonl")
+                    or path.endswith(".ndjson")
+                    or path.endswith(".jsonlines")
                 ):
                     self.edit_jsonl_action.setVisible(True)
                 else:
@@ -577,7 +598,7 @@ class Sidebar(QWidget):
             self.stage_dialog.show_dialog()
         else:
             print("invalid index in _stage_data")
-            ... # should never happen, but what if it did?
+            ...  # should never happen, but what if it did?
 
     def _cut(self) -> None:
         index = self.file_navigator.currentIndex()
@@ -618,7 +639,6 @@ class Sidebar(QWidget):
         self.cutted = None
         self.copied = None
 
-
     def _generate_csvpath(self) -> None:
         index = self.file_navigator.currentIndex()
         if index.isValid():
@@ -651,8 +671,6 @@ class Sidebar(QWidget):
         self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
         self.main.on_ai_gen_data()
 
-
-
     def _load_paths(self) -> None:
         index = self.file_navigator.currentIndex()
         if index.isValid():
@@ -660,9 +678,8 @@ class Sidebar(QWidget):
             loader = CsvpathLoader(main=self.main)
             loader.load_paths(path)
 
-
     def _run_paths(self) -> None:
-        print(f"_run_paths called. not doing anything about it")
+        print("_run_paths called. not doing anything about it")
         ...
 
     def _renew_sidebars(self) -> None:
@@ -675,10 +692,11 @@ class Sidebar(QWidget):
         #
         # we're only actually doing named_paths here. what's up with that?
         #
-        self.main.sidebar_rt_mid = SidebarNamedPaths(main=self.main, config=self.main.csvpath_config, role=2)
+        self.main.sidebar_rt_mid = SidebarNamedPaths(
+            main=self.main, config=self.main.csvpath_config, role=2
+        )
         self.main.rt_col.replaceWidget(1, self.main.sidebar_rt_mid)
-        #self.main.sidebar_rt_mid.view.clicked.connect(self.main.on_named_paths_tree_click)
-
+        # self.main.sidebar_rt_mid.view.clicked.connect(self.main.on_named_paths_tree_click)
 
     def do_stage(self) -> None:
         #
@@ -689,7 +707,10 @@ class Sidebar(QWidget):
         if template == "":
             template = None
         if template and not template.endswith(":filename"):
-            meut.message(msg="The :filename token must be the last component of the template", title="Incomplete")
+            meut.message(
+                msg="The :filename token must be the last component of the template",
+                title="Incomplete",
+            )
             return
         named_file_name = self.stage_dialog.named_file_name_ctl.text()
         recurse = self.stage_dialog.recurse_ctl.isChecked()
@@ -699,23 +720,34 @@ class Sidebar(QWidget):
         # have to override the filesystem prohibit because it doesn't make sense
         # here. we are all local file-based atm and also control config.
         #
-        local = paths.config.set(section="inputs", name="allow_local_files", value=True)
-
+        paths.config.set(section="inputs", name="allow_local_files", value=True)
         #
         # got all the vars
         #
         nos = Nos(name)
         try:
             if nos.isfile():
-                paths.file_manager.add_named_file(name=named_file_name, path=name, template=template)
+                paths.file_manager.add_named_file(
+                    name=named_file_name, path=name, template=template
+                )
             else:
                 if self.stage_dialog.separate_ctl.isChecked():
-                    paths.file_manager.add_named_files_from_dir(name=None, dirname=name, template=template, recurse=recurse)
+                    paths.file_manager.add_named_files_from_dir(
+                        name=None, dirname=name, template=template, recurse=recurse
+                    )
                 else:
                     if not named_file_name or named_file_name.strip() == "":
-                        meut.message(title="No name given", msg="You must provide a named-file name")
+                        meut.message(
+                            title="No name given",
+                            msg="You must provide a named-file name",
+                        )
                         return
-                    paths.file_manager.add_named_files_from_dir(name=named_file_name, dirname=name, template=template, recurse=recurse)
+                    paths.file_manager.add_named_files_from_dir(
+                        name=named_file_name,
+                        dirname=name,
+                        template=template,
+                        recurse=recurse,
+                    )
         except Exception as e:
             meut.message(title="Stage error", msg=f"{e}")
             return
@@ -726,9 +758,11 @@ class Sidebar(QWidget):
         # and if we did that the refresh might slow down potentially a lot. so long-term,
         # seems like we should capture what is registered and manually add it. no fun. :/
         #
-        self.main.sidebar_rt_top = SidebarNamedFiles(main=self.main, config=self.main.csvpath_config, role=1)
+        self.main.sidebar_rt_top = SidebarNamedFiles(
+            main=self.main, config=self.main.csvpath_config, role=1
+        )
         self.main.rt_col.replaceWidget(0, self.main.sidebar_rt_top)
-        #self.main.sidebar_rt_top.view.clicked.connect(self.main.on_named_file_tree_click)
+        # self.main.sidebar_rt_top.view.clicked.connect(self.main.on_named_file_tree_click)
         #
         #
         #
@@ -758,12 +792,12 @@ class Sidebar(QWidget):
                     new_dir = os.path.dirname(new_name)
                     np = os.path.join(dir_name, new_dir)
                     np = os.path.normpath(np)
-                    if np.startswith( self.main.state.cwd ):
+                    if np.startswith(self.main.state.cwd):
                         try:
-                            nos = Nos( np )
+                            nos = Nos(np)
                             if not nos.exists():
                                 nos.makedirs()
-                        except Exception as e:
+                        except Exception:
                             msg_box = QMessageBox()
                             msg_box.setIcon(QMessageBox.Critical)
                             msg_box.setWindowTitle("Path error")
@@ -779,7 +813,7 @@ class Sidebar(QWidget):
                         msg_box.setStandardButtons(QMessageBox.Ok)
                         msg_box.exec()
                         return
-                nos = Nos(path).rename(os.path.join( dir_name, new_name) )
+                nos = Nos(path).rename(os.path.join(dir_name, new_name))
 
     def _new_folder_navigator_item(self):
         dialog = QInputDialog()
@@ -805,9 +839,15 @@ class Sidebar(QWidget):
                     #
                     os.mkdir(new_name)
                 except PermissionError:
-                    QMessageBox.warning(self, self.tr("Error"), self.tr("Operation not permitted."))
+                    QMessageBox.warning(
+                        self, self.tr("Error"), self.tr("Operation not permitted.")
+                    )
                 except OSError:
-                    QMessageBox.warning(self, self.tr("Error"), self.tr("File with this name already exists."))
+                    QMessageBox.warning(
+                        self,
+                        self.tr("Error"),
+                        self.tr("File with this name already exists."),
+                    )
             else:
                 #
                 # show a simple error msg dialog. may look significantly different from the modal, but
@@ -819,13 +859,13 @@ class Sidebar(QWidget):
                     "Cannot create folder",
                     msg,
                     buttons=QMessageBox.Cancel | QMessageBox.Retry,
-                    defaultButton=QMessageBox.Cancel
+                    defaultButton=QMessageBox.Cancel,
                 )
                 if button == QMessageBox.Retry:
                     self._new_folder_navigator_item()
                 return
 
-    def _valid_new_folder(self, name:str) -> tuple[bool,str]:
+    def _valid_new_folder(self, name: str) -> tuple[bool, str]:
         b = name.find(".") == -1
         if b:
             return b, "Ok"
@@ -833,7 +873,6 @@ class Sidebar(QWidget):
 
     def _save_file_navigator_item(self):
         self.main.content.csvpath_source_view.text_edit.on_save()
-
 
     def _edit_as_json(self) -> None:
         index = self.file_navigator.selectionModel().selectedIndexes()
@@ -846,7 +885,7 @@ class Sidebar(QWidget):
         path = self.proxy_model.filePath(index)
         self._do_edit_as_json(path)
 
-    def _do_edit_as_json(self, path:str) -> None:
+    def _do_edit_as_json(self, path: str) -> None:
         if path is None:
             raise ValueError("Path cannot be none")
         nos = Nos(path)
@@ -860,7 +899,6 @@ class Sidebar(QWidget):
         if data_view is not None:
             self.main.content.tab_widget.close_tab(path)
         self.main.spin_up_json_worker(path=path, editable=EditStates.EDITABLE)
-
 
     def _new_file_navigator_item(self):
         dialog = QInputDialog()
@@ -878,7 +916,9 @@ class Sidebar(QWidget):
                 content = ""
                 if ns[1] in ["json", "jsonl", "ndjson", "jsonlines"]:
                     items = ["{}", "[]"]
-                    item, ok = QInputDialog.getItem(self, "Data structure", "Start with", items, 0, False)
+                    item, ok = QInputDialog.getItem(
+                        self, "Data structure", "Start with", items, 0, False
+                    )
                     if ok and item:
                         content = item
                 elif ns[1] == "md":
@@ -887,9 +927,13 @@ class Sidebar(QWidget):
                     """
                 elif ns[1] == "txt":
                     content = ""
-                elif ns[1] in self.main.csvpath_config.get(section="extensions", name="csv_files"):
+                elif ns[1] in self.main.csvpath_config.get(
+                    section="extensions", name="csv_files"
+                ):
                     content = ","
-                elif ns[1] in self.main.csvpath_config.get(section="extensions", name="csvpath_files"):
+                elif ns[1] in self.main.csvpath_config.get(
+                    section="extensions", name="csvpath_files"
+                ):
                     testdata = ""
                     _ = os.path.join(self.main.state.cwd, "examples/test.csv")
                     if Nos(_).exists():
@@ -919,7 +963,9 @@ $[*][ print("hello world") ]"""
                 except PermissionError:
                     QMessageBox.warning(self, "Error", "Operation not permitted.")
                 except OSError:
-                    QMessageBox.warning(self, "Error", "File with this name already exists.")
+                    QMessageBox.warning(
+                        self, "Error", "File with this name already exists."
+                    )
             else:
                 #
                 # show a simple error msg dialog. may look significantly different from the modal, but
@@ -931,23 +977,22 @@ $[*][ print("hello world") ]"""
                     "Cannot create file",
                     msg,
                     buttons=QMessageBox.Cancel | QMessageBox.Retry,
-                    defaultButton=QMessageBox.Cancel
+                    defaultButton=QMessageBox.Cancel,
                 )
                 if button == QMessageBox.Retry:
                     self._new_file_navigator_item()
                 return
 
-    def _valid_new_file(self, name:str) -> tuple[bool,str]:
+    def _valid_new_file(self, name: str) -> tuple[bool, str]:
         if name is None or name.strip() == "":
             return False, "Name cannot be empty"
-        if (
-            (name.find("/") > -1 or name.find("\\") > -1)
-            and not ( name.startswith(self.main.state.cwd) or name.startswith(f".{os.sep}") )
+        if (name.find("/") > -1 or name.find("\\") > -1) and not (
+            name.startswith(self.main.state.cwd) or name.startswith(f".{os.sep}")
         ):
             return False, "File must be in or below the working directory"
         if name.find(".", 1) == -1:
             return False, "File name must have an extension recognized by CsvPath"
-        ext = name[name.rfind(".")+1:]
+        ext = name[name.rfind(".") + 1 :]
         if ext == "json":
             return True, "Ok"
         #
@@ -956,14 +1001,16 @@ $[*][ print("hello world") ]"""
         #
         if ext in ["md", "txt"]:
             return True, "Ok"
-        if ( ext not in self.main.csvpath_config.get(section="extensions", name="csvpath_files")
-             and ext not in self.main.csvpath_config.get(section="extensions", name="csv_files")
+        if ext not in self.main.csvpath_config.get(
+            section="extensions", name="csvpath_files"
+        ) and ext not in self.main.csvpath_config.get(
+            section="extensions", name="csv_files"
         ):
             return False, "Extension must be for csvpaths, data, text, or markdown"
         #
         # all data files are editable now, except xlsx/xls
         #
-        #if ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
+        # if ext in self.main.csvpath_config.get(section="extensions", name="csv_files"):
         #    meut.message( title="Data file", msg="You are creating an empty data file that must be edited outside of FlightPath" )
         if ext in ["xlsx", "xsl"]:
             return False, "Excel files are not supported in FlightPath at this time"
@@ -997,10 +1044,12 @@ $[*][ print("hello world") ]"""
         else:
             raise RuntimeError("An item must be clicked to copy a relative path")
         path = pathu.resep(path)
-        if path.startswith( self.main.state.cwd ):
-            path = path[len(self.main.state.cwd)+1:]
+        if path.startswith(self.main.state.cwd):
+            path = path[len(self.main.state.cwd) + 1 :]
         else:
-            raise ValueError(f"Path must start with {self.main.state.cwd}. {path} does not.")
+            raise ValueError(
+                f"Path must start with {self.main.state.cwd}. {path} does not."
+            )
         clipboard = QGuiApplication.clipboard()
         clipboard.setText(path)
 
@@ -1041,11 +1090,11 @@ $[*][ print("hello world") ]"""
                 else:
                     if is_selected:
                         self.window().show_welcome_screen()
-                    self.window().statusBar().showMessage(f"{path} deleted successfuly.")
+                    self.window().statusBar().showMessage(
+                        f"{path} deleted successfuly."
+                    )
 
     def _show_only_name_column_in_file_navigator(self, file_model, file_navigator):
         for column in range(file_model.columnCount()):
             if column != 0:  # 0 is the name column
                 file_navigator.setColumnHidden(column, True)
-
-

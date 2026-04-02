@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QTreeView, QAbstractItemView
+from PySide6.QtWidgets import QTreeView
 from PySide6.QtCore import Signal
+
 
 class CustomTreeView(QTreeView):
     empty_area_click = Signal()
@@ -22,7 +23,6 @@ class CustomTreeView(QTreeView):
         except Exception as e:
             print(f"Error in selection change: {e}")
 
-
     def expanded(self, index):
         # Safety check before passing to base implementation
         if index.isValid() and self.model():
@@ -32,6 +32,3 @@ class CustomTreeView(QTreeView):
         # Safety check before passing to base implementation
         if index.isValid() and self.model():
             super().collapsed(index)
-
-
-

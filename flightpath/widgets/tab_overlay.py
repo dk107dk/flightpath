@@ -1,6 +1,7 @@
-from PySide6.QtWidgets import QTabWidget, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QPushButton, QVBoxLayout, QWidget
 from PySide6.QtWidgets import QStyle
 from PySide6.QtCore import QSize, Qt
+
 
 class TabWidgetOverlayButton(QWidget):
     def __init__(self, tabs, parent, main):
@@ -11,7 +12,9 @@ class TabWidgetOverlayButton(QWidget):
 
         # Create close all button
         self.close_all_button = QPushButton()
-        self.close_all_button.setStyleSheet("background-color: transparent; border: none; margin: 0 10px 5px 0;")
+        self.close_all_button.setStyleSheet(
+            "background-color: transparent; border: none; margin: 0 10px 5px 0;"
+        )
         pixmapi = QStyle.StandardPixmap.SP_TitleBarCloseButton
         icon = self.close_all_button.style().standardIcon(pixmapi)
         self.close_all_button.setIcon(icon)
@@ -28,4 +31,3 @@ class TabWidgetOverlayButton(QWidget):
 
         # Make the button a proper widget in the corner of the tab widget
         self.tabs.setCornerWidget(self, Qt.Corner.TopRightCorner)
-

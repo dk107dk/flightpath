@@ -1,17 +1,11 @@
 import os
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QPushButton,
-    QComboBox
-)
+from PySide6.QtWidgets import QLineEdit, QFormLayout, QPushButton, QComboBox
 
-from csvpath.util.config import Config
 from csvpath.util.nos import Nos
 
 from flightpath.util.os_utility import OsUtility as osut
 from .blank_form import BlankForm
+
 
 class LoggingForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -40,12 +34,13 @@ class LoggingForm(BlankForm):
         self.csvpaths_level = QComboBox()
         layout.addRow("CsvPaths log level: ", self.csvpaths_level)
 
-
         self.setLayout(layout)
         self._setup()
 
     def on_click_open_dir(self) -> None:
-        path = self.config.get(section="logging", name="log_file", default="logs/csvpath.log")
+        path = self.config.get(
+            section="logging", name="log_file", default="logs/csvpath.log"
+        )
         path = os.path.dirname(path)
         nos = Nos(path)
         if not nos.exists():
@@ -60,19 +55,17 @@ class LoggingForm(BlankForm):
             o = osut.file_system_open_cmd()
             print(f"LoggingForm: on_click_open: opening {path} with {o}")
             os.system(f'{o} "{path}"')
-        print(f"LoggingForm: on_click_open: done.")
-
-
+        print("LoggingForm: on_click_open: done.")
 
     def add_to_config(self, config) -> None:
-        config.add_to_config("logging", "handler", self.handler.currentText() )
-        config.add_to_config("logging", "log_file_size", self.log_file_size.text() )
-        config.add_to_config("logging", "log_files_to_keep", self.log_files_to_keep.text() )
-        config.add_to_config("logging", "log_file", self.path.text() )
-        config.add_to_config("logging", "csvpath", self.csvpath_level.currentText() )
-        config.add_to_config("logging", "csvpaths", self.csvpaths_level.currentText() )
-
-
+        config.add_to_config("logging", "handler", self.handler.currentText())
+        config.add_to_config("logging", "log_file_size", self.log_file_size.text())
+        config.add_to_config(
+            "logging", "log_files_to_keep", self.log_files_to_keep.text()
+        )
+        config.add_to_config("logging", "log_file", self.path.text())
+        config.add_to_config("logging", "csvpath", self.csvpath_level.currentText())
+        config.add_to_config("logging", "csvpaths", self.csvpaths_level.currentText())
 
     def _setup(self) -> None:
         self.path.textChanged.connect(self.main.on_config_changed)
@@ -84,11 +77,17 @@ class LoggingForm(BlankForm):
 
     def populate(self):
         config = self.config
-        path = config.get(section="logging", name="log_file", default="logs/csvpath.log")
+        path = config.get(
+            section="logging", name="log_file", default="logs/csvpath.log"
+        )
         self.path.setText(path)
-        log_files_to_keep = config.get(section="logging", name="log_files_to_keep", default="10")
+        log_files_to_keep = config.get(
+            section="logging", name="log_files_to_keep", default="10"
+        )
         self.log_files_to_keep.setText(str(log_files_to_keep))
-        log_file_size = config.get(section="logging", name="log_file_size", default="50000000")
+        log_file_size = config.get(
+            section="logging", name="log_file_size", default="50000000"
+        )
         self.log_file_size.setText(str(log_file_size))
 
         self.handler.clear()
@@ -133,14 +132,20 @@ class LoggingForm(BlankForm):
         else:
             self.csvpaths_level.setCurrentText("error")
 
-
     @property
     def fields(self) -> list[str]:
-        return ["handler","log_file_size","log_files_to_keep","log_file","csvpath","csvpaths"]
+        return [
+            "handler",
+            "log_file_size",
+            "log_files_to_keep",
+            "log_file",
+            "csvpath",
+            "csvpaths",
+        ]
 
     @property
     def server_fields(self) -> list[str]:
-        return ["handler","log_file_size","log_files_to_keep","csvpath","csvpaths"]
+        return ["handler", "log_file_size", "log_files_to_keep", "csvpath", "csvpaths"]
 
     @property
     def section(self) -> str:
@@ -149,5 +154,3 @@ class LoggingForm(BlankForm):
     @property
     def tabs(self) -> list[str]:
         return []
-
-

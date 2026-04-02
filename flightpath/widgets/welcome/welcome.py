@@ -1,8 +1,7 @@
 import os
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPixmap, QPainter, QShortcut, QKeySequence
-from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtGui import QPixmap, QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QWidget,
     QLabel,
@@ -11,16 +10,13 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QSizePolicy,
     QSpacerItem,
-    QMessageBox
+    QMessageBox,
 )
 
 from csvpath.util.file_readers import DataFileReader
-from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
-from csvpath import CsvPaths
 
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
-from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.util.message_utility import MessageUtility as meut
@@ -29,8 +25,8 @@ from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.file_collector import FileCollector
 
-class Welcome(QWidget):
 
+class Welcome(QWidget):
     def __init__(self, main):
         super().__init__()
         self.main = main
@@ -39,8 +35,10 @@ class Welcome(QWidget):
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         image_label = QLabel(self)
-        imgpath = fiut.make_app_path(f"assets{os.sep}images{os.sep}flightpath-gray.svg", main=main)
-        #print(f"Welcome: central image path: {imgpath}")
+        imgpath = fiut.make_app_path(
+            f"assets{os.sep}images{os.sep}flightpath-gray.svg", main=main
+        )
+        # print(f"Welcome: central image path: {imgpath}")
         self.main.log(f"Welcome: central image path: {imgpath}")
         pixmap = QPixmap(imgpath)
         image_label.setPixmap(pixmap)
@@ -49,9 +47,15 @@ class Welcome(QWidget):
         #
         # these boxes have a button + help icon
         #
-        self.copy_in_box = self._copy_in_button(on_click=self.on_click_copy_in, on_help=self.on_click_copy_in_help)
-        self.run_box = self._run_button(on_click=self.on_click_run, on_help=self.on_click_run_help)
-        self.find_data_box = self._find_data_button(on_click=self.on_click_find_data, on_help=self.on_click_find_data_help)
+        self.copy_in_box = self._copy_in_button(
+            on_click=self.on_click_copy_in, on_help=self.on_click_copy_in_help
+        )
+        self.run_box = self._run_button(
+            on_click=self.on_click_run, on_help=self.on_click_run_help
+        )
+        self.find_data_box = self._find_data_button(
+            on_click=self.on_click_find_data, on_help=self.on_click_find_data_help
+        )
 
         top_layout = QVBoxLayout()
         top_layout.addWidget(image_label)
@@ -72,15 +76,15 @@ class Welcome(QWidget):
         top_container_layout.addStretch()
         top_container_layout.setContentsMargins(0, 0, 0, 0)
 
-        top_spacer = QSpacerItem(0, 200, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        top_spacer = QSpacerItem(
+            0, 200, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed
+        )
         main_layout.addItem(top_spacer)
         main_layout.addWidget(top_container)
         main_layout.addStretch(1)
 
-
         find_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+f"), self)
         find_shortcut_ctrl.activated.connect(self.on_click_find_data)
-
 
         self.setLayout(main_layout)
         #
@@ -110,10 +114,7 @@ class Welcome(QWidget):
         # pick and copy
         #
         path = FileCollector.select_file(
-            parent=self,
-            cwd=cwd,
-            title="Select File",
-            file_type_filter=afilter
+            parent=self, cwd=cwd, title="Select File", file_type_filter=afilter
         )
         print(f"welcome: on_click_copy_in: path: {path}")
 
@@ -146,7 +147,7 @@ class Welcome(QWidget):
             parent=self,
             cwd=self.main.state.cwd,
             title="Select CsvPath Language File",
-            file_type_filter=FileCollector.csvpaths_filter(self.main.csvpath_config)
+            file_type_filter=FileCollector.csvpaths_filter(self.main.csvpath_config),
         )
         if csvpath is None:
             return
@@ -155,7 +156,11 @@ class Welcome(QWidget):
         #
         self.selected_file_path = csvpath
         self._run_one_time = csvpath
-        self.main.read_validate_and_display_file_for_path(path=csvpath, editable=self.main.EDITABLE, finished_callback=self._on_run_one_load)
+        self.main.read_validate_and_display_file_for_path(
+            path=csvpath,
+            editable=self.main.EDITABLE,
+            finished_callback=self._on_run_one_load,
+        )
 
     def _on_run_one_load(self) -> None:
         csvpath = self._run_one_time
@@ -174,11 +179,10 @@ class Welcome(QWidget):
             csvpath = file.read()
         cs = csvpath.split("---- CSVPATH ----")
         if len(cs) > 1:
-
             confirm = QMessageBox.question(
                 self,
                 "Multiple statements",
-                f"The file has multiple cvspaths. Do you want to run the first one?",
+                "The file has multiple cvspaths. Do you want to run the first one?",
                 QMessageBox.Yes | QMessageBox.No,
             )
             if confirm == QMessageBox.No:
@@ -189,10 +193,9 @@ class Welcome(QWidget):
             #
             if cs[0].strip() == "":
                 cs[0] = cs[1]
-        #self.main.content.csvpath_source_view.run_one_csvpath(cs[0], None)
+        # self.main.content.csvpath_source_view.run_one_csvpath(cs[0], None)
         print(f"welcome._on_run_one_load: cs: {cs}")
         w[1].run_one_csvpath(cs[0], None)
-
 
     def on_click_copy_in_help(self) -> None:
         md = HelpFinder(main=self.main).help("welcome/copy_in.md")
@@ -215,7 +218,9 @@ class Welcome(QWidget):
     def _copy_in_button(self, *, on_click, on_help) -> QWidget:
         self.button_copy_in = QPushButton()
         self.button_copy_in.setStyleSheet("QPushButton { width:170px;}")
-        box = HelpIconPackager.add_help(main=self.main, widget=self.button_copy_in, on_help=on_help)
+        box = HelpIconPackager.add_help(
+            main=self.main, widget=self.button_copy_in, on_help=on_help
+        )
         self.button_copy_in.setText("Copy data in")
         self.button_copy_in.clicked.connect(on_click)
         return box
@@ -223,7 +228,9 @@ class Welcome(QWidget):
     def _run_button(self, *, on_click, on_help) -> QWidget:
         self.button_run = QPushButton()
         self.button_run.setStyleSheet("QPushButton { width:170px;}")
-        box = HelpIconPackager.add_help(main=self.main, widget=self.button_run, on_help=on_help)
+        box = HelpIconPackager.add_help(
+            main=self.main, widget=self.button_run, on_help=on_help
+        )
         self.button_run.setText("Trigger a run")
         self.button_run.clicked.connect(on_click)
         self.update_run_button()
@@ -232,7 +239,10 @@ class Welcome(QWidget):
     def update_run_button(self) -> None:
         paths = self.main.csvpaths
         try:
-            if paths.file_manager.named_files_count == 0 or paths.paths_manager.total_named_paths == 0:
+            if (
+                paths.file_manager.named_files_count == 0
+                or paths.paths_manager.total_named_paths == 0
+            ):
                 self.button_run.setEnabled(False)
             else:
                 self.button_run.setEnabled(True)
@@ -243,16 +253,19 @@ class Welcome(QWidget):
     def _find_data_button(self, *, on_click, on_help) -> QWidget:
         self.button_find_data = QPushButton()
         self.button_find_data.setStyleSheet("QPushButton { width:170px;}")
-        box = HelpIconPackager.add_help(main=self.main, widget=self.button_find_data, on_help=on_help)
+        box = HelpIconPackager.add_help(
+            main=self.main, widget=self.button_find_data, on_help=on_help
+        )
         self.button_find_data.setText("Find data")
         self.button_find_data.clicked.connect(on_click)
         return box
 
-
     def _validate_button(self, *, on_click, on_help) -> QWidget:
         self.button_validate = QPushButton()
         self.button_validate.setStyleSheet("QPushButton { width:170px;}")
-        box = HelpIconPackager.add_help(main=self.main, widget=self.button_validate, on_help=on_help)
+        box = HelpIconPackager.add_help(
+            main=self.main, widget=self.button_validate, on_help=on_help
+        )
         self.button_validate.setText("Valdiate a file")
         self.button_validate.clicked.connect(on_click)
         return box
@@ -266,19 +279,14 @@ class Welcome(QWidget):
             md = HelpFinder(main=self.main).help("welcome/welcome.md")
             self.main.helper.get_help_tab().setMarkdown(md)
 
-
         ss = self.main.main.sizes()
         if ss[1] > 0:
             self.main.main.setSizes([1, 0])
         else:
             self.main.main.setSizes([4, 1])
 
-
     clicked = Signal()
+
     def mousePressEvent(self, event):
         self.clicked.emit()
         super().mousePressEvent(event)
-
-
-
-

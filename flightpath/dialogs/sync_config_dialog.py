@@ -1,43 +1,24 @@
-import re
-import os
 import io
-import json
 from configparser import ConfigParser
 from PySide6.QtWidgets import (
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QLabel,
-        QDialog,
-        QLineEdit,
-        QFormLayout,
-        QSizePolicy,
-        QMenu,
-        QWidget,
-        QPlainTextEdit,
-        QLineEdit,
-        QTableWidget,
-        QTableWidgetItem,
-        QMessageBox,
-        QAbstractItemView
+    QVBoxLayout,
+    QPushButton,
+    QDialog,
+    QWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QAbstractItemView,
 )
 
 
-from PySide6.QtGui import QAction
-
 from PySide6.QtCore import Qt, Slot
 
-from csvpath.util.config import Config
 
-from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
-from flightpath.util.log_utility import LogUtility as lout
-from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.util.server_utility import  ServerUtility as seut
+from flightpath.util.server_utility import ServerUtility as seut
+
 
 class SyncConfigDialog(QDialog):
-
-
     def __init__(self, *, name, parent):
         super().__init__(parent)
         self.parent = parent
@@ -55,8 +36,8 @@ class SyncConfigDialog(QDialog):
         self.setFixedWidth(600)
 
         self.setWindowTitle(f"Update the {self.name} project config")
-        self.upload_button = None # QPushButton()
-        self.cancel_button = None #QPushButton()
+        self.upload_button = None  # QPushButton()
+        self.cancel_button = None  # QPushButton()
         self.setWindowModality(Qt.ApplicationModal)
         self.main_content()
 
@@ -69,18 +50,15 @@ class SyncConfigDialog(QDialog):
         if not self.sidebar.main.helper.is_showing_help():
             self.sidebar.main.helper.on_click_help()
 
-
     def show_dialog(self) -> None:
         #
         # show the dialog
         #
         self.exec()
 
-
-#================
-# main part
-#================
-
+    # ================
+    # main part
+    # ================
 
     def main_content(self) -> None:
         self.layout = QVBoxLayout()
@@ -93,13 +71,19 @@ class SyncConfigDialog(QDialog):
         self.table_of_existing = QTableWidget()
         self.table_of_existing.setFixedHeight(265)
         self.table_of_existing.setColumnCount(2)
-        self.table_of_existing.setHorizontalHeaderLabels(["Name", "Local Value (Click to copy)"])
+        self.table_of_existing.setHorizontalHeaderLabels(
+            ["Name", "Local Value (Click to copy)"]
+        )
         self.table_of_existing.verticalHeader().setVisible(False)
         header = self.table_of_existing.horizontalHeader()
         header.setStretchLastSection(True)
         self.populate_existing()
-        self.table_of_existing.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table_of_existing.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.table_of_existing.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.table_of_existing.setSelectionMode(
+            QAbstractItemView.SelectionMode.SingleSelection
+        )
 
         self.table_of_existing.itemClicked.connect(self.table_of_existing_clicked)
         self.main.show_now_or_later(self.table_of_existing)
@@ -111,7 +95,9 @@ class SyncConfigDialog(QDialog):
         self.table_of_sending = QTableWidget()
         self.table_of_sending.setFixedHeight(265)
         self.table_of_sending.setColumnCount(2)
-        self.table_of_sending.setHorizontalHeaderLabels(["Name", "Server Value (Click to edit)"])
+        self.table_of_sending.setHorizontalHeaderLabels(
+            ["Name", "Server Value (Click to edit)"]
+        )
         self.table_of_sending.verticalHeader().setVisible(False)
         header = self.table_of_sending.horizontalHeader()
         header.setStretchLastSection(True)
@@ -130,13 +116,13 @@ class SyncConfigDialog(QDialog):
         self.sync_button.setEnabled(False)
         self.sync_button.clicked.connect(self.do_sync)
 
+    # ==================
+    # upload event
+    # ==================
 
-
-#==================
-# upload event
-#==================
-
-    def populate_table(self, *, table:QTableWidget, config:ConfigParser, editable:bool=False) -> None:
+    def populate_table(
+        self, *, table: QTableWidget, config: ConfigParser, editable: bool = False
+    ) -> None:
         forms = self.main.config.config_panel.forms_by_section
         t = self.main.config.config_panel.total_server_fields
         table.setRowCount(t)
@@ -175,17 +161,19 @@ class SyncConfigDialog(QDialog):
 
             except Exception as ex:
                 import traceback
+
                 print(traceback.format_exc())
                 print(f"error in populate existing: {ex}")
 
     def populate_sending(self) -> None:
-        form = self.main.config.config_panel.get_form( "ServerForm" )
+        form = self.main.config.config_panel.get_form("ServerForm")
         host = form.host.text()
-        cfgstr = seut.download_config(host=host, project=self.name, headers=form._headers)
+        cfgstr = seut.download_config(
+            host=host, project=self.name, headers=form._headers
+        )
         c = ConfigParser()
         c.read_string(cfgstr)
         self.populate_table(table=self.table_of_sending, config=c, editable=True)
-
 
     def populate_existing(self) -> None:
         cfg = self.main.csvpath_config
@@ -195,7 +183,7 @@ class SyncConfigDialog(QDialog):
         #
         #
         #
-        form = self.main.config.config_panel.get_form( "ServerForm" )
+        form = self.main.config.config_panel.get_form("ServerForm")
         config_str = self._table_of_sending_to_config(form)
         form._upload_config(self.name, config_str, prompt=False)
         self.accept()
@@ -204,7 +192,9 @@ class SyncConfigDialog(QDialog):
         #
         # get the whole current server config
         #
-        cfgstr = seut.download_config(host=form.host.text(), project=self.name, headers=form._headers)
+        cfgstr = seut.download_config(
+            host=form.host.text(), project=self.name, headers=form._headers
+        )
         c = ConfigParser()
         c.read_string(cfgstr)
         #
@@ -215,8 +205,8 @@ class SyncConfigDialog(QDialog):
             name = self.table_of_sending.item(row, 0)
             value = self.table_of_sending.item(row, 1)
             section = name.text()
-            name = section[section.find(" ")+1:]
-            section = section[0:section.find(" ")]
+            name = section[section.find(" ") + 1 :]
+            section = section[0 : section.find(" ")]
             section = section.strip("]")
             section = section.strip("[")
             v = value.text()
@@ -229,21 +219,23 @@ class SyncConfigDialog(QDialog):
         config_str = self._get_config_str(c)
         return config_str
 
-    def _get_config_str(self, config:ConfigParser) -> str:
+    def _get_config_str(self, config: ConfigParser) -> str:
         string_buffer = io.StringIO()
         config.write(string_buffer)
         config_str = string_buffer.getvalue()
         return config_str
 
-#==================
-# lists events
-#==================
-
+    # ==================
+    # lists events
+    # ==================
 
     @Slot(QTableWidgetItem)
     def handle_item_changed(self, item) -> None:
         row = item.row()
-        value = self.table_of_sending.item(row, 1)
+        #
+        # does this next line have a side-effect? otherwise, remove.
+        #
+        self.table_of_sending.item(row, 1)
         self.sync_button.setEnabled(True)
 
     @Slot(QTableWidgetItem)
@@ -259,6 +251,3 @@ class SyncConfigDialog(QDialog):
             self.table_of_sending.setItem(row, 0, k)
             self.table_of_sending.setItem(row, 1, v)
             self.sync_button.setEnabled(True)
-
-
-

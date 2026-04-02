@@ -1,12 +1,4 @@
-
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QTabWidget,
-    QMessageBox,
-    QToolBar
-)
-from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar
 
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
@@ -19,8 +11,8 @@ from flightpath.widgets.toolbars.data_toolbar import DataToolbar
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.editable import EditStates
 
-class Content(ClosingTabsHolder):
 
+class Content(ClosingTabsHolder):
     def __init__(self, main):
         super().__init__(can_have_edit_tabs=True)
         self.main = main
@@ -37,9 +29,9 @@ class Content(ClosingTabsHolder):
         self._do_i_close_reentry_block = False
 
         ts = self.main.findChildren(QToolBar)
-        if len( ts ) == 0:
+        if len(ts) == 0:
             self.toolbar = DataToolbar(parent=self, main=self.main)
-        elif len( ts ) > 1:
+        elif len(ts) > 1:
             raise RuntimeError("Cannot have {len(ts)} toolbar instances")
         else:
             self.toolbar = ts[0]
@@ -80,7 +72,7 @@ class Content(ClosingTabsHolder):
             and self.data_files_are_saved()
         )
 
-    def do_i_close(self, i:int) -> bool:
+    def do_i_close(self, i: int) -> bool:
         if self._do_i_close_reentry_block is True:
             return
         self._do_i_close_reentry_block = True
@@ -103,12 +95,13 @@ class Content(ClosingTabsHolder):
                 #
                 path = widget.objectName()
                 if path.startswith(self.main.state.cwd):
-                    path = path[len(self.main.state.cwd) + 1:]
-                return meut.yesNo(parent=self, title="Close file", msg=f"Close {path} without saving?")
+                    path = path[len(self.main.state.cwd) + 1 :]
+                return meut.yesNo(
+                    parent=self, title="Close file", msg=f"Close {path} without saving?"
+                )
             return True
         finally:
             self._do_i_close_reentry_block = False
-
 
     def close_all_tabs(self):
         #
@@ -136,4 +129,3 @@ class Content(ClosingTabsHolder):
             #
             self.main.main_layout.setCurrentIndex(0)
         return ret
-

@@ -1,13 +1,7 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QComboBox,
-    QLabel
-)
+from PySide6.QtWidgets import QLineEdit, QFormLayout, QComboBox, QLabel
 
-from csvpath.util.config import Config
 from .blank_form import BlankForm
+
 
 class CacheForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -33,7 +27,7 @@ class CacheForm(BlankForm):
     def add_to_config(self, config) -> None:
         path = self.cache_dir_path.text()
         usecache = self.use_cache.currentText()
-        config.add_to_config("cache", "path", path )
+        config.add_to_config("cache", "path", path)
         config.add_to_config("cache", "use_cache", usecache)
 
     def populate(self):

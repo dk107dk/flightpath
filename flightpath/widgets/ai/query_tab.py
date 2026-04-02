@@ -1,16 +1,18 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QApplication, QTextEdit
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QPlainTextEdit,
+    QApplication,
+    QTextEdit,
+)
 from PySide6.QtGui import QColor
 from PySide6.QtCore import QThreadPool
 
-from csvpath.util.file_readers import DataFileReader
-from csvpath.util.nos import Nos
 
 from flightpath.widgets.ai.query_form import QueryFormWidget
 from flightpath.widgets.ai.query_accordion import QueryAccordionWidget
 from flightpath.workers.dispatcher import JobDispatcher
-from flightpath.workers.jobs.ai_generate_csvpath_job import AiGenerateCsvpathJob
 from flightpath.util.feedback_utility import FeedbackUtility as feut
-from flightpath.util.test_data_utility import TestDataUtility as tdut
 
 
 class QueryTabWidget(QWidget):
@@ -32,23 +34,24 @@ class QueryTabWidget(QWidget):
         self.accordion.itemClicked.connect(self.on_item_clicked)
         self.accordion.itemCloseRequested.connect(self.on_item_close_requested)
 
-
-
-    def enable_for_extension(self, e:str) -> None:
+    def enable_for_extension(self, e: str) -> None:
         self.form.activity_selector.enable_for_extension(e)
 
         #
         # we need the doc checkbox only if "question" or "explain", not "testdata" or "validate"
         # this isn't there yet
         #
-        if(e in self.main.csvpath_config.get(section="extensions", name="csvpath_files")):
+        if e in self.main.csvpath_config.get(
+            section="extensions", name="csvpath_files"
+        ):
             self.form.use_doc_checkbox.setChecked(True)
             self.form.use_doc_checkbox.setEnabled(True)
         #
         #
-        if(
-           e in self.main.csvpath_config.get(section="extensions", name="csv_files")
-            or e in self.main.csvpath_config.get(section="extensions", name="csvpath_files")
+        if e in self.main.csvpath_config.get(
+            section="extensions", name="csv_files"
+        ) or e in self.main.csvpath_config.get(
+            section="extensions", name="csvpath_files"
         ):
             self.form.prompt_title.setEnabled(True)
             self.form.instructions.setEnabled(True)
@@ -68,7 +71,7 @@ class QueryTabWidget(QWidget):
             "status": "running",
             "document_path": params.get("document_path"),
             "results": None,
-            "turns_limit": params.get("turns_limit")
+            "turns_limit": params.get("turns_limit"),
         }
         """
         import json
@@ -82,18 +85,29 @@ class QueryTabWidget(QWidget):
             title=params.get("title", "Untitled Query"),
             activity=activity,
             status_color=QColor("#ffd43b"),
-            metadata=metadata
+            metadata=metadata,
         )
         instructions = metadata.get("params").get("instructions")
-        if self.form._current_activity == "question" and str(instructions).strip() == "":
-            self.on_worker_error(item, metadata, "You must provide a question or constrant for the AI to help with.")
+        if (
+            self.form._current_activity == "question"
+            and str(instructions).strip() == ""
+        ):
+            self.on_worker_error(
+                item,
+                metadata,
+                "You must provide a question or constrant for the AI to help with.",
+            )
             return
         worker = JobDispatcher.get_worker(main=self.main, me=self, mdata=metadata)
-        worker.signals.finished.connect(lambda generation: self.on_worker_finished(item, metadata, generation))
+        worker.signals.finished.connect(
+            lambda generation: self.on_worker_finished(item, metadata, generation)
+        )
 
         worker.signals.turn.connect(lambda js: self.on_turn_update(item, js))
 
-        worker.signals.error.connect(lambda msg: self.on_worker_error(item, metadata, msg))
+        worker.signals.error.connect(
+            lambda msg: self.on_worker_error(item, metadata, msg)
+        )
         item.worker = worker
 
         self.threadpool.start(worker)
@@ -110,7 +124,9 @@ class QueryTabWidget(QWidget):
 
     def on_worker_finished(self, item, metadata, generation):
         if generation is None:
-            self.on_worker_error(item, metadata, "Invalid result metadata: no generation")
+            self.on_worker_error(
+                item, metadata, "Invalid result metadata: no generation"
+            )
             return
         if generation.errors is not None:
             self.on_worker_error(item, metadata, generation.errors)
@@ -132,7 +148,7 @@ class QueryTabWidget(QWidget):
         try:
             QApplication.beep()
         except Exception:
-            print(f"beep error")
+            print("beep error")
             ...
 
     def on_worker_error(self, item, metadata, msg):
@@ -147,7 +163,7 @@ class QueryTabWidget(QWidget):
         view = QPlainTextEdit()
         view.setPlainText(msg)
         view.setReadOnly(True)
-        error = f"{metadata["id"]}.error"
+        error = f"{metadata['id']}.error"
         feut.add_feedback_tab(main=self.main, tab_id=error, name="Error", tab=view)
         #
         # display feedback
@@ -168,17 +184,19 @@ class QueryTabWidget(QWidget):
         #
         # show result text
         #
-        response = f"{metadata["id"]}.response"
+        response = f"{metadata['id']}.response"
         generation = metadata.get("results")
-        tracking = f"{metadata["id"]}.tracking"
+        tracking = f"{metadata['id']}.tracking"
         #
         if generation:
             view = QTextEdit()
             view.setMarkdown(generation.response_text)
             view.setReadOnly(True)
-            feut.add_feedback_tab(main=self.main, tab_id=response, name="Results", tab=view)
+            feut.add_feedback_tab(
+                main=self.main, tab_id=response, name="Results", tab=view
+            )
         else:
-            print(f"on_item_clicked: no generation available from metadata")
+            print("on_item_clicked: no generation available from metadata")
         #
         # log info
         #
@@ -189,7 +207,9 @@ class QueryTabWidget(QWidget):
         view = QPlainTextEdit()
         view.setPlainText(js)
         view.setReadOnly(True)
-        feut.add_feedback_tab(main=self.main, tab_id=tracking, name="Tracking", tab=view)
+        feut.add_feedback_tab(
+            main=self.main, tab_id=tracking, name="Tracking", tab=view
+        )
         #
         # display feedback
         #
@@ -201,4 +221,3 @@ class QueryTabWidget(QWidget):
         #
         # can we check for a worker and attempt to stop it?
         #
-

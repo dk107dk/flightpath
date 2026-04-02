@@ -2,41 +2,29 @@ import re
 import os
 import json
 import traceback
-from PySide6.QtWidgets import ( # pylint: disable=E0611
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QLabel,
-        QDialog,
-        QLineEdit,
-        QFormLayout,
-        QComboBox,
-        QSizePolicy,
-        QMenu,
-        QWidget,
-        QPlainTextEdit,
-        QLineEdit,
-        QTableWidget,
-        QTableWidgetItem,
-        QMessageBox
+from PySide6.QtWidgets import (  # pylint: disable=E0611
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QDialog,
+    QFormLayout,
+    QWidget,
+    QLineEdit,
+    QTableWidget,
+    QTableWidgetItem,
 )
 
-
-from PySide6.QtGui import QAction
 
 from PySide6.QtCore import Qt, Slot
 
 from csvpath.util.config_env import ConfigEnv
 
-from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
-from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.util.server_utility import  ServerUtility as seut
+from flightpath.util.server_utility import ServerUtility as seut
+
 
 class CompileEnvDialog(QDialog):
-
-
     def __init__(self, *, name, parent):
         super().__init__(parent)
         self.parent = parent
@@ -53,8 +41,8 @@ class CompileEnvDialog(QDialog):
         self.setFixedWidth(600)
 
         self.setWindowTitle(f"Collect env vars for the {self.name} project")
-        self.upload_button = None # QPushButton()
-        self.cancel_button = None #QPushButton()
+        self.upload_button = None  # QPushButton()
+        self.cancel_button = None  # QPushButton()
         self.setWindowModality(Qt.ApplicationModal)
         self.main_content()
 
@@ -67,18 +55,15 @@ class CompileEnvDialog(QDialog):
         if not self.sidebar.main.helper.is_showing_help():
             self.sidebar.main.helper.on_click_help()
 
-
     def show_dialog(self) -> None:
         #
         # show the dialog
         #
         self.exec()
 
-
-#================
-# main part
-#================
-
+    # ================
+    # main part
+    # ================
 
     def main_content(self) -> None:
         self.layout = QVBoxLayout()
@@ -164,15 +149,13 @@ class CompileEnvDialog(QDialog):
         self.refreshing = False
         self.populate_existing()
 
-
-#==================
-# upload event
-#==================
+    # ==================
+    # upload event
+    # ==================
 
     def do_upload(self) -> None:
         # this method doesn't actually send. it just compiles the env string
         # and closes so that the main env_form can send.
-        payload = {"name": self.name }
         rows = self.table_of_sending.rowCount()
         _ = {}
         for row in range(rows):
@@ -183,9 +166,9 @@ class CompileEnvDialog(QDialog):
         self.config_str = s
         self.accept()
 
-#==================
-# lists events
-#==================
+    # ==================
+    # lists events
+    # ==================
 
     @Slot(QTableWidgetItem)
     def table_of_sending_clicked(self, item) -> None:
@@ -205,16 +188,15 @@ class CompileEnvDialog(QDialog):
         else:
             i = x
 
-
-        #self.table_of_sending.insertRow(i)
+        # self.table_of_sending.insertRow(i)
         k = QTableWidgetItem(name.text())
         v = QTableWidgetItem(value.text())
         self.table_of_sending.setItem(i, 0, k)
         self.table_of_sending.setItem(i, 1, v)
 
-#==================
-# filter buttons
-#==================
+    # ==================
+    # filter buttons
+    # ==================
 
     def _os(self) -> bool:
         source = self.main.csvpath_config.get(section="config", name="var_sub_source")
@@ -235,7 +217,7 @@ class CompileEnvDialog(QDialog):
 
     def populate_sending(self) -> None:
         try:
-            form = self.main.config.config_panel.get_form( "ServerForm" )
+            form = self.main.config.config_panel.get_form("ServerForm")
             host = form.host.text()
             r = seut.download_env(host=host, project=self.name, headers=form._headers)
             j = json.loads(r)
@@ -245,10 +227,13 @@ class CompileEnvDialog(QDialog):
                 vi = QTableWidgetItem(v)
                 self.table_of_sending.setItem(i, 0, ki)
                 self.table_of_sending.setItem(i, 1, vi)
-        except Exception as e:
+        except Exception:
             print(traceback.format_exc())
-            meut.warning(parent=self, msg=f"Cannot download the {self.name} env", title="Download failed")
-
+            meut.warning(
+                parent=self,
+                msg=f"Cannot download the {self.name} env",
+                title="Download failed",
+            )
 
     def populate_existing(self) -> None:
         self.refreshing = True
@@ -287,15 +272,11 @@ class CompileEnvDialog(QDialog):
         self.table_of_sending.setItem(i, 0, k)
         self.table_of_sending.setItem(i, 1, v)
 
-    def _has_key(self, k:str) -> int:
+    def _has_key(self, k: str) -> int:
         rows = self.table_of_sending.rowCount()
         for row in range(rows):
             ki = self.table_of_sending.item(row, 0)
-            vi = self.table_of_sending.item(row, 1)
+            # self.table_of_sending.item(row, 1)
             if ki.text() == k:
                 return row
         return -1
-
-
-
-

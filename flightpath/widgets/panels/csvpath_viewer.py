@@ -1,9 +1,15 @@
-import sys
 import json
 import os
 import traceback
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QTextEdit, QLabel, QMessageBox, QTableView
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QPlainTextEdit,
+    QTextEdit,
+    QLabel,
+    QTableView,
+)
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtCore import Qt, QFileInfo, Slot
 
@@ -32,6 +38,7 @@ from flightpath.util.os_utility import OsUtility as osut
 
 from flightpath.editable import EditStates
 
+
 class CsvpathViewer(QWidget):
     CHAR_NAMES = {
         "pipe": "|",
@@ -40,21 +47,21 @@ class CsvpathViewer(QWidget):
         "semicolon": ";",
         "comma": ",",
         "colon": ":",
-        "hash":"#",
-        "percent":"%",
-        "star":"*",
-        "asterisk":"*",
-        "at":"@",
-        "~":"tilde",
+        "hash": "#",
+        "percent": "%",
+        "star": "*",
+        "asterisk": "*",
+        "at": "@",
+        "~": "tilde",
         "int": None,
-        "quotes":'"',
+        "quotes": '"',
         "quote": '"',
-        "single-quotes":"'",
-        "singlequotes":"'",
-        "singlequote":"'",
-        "single-quote":"'",
-        "tick":"`",
-        "tab":None
+        "single-quotes": "'",
+        "singlequotes": "'",
+        "singlequote": "'",
+        "single-quote": "'",
+        "tick": "`",
+        "tab": None,
     }
 
     def __init__(self, *, main, editable=EditStates.EDITABLE):
@@ -91,14 +98,14 @@ class CsvpathViewer(QWidget):
         layout.addWidget(self.text_edit)
         layout.setContentsMargins(0, 0, 0, 0)
 
-    def _statement_and_comment(self, csvpath:str) -> tuple[str,str]:
+    def _statement_and_comment(self, csvpath: str) -> tuple[str, str]:
         mdatap = MetadataParser(None)
         cstr, comment = mdatap.extract_csvpath_and_comment(csvpath)
         cstr = cstr.strip()
         comment = comment.strip()
         return cstr, comment
 
-    def _get_metadata(self, comment:str) -> None:
+    def _get_metadata(self, comment: str) -> None:
         if comment and self._comment != comment:
             self._comment = None
             self.mdata = None
@@ -111,7 +118,7 @@ class CsvpathViewer(QWidget):
             self.mdata = {}
         return self.mdata
 
-    def _get_filepath(self, cstr:str, comment:str) -> str:
+    def _get_filepath(self, cstr: str, comment: str) -> str:
         comment = "" if comment is None else comment.strip()
         mdata = {}
         if len(comment) > 0:
@@ -124,18 +131,20 @@ class CsvpathViewer(QWidget):
         if filepath is None:
             return None
         filepath = filepath.strip()
-        filepath = filepath if filepath.find("\n") == -1 else filepath[0:filepath.find("\n")]
+        filepath = (
+            filepath if filepath.find("\n") == -1 else filepath[0 : filepath.find("\n")]
+        )
         if not filepath.startswith("/"):
             #
             # check if we lopped off a leading '/'. metadata parser has a bug.
             # this is a stupid hack.  :/
             #
             i = comment.find(filepath)
-            if i > 0 and comment[i-1] == '/':
+            if i > 0 and comment[i - 1] == "/":
                 return f"/{filepath}"
         return filepath
 
-    def _get_delimiter(self, comment:str=None) -> str:
+    def _get_delimiter(self, comment: str = None) -> str:
         c = None
         mdata = self._get_metadata(comment)
         if mdata:
@@ -144,7 +153,7 @@ class CsvpathViewer(QWidget):
                 c = self._get_char(c, ",")
         return c
 
-    def _get_quotechar(self, comment:str=None) -> str:
+    def _get_quotechar(self, comment: str = None) -> str:
         c = None
         mdata = self._get_metadata(comment)
         if mdata:
@@ -153,7 +162,7 @@ class CsvpathViewer(QWidget):
                 c = self._get_char(c, '"')
         return c
 
-    def _get_char(self, c:str, default:str) -> str:
+    def _get_char(self, c: str, default: str) -> str:
         #
         # CsvPath does not support special characters in metadata. they are
         # allowed, but not preserved. that means we cannot assume test-delimiter
@@ -174,21 +183,26 @@ class CsvpathViewer(QWidget):
         else:
             try:
                 c = CsvpathViewer.CHAR_NAMES.get(c)
-            except Exception as e:
+            except Exception:
                 ...
         if c is None:
             c = default
         c = c.strip()
         return c
 
-    def run_one_csvpath(self, csvpath:str, filepath:str=None, *, position=None) -> None:
+    def run_one_csvpath(
+        self, csvpath: str, filepath: str = None, *, position=None
+    ) -> None:
         if (
             csvpath is None
             or csvpath.strip() == ""
             or csvpath.find("[") == -1
             or csvpath.find("$") == -1
         ):
-            meut.message(msg="Check that your cursor is in a csvpath statement", title="No csvpath selected")
+            meut.message(
+                msg="Check that your cursor is in a csvpath statement",
+                title="No csvpath selected",
+            )
             return
         #
         #
@@ -197,10 +211,10 @@ class CsvpathViewer(QWidget):
         #
         cstr, comment = self._statement_and_comment(csvpath)
         if filepath is None:
-            if cstr[1] == '[':
+            if cstr[1] == "[":
                 filepath = self._get_filepath(cstr, comment)
             else:
-                filepath = cstr[cstr.find("$")+1: cstr.find("[")]
+                filepath = cstr[cstr.find("$") + 1 : cstr.find("[")]
         if comment is None:
             #
             # not sure this would happen, but we can defend
@@ -215,21 +229,22 @@ class CsvpathViewer(QWidget):
                 parent=self,
                 cwd=self.main.state.cwd,
                 title="Select Data File",
-                file_type_filter=FileCollector.csvs_filter(self.main.csvpath_config)
+                file_type_filter=FileCollector.csvs_filter(self.main.csvpath_config),
             )
             #
             # or, error message here.
             #
             if filepath is None:
-                meut.message(title="No File", msg="No file was selected. Cannot continue.")
+                meut.message(
+                    title="No File", msg="No file was selected. Cannot continue."
+                )
                 return
             #
             # add the test data file to the comment. easy to add to comment, but how to
             # get it back into the original file....
             #
             self.text_edit.add_to_external_comment_of_csvpath_at_position(
-                position=position,
-                addto=f"test-data:{filepath}\n"
+                position=position, addto=f"test-data:{filepath}\n"
             )
             #
             #
@@ -246,30 +261,31 @@ class CsvpathViewer(QWidget):
         #
         # this will blowup until the next CsvPaths release
         #
-        #path = CsvPath(quotechar=quotechar, delimiter=delimiter)
+        # path = CsvPath(quotechar=quotechar, delimiter=delimiter)
         path = CsvPath(
             quotechar=quotechar,
             delimiter=delimiter,
             project=self.main.state.current_project,
-            project_context="FlightPath Data"
+            project_context="FlightPath Data",
         )
         #
         #
         #
-        p = path.config.get(section='cache', name='path')
-        uc = path.config.get(section='cache', name='use_cache')
-        lines = []
         capture = None
         try:
             path.parse(csvpath)
-            path.logger.info(f"starting one-off run: path: {path}, file: {path.scanner.filename}")
+            path.logger.info(
+                f"starting one-off run: path: {path}, file: {path.scanner.filename}"
+            )
             b = self._warn_file_size_if(path.scanner.filename)
             if b is True:
                 #
                 # open file so the user can create a sample
                 #
                 self.main.selected_file_path = path.scanner.filename
-                self.main.read_validate_and_display_file_for_path(path=path.scanner.filename, editable=EditStates.EDITABLE)
+                self.main.read_validate_and_display_file_for_path(
+                    path=path.scanner.filename, editable=EditStates.EDITABLE
+                )
                 return
             path.update_settings_from_metadata()
             path.ecoms = ErrorCommunications(csvpath=path)
@@ -304,11 +320,11 @@ class CsvpathViewer(QWidget):
             return
 
     @Slot(tuple)
-    def _on_test_run_complete(self, t:tuple) -> None:
-        path:CsvPath = t[0]
-        csvpath_str:str = t[1]
-        lines:list[list[str]] = t[2]
-        printer:CapturePrinter = t[3]
+    def _on_test_run_complete(self, t: tuple) -> None:
+        path: CsvPath = t[0]
+        csvpath_str: str = t[1]
+        lines: list[list[str]] = t[2]
+        printer: CapturePrinter = t[3]
         #
         # same as before
         #
@@ -318,7 +334,9 @@ class CsvpathViewer(QWidget):
         #
         # display to the user in the lower panel
         #
-        self._run_feedback(csvpath_str=csvpath_str, path=path, lines=lines, printer=printer)
+        self._run_feedback(
+            csvpath_str=csvpath_str, path=path, lines=lines, printer=printer
+        )
         #
         # there's no absolute need to drop the metadata, but it seems prudent
         #
@@ -333,7 +351,7 @@ class CsvpathViewer(QWidget):
         title = "Large file"
         return meut.yesNo(parent=self, msg=msg, title=title)
 
-    def _display_stacktrace(self, trace:str) -> None:
+    def _display_stacktrace(self, trace: str) -> None:
         self._clear_feedback()
         es = QWidget()
         es.setObjectName("Error")
@@ -347,7 +365,7 @@ class CsvpathViewer(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.main.helper.help_and_feedback.setCurrentWidget(es)
         self.main.show_now_or_later(self.main.helper.help_and_feedback)
-        #self.main.helper.help_and_feedback.show()
+        # self.main.helper.help_and_feedback.show()
         if not self.main.helper.is_showing_help():
             self.main.helper.on_click_help()
 
@@ -357,13 +375,14 @@ class CsvpathViewer(QWidget):
             self.main.helper.help_and_feedback.removeTab(0)
             t.deleteLater()
 
-    def _run_feedback(self, *, csvpath_str, path:CsvPath, lines:list, printer:Printer) -> None:
+    def _run_feedback(
+        self, *, csvpath_str, path: CsvPath, lines: list, printer: Printer
+    ) -> None:
         #
         # remove all tabs (not incl. help)
         #
         self._clear_feedback()
         printouts_label = "Printouts [default]"
-        helptab = None
         #
         # create new tabs
         #
@@ -424,8 +443,8 @@ class CsvpathViewer(QWidget):
         #
         # display data in each tab
         #
-        self._display_log(log, log_lines )
-        self._display_errors(errors, path.errors )
+        self._display_log(log, log_lines)
+        self._display_errors(errors, path.errors)
         self._display_code(code, csvpath_str)
         self._display_matches(matches, lines)
         self._display_variables(variables, path.variables)
@@ -439,9 +458,9 @@ class CsvpathViewer(QWidget):
         self.main.helper.help_and_feedback.setCurrentWidget(t)
 
         self.main.show_now_or_later(self.main.helper.help_and_feedback)
-        #self.main.helper.help_and_feedback.show()
+        # self.main.helper.help_and_feedback.show()
 
-    def _display_log(self, log:QWidget, log_lines:str) -> None:
+    def _display_log(self, log: QWidget, log_lines: str) -> None:
         layout = QVBoxLayout()
         log.setLayout(layout)
         view = QPlainTextEdit()
@@ -450,7 +469,7 @@ class CsvpathViewer(QWidget):
         layout.addWidget(view)
         layout.setContentsMargins(0, 0, 0, 0)
 
-    def _display_matches(self, matches:QWidget, lines:list[list[str]]) -> None:
+    def _display_matches(self, matches: QWidget, lines: list[list[str]]) -> None:
         layout = QVBoxLayout()
         matches.setLayout(layout)
         matches_view = QTableView()
@@ -459,7 +478,7 @@ class CsvpathViewer(QWidget):
         layout.addWidget(matches_view)
         layout.setContentsMargins(0, 0, 0, 0)
 
-    def _display_code(self, code:QWidget, csvpath_str:str) -> None:
+    def _display_code(self, code: QWidget, csvpath_str: str) -> None:
         pseudo = f"""
 #
 # for a one-off validation
@@ -488,7 +507,7 @@ lines = path.collect()
         layout.addWidget(code_view)
         layout.setContentsMargins(0, 0, 0, 0)
 
-    def _display_errors(self, errors:QWidget, es:list) -> None:
+    def _display_errors(self, errors: QWidget, es: list) -> None:
         es = [e.to_json() for e in es]
         layout = QVBoxLayout()
         errors.setLayout(layout)
@@ -507,7 +526,7 @@ lines = path.collect()
         layout.addWidget(errors_view)
         layout.setContentsMargins(0, 0, 0, 0)
 
-    def _display_variables(self, variables:QWidget, vdata:dict) -> None:
+    def _display_variables(self, variables: QWidget, vdata: dict) -> None:
         layout = QVBoxLayout()
         variables.setLayout(layout)
         #
@@ -526,7 +545,7 @@ lines = path.collect()
         layout.addWidget(variables_view)
         layout.setContentsMargins(0, 0, 0, 0)
 
-    def _display_why(self, why:QWidget, path:CsvPath) -> None:
+    def _display_why(self, why: QWidget, path: CsvPath) -> None:
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         why.setLayout(layout)
@@ -560,15 +579,16 @@ lines = path.collect()
         i = self.main.content.tab_widget.currentIndex()
         name = self.main.content.tab_widget.tabText(i)
         name = name.replace("+", "")
-        self.main.content.tab_widget.setTabText(i, name )
+        self.main.content.tab_widget.setTabText(i, name)
 
-
-    def open_file(self, *, path:str, data:str) -> None:
+    def open_file(self, *, path: str, data: str) -> None:
         self.path = path
         info = QFileInfo(path)
-        if not info.suffix() in self.main.csvpath_config.get(section="extensions", name="csvpath_files"):
+        if info.suffix() not in self.main.csvpath_config.get(
+            section="extensions", name="csvpath_files"
+        ):
             self.main.show_now_or_later(self.label)
-            #self.label.show()
+            # self.label.show()
             self.text_edit.hide()
             return
         self.text_edit.clear()
@@ -583,15 +603,13 @@ lines = path.collect()
         CsvPathSyntaxHighlighter(self.text_edit.document())
 
         self.main.show_now_or_later(self.text_edit)
-        #self.text_edit.show()
+        # self.text_edit.show()
         self.text_edit.setPlainText(data)
         c = "cmd" if osut.is_mac() else "ctrl"
-        self.main.statusBar().showMessage(f"{c}-s to save, {c}-r to run • Opened {path}")
-
+        self.main.statusBar().showMessage(
+            f"{c}-s to save, {c}-r to run • Opened {path}"
+        )
 
     def clear(self):
         self.text_edit.hide()
         self.path = None
-
-
-

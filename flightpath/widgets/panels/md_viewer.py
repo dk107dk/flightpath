@@ -1,9 +1,8 @@
 import os
-import traceback
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QPlainTextEdit
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtCore import Qt, QFileInfo
-from PySide6.QtGui import  QKeySequence, QAction
+from PySide6.QtGui import QKeySequence, QAction
 
 
 from csvpath.util.file_readers import DataFileReader
@@ -11,19 +10,16 @@ from csvpath.util.file_writers import DataFileWriter
 
 from flightpath.widgets.md_text_edit import MdTextEdit
 from flightpath.widgets.raw_text_edit import RawTextEdit
-from flightpath.util.printer import CapturePrinter
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.log_utility import LogUtility as lout
-from flightpath.util.file_collector import FileCollector
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
 
 from flightpath.editable import EditStates
 
-class MdViewer(QWidget):
 
-    def __init__(self, *, main, editable=EditStates.EDITABLE, displaying:bool=True):
+class MdViewer(QWidget):
+    def __init__(self, *, main, editable=EditStates.EDITABLE, displaying: bool = True):
         #
         # what is displaying?
         # the displaying:bool argument determines if it is an .md or .txt file.
@@ -36,7 +32,7 @@ class MdViewer(QWidget):
         # exp
         #
         self.editable = EditStates.EDITABLE
-        #self.editable = editable
+        # self.editable = editable
         #
         # set the font size
         #
@@ -56,7 +52,6 @@ class MdViewer(QWidget):
         self.text_edit = None
         self.content_view = None
 
-
         save_action = QAction("Save", self)
         save_action.setShortcut(QKeySequence.Save)
         save_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
@@ -75,21 +70,23 @@ class MdViewer(QWidget):
         toggle_action.triggered.connect(self.on_toggle)
         self.addAction(toggle_action)
 
-
-
         self._make_editor()
         layout.addWidget(self.text_edit)
         layout.setContentsMargins(0, 0, 0, 0)
 
     def _make_editor(self) -> None:
         if self.displaying is True:
-            self.text_edit = MdTextEdit(main=self.main, parent=self, editable=self.editable)
+            self.text_edit = MdTextEdit(
+                main=self.main, parent=self, editable=self.editable
+            )
         else:
-            self.text_edit = RawTextEdit(main=self.main, parent=self, editable=self.editable)
+            self.text_edit = RawTextEdit(
+                main=self.main, parent=self, editable=self.editable
+            )
         #
         # exp. didn't realize this was here. was functional?
         #
-        #self.text_edit.setReadOnly(self.editable == EditStates.UNEDITABLE)
+        # self.text_edit.setReadOnly(self.editable == EditStates.UNEDITABLE)
         self.content_view = self.text_edit
         #
         # remove widget
@@ -120,7 +117,7 @@ class MdViewer(QWidget):
         i = self.main.content.tab_widget.currentIndex()
         name = self.main.content.tab_widget.tabText(i)
         name = name.replace("+", "")
-        self.main.content.tab_widget.setTabText(i, name )
+        self.main.content.tab_widget.setTabText(i, name)
 
     def desaved(self) -> bool:
         if self.saved is True:
@@ -129,18 +126,17 @@ class MdViewer(QWidget):
             i = self.main.content.tab_widget.currentIndex()
             name = self.main.content.tab_widget.tabText(i)
             name = name.replace("+ ", "")
-            self.main.content.tab_widget.setTabText(i, f"+ {name}" )
+            self.main.content.tab_widget.setTabText(i, f"+ {name}")
             self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
             self.saved = False
-
 
     #
     # do we need this here?
     #
-    def open_file(self, *, path:str, data:str) -> None:
+    def open_file(self, *, path: str, data: str) -> None:
         self.path = path
         info = QFileInfo(path)
-        if not info.suffix() in ["md", "txt", "html", "log"]:
+        if info.suffix() not in ["md", "txt", "html", "log"]:
             self.text_edit.hide()
             return
         self.text_edit.clear()
@@ -186,7 +182,7 @@ class MdViewer(QWidget):
         self.text_edit.hide()
         self.path = None
 
-# =============================
+    # =============================
 
     def on_save_as(self, switch_local=False) -> None:
         if self.editable == EditStates.UNEDITABLE:
@@ -197,10 +193,10 @@ class MdViewer(QWidget):
 
         name, ok = meut.input(title="Save As", msg="Where should the new file live? ")
         if ok and name:
-            path = fiut.deconflicted_path( thepath, name )
+            path = fiut.deconflicted_path(thepath, name)
             self._save(path=path)
 
-    def _save(self, path:str) -> None:
+    def _save(self, path: str) -> None:
         info = QFileInfo(self.path)
         txt = None
         if info.suffix() == "txt":
@@ -215,7 +211,7 @@ class MdViewer(QWidget):
             else:
                 txt = self.text_edit.toPlainText()
         elif info.suffix() == "html":
-            ... # error. html is not editable. if fix!
+            ...  # error. html is not editable. if fix!
         with DataFileWriter(path=path) as writer:
             writer.write(txt)
         self.main.statusBar().showMessage(f"  Saved to: {path}")
@@ -251,7 +247,7 @@ class MdViewer(QWidget):
         else:
             print(f"md_viewer: cannot toggle {info}")
 
-    def _make_paragraphs(self, txt:str) -> str:
+    def _make_paragraphs(self, txt: str) -> str:
         ss = txt.split("\n")
         ntxt = []
         last = False
@@ -267,4 +263,3 @@ class MdViewer(QWidget):
                 ntxt.append(s)
                 last = False
         return "\n".join(ntxt)
-

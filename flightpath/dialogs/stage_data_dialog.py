@@ -1,20 +1,19 @@
 import traceback
-from PySide6.QtWidgets import ( # pylint: disable=E0611
-        QWidget,
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QLabel,
-        QDialog,
-        QLineEdit,
-        QFormLayout,
-        QScrollArea,
-        QCheckBox,
-        QSizePolicy
+from PySide6.QtWidgets import (  # pylint: disable=E0611
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QDialog,
+    QLineEdit,
+    QFormLayout,
+    QScrollArea,
+    QCheckBox,
+    QSizePolicy,
 )
-from PySide6.QtCore import Qt, Slot #pylint: disable=E0611
+from PySide6.QtCore import Qt, Slot  # pylint: disable=E0611
 
-from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 from csvpath.util.path_util import PathUtility as pathu
 
@@ -24,9 +23,9 @@ from flightpath.util.help_finder import HelpFinder
 from flightpath.util.message_utility import MessageUtility as meut
 
 
-class StageDataDialog(QDialog): # pylint: disable=R0902
-    """ loads source data files as named-files. the resulting
-        named-file is visiable in the top right-hand window """
+class StageDataDialog(QDialog):  # pylint: disable=R0902
+    """loads source data files as named-files. the resulting
+    named-file is visiable in the top right-hand window"""
 
     SET_TO_FILES_NAME = "  ... Set file's name ..."
 
@@ -35,7 +34,7 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         self.sidebar = parent
         self.main = parent.main
         self.setWindowTitle("Stage source data files")
-        #self.setAttribute(Qt.WA_DeleteOnClose)
+        # self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.path = path
         self.errors = None
@@ -47,7 +46,6 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
 
         self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.NonModal)
-
 
         self.setFixedWidth(720)
 
@@ -73,12 +71,11 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.named_file_name_ctl,
-            on_help=self.on_help_named_file
+            on_help=self.on_help_named_file,
         )
         box.setFixedHeight(30)
 
         form_layout.addRow("Named-file name: ", box)
-
 
         self.separate_ctl = QCheckBox("Yes")
         self.separate_ctl.setChecked(True)
@@ -97,11 +94,14 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         else:
             form_layout.addRow("Register files within: ", self.area)
 
-
         #
         # add a help icon for templates
         #
-        box = HelpIconPackager.add_help(main=self.sidebar.main, widget=self.template_ctl, on_help=self.on_help_template)
+        box = HelpIconPackager.add_help(
+            main=self.sidebar.main,
+            widget=self.template_ctl,
+            on_help=self.on_help_template,
+        )
         box.setFixedHeight(30)
         form_layout.addRow("Template (used, not stored):", box)
 
@@ -124,7 +124,6 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         buttons.setLayout(buttons_layout)
         main_layout.addWidget(buttons)
         self._csvpaths = None
-
 
     def _check_for_template(self) -> None:
         n = self.named_file_name_ctl.text()
@@ -155,7 +154,6 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
                                                         background-color:#fff;
                                                         font-style:plain}""")
             self.named_file_name_ctl.setText("")
-
 
     def on_help_named_file(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("stage_data/named_file.md")
@@ -211,7 +209,7 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
             p.setStyleSheet("QLabel {color:#885522;}")
             p.adjustSize()
             layout.addWidget(p)
-            if i < len(parts)-1:
+            if i < len(parts) - 1:
                 s = QLabel()
                 s.setText("/")
                 s.adjustSize()
@@ -219,11 +217,12 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
 
         self.area.setWidget(content_widget)
 
-
     @Slot(str)
-    def _source_path_click(self, text:str) -> None:
+    def _source_path_click(self, text: str) -> None:
         if self.template_ctl.text().endswith(":filename"):
-            meut.message(msg="Filename must be the last component of the path", title="Complete")
+            meut.message(
+                msg="Filename must be the last component of the path", title="Complete"
+            )
             return
         cursor_pos = self.template_ctl.cursorPosition()
         parts = pathu.parts(self.path)
@@ -238,7 +237,7 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
         top = t[0:cursor_pos]
         middle = ""
         bottom = t[cursor_pos:]
-        if i == len(parts) -1:
+        if i == len(parts) - 1:
             if top != "" and not top.endswith("/"):
                 middle = "/"
             middle = f"{middle}:filename"
@@ -248,13 +247,13 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
                 bottom = f"/{bottom}"
         nt = f"{top}{middle}{bottom}"
         nt = nt.lstrip("/")
-        self.template_ctl.setText( nt )
+        self.template_ctl.setText(nt)
         #
         # update the t_lab with what the path will be
         #
         self._update_actual_path(nt)
 
-    def _update_actual_path(self, gen_path:str) -> None:
+    def _update_actual_path(self, gen_path: str) -> None:
         if gen_path is None:
             gen_path = self.template_ctl.text()
         parts = pathu.parts(self.path)
@@ -262,11 +261,11 @@ class StageDataDialog(QDialog): # pylint: disable=R0902
             parts.remove("")
         for i, p in enumerate(parts):
             gen_path = gen_path.replace(f":{i}", p)
-        gen_path = gen_path.replace(":filename", parts[len(parts)-1])
+        gen_path = gen_path.replace(":filename", parts[len(parts) - 1])
         gen_path = gen_path.lstrip("/")
         self.t_lab.setText(gen_path)
         self.t_lab.adjustSize()
 
     def show_dialog(self) -> None:
         self.exec()
-        #self.show()
+        # self.show()

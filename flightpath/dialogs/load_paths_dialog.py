@@ -1,25 +1,28 @@
-from PySide6.QtWidgets import ( # pylint: disable=E0611
-        QWidget,
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QLabel,
-        QDialog,
-        QLineEdit,
-        QFormLayout,
-        QScrollArea,
+from PySide6.QtWidgets import (  # pylint: disable=E0611
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QDialog,
+    QLineEdit,
+    QFormLayout,
+    QScrollArea,
 )
-from PySide6.QtCore import Qt, QFileInfo # pylint: disable=E0611
+from PySide6.QtCore import Qt, QFileInfo  # pylint: disable=E0611
 
-from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 
-class LoadPathsDialog(QDialog):
 
-    def __init__(self, *, path:str, parent:"Sidebar", loader:"CsvpathLoader"):
+class LoadPathsDialog(QDialog):
+    #
+    # parent is a Sidebar
+    # loader is a CsvpathLoader
+    #
+    def __init__(self, *, path: str, parent, loader):
         super().__init__(None)
         self.sidebar = parent
         self.main = parent.main
@@ -81,7 +84,7 @@ class LoadPathsDialog(QDialog):
             box = HelpIconPackager.add_help(
                 main=self.sidebar.main,
                 widget=self.named_paths_name_ctl,
-                on_help=self.on_help_name
+                on_help=self.on_help_name,
             )
             form_layout.addRow(clabel, box)
             self.named_paths_name_ctl.textChanged.connect(self._name_check)
@@ -95,12 +98,15 @@ class LoadPathsDialog(QDialog):
 
         tlabel = QLabel()
         tlabel.setText("Default template:")
-        box = HelpIconPackager.add_help(main=self.sidebar.main, widget=self.template_ctl, on_help=self.on_help_template)
+        box = HelpIconPackager.add_help(
+            main=self.sidebar.main,
+            widget=self.template_ctl,
+            on_help=self.on_help_template,
+        )
         if not self.json:
             form_layout.addRow(tlabel, box)
 
         self.named_paths_name_ctl.textChanged.connect(self._check_for_template)
-
 
         self.cancel_button = QPushButton()
         self.cancel_button.setText("Cancel")
@@ -130,7 +136,6 @@ class LoadPathsDialog(QDialog):
         buttons.setLayout(buttons_layout)
         main_layout.addWidget(buttons)
 
-
     def _check_for_template(self) -> None:
         n = self.named_paths_name_ctl.text()
         try:
@@ -143,8 +148,6 @@ class LoadPathsDialog(QDialog):
         except Exception as ex:
             print(f"{ex}")
             self.template_ctl.setText("")
-
-
 
     def _name_check(self) -> None:
         t = self.named_paths_name_ctl.text()
@@ -173,4 +176,3 @@ class LoadPathsDialog(QDialog):
         self.sidebar.main.helper.get_help_tab().setMarkdown(md)
         if not self.sidebar.main.helper.is_showing_help():
             self.sidebar.main.helper.on_click_help()
-

@@ -1,13 +1,7 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QComboBox,
-    QLabel
-)
+from PySide6.QtWidgets import QLineEdit, QFormLayout, QLabel
 
-from csvpath.util.config import Config
 from .blank_form import BlankForm
+
 
 class ResultsForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -19,7 +13,9 @@ class ResultsForm(BlankForm):
 
         self.transfers = QLineEdit()
         layout.addRow("Transfers directory: ", self.transfers)
-        msg = QLabel("If using a non-local backend remember to update the configuration in integrations or env.")
+        msg = QLabel(
+            "If using a non-local backend remember to update the configuration in integrations or env."
+        )
         msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
         msg.setWordWrap(True)
         layout.addRow("", msg)
@@ -28,13 +24,12 @@ class ResultsForm(BlankForm):
         self._setup()
 
     def add_to_config(self, config) -> None:
-        config.add_to_config("results", "archive", self.archive.text() )
-        config.add_to_config("results", "transfers", self.transfers.text() )
+        config.add_to_config("results", "archive", self.archive.text())
+        config.add_to_config("results", "transfers", self.transfers.text())
 
     def _setup(self) -> None:
         self.archive.textChanged.connect(self.main.on_config_changed)
         self.transfers.textChanged.connect(self.main.on_config_changed)
-
 
     def populate(self):
         config = self.config
@@ -43,10 +38,9 @@ class ResultsForm(BlankForm):
         transfers = config.get(section="results", name="transfers")
         self.transfers.setText(transfers)
 
-
     @property
     def fields(self) -> list[str]:
-        return ["archive","transfers"]
+        return ["archive", "transfers"]
 
     @property
     def server_fields(self) -> list[str]:
@@ -59,5 +53,3 @@ class ResultsForm(BlankForm):
     @property
     def tabs(self) -> list[str]:
         return []
-
-

@@ -2,14 +2,8 @@
 # SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 from __future__ import annotations
 
-import json
-import sys
-from typing import Any
-from PySide6.QtCore import Qt
-
 
 class TreeItem:
-
     def __init__(self, parent: "TreeItem" = None):
         self._parent = parent
         self._key = ""
@@ -25,7 +19,6 @@ class TreeItem:
   value_type: {self.value_type},
   children: {len(self.children)},
   parent{self.parent}"""
-
 
     def appendChild(self, item: "TreeItem"):
         self._children.append(item)
@@ -106,5 +99,3 @@ class TreeItem:
             rootItem.value = value
             rootItem.value_type = type(value)
         return rootItem
-
-

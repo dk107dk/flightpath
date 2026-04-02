@@ -1,25 +1,21 @@
-from PySide6.QtWidgets import ( # pylint: disable=E0611
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QDialog,
-        QLineEdit,
-        QFormLayout,
-        QSizePolicy,
-        QGroupBox,
-        QWidget
+from PySide6.QtWidgets import (  # pylint: disable=E0611
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QDialog,
+    QLineEdit,
+    QFormLayout,
+    QGroupBox,
+    QWidget,
 )
-from PySide6.QtCore import Qt # pylint: disable=E0611
+from PySide6.QtCore import Qt  # pylint: disable=E0611
 
-from csvpath import CsvPaths
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
-from flightpath.util.tabs_utility import TabsUtility as taut
+
 
 class WebhooksDialog(QDialog):
-
-
     def __init__(self, *, main, name, parent):
         super().__init__(None)
         self.main = main
@@ -121,9 +117,7 @@ class WebhooksDialog(QDialog):
         self.buttons = QWidget()
         self.buttons.setLayout(buttons_layout)
         box = HelpIconPackager.add_help(
-            main=self.sidebar.main,
-            widget=self.buttons,
-            on_help=self.on_help_webhooks
+            main=self.sidebar.main, widget=self.buttons, on_help=self.on_help_webhooks
         )
         main_layout.addWidget(box)
 
@@ -156,10 +150,15 @@ class WebhooksDialog(QDialog):
         self.invalid_url.setText(c.invalid_url if c.invalid_url else "")
         self.error_url.setText(c.error_url if c.error_url else "")
         self.on_complete_all.setText(c.on_complete_all if c.on_complete_all else "")
-        self.on_complete_valid.setText(c.on_complete_invalid if c.on_complete_invalid else "")
-        self.on_complete_invalid.setText(c.on_complete_valid if c.on_complete_valid else "")
-        self.on_complete_error.setText(c.on_complete_error if c.on_complete_error else "")
-
+        self.on_complete_valid.setText(
+            c.on_complete_invalid if c.on_complete_invalid else ""
+        )
+        self.on_complete_invalid.setText(
+            c.on_complete_valid if c.on_complete_valid else ""
+        )
+        self.on_complete_error.setText(
+            c.on_complete_error if c.on_complete_error else ""
+        )
 
     def on_help_webhooks(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("webhooks/webhooks.md")
@@ -170,13 +169,11 @@ class WebhooksDialog(QDialog):
         if not self.sidebar.main.helper.is_showing_help():
             self.sidebar.main.helper.on_click_help()
 
-
     def _edit(self) -> None:
         if self._any_and_no_stragglers():
             self.set_button.setEnabled(True)
         else:
             self.set_button.setEnabled(False)
-
 
     def _any_and_no_stragglers(self) -> bool:
         t = False
@@ -211,7 +208,5 @@ class WebhooksDialog(QDialog):
 
         return t
 
-
     def show_dialog(self) -> None:
         self.show()
-

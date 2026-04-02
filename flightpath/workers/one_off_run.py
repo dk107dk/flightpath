@@ -1,6 +1,4 @@
-import os
-from PySide6.QtCore import QObject, Signal, Slot, QRunnable
-from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QRunnable
 from csvpath import CsvPath
 from .run_worker_signals import RunWorkerSignals
 
@@ -11,12 +9,7 @@ from .run_worker_signals import RunWorkerSignals
 # the assumption is that it is for dev/test work before deploy to prod.
 #
 class OneOffRunWorker(QRunnable):
-
-    def __init__(self, *,
-        csvpath:CsvPath,
-        csvpath_str:str,
-        printer
-    ) -> None:
+    def __init__(self, *, csvpath: CsvPath, csvpath_str: str, printer) -> None:
         super().__init__()
         self.csvpath = csvpath
         self.csvpath_str = csvpath_str
@@ -30,11 +23,15 @@ class OneOffRunWorker(QRunnable):
 
         try:
             lines = path.collect()
-            self.signals.messages.emit(f"Test run complete. Matched {len(lines)} line{'s' if len(lines) != 1 else ''}.")
+            self.signals.messages.emit(
+                f"Test run complete. Matched {len(lines)} line{'s' if len(lines) != 1 else ''}."
+            )
         except Exception as ex:
             import traceback
-            print( traceback.format_exc())
-            self.csvpath.logger.error(ex)
-            self.signals.messages.emit(f"Test run failed")
-        self.signals.finished.emit( (self.csvpath, self.csvpath_str, lines, self.printer ) )
 
+            print(traceback.format_exc())
+            self.csvpath.logger.error(ex)
+            self.signals.messages.emit("Test run failed")
+        self.signals.finished.emit(
+            (self.csvpath, self.csvpath_str, lines, self.printer)
+        )

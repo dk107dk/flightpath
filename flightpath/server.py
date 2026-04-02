@@ -1,6 +1,3 @@
-import sys
-import os
-
 from flightpath.util.gate_guard import GateGuard
 from flightpath_server.main import Main as ServerMain
 from flightpath.hidden import Hidden
@@ -30,6 +27,7 @@ def server_main():
         main = ServerMain()
         main.serve()
         return
+
 
 if __name__ == "__main__":
     server_main()

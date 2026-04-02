@@ -1,15 +1,12 @@
-
-from PySide6.QtCore import QObject, Signal, Slot, QRunnable
-from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QRunnable
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.nos import Nos
-from pathlib import Path
 
 from flightpath.editable import EditStates
 from .data_worker_signals import DataWorkerSignals
 
-class CsvpathFileWorker(QRunnable):
 
+class CsvpathFileWorker(QRunnable):
     def __init__(self, filepath, main, editable=EditStates.EDITABLE):
         super().__init__()
         self.main = main
@@ -35,11 +32,8 @@ class CsvpathFileWorker(QRunnable):
         #
         # try running/parsing w/a CsvPath to chk file is basically valid CsvPath Language?
         #
-        self.signals.messages.emit(f"Opened: {self.filepath}" )
+        self.signals.messages.emit(f"Opened: {self.filepath}")
         #
         # provide editable indicator
         #
         self.signals.finished.emit((self.filepath, data, self.editable))
-
-
-

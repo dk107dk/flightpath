@@ -1,7 +1,15 @@
 import os
 import json
 
-from PySide6.QtWidgets import QTabWidget, QPushButton, QStyle, QTabBar, QWidget, QMenu, QFileDialog, QTextEdit
+from PySide6.QtWidgets import (
+    QTabWidget,
+    QPushButton,
+    QStyle,
+    QTabBar,
+    QMenu,
+    QFileDialog,
+    QTextEdit,
+)
 from PySide6.QtGui import QIcon, QAction, QPageLayout, QPageSize
 from PySide6.QtPrintSupport import QPrinter
 from PySide6.QtCore import Slot, Qt, QMarginsF
@@ -13,7 +21,7 @@ from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.tabs_nonscrolling_tab_bar import NonScrollingTabBar
 from flightpath.util.tabs_utility import TabsUtility as taut
-from flightpath.util.json_utility import JsonUtility as jsut
+
 
 class ClosingTabs(QTabWidget):
     def __init__(self, main, *, parent=None):
@@ -49,9 +57,9 @@ class ClosingTabs(QTabWidget):
         # "Matches". but that would be a weird name and a subtle impact. can probably just
         # ignore so we don't have to check what tab bar we are in.
         #
-        if  t.objectName() in ["Code"]:
+        if t.objectName() in ["Code"]:
             return
-        if  t.objectName() in ["Why", "Help Content", "FileInfo"]:
+        if t.objectName() in ["Why", "Help Content", "FileInfo"]:
             menu = QMenu(self)
             save_sample = QAction("Save to PDF", self)
             menu.addAction(save_sample)
@@ -64,26 +72,27 @@ class ClosingTabs(QTabWidget):
         save_sample.triggered.connect(lambda: self.on_save_sample(index))
         menu.popup(self.mapToGlobal(pos))
 
-    def on_save_pdf(self, index:int, landscape=False) -> None:
+    def on_save_pdf(self, index: int, landscape=False) -> None:
         t = self.widget(index)
         ton = t.objectName()
         if ton == "FileInfo":
             landscape = True
         path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Export PDF",
-            "",
-            "PDF Files (*.pdf);;All Files (*)"
+            self, "Export PDF", "", "PDF Files (*.pdf);;All Files (*)"
         )
         if path:
-            if not path.lower().endswith('.pdf'):
-                path += '.pdf'
+            if not path.lower().endswith(".pdf"):
+                path += ".pdf"
             printer = QPrinter(QPrinter.HighResolution)
             printer.setOutputFormat(QPrinter.PdfFormat)
 
             margins = QMarginsF(0, 0, 0, 0)
 
-            orientation = QPageLayout.Orientation.Landscape if landscape is True else QPageLayout.Orientation.Portrait
+            orientation = (
+                QPageLayout.Orientation.Landscape
+                if landscape is True
+                else QPageLayout.Orientation.Portrait
+            )
             layout = QPageLayout(QPageSize(QPageSize.A4), orientation, margins)
             layout.setMode(QPageLayout.FullPageMode)
 
@@ -101,8 +110,7 @@ class ClosingTabs(QTabWidget):
 
             document.print_(printer)
 
-
-    def on_save_sample(self, index:int) -> None:
+    def on_save_sample(self, index: int) -> None:
         if index == -1:
             return
         path = self.main.selected_file_path
@@ -115,46 +123,45 @@ class ClosingTabs(QTabWidget):
             return
         if ton.startswith("Printouts"):
             ton = f"{ton}.txt"
-            l = t.layout()
-            w = l.itemAt(0).widget()
+            layout = t.layout()
+            w = layout.itemAt(0).widget()
             txt = w.toPlainText()
             self.main.save_sample(path=path, name=ton, data=txt)
         elif ton == "Log":
-            l = t.layout()
-            w = l.itemAt(0).widget()
+            layout = t.layout()
+            w = layout.itemAt(0).widget()
             txt = w.toPlainText()
             self.main.save_sample(path=path, name="run.log", data=txt)
         elif ton in ["Errors", "Variables"]:
-            l = t.layout()
-            w = l.itemAt(0).widget()
+            layout = t.layout()
+            w = layout.itemAt(0).widget()
             #
             # exp
             #
             j = w.model.to_json()
             txt = json.dumps(j)
-            #txt = w.toPlainText()
+            # txt = w.toPlainText()
             self.main.save_sample(path=path, name=f"{ton}.json", data=txt)
         elif ton == "Matches":
-            l = t.layout()
-            w = l.itemAt(0).widget()
+            layout = t.layout()
+            w = layout.itemAt(0).widget()
             m = w.model()
             data = m.get_data()
             self.main.save_sample(path=path, name="sample.csv", data=data)
         elif isinstance(t, QTextEdit):
-            print(f"found a qutext ed")
+            print("found a qutext ed")
             txt = t.toMarkdown()
             print(f"md: txt: {txt}")
             self.main.save_sample(path=path, name=ton, data=txt)
-            print(f"done saving")
+            print("done saving")
         else:
-            l = t.layout()
-            w = l.itemAt(0).widget()
+            layout = t.layout()
+            w = layout.itemAt(0).widget()
             txt = w.toPlainText()
             self.main.save_sample(path=path, name=ton, data=txt)
 
-
     @Slot(str)
-    def close_tab(self, name:str) -> bool:
+    def close_tab(self, name: str) -> bool:
         #
         # we find tabs by name because the indexes change
         # using our own tab close icon made the changing
@@ -167,7 +174,7 @@ class ClosingTabs(QTabWidget):
         #
         if t is None:
             raise ValueError(f"Tab named {name} cannot be None")
-        if self.parent and hasattr( self.parent, "do_i_close"):
+        if self.parent and hasattr(self.parent, "do_i_close"):
             if not self.parent.do_i_close(t[0]):
                 return False
         elif not self.main.content.do_i_close(t[0]):
@@ -185,7 +192,7 @@ class ClosingTabs(QTabWidget):
             return True
         return False
 
-    def close_tab_at(self, index:int) -> bool:
+    def close_tab_at(self, index: int) -> bool:
         #
         # this is expected to be called where needed, e.g. content's
         # close all, but not connected for UI callbacks. see the comment
@@ -220,7 +227,6 @@ class ClosingTabs(QTabWidget):
             self.parent.close_help()
         return True
 
-
     def has_csvpath_tabs(self) -> bool:
         return taut.has_type(self, CsvpathViewer)
 
@@ -233,7 +239,9 @@ class ClosingTabs(QTabWidget):
     def addTab(self, widget, title):
         index = super().addTab(widget, title)
         close_button = QPushButton()
-        close_button.setIcon(QIcon(self.style().standardIcon(QStyle.SP_TitleBarCloseButton)))
+        close_button.setIcon(
+            QIcon(self.style().standardIcon(QStyle.SP_TitleBarCloseButton))
+        )
         close_button.setStyleSheet("border: none;")
         close_button.clicked.connect(lambda: self.close_tab(widget.objectName()))
         self.tabBar().setTabButton(index, QTabBar.ButtonPosition.LeftSide, close_button)
@@ -250,4 +258,3 @@ class ClosingTabs(QTabWidget):
                     self.main.content.toolbar.enable()
                 else:
                     self.main.content.toolbar.disable()
-

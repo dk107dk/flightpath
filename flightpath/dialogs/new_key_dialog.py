@@ -1,26 +1,20 @@
 import httpx
-from PySide6.QtWidgets import ( # pylint: disable=E0611
-        QWidget,
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QLabel,
-        QDialog,
-        QLineEdit,
-        QFormLayout,
-        QScrollArea,
+from PySide6.QtWidgets import (  # pylint: disable=E0611
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QDialog,
+    QLineEdit,
+    QFormLayout,
 )
-from PySide6.QtCore import Qt, QFileInfo # pylint: disable=E0611
+from PySide6.QtCore import Qt  # pylint: disable=E0611
 
-from csvpath import CsvPaths
-from csvpath.util.nos import Nos
 
-from flightpath.widgets.help.plus_help import HelpIconPackager
-from flightpath.util.help_finder import HelpFinder
 from flightpath.util.message_utility import MessageUtility as meut
 
-class NewKeyDialog(QDialog):
 
+class NewKeyDialog(QDialog):
     def __init__(self, parent):
         super().__init__(None)
         self.parent = parent
@@ -66,15 +60,23 @@ class NewKeyDialog(QDialog):
         #
         # send request to server
         #
-        _ = [self.key_owner.text().strip(), self.key_owner_contact.text().strip(), self.key_name.text().strip()]
+        _ = [
+            self.key_owner.text().strip(),
+            self.key_owner_contact.text().strip(),
+            self.key_name.text().strip(),
+        ]
         if None in _ or "" in _:
-            meut.warning(parent=self, msg="You must provide a key name and an owner name and contact", title="Required fields")
+            meut.warning(
+                parent=self,
+                msg="You must provide a key name and an owner name and contact",
+                title="Required fields",
+            )
             return
 
         key_data = {
             "key_name": self.key_name.text(),
             "key_owner_name": self.key_owner.text(),
-            "key_owner_contact": self.key_owner_contact.text()
+            "key_owner_contact": self.key_owner_contact.text(),
         }
         with httpx.Client() as client:
             msg = None
@@ -95,11 +97,14 @@ class NewKeyDialog(QDialog):
                 else:
                     msg = response.json().get("detail")
                     msg = f"Cannot create a key. Server response: {response.status_code}: {msg}"
-                    meut.warning(parent=self, title="Cannot create new API key", msg=msg)
+                    meut.warning(
+                        parent=self, title="Cannot create new API key", msg=msg
+                    )
                     self.reject()
                     return
             except Exception as ex:
                 import traceback
+
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 print(msg)
@@ -108,6 +113,9 @@ class NewKeyDialog(QDialog):
         #
         # use meut to show the key 1 and only 1 time
         #
-        meut.input(msg="Copy this key. It will not be shown again", title="API key created", text=key)
+        meut.input(
+            msg="Copy this key. It will not be shown again",
+            title="API key created",
+            text=key,
+        )
         self.accept()
-

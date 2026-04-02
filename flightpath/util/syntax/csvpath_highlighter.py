@@ -1,8 +1,8 @@
 import re
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QTextCharFormat, QFont, QSyntaxHighlighter
-from PySide6.QtWidgets import QApplication, QMainWindow, QTextEdit, QVBoxLayout, QWidget
 import darkdetect
+
+
 #
 # this class is all claude. take this comment out if/when we work on it.
 #
@@ -15,69 +15,65 @@ class CsvPathSyntaxHighlighter(QSyntaxHighlighter):
 
         # Define text formats for different syntax elements
         self.colors = {
-            'comment': QColor(128, 128, 128),
-            'string':QColor(163, 21, 21),
-            'regex': QColor(196, 26, 22),
-            'header': QColor(25, 23, 124),
-            'none': QColor(25, 23, 124),
-            'variable': QColor(9, 134, 88),
-            'bool': QColor(9, 134, 88),
-            'reference': QColor(136, 19, 145),
-            'function': QColor(0, 0, 255),
-            'number': QColor(0, 153, 153),
-            'operator': QColor(255, 0, 0),
-            'bracket': QColor(0, 0, 0),
-            'punctuation': QColor(0, 0, 0)
+            "comment": QColor(128, 128, 128),
+            "string": QColor(163, 21, 21),
+            "regex": QColor(196, 26, 22),
+            "header": QColor(25, 23, 124),
+            "none": QColor(25, 23, 124),
+            "variable": QColor(9, 134, 88),
+            "bool": QColor(9, 134, 88),
+            "reference": QColor(136, 19, 145),
+            "function": QColor(0, 0, 255),
+            "number": QColor(0, 153, 153),
+            "operator": QColor(255, 0, 0),
+            "bracket": QColor(0, 0, 0),
+            "punctuation": QColor(0, 0, 0),
         }
 
         self.dark_colors = {
-            'comment': QColor(128, 128, 128),
-            'string': QColor(163, 121, 121),
-            'regex': QColor(196, 126, 122),
-            'header': QColor(125, 183, 124),
-            'none': QColor(125, 183, 124),
-            'variable': QColor(9, 134, 88),
-            'bool': QColor(9, 134, 88),
-            'reference': QColor(136, 119, 145),
-            'function': QColor(100, 200, 255),
-            'number': QColor(0, 153, 153),
-            'operator': QColor(255, 100, 80),
-            'bracket': QColor(110, 110, 110),
-            'punctuation': QColor(220, 220, 220)
+            "comment": QColor(128, 128, 128),
+            "string": QColor(163, 121, 121),
+            "regex": QColor(196, 126, 122),
+            "header": QColor(125, 183, 124),
+            "none": QColor(125, 183, 124),
+            "variable": QColor(9, 134, 88),
+            "bool": QColor(9, 134, 88),
+            "reference": QColor(136, 119, 145),
+            "function": QColor(100, 200, 255),
+            "number": QColor(0, 153, 153),
+            "operator": QColor(255, 100, 80),
+            "bracket": QColor(110, 110, 110),
+            "punctuation": QColor(220, 220, 220),
         }
 
-
-
         self._formats = {
-            'comment': self._create_format(QColor(128, 128, 128), italic=True),
-            'string': self._create_format(QColor(163, 21, 21)),
-            'regex': self._create_format(QColor(196, 26, 22)),
-            'header': self._create_format(QColor(25, 23, 124), bold=True),
-            'variable': self._create_format(QColor(9, 134, 88), bold=True),
-            'reference': self._create_format(QColor(136, 19, 145), bold=True),
-            'function': self._create_format(QColor(0, 0, 255)),
-            'number': self._create_format(QColor(0, 153, 153)),
-            'operator': self._create_format(QColor(255, 0, 0), bold=True),
-            'bracket': self._create_format(QColor(0, 0, 0), bold=True),
-            'punctuation': self._create_format(QColor(0, 0, 0))
+            "comment": self._create_format(QColor(128, 128, 128), italic=True),
+            "string": self._create_format(QColor(163, 21, 21)),
+            "regex": self._create_format(QColor(196, 26, 22)),
+            "header": self._create_format(QColor(25, 23, 124), bold=True),
+            "variable": self._create_format(QColor(9, 134, 88), bold=True),
+            "reference": self._create_format(QColor(136, 19, 145), bold=True),
+            "function": self._create_format(QColor(0, 0, 255)),
+            "number": self._create_format(QColor(0, 153, 153)),
+            "operator": self._create_format(QColor(255, 0, 0), bold=True),
+            "bracket": self._create_format(QColor(0, 0, 0), bold=True),
+            "punctuation": self._create_format(QColor(0, 0, 0)),
         }
 
         # Define text formats for different syntax elements
         self._formats_dark = {
-            'comment': self._create_format(QColor(128, 128, 128), italic=True),
-            'string': self._create_format(QColor(163, 121, 121)),
-            'regex': self._create_format(QColor(196, 126, 122)),
-            'header': self._create_format(QColor(125, 183, 124), bold=True),
-            'variable': self._create_format(QColor(9, 134, 88), bold=True),
-            'reference': self._create_format(QColor(136, 119, 145), bold=True),
-            'function': self._create_format(QColor(100, 200, 255)),
-            'number': self._create_format(QColor(0, 153, 153)),
-            'operator': self._create_format(QColor(255, 100, 80), bold=True),
-            'bracket': self._create_format(QColor(110, 110, 110), bold=True),
-            'punctuation': self._create_format(QColor(220, 220, 220))
+            "comment": self._create_format(QColor(128, 128, 128), italic=True),
+            "string": self._create_format(QColor(163, 121, 121)),
+            "regex": self._create_format(QColor(196, 126, 122)),
+            "header": self._create_format(QColor(125, 183, 124), bold=True),
+            "variable": self._create_format(QColor(9, 134, 88), bold=True),
+            "reference": self._create_format(QColor(136, 119, 145), bold=True),
+            "function": self._create_format(QColor(100, 200, 255)),
+            "number": self._create_format(QColor(0, 153, 153)),
+            "operator": self._create_format(QColor(255, 100, 80), bold=True),
+            "bracket": self._create_format(QColor(110, 110, 110), bold=True),
+            "punctuation": self._create_format(QColor(220, 220, 220)),
         }
-
-
 
         # Build highlighting rules based on the grammar
         self._build_rules()
@@ -102,77 +98,64 @@ class CsvPathSyntaxHighlighter(QSyntaxHighlighter):
         """Build the highlighting rules based on CsvPath grammar"""
 
         # Comments: ~...~
-        self.highlighting_rules.append((
-            re.compile(r'~[^~]*~'),
-            self.formats['comment']
-        ))
+        self.highlighting_rules.append(
+            (re.compile(r"~[^~]*~"), self.formats["comment"])
+        )
 
         # Strings: "..."
-        self.highlighting_rules.append((
-            re.compile(r'"[^"]*"'),
-            self.formats['string']
-        ))
+        self.highlighting_rules.append((re.compile(r'"[^"]*"'), self.formats["string"]))
 
         # Regular expressions: /.../ (but not division operators)
         # Look for / followed by regex content and closing /
-        self.highlighting_rules.append((
-            re.compile(r'/([^/\\]|\\.)*?/'),
-            self.formats['regex']
-        ))
+        self.highlighting_rules.append(
+            (re.compile(r"/([^/\\]|\\.)*?/"), self.formats["regex"])
+        )
 
         # Headers: #identifier or #"quoted identifier"
-        self.highlighting_rules.append((
-            re.compile(r'#"[a-zA-Z0-9 \._]+"'),
-            self.formats['header']
-        ))
-        self.highlighting_rules.append((
-            re.compile(r'#[a-zA-Z0-9\._]+'),
-            self.formats['header']
-        ))
+        self.highlighting_rules.append(
+            (re.compile(r'#"[a-zA-Z0-9 \._]+"'), self.formats["header"])
+        )
+        self.highlighting_rules.append(
+            (re.compile(r"#[a-zA-Z0-9\._]+"), self.formats["header"])
+        )
 
         # Variables: @identifier
-        self.highlighting_rules.append((
-            re.compile(r'@[a-zA-Z0-9\._]+'),
-            self.formats['variable']
-        ))
+        self.highlighting_rules.append(
+            (re.compile(r"@[a-zA-Z0-9\._]+"), self.formats["variable"])
+        )
 
         # References: $identifier
-        self.highlighting_rules.append((
-            re.compile(r'\$[a-zA-Z0-9\._]+'),
-            self.formats['reference']
-        ))
+        self.highlighting_rules.append(
+            (re.compile(r"\$[a-zA-Z0-9\._]+"), self.formats["reference"])
+        )
 
         # Numbers (signed)
-        self.highlighting_rules.append((
-            re.compile(r'[+-]?\d+(?:\.\d+)?'),
-            self.formats['number']
-        ))
+        self.highlighting_rules.append(
+            (re.compile(r"[+-]?\d+(?:\.\d+)?"), self.formats["number"])
+        )
 
         # Functions: identifier followed by parentheses
         # This is tricky because we need to distinguish from other identifiers
         # We'll look for word followed by optional whitespace and opening paren
-        self.highlighting_rules.append((
-            re.compile(r'\b[a-zA-Z][a-zA-Z0-9\._]*\s*(?=\()'),
-            self.formats['function']
-        ))
+        self.highlighting_rules.append(
+            (
+                re.compile(r"\b[a-zA-Z][a-zA-Z0-9\._]*\s*(?=\()"),
+                self.formats["function"],
+            )
+        )
 
         # Operators
-        self.highlighting_rules.append((
-            re.compile(r'->|==|='),
-            self.formats['operator']
-        ))
+        self.highlighting_rules.append(
+            (re.compile(r"->|==|="), self.formats["operator"])
+        )
 
         # Brackets and parentheses
-        self.highlighting_rules.append((
-            re.compile(r'[\[\]()]'),
-            self.formats['bracket']
-        ))
+        self.highlighting_rules.append(
+            (re.compile(r"[\[\]()]"), self.formats["bracket"])
+        )
 
         # Commas
-        self.highlighting_rules.append((
-            re.compile(r','),
-            self.formats['punctuation']
-        ))
+        self.highlighting_rules.append((re.compile(r","), self.formats["punctuation"]))
 
     def highlightBlock(self, text):
         """Apply syntax highlighting to a block of text"""
@@ -194,20 +177,17 @@ class CsvPathSyntaxHighlighter(QSyntaxHighlighter):
         # to use QSyntaxHighlighter's state management for proper multi-line handling
 
         # Find unclosed comment starts
-        comment_start = text.find('~')
+        comment_start = text.find("~")
         while comment_start >= 0:
             # Look for the closing ~
-            comment_end = text.find('~', comment_start + 1)
+            comment_end = text.find("~", comment_start + 1)
             if comment_end >= 0:
                 # Complete comment found
                 length = comment_end - comment_start + 1
-                self.setFormat(comment_start, length, self.formats['comment'])
-                comment_start = text.find('~', comment_end + 1)
+                self.setFormat(comment_start, length, self.formats["comment"])
+                comment_start = text.find("~", comment_end + 1)
             else:
                 # Unclosed comment - highlight to end of line
                 length = len(text) - comment_start
-                self.setFormat(comment_start, length, self.formats['comment'])
+                self.setFormat(comment_start, length, self.formats["comment"])
                 break
-
-
-

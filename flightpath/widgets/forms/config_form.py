@@ -1,16 +1,10 @@
 import os
 import json
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QLabel,
-    QComboBox
-)
+from PySide6.QtWidgets import QLineEdit, QFormLayout, QLabel, QComboBox
 
-from csvpath.util.config import Config
 from csvpath.util.nos import Nos
 from .blank_form import BlankForm
+
 
 class ConfigForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -27,8 +21,9 @@ class ConfigForm(BlankForm):
         layout.addRow("Variable substitution source: ", self.var_sub_source)
 
         msg = QLabel(
-"""The default is env, meaning use OS env vars; otherwise,
- a path to a JSON dict.""")
+            """The default is env, meaning use OS env vars; otherwise,
+ a path to a JSON dict."""
+        )
         msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
         layout.addRow("", msg)
 
@@ -44,20 +39,26 @@ class ConfigForm(BlankForm):
         path = self.config_dir_path.text()
         if path is None or path.strip() == "":
             path = f"config{os.sep}config.ini"
-        elif not path.endswith(f".ini"):
+        elif not path.endswith(".ini"):
             path = f"{path}{os.sep}config.ini"
-        self.config.add_to_config("config", "path", path )
-        self.config.add_to_config("config", "allow_var_sub", self.allow_var_sub.currentText() )
+        self.config.add_to_config("config", "path", path)
+        self.config.add_to_config(
+            "config", "allow_var_sub", self.allow_var_sub.currentText()
+        )
         path = self.var_sub_source.text()
         path = "env" if path is None or path.strip() == "" else path
         if path != "env":
-            path = ConfigForm.make_path(path=path, cwd=self.main.state.cwd, current_project=self.main.state.current_project)
+            path = ConfigForm.make_path(
+                path=path,
+                cwd=self.main.state.cwd,
+                current_project=self.main.state.current_project,
+            )
             path = self.assure_env_path(path)
-        self.config.add_to_config("config", "var_sub_source", path )
+        self.config.add_to_config("config", "var_sub_source", path)
         path = self.var_sub_source.setText(path)
 
     @classmethod
-    def make_path(self, *, path:str, cwd:str, current_project:str) -> str:
+    def make_path(self, *, path: str, cwd: str, current_project: str) -> str:
         if not path or path.strip() in ["", "env"]:
             return "env"
         if cwd is None:
@@ -70,7 +71,7 @@ class ConfigForm(BlankForm):
         proj = f"{current_project}{os.sep}"
         i = path.find(proj)
         if i >= 0:
-            path = path[i+len(proj):]
+            path = path[i + len(proj) :]
             if path.startswith(f"config{os.sep}"):
                 path = f"{cwd}{os.sep}{path}"
             else:
@@ -84,7 +85,7 @@ class ConfigForm(BlankForm):
             path = f"{cwd}{os.sep}config{os.sep}{path}"
         return path
 
-    def assure_env_path(self, path:str) -> str:
+    def assure_env_path(self, path: str) -> str:
         if path is None:
             path = f"config{os.sep}env.json"
         if path.endswith(f"{os.sep}config.ini"):
@@ -102,7 +103,9 @@ class ConfigForm(BlankForm):
 
     def populate(self):
         config = self.config
-        config_path = config.get(section="config", name="path", default="config/config.ini")
+        config_path = config.get(
+            section="config", name="path", default="config/config.ini"
+        )
         self.config_dir_path.setText(config_path)
 
         self.allow_var_sub.clear()
@@ -137,4 +140,3 @@ class ConfigForm(BlankForm):
     @property
     def tabs(self) -> list[str]:
         return []
-

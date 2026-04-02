@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import traceback
-from PySide6.QtGui import QIcon, QFont, QFontMetrics
+from PySide6.QtGui import QFontMetrics
 from PySide6.QtCore import QModelIndex, Qt, QAbstractItemModel, QSize
 from PySide6.QtWidgets import QStyle, QApplication
 
@@ -11,8 +11,9 @@ from .treeitem import TreeItem
 
 
 class TreeModel(QAbstractItemModel):
-
-    def __init__(self, *, headers: list, data:Nos, parent, title:str="", sidebar=None):
+    def __init__(
+        self, *, headers: list, data: Nos, parent, title: str = "", sidebar=None
+    ):
         super().__init__(parent)
         self.root_data = [title]
         self.setHeaderData(value=title)
@@ -21,19 +22,31 @@ class TreeModel(QAbstractItemModel):
         self.style = None
         self.sidebar = sidebar
 
-    def headerData(self, section: int, orientation: Qt.Orientation,
-                   role: int = Qt.ItemDataRole.DisplayRole):
-        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+    def headerData(
+        self,
+        section: int,
+        orientation: Qt.Orientation,
+        role: int = Qt.ItemDataRole.DisplayRole,
+    ):
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.DisplayRole
+        ):
             return self.root_data[0]
         return None
 
-    def setHeaderData(self, section: int=0, orientation=Qt.Orientation.Horizontal, value="",
-                      role=Qt.ItemDataRole.EditRole) -> bool:
+    def setHeaderData(
+        self,
+        section: int = 0,
+        orientation=Qt.Orientation.Horizontal,
+        value="",
+        role=Qt.ItemDataRole.EditRole,
+    ) -> bool:
         if role != Qt.ItemDataRole.EditRole or orientation != Qt.Orientation.Horizontal:
             return False
 
         self.root_data[0] = value
-        self.headerDataChanged.emit(orientation,0,0)
+        self.headerDataChanged.emit(orientation, 0, 0)
 
         return True
 
@@ -83,7 +96,7 @@ class TreeModel(QAbstractItemModel):
         name = os.path.basename(name)
         return name
 
-    def filePath(self, index:QModelIndex):
+    def filePath(self, index: QModelIndex):
         if not index.isValid():
             return None
         item: TreeItem = self.get_item(index)
@@ -119,7 +132,7 @@ class TreeModel(QAbstractItemModel):
             return QModelIndex()
 
     def parent(self, index: QModelIndex = QModelIndex()) -> QModelIndex:
-        #print("TreeModel.parent called")
+        # print("TreeModel.parent called")
         if not index.isValid():
             return QModelIndex()
         child_item: TreeItem = self.get_item(index)
@@ -145,14 +158,12 @@ class TreeModel(QAbstractItemModel):
         item: TreeItem = self.get_item(index)
         result: bool = item.set_data(index.column(), value)
         if result:
-            self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole])
+            self.dataChanged.emit(
+                index, index, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole]
+            )
         return result
 
     def setup_model_data(self, parent: TreeItem):
-        #
-        # what is the purpose of lst?
-        #
-        lst = parent.data(0).listdir()
         #
         # get the child_items in order to make it load its children
         #

@@ -1,31 +1,15 @@
-import sys
-import os
-from pathlib import Path
 import traceback
 
-from PySide6.QtWidgets import (
-    QPushButton,
-    QWidget,
-    QMenu,
-    QLabel,
-    QMessageBox,
-    QVBoxLayout,
-    QHBoxLayout,
-    QSizePolicy,
-    QApplication
-)
+from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout, QSizePolicy, QApplication
 
-from PySide6.QtGui import QPixmap, QIcon, QAction
-from PySide6.QtCore import Qt, QSize, QModelIndex
-from PySide6.QtWidgets import QFileSystemModel, QTreeView, QAbstractItemView, QSizePolicy, QHeaderView
+from PySide6.QtGui import QAction
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTreeView, QAbstractItemView, QHeaderView
 
 from csvpath.util.nos import Nos
 from csvpath.util.config import Config
-from csvpath.util.file_readers import DataFileReader
-from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.path_util import PathUtility as pathu
 
-from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
@@ -34,17 +18,15 @@ from flightpath.dialogs.files_template_dialog import FilesTemplateDialog
 
 
 from .sidebar_file_ref_maker import SidebarFileRefMaker
-from flightpath.util.help_finder import HelpFinder
 from flightpath.widgets.help.plus_help import HelpHeaderView
-from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
 
 from flightpath.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
 
-class SidebarNamedFiles(SidebarRightBase):
 
-    def __init__(self, *, main, role=1, config:Config):
+class SidebarNamedFiles(SidebarRightBase):
+    def __init__(self, *, main, role=1, config: Config):
         super().__init__()
         self.role = role
         self.setMinimumWidth(300)
@@ -61,7 +43,9 @@ class SidebarNamedFiles(SidebarRightBase):
             layout.setSpacing(0)
             layout.setContentsMargins(1, 1, 1, 1)
 
-            named_files_path = self.main.csvpath_config.get(section="inputs", name="files")
+            named_files_path = self.main.csvpath_config.get(
+                section="inputs", name="files"
+            )
             nos = Nos(named_files_path)
             try:
                 if not nos.dir_exists():
@@ -73,16 +57,26 @@ class SidebarNamedFiles(SidebarRightBase):
                 return
 
             self.view = QTreeView()
-            self.view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
+            self.view.setSelectionBehavior(
+                QAbstractItemView.SelectionBehavior.SelectItems
+            )
             self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            self.view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+            self.view.setHorizontalScrollMode(
+                QAbstractItemView.ScrollMode.ScrollPerPixel
+            )
             self.view.setWordWrap(False)
             self.view.setAnimated(False)
             self.view.setAllColumnsShowFocus(True)
             self.view.setAutoScroll(True)
             self.view.setIndentation(20)
             self.view.setColumnWidth(0, 250)
-            self.model = TreeModel(headers=["Staged files"], data=nos, parent=self, title="Staged named-files", sidebar=self)
+            self.model = TreeModel(
+                headers=["Staged files"],
+                data=nos,
+                parent=self,
+                title="Staged named-files",
+                sidebar=self,
+            )
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
             #
@@ -90,14 +84,20 @@ class SidebarNamedFiles(SidebarRightBase):
             #
             self.view.updateGeometries()
             layout.addWidget(self.view)
-            self.view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            self.view.setSizePolicy(
+                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            )
             self.view.setContextMenuPolicy(Qt.CustomContextMenu)
             self.view.customContextMenuRequested.connect(self._show_context_menu)
             self._setup_view_context_menu()
             #
             #
             #
-            self.view.setHeader(HelpHeaderView(self.view, on_help=self.main.helper.on_click_named_files_help))
+            self.view.setHeader(
+                HelpHeaderView(
+                    self.view, on_help=self.main.helper.on_click_named_files_help
+                )
+            )
             self.view.header().setSectionResizeMode(0, QHeaderView.Stretch)
             self.view.header().setFixedHeight(24)
             self.view.header().setStyleSheet("QHeaderView {font-size:13px}")
@@ -110,7 +110,10 @@ class SidebarNamedFiles(SidebarRightBase):
         except Exception as e:
             print(traceback.format_exc())
             print(f"error in named files: {type(e)}: {e}")
-            meut.message(title=f"{type(e)} error loading named-files", msg=f"Named-files error: {e}")
+            meut.message(
+                title=f"{type(e)} error loading named-files",
+                msg=f"Named-files error: {e}",
+            )
 
     #
     # moved from main
@@ -120,9 +123,13 @@ class SidebarNamedFiles(SidebarRightBase):
         nos = Nos(self.main.selected_file_path)
         if not nos.isfile():
             ...
-            #self._show_welcome_but_do_not_deselect()
+            # self._show_welcome_but_do_not_deselect()
         else:
-            ed = EditStates.EDITABLE if self.main.selected_file_path.endswith(".md") else EditStates.UNEDITABLE
+            ed = (
+                EditStates.EDITABLE
+                if self.main.selected_file_path.endswith(".md")
+                else EditStates.UNEDITABLE
+            )
             self.main.read_validate_and_display_file(editable=ed)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
@@ -202,7 +209,7 @@ class SidebarNamedFiles(SidebarRightBase):
                 self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
-            if path and ( path.endswith("manifest.json") or path.endswith(".db") ):
+            if path and (path.endswith("manifest.json") or path.endswith(".db")):
                 self.copy_path_action.setVisible(False)
                 self.arrival_action.setVisible(False)
                 self.copy_action.setVisible(True)
@@ -219,11 +226,15 @@ class SidebarNamedFiles(SidebarRightBase):
             r = self.main.csvpath_config.get(section="inputs", name="files")
             if not path.startswith(r):
                 raise ValueError(f"Path to item {path} doesn't start with {r}")
-            path = path[len(r)+1:]
+            path = path[len(r) + 1 :]
             name = pathu.parts(path)[0]
-            self._template_dialog = FilesTemplateDialog(main=self.main, name=name, parent=self)
+            self._template_dialog = FilesTemplateDialog(
+                main=self.main, name=name, parent=self
+            )
             # When the dialog finishes, drop the reference
-            self._template_dialog.finished.connect(lambda _: setattr(self, "_template_dialog", None))
+            self._template_dialog.finished.connect(
+                lambda _: setattr(self, "_template_dialog", None)
+            )
             self._template_dialog.show_dialog()
 
     def _copy_path(self) -> None:
@@ -236,13 +247,17 @@ class SidebarNamedFiles(SidebarRightBase):
     def _new_run(self):
         maker = SidebarFileRefMaker(parent=self, main=self.main)
         ref = maker.new_run_ref()
-        self.new_run_dialog = NewRunDialog(parent=self, named_paths=None, named_file=ref)
+        self.new_run_dialog = NewRunDialog(
+            parent=self, named_paths=None, named_file=ref
+        )
         self.main.show_now_or_later(self.new_run_dialog)
 
     def _set_activation(self):
         maker = SidebarFileRefMaker(parent=self, main=self.main)
         name = maker.named_file_name()
-        self.activation_dialog = ActivationDialog(parent=self, main=self.main, named_file=name)
+        self.activation_dialog = ActivationDialog(
+            parent=self, main=self.main, named_file=name
+        )
         self.main.show_now_or_later(self.activation_dialog)
 
     def _find_data(self):
@@ -270,7 +285,7 @@ class SidebarNamedFiles(SidebarRightBase):
                     # TODO: this will have to change because we don't want to dismiss
                     # content that is being worked on from the working dir side
                     #
-                    #if is_selected:
+                    # if is_selected:
                     #    self.window().show_welcome_screen()
                     self.window().statusBar().showMessage("{path} deleted")
                     #
@@ -280,9 +295,5 @@ class SidebarNamedFiles(SidebarRightBase):
                     # and if we did that the refresh might slow down potentially a lot. so long-term,
                     # seems like we should capture what is registered and manually add it. no fun. :/
                     #
-                    #self.main._setup_central_widget()
+                    # self.main._setup_central_widget()
                     self.main.renew_sidebar_named_files()
-
-
-
-

@@ -1,12 +1,8 @@
-import os
-import json
-import logging
-from pathlib import Path
+from csvpath.util.file_info import FileInfo
+from csvpath.util.line_spooler import LineSpooler
 
 from .file_writers import DataFileWriter
-from .nos import Nos
 from .path_util import PathUtility as pathu
-
 
 
 class JsonLineSpooler(LineSpooler):
@@ -43,7 +39,7 @@ class JsonLineSpooler(LineSpooler):
             self.load_if()
         if not self.sink:
             msg = f"Cannot write to {self.path}"
-            raise InputException(msg)
+            raise ValueError(msg)
         self.sink.write(line)
         self._count += 1
 
@@ -63,7 +59,6 @@ class JsonLineSpooler(LineSpooler):
                 self.sink.close()
                 self.sink = None
                 self.closed = True
-        except Exception as ex:
+        except Exception:
             self.sink = None
             raise
-

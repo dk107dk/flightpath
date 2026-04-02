@@ -2,18 +2,15 @@ import sys
 import os
 import json
 from pathlib import Path
-from PySide6.QtWidgets import QMessageBox
 
 from csvpath import CsvPaths
 from csvpath.util.config import Config as CsvPath_Config
 from csvpath.util.nos import Nos
 
 from flightpath.util.examples_marshal import ExamplesMarshal
-from flightpath.util.os_utility import OsUtility as osut
-from flightpath.util.file_utility import FileUtility as fiut
+
 
 class State:
-
     DEFAULT_PROJECT_NAME = "Default"
     DEFAULT_PROJECTS_DIR = "FlightPath"
     STATE_FILE_NAME = ".flightpath"
@@ -78,11 +75,11 @@ class State:
                 self.data = data
             else:
                 ...
-                #print(f"state.project_home: cannot set project home in state")
+                # print(f"state.project_home: cannot set project home in state")
         return projs
 
     @projects_home.setter
-    def projects_home(self, home:str) -> None:
+    def projects_home(self, home: str) -> None:
         data = self.data
         if home is None and data.get("projects_home") is not None:
             del data["projects_home"]
@@ -102,11 +99,11 @@ class State:
         elif proj.strip() == "":
             proj = self.DEFAULT_PROJECT_NAME
         elif proj.find(os.sep) > -1:
-            proj = proj[0:proj.find(os.sep)]
+            proj = proj[0 : proj.find(os.sep)]
         return proj
 
     @current_project.setter
-    def current_project(self, proj:str) -> str:
+    def current_project(self, proj: str) -> str:
         data = self.data
         data["current_project"] = proj
         self.data = data
@@ -119,24 +116,29 @@ class State:
         if self._state_path is None:
             self._state_path = os.path.join(self.home, self.STATE_FILE_NAME)
             if not os.path.exists(self._state_path):
-                import getpass
-                current_user = getpass.getuser()
                 self._create_new_state_file(self._state_path)
         return self._state_path
 
-    def _create_new_state_file(self, statepath:str) -> None:
+    def _create_new_state_file(self, statepath: str) -> None:
         state = {}
         #
         # TODO: this is a brittle way to setup the config forms integrations.
         # hard to change & disconnected.
         #
         state["integrations"] = [
-            "ckan", "default", "openlineage", "scripts", "sftp", "slack", "sql", "sqlite"
+            "ckan",
+            "default",
+            "openlineage",
+            "scripts",
+            "sftp",
+            "slack",
+            "sql",
+            "sqlite",
         ]
         #
         # not doing this here. likely to cause problems.
         #
-        #state["projects_home"] = self.projects_home
+        # state["projects_home"] = self.projects_home
         #
         # default cwd has to be writable. the macos app package isn't so we
         # use the user's home dir.
@@ -145,7 +147,7 @@ class State:
             json.dump(state, file, indent=4)
 
     @state_path.setter
-    def state_path(self, state_path:str) -> None:
+    def state_path(self, state_path: str) -> None:
         self._state_path = state_path
 
     @property
@@ -171,11 +173,16 @@ class State:
 
     @property
     def data(self) -> dict:
+        nos = Nos(self.state_path)
+        if not nos.exists():
+            self.data = {}
         with open(self.state_path, mode="r", encoding="utf-8") as file:
             return json.load(file)
 
     @data.setter
-    def data(self, state:dict) -> None:
+    def data(self, state: dict) -> None:
+        if state is None:
+            raise ValueError("State cannot be None")
         with open(self.state_path, mode="w", encoding="utf-8") as file:
             json.dump(state, file, indent=4)
 
@@ -195,7 +202,7 @@ class State:
             except ValueError as e:
                 print(f"Error setting {k} to {v}: {e}")
 
-    def set_env(self, k:str, v:str) -> None:
+    def set_env(self, k: str, v: str) -> None:
         data = self.data
         env = data.get("env")
         if env is None:
@@ -275,18 +282,48 @@ class State:
             # we can assume main.py will create its own CsvPaths and config for
             # its long term use.
             #
-            config.set(section="config", name="path", value=os.path.join(cwd, "config", "config.ini") )
-            config.set(section="config", name="allow_var_sub", value="yes" )
-            config.set(section="config", name="var_sub_source", value=os.path.join(cwd, "config", "env.json") )
-            config.set(section="cache", name="path", value=os.path.join(cwd, "cache") )
-            config.set(section="logging", name="log_file", value=os.path.join(cwd, "logs", "csvpath.log") )
-            config.set(section="inputs", name="files", value=os.path.join(cwd, "inputs", "named_files") )
-            config.set(section="inputs", name="csvpaths", value=os.path.join(cwd, "inputs", "named_paths") )
-            config.set(section="results", name="archive", value=os.path.join(cwd, "archive") )
-            config.set(section="results", name="transfers", value=os.path.join(cwd, "transfers") )
-            config.set(section="sqlite", name="db", value=os.path.join(cwd, "archive", "csvpath.db") )
-            config.set(section="sql", name="connection_string", value="" )
-            fun = os.path.join(cwd, "config", "functions.imports" )
+            config.set(
+                section="config",
+                name="path",
+                value=os.path.join(cwd, "config", "config.ini"),
+            )
+            config.set(section="config", name="allow_var_sub", value="yes")
+            config.set(
+                section="config",
+                name="var_sub_source",
+                value=os.path.join(cwd, "config", "env.json"),
+            )
+            config.set(section="cache", name="path", value=os.path.join(cwd, "cache"))
+            config.set(
+                section="logging",
+                name="log_file",
+                value=os.path.join(cwd, "logs", "csvpath.log"),
+            )
+            config.set(
+                section="inputs",
+                name="files",
+                value=os.path.join(cwd, "inputs", "named_files"),
+            )
+            config.set(
+                section="inputs",
+                name="csvpaths",
+                value=os.path.join(cwd, "inputs", "named_paths"),
+            )
+            config.set(
+                section="results", name="archive", value=os.path.join(cwd, "archive")
+            )
+            config.set(
+                section="results",
+                name="transfers",
+                value=os.path.join(cwd, "transfers"),
+            )
+            config.set(
+                section="sqlite",
+                name="db",
+                value=os.path.join(cwd, "archive", "csvpath.db"),
+            )
+            config.set(section="sql", name="connection_string", value="")
+            fun = os.path.join(cwd, "config", "functions.imports")
             config.set(section="functions", name="imports", value=fun)
             if not os.path.exists(fun):
                 with open(fun, "w") as file:
@@ -307,7 +344,7 @@ class State:
             if not os.path.exists(r):
                 with open(r, "w") as file:
                     file.write(
-f"""# {pname} Project Docs
+                        f"""# {pname} Project Docs
 
 Add your docs for the {pname} project here.
 
@@ -315,8 +352,9 @@ Add your docs for the {pname} project here.
 """
                     )
 
-
-    def _change_function_path(self, *, old_config:CsvPath_Config=None, new_config:CsvPath_Config) -> None:
+    def _change_function_path(
+        self, *, old_config: CsvPath_Config = None, new_config: CsvPath_Config
+    ) -> None:
         if new_config is None:
             raise ValueError("New config cannot be None")
         if old_config:
@@ -330,7 +368,3 @@ Add your docs for the {pname} project here.
         if path != "":
             dirpath = os.path.dirname(path)
             sys.path.append(dirpath)
-
-
-
-

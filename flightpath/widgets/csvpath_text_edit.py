@@ -1,8 +1,6 @@
 import os
-from PySide6.QtWidgets import QPlainTextEdit, QStyle, QMenu
-from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut, QPixmap, QPainter, QIcon, QFont
-from PySide6.QtCore import Qt
-from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtWidgets import QPlainTextEdit, QMenu
+from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut
 
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
@@ -17,11 +15,9 @@ from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.syntax.span_utility import SpanUtility as sput
 from flightpath.util.key_utility import KeyUtility as keut
-from flightpath.util.os_utility import OsUtility as osut
+
 
 class CsvPathTextEdit(QPlainTextEdit):
-
-
     def __init__(self, *, main, parent=None, editable=EditStates.EDITABLE) -> None:
         super().__init__()
         self.main = main
@@ -69,7 +65,6 @@ class CsvPathTextEdit(QPlainTextEdit):
         explain_ctrl = QShortcut(QKeySequence("Shift+Ctrl+E"), self)
         explain_ctrl.activated.connect(self.on_explain)
 
-
         self.load_dialog = None
 
     @property
@@ -80,7 +75,7 @@ class CsvPathTextEdit(QPlainTextEdit):
             return True
 
     @saved.setter
-    def saved(self, s:bool) -> None:
+    def saved(self, s: bool) -> None:
         if self.parent and self.parent != self:
             self.parent.saved = s
         else:
@@ -103,7 +98,7 @@ class CsvPathTextEdit(QPlainTextEdit):
             name = self.main.content.tab_widget.tabText(i)
             name = name.replace("+", "")
             name = name.strip()
-            self.main.content.tab_widget.setTabText(i, f"+ {name}" )
+            self.main.content.tab_widget.setTabText(i, f"+ {name}")
             self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
             self.parent.saved = False
         return True
@@ -169,7 +164,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         #
         # separator and run
         #
-        #menu.addSeparator()
+        # menu.addSeparator()
         run_action = QAction("Run", self)
         run_action.triggered.connect(self.on_run)
         run_action.setShortcut(QKeySequence("Ctrl+r"))
@@ -228,7 +223,7 @@ class CsvPathTextEdit(QPlainTextEdit):
 
         explain_action = QAction("Explain", self)
         submenu.addAction(explain_action)
-        explain_action.triggered.connect(self.on_explain)
+        explain_action.triggered.connect(self.on_explain_mode)
 
         files_action = QAction("Files", self)
         submenu.addAction(files_action)
@@ -282,11 +277,13 @@ class CsvPathTextEdit(QPlainTextEdit):
         #
         del menu
 
-    def _insert_mode(self, m:str) -> None:
+    def _insert_mode(self, m: str) -> None:
         if not self.desaved():
             return
         position = self.textCursor().position()
-        self.setPlainText(sput.insert(text=self.toPlainText(), position=position, insert=m))
+        self.setPlainText(
+            sput.insert(text=self.toPlainText(), position=position, insert=m)
+        )
         self.desaved()
 
     def on_test_data(self) -> None:
@@ -301,35 +298,35 @@ class CsvPathTextEdit(QPlainTextEdit):
     def on_error(self) -> None:
         self._insert_mode("error-mode: full")
 
-    def on_explain(self) -> None:
+    def on_explain_mode(self) -> None:
         self._insert_mode("explain-mode:")
 
     def on_files(self) -> None:
         self._insert_mode("files-mode:")
 
     def on_logic(self) -> None:
-       self._insert_mode("logic-mode: AND")
+        self._insert_mode("logic-mode: AND")
 
     def on_print(self) -> None:
-       self._insert_mode("print-mode:")
+        self._insert_mode("print-mode:")
 
     def on_return(self) -> None:
-       self._insert_mode("return-mode: matches")
+        self._insert_mode("return-mode: matches")
 
     def on_run_mode(self) -> None:
-       self._insert_mode("run-mode:")
+        self._insert_mode("run-mode:")
 
     def on_source(self) -> None:
-       self._insert_mode("source-mode:")
+        self._insert_mode("source-mode:")
 
     def on_transfer(self) -> None:
-       self._insert_mode("transfer-mode:")
+        self._insert_mode("transfer-mode:")
 
     def on_unmatched(self) -> None:
-       self._insert_mode("unmatched-mode: no-keep")
+        self._insert_mode("unmatched-mode: no-keep")
 
     def on_validation(self) -> None:
-       self._insert_mode("validation-mode: print, no-raise")
+        self._insert_mode("validation-mode: print, no-raise")
 
     def on_generate_data(self) -> None:
         self.main.on_ai_gen_data()
@@ -367,7 +364,7 @@ class CsvPathTextEdit(QPlainTextEdit):
             ap = self.main.csvpath_config.archive_path
             ncp = self.main.csvpath_config.inputs_csvpaths_path
             if apath.startswith(ap) or apath.startswith(ncp):
-                switch_local=True
+                switch_local = True
         thepath = None
         if switch_local:
             index = self.main.sidebar.last_file_index
@@ -390,8 +387,8 @@ class CsvPathTextEdit(QPlainTextEdit):
         name, ok = meut.input(title="Save As", msg="Where should the new file live? ")
         if ok and name:
             text = self.toPlainText()
-            path = fiut.deconflicted_path( thepath, name )
-            with DataFileWriter( path=path ) as file:
+            path = fiut.deconflicted_path(thepath, name)
+            with DataFileWriter(path=path) as file:
                 file.write(text)
             #
             # does this need to change if switch_local?
@@ -402,7 +399,11 @@ class CsvPathTextEdit(QPlainTextEdit):
     def _copy_back_question(self, action="edit") -> None:
         if self.parent is None or self.parent == self:
             return
-        yes = meut.yesNo( parent=self, msg=f"You can't {action} here. Copy back to project?", title="Copy file to project?")
+        yes = meut.yesNo(
+            parent=self,
+            msg=f"You can't {action} here. Copy back to project?",
+            title="Copy file to project?",
+        )
         if yes is True:
             try:
                 name = self.parent.objectName()
@@ -411,8 +412,8 @@ class CsvPathTextEdit(QPlainTextEdit):
                 self.main.content.tab_widget.close_tab(name)
             except Exception:
                 import traceback
-                print(traceback.format_exc())
 
+                print(traceback.format_exc())
 
     def on_save(self) -> None:
         #
@@ -446,7 +447,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         cursor = self.textCursor()
         position = cursor.position()
         text = self.toPlainText()
-        text = self.find_csvpath_at_position( position, text )
+        text = self.find_csvpath_at_position(position, text)
         self.parent.run_one_csvpath(text, position=position)
 
     def on_append(self) -> None:
@@ -458,7 +459,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         self.setPlainText(text)
         self.desaved()
 
-    def find_csvpath_at_position(self, position:int, text:str) -> str:
+    def find_csvpath_at_position(self, position: int, text: str) -> str:
         #
         # split the text at the cursor into top and bottom
         # start = rfind marker in top or text[0]
@@ -470,32 +471,46 @@ class CsvPathTextEdit(QPlainTextEdit):
             # would this ever happen? error dialog?
             #
             return
-        if position > len(text)-1:
+        if position > len(text) - 1:
             #
             # would this ever happen? error dialog?
             #
             return
-        top = text[0:position+1]
+        top = text[0 : position + 1]
         bottom = text[position:]
         #
         # find markers if any
         #
-        start = top.rfind(PathsManager.MARKER)+len(PathsManager.MARKER) if top.rfind(PathsManager.MARKER) > -1 else 0
-        end = bottom.find(PathsManager.MARKER) if bottom.find(PathsManager.MARKER) > -1 else len(bottom)
+        start = (
+            top.rfind(PathsManager.MARKER) + len(PathsManager.MARKER)
+            if top.rfind(PathsManager.MARKER) > -1
+            else 0
+        )
+        end = (
+            bottom.find(PathsManager.MARKER)
+            if bottom.find(PathsManager.MARKER) > -1
+            else len(bottom)
+        )
 
-        top2 = top[start:len(top)-1]
+        top2 = top[start : len(top) - 1]
         bottom2 = bottom[0:end]
 
         text2 = f"{top2}{bottom2}"
         return text2
 
-    def add_to_external_comment_of_csvpath_at_position(self, *, position:int, addto:str) -> str:
+    def add_to_external_comment_of_csvpath_at_position(
+        self, *, position: int, addto: str
+    ) -> str:
         text = self.toPlainText()
-        text, d = self._add_to_external_comment_of_csvpath_at_position(text=text, position=position, addto=addto)
+        text, d = self._add_to_external_comment_of_csvpath_at_position(
+            text=text, position=position, addto=addto
+        )
         self.setPlainText(text)
 
     @classmethod
-    def _add_to_external_comment_of_csvpath_at_position(self, *, text:str, position:int, addto:str) -> tuple[str, dict]:
+    def _add_to_external_comment_of_csvpath_at_position(
+        self, *, text: str, position: int, addto: str
+    ) -> tuple[str, dict]:
         #
         # text: the whole file
         # position: where the cursor is, indicating which csvpath
@@ -509,9 +524,9 @@ class CsvPathTextEdit(QPlainTextEdit):
             raise ValueError(f"Index {position} out of string: {text}")
         #
         #                                                 V
-        #$[*][ yes()] ---- CSVPATH ---- ~ two fish ~ $[*][ yes()] ---- CSVPATH ---- ~ three bugs ~ $[*][ yes() ]
-        #|--------------------top-------------------------|----------bottom------------------------------------|
-        #|--------------over-----------|------head--------|-tail--|---------under------------------------------|
+        # $[*][ yes()] ---- CSVPATH ---- ~ two fish ~ $[*][ yes()] ---- CSVPATH ---- ~ three bugs ~ $[*][ yes() ]
+        # |--------------------top-------------------------|----------bottom------------------------------------|
+        # |--------------over-----------|------head--------|-tail--|---------under------------------------------|
         #                              |s|--comment-|-pre-|
         #                                /\
         #                               /m\
@@ -550,9 +565,9 @@ class CsvPathTextEdit(QPlainTextEdit):
         #
         if head.find("~") > -1:
             _ = head.find("~")
-            s = head[0:_+1]
-            comment = head[_+1:head.rfind("~")+1]
-            pre = head[head.rfind("~")+1:]
+            s = head[0 : _ + 1]
+            comment = head[_ + 1 : head.rfind("~") + 1]
+            pre = head[head.rfind("~") + 1 :]
         else:
             s = "~"
             comment = "~"
@@ -561,9 +576,14 @@ class CsvPathTextEdit(QPlainTextEdit):
         # build the new string and collect the dict for checking, if needed.
         #
         return (
-          f"{over}{s}{addto}{comment}{pre}{tail}{under}",
-          {"over":over, "s":s, "addto":addto, "comment":comment,"pre":pre, "tail":tail, "under":under}
+            f"{over}{s}{addto}{comment}{pre}{tail}{under}",
+            {
+                "over": over,
+                "s": s,
+                "addto": addto,
+                "comment": comment,
+                "pre": pre,
+                "tail": tail,
+                "under": under,
+            },
         )
-
-
-

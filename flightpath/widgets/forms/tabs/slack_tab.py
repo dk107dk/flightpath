@@ -1,9 +1,4 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QLabel
-)
+from PySide6.QtWidgets import QWidget, QLineEdit, QFormLayout
 
 
 class SlackTab(QWidget):
@@ -30,16 +25,11 @@ class SlackTab(QWidget):
     def server_fields_count(self) -> int:
         return len(self.server_fields)
 
-
     def add_to_config(self, config) -> None:
         webhook_url = self.webhook_url.text()
-        self.form.config.add_to_config(self.section, "webhook_url", webhook_url )
+        self.form.config.add_to_config(self.section, "webhook_url", webhook_url)
 
     def populate(self):
         config = self.form.config
         webhook_url = config.get(section=self.section, name="webhook_url", default="")
         self.webhook_url.setText(webhook_url)
-
-
-
-

@@ -1,24 +1,23 @@
-from PySide6.QtWidgets import ( # pylint: disable=E0611
-        QWidget,
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QLabel,
-        QDialog,
-        QLineEdit,
-        QFormLayout,
-        QComboBox,
-        QScrollArea,
+from PySide6.QtWidgets import (  # pylint: disable=E0611
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QDialog,
+    QLineEdit,
+    QComboBox,
 )
-from PySide6.QtCore import Qt # pylint: disable=E0611
+from PySide6.QtCore import Qt  # pylint: disable=E0611
 
 from csvpath import CsvPaths
-#from flightpath.widgets.help.plus_help import HelpIconPackager
-#from flightpath.util.help_finder import HelpFinder
+
+# from flightpath.widgets.help.plus_help import HelpIconPackager
+# from flightpath.util.help_finder import HelpFinder
 from flightpath.widgets.json_tree_model.json_tree_item import TreeItem
 
-class PickPathsDialog(QDialog):
 
+class PickPathsDialog(QDialog):
     def __init__(self, *, main, tree, parent_item):
         super().__init__(main)
         self.main = main
@@ -73,15 +72,19 @@ class PickPathsDialog(QDialog):
         self.show_dialog()
 
     def _add(self):
-        print(f"pick_paths_dialog: adding")
+        print("pick_paths_dialog: adding")
         named_paths_name = self.named_paths_name_ctl.text()
         existing = self.existing_group_ctl.currentText()
         if named_paths_name and named_paths_name.strip() == "" and existing == "...":
-            print(f"pick_paths_dialog: not adding")
+            print("pick_paths_dialog: not adding")
             self.close()
             return
 
-        named_paths_name = named_paths_name if (named_paths_name and named_paths_name.strip() != "") else existing
+        named_paths_name = (
+            named_paths_name
+            if (named_paths_name and named_paths_name.strip() != "")
+            else existing
+        )
         print(f"pick_paths_dialog: adding name: {named_paths_name}")
         self.tree.beginResetModel()
         item = TreeItem(self.parent)

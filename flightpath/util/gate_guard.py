@@ -2,7 +2,8 @@ import hashlib
 import os
 import argparse
 from .state import State
-from flightpath.util.file_utility import FileUtility as fiut
+
+
 #
 # if GateGuard matches a UUID in the state file (~/.flightpath) to a hashed version
 # of same we allow server mode. this is a not a security measure, obviously! it is
@@ -15,7 +16,7 @@ class GateGuard:
     #
     # ticket uuid is: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
     #
-    TICKET_REQUIRED = f"""
+    TICKET_REQUIRED = """
 You need a valid --server-mode ticket to use FlightPath Server. There is no
 charge for a ticket. Please email info@csvpath.org to get yours.
 
@@ -25,7 +26,6 @@ When you have a ticket enter it into your .flightpath configuration file.
 
 This requirement will be removed in a future release.
 """
-
 
     ART = """
 
@@ -107,17 +107,16 @@ This requirement will be removed in a future release.
         return False
 
     @classmethod
-    def has_ticket(cls) -> bool|None:
+    def has_ticket(cls) -> bool | None:
         parser = argparse.ArgumentParser(
-            description='FlightPath Server',
-            epilog=cls.TICKET_REQUIRED
+            description="FlightPath Server", epilog=cls.TICKET_REQUIRED
         )
         parser.add_argument(
-            '--server-mode',
-            '-s',
+            "--server-mode",
+            "-s",
             default=False,
-            action='store_true',
-            help='run FlightPath in headless Server Mode'
+            action="store_true",
+            help="run FlightPath in headless Server Mode",
         )
         args = parser.parse_args()
 
@@ -154,8 +153,6 @@ This requirement will be removed in a future release.
 
 """)
             import sys
+
             sys.exit(1)
         return ret
-
-
-

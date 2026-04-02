@@ -1,4 +1,3 @@
-import os
 from typing import Callable
 
 from PySide6.QtGui import QPixmap, QPainter, QIcon
@@ -10,10 +9,17 @@ from PySide6.QtCore import Qt
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.util.file_utility import FileUtility as fiut
 
-class IconPackager:
 
+class IconPackager:
     @classmethod
-    def add_svg_icon(cls, *, main, widget:QWidget, on_click:Callable|list[Callable], icon_path:str|list[str]) -> QWidget:
+    def add_svg_icon(
+        cls,
+        *,
+        main,
+        widget: QWidget,
+        on_click: Callable | list[Callable],
+        icon_path: str | list[str],
+    ) -> QWidget:
         #
         # if you pass in a list of icon path or callable both must
         # have the same number of elements in the list in the same
@@ -32,7 +38,7 @@ class IconPackager:
         box_layout = QHBoxLayout(box)
         box_layout.setContentsMargins(0, 0, 0, 0)
         box_layout.addWidget(widget, stretch=1)
-        #box_layout.addWidget(widget)
+        # box_layout.addWidget(widget)
 
         if not isinstance(on_click, list):
             on_click = [on_click]
@@ -49,17 +55,17 @@ class IconPackager:
             icon.setPixmap(pixmap)
             main.show_now_or_later(icon)
             box_layout.addWidget(icon, stretch=0)
-            #box_layout.addWidget(icon)
+            # box_layout.addWidget(icon)
             icon.icon_pixmap = pixmap
             icon.click_callback = on_click[i]
         return box
 
     @classmethod
-    def _make_pixmap(cls, path:str) -> QPixmap:
+    def _make_pixmap(cls, path: str) -> QPixmap:
         svg_renderer = QSvgRenderer(path)
         if not svg_renderer.isValid():
             print("Failed to load SVG file")
-        pixmap = QPixmap(16,16)
+        pixmap = QPixmap(16, 16)
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
         svg_renderer.render(painter)
@@ -67,7 +73,7 @@ class IconPackager:
         return pixmap
 
     @classmethod
-    def make_svg_icon(cls, icon_path:str) -> QWidget:
+    def make_svg_icon(cls, icon_path: str) -> QWidget:
         if icon_path is None:
             raise ValueError("Icon path cannot be None")
         path = fiut.make_app_path(icon_path)
@@ -76,7 +82,7 @@ class IconPackager:
         return icon
 
     @classmethod
-    def make_clickable_label(cls, parent, on_click, icon_path:str) -> ClickableLabel:
+    def make_clickable_label(cls, parent, on_click, icon_path: str) -> ClickableLabel:
         if icon_path is None:
             raise ValueError("Icon path cannot be None")
         if on_click is None:
@@ -86,14 +92,11 @@ class IconPackager:
         path = fiut.make_app_path(icon_path)
         pixmap = cls._make_pixmap(path)
         clk.setPixmap(pixmap)
-        if hasattr( parent, "show_now_or_later"):
+        if hasattr(parent, "show_now_or_later"):
             parent.show_now_or_later(clk)
         elif hasattr(parent, "main"):
             parent.main.show_now_or_later(clk)
         else:
             clk.show()
-        clk.clicked.connect( on_click )
+        clk.clicked.connect(on_click)
         return clk
-
-
-

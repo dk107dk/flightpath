@@ -1,12 +1,5 @@
 import os
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QCheckBox,
-    QPushButton,
-    QLabel
-)
+from PySide6.QtWidgets import QLineEdit, QFormLayout, QCheckBox, QPushButton
 
 from flightpath.util.generator_utility import GeneratorUtility as geut
 from flightpath.util.os_utility import OsUtility as osut
@@ -15,12 +8,13 @@ from flightpath.util.file_utility import FileUtility as fiut
 from csvpath.util.nos import Nos
 from .blank_form import BlankForm
 
+
 class LlmForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         layout = QFormLayout()
         self.model = QLineEdit()
-        layout.addRow(f"AI Model: ", self.model)
+        layout.addRow("AI Model: ", self.model)
 
         self.base = QLineEdit()
         layout.addRow("API base: ", self.base)
@@ -32,11 +26,9 @@ class LlmForm(BlankForm):
         self.checkbox.setChecked(True)
         layout.addRow("Use for all projects: ", self.checkbox)
 
-
         button = QPushButton("Open metadata dir")
         layout.addRow("", button)
         button.clicked.connect(self.on_click_open)
-
 
         self.setLayout(layout)
         self._setup()
@@ -59,8 +51,6 @@ class LlmForm(BlankForm):
             o = osut.file_system_open_cmd()
             os.system(f'{o} "{path}"')
 
-
-
     def _setup(self) -> None:
         self.model.textChanged.connect(self.main.on_config_changed)
         self.base.textChanged.connect(self.main.on_config_changed)
@@ -68,9 +58,9 @@ class LlmForm(BlankForm):
         self.checkbox.stateChanged.connect(self.main.on_config_changed)
 
     def add_to_config(self, config) -> None:
-        config.add_to_config("llm", "model", self.model.text().strip() )
-        config.add_to_config("llm", "api_base", self.base.text().strip() )
-        config.add_to_config("llm", "api_key", self.key.text().strip() )
+        config.add_to_config("llm", "model", self.model.text().strip())
+        config.add_to_config("llm", "api_base", self.base.text().strip())
+        config.add_to_config("llm", "api_key", self.key.text().strip())
         if self.checkbox.isChecked():
             data = self.main.state.data
             ai = data.get("llm")
@@ -105,7 +95,6 @@ class LlmForm(BlankForm):
             return False
 
         return True
-
 
     def populate(self):
         #
@@ -148,4 +137,3 @@ class LlmForm(BlankForm):
     @property
     def tabs(self) -> list[str]:
         return []
-

@@ -6,15 +6,13 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QCheckBox,
-    QHBoxLayout,
     QPlainTextEdit,
     QComboBox,
     QFormLayout,
-    QScrollArea
+    QScrollArea,
 )
 
 from csvpath.util.file_readers import DataFileReader
-from csvpath.util.nos import Nos
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.ai.activity_selector import ActivitySelector
@@ -22,6 +20,7 @@ from flightpath.util.help_finder import HelpFinder
 from flightpath.util.test_data_utility import TestDataUtility as tdut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.generator_utility import GeneratorUtility as geut
+
 
 class QueryFormWidget(QWidget):
     querySubmitted = Signal(dict)
@@ -89,13 +88,17 @@ class QueryFormWidget(QWidget):
         #
         #
         self.submit_btn = QPushButton("Submit", self)
-        box = HelpIconPackager.add_help(main=self.main, widget=self.submit_btn, on_help=self.on_ai_help)
+        box = HelpIconPackager.add_help(
+            main=self.main, widget=self.submit_btn, on_help=self.on_ai_help
+        )
         box.setMinimumWidth(150)
 
-        box.setStyleSheet("QWidget { margin-bottom:9px; height:25px; padding-right:4px;} ")
+        box.setStyleSheet(
+            "QWidget { margin-bottom:9px; height:25px; padding-right:4px;} "
+        )
 
         layout.addWidget(box)
-        #layout.addWidget(self.submit_btn)
+        # layout.addWidget(self.submit_btn)
         #
         # signals
         #
@@ -122,7 +125,9 @@ class QueryFormWidget(QWidget):
 
     def assure_state(self) -> None:
         fs = fiut.split_filename(self.main.selected_file_path)
-        if fs[1] in self.main.csvpath_config.get(section="extensions", name="csv_files"):
+        if fs[1] in self.main.csvpath_config.get(
+            section="extensions", name="csv_files"
+        ):
             self.activity_selector.set_activity("validation")
         else:
             self._on_activity_changed(self.activity_selector.activity)
@@ -143,14 +148,16 @@ class QueryFormWidget(QWidget):
             self.instructions.setPlaceholderText("Enter any instructions…")
             self.prompt_title.setPlaceholderText("Name your request…")
         else:
-            self.instructions.setPlaceholderText("Any instructions for data generation…")
+            self.instructions.setPlaceholderText(
+                "Any instructions for data generation…"
+            )
             self.prompt_title.setPlaceholderText("Name your request…")
         if mode in ["testdata", "validation"]:
             self.doc_path.hide()
             self.use_doc_checkbox.hide()
         else:
             self.use_doc_checkbox.show()
-            self.on_use_doc( self.use_doc_checkbox.isChecked() )
+            self.on_use_doc(self.use_doc_checkbox.isChecked())
 
         self.lines.setVisible(mode == "testdata")
 
@@ -159,7 +166,7 @@ class QueryFormWidget(QWidget):
         # TODO: show/hide fields depending on mode
         #
 
-    def on_use_doc(self, state:int) -> None:
+    def on_use_doc(self, state: int) -> None:
         if state == Qt.CheckState.Checked.value:
             self.doc_path.show()
             #
@@ -173,7 +180,10 @@ class QueryFormWidget(QWidget):
 
     def _on_submit(self):
         docpath = None
-        use_doc_path = self.use_doc_checkbox.isChecked() and str(self.doc_path_text.text()).strip() != ""
+        use_doc_path = (
+            self.use_doc_checkbox.isChecked()
+            and str(self.doc_path_text.text()).strip() != ""
+        )
         if use_doc_path:
             docpath = self.doc_path_text.text()
         #
@@ -234,7 +244,7 @@ class QueryFormWidget(QWidget):
             # number of lines is used in data generation. not used otherwise, atm, but doesn't
             # hurt to include it.
             #
-            "number_of_lines": self.lines_count.currentText()
+            "number_of_lines": self.lines_count.currentText(),
         }
         self.querySubmitted.emit(params)
 
@@ -282,7 +292,7 @@ class QueryFormWidget(QWidget):
             #
             return ret
 
-    def get_data_context_from_path_if(self, path:str) -> str:
+    def get_data_context_from_path_if(self, path: str) -> str:
         if path is None:
             return ""
         with DataFileReader(path) as file:
@@ -302,4 +312,3 @@ class QueryFormWidget(QWidget):
             self.doc_path.show()
         else:
             self.doc_path.hide()
-

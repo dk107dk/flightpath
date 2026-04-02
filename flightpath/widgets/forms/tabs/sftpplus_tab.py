@@ -1,9 +1,5 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QLabel
-)
+from PySide6.QtWidgets import QWidget, QLineEdit, QFormLayout
+
 
 class SftpPlusTab(QWidget):
     def __init__(self, form):
@@ -67,56 +63,76 @@ class SftpPlusTab(QWidget):
         self.form.config.add_to_config(self.section, "admin_username", admin_username)
 
         admin_password = self.admin_password.text()
-        self.form.config.add_to_config(self.section, "admin_password", admin_password )
+        self.form.config.add_to_config(self.section, "admin_password", admin_password)
 
         api_url = self.api_url.text()
-        self.form.config.add_to_config(self.section, "api_url", api_url )
+        self.form.config.add_to_config(self.section, "api_url", api_url)
 
         scripts_dir = self.scripts_dir.text()
-        self.form.config.add_to_config(self.section, "scripts_dir", scripts_dir )
+        self.form.config.add_to_config(self.section, "scripts_dir", scripts_dir)
 
         execute_timeout = self.execute_timeout.text()
         self.form.config.add_to_config(self.section, "execute_timeout", execute_timeout)
 
         mailbox_user = self.mailbox_user.text()
-        self.form.config.add_to_config(self.section, "mailbox_user", mailbox_user )
+        self.form.config.add_to_config(self.section, "mailbox_user", mailbox_user)
 
         mailbox_password = self.mailbox_password.text()
-        self.form.config.add_to_config(self.section, "mailbox_password", mailbox_password )
+        self.form.config.add_to_config(
+            self.section, "mailbox_password", mailbox_password
+        )
 
         server = self.server.text()
-        self.form.config.add_to_config(self.section, "server", server )
+        self.form.config.add_to_config(self.section, "server", server)
 
         port = self.port.text()
-        self.form.config.add_to_config(self.section, "port", port )
+        self.form.config.add_to_config(self.section, "port", port)
 
     def populate(self):
         config = self.form.config
-        admin_username = config.get(section=self.section, name="admin_username", default="SFTPPLUS_ADMIN_USERNAME")
+        admin_username = config.get(
+            section=self.section,
+            name="admin_username",
+            default="SFTPPLUS_ADMIN_USERNAME",
+        )
         self.admin_username.setText(admin_username)
 
-        admin_password = config.get(section=self.section, name="admin_password", default="SFTPPLUS_ADMIN_PASSWORD")
+        admin_password = config.get(
+            section=self.section,
+            name="admin_password",
+            default="SFTPPLUS_ADMIN_PASSWORD",
+        )
         self.admin_password.setText(admin_password)
 
-        api_url = config.get(section=self.section, name="api_url", default="https://localhost:10020/json")
+        api_url = config.get(
+            section=self.section, name="api_url", default="https://localhost:10020/json"
+        )
         self.api_url.setText(api_url)
 
         scripts_dir = config.get(section=self.section, name="scripts_dir", default="")
         self.scripts_dir.setText(scripts_dir)
 
-        execute_timeout = config.get(section=self.section, name="execute_timeout", default="300")
+        execute_timeout = config.get(
+            section=self.section, name="execute_timeout", default="300"
+        )
         self.execute_timeout.setText(execute_timeout)
 
-        mailbox_user = config.get(section=self.section, name="mailbox_user", default="mailbox")
+        mailbox_user = config.get(
+            section=self.section, name="mailbox_user", default="mailbox"
+        )
         self.mailbox_user.setText(mailbox_user)
 
-        mailbox_password = config.get(section=self.section, name="mailbox_password", default="SFTPPLUS_MAILBOX_PASSWORD")
+        mailbox_password = config.get(
+            section=self.section,
+            name="mailbox_password",
+            default="SFTPPLUS_MAILBOX_PASSWORD",
+        )
         self.mailbox_password.setText(mailbox_password)
 
-        server = config.get(section=self.section, name="server", default="SFTPPLUS_SERVER")
+        server = config.get(
+            section=self.section, name="server", default="SFTPPLUS_SERVER"
+        )
         self.server.setText(server)
 
         port = config.get(section=self.section, name="port", default="SFTPPLUS_PORT")
         self.port.setText(port)
-
-

@@ -1,24 +1,20 @@
-from PySide6.QtWidgets import ( # pylint: disable=E0611
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QDialog,
-        QLineEdit,
-        QFormLayout,
-        QSizePolicy,
-        QWidget
+from PySide6.QtWidgets import (  # pylint: disable=E0611
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QDialog,
+    QLineEdit,
+    QFormLayout,
 )
-from PySide6.QtCore import Qt # pylint: disable=E0611
+from PySide6.QtCore import Qt  # pylint: disable=E0611
 
-from csvpath import CsvPaths
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.tabs_utility import TabsUtility as taut
 
+
 class TemplateDialog(QDialog):
-
-
     def __init__(self, *, main, name, parent):
         super().__init__(parent)
         self.main = main
@@ -59,7 +55,7 @@ class TemplateDialog(QDialog):
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.template_ctl,
-            on_help=self.on_help_template
+            on_help=self.on_help_template,
         )
         form_layout.addRow("Template: ", box)
 
@@ -70,8 +66,9 @@ class TemplateDialog(QDialog):
 
         self.tab = None
         for _ in taut.tabs(main.content.tab_widget):
-            if ( _.objectName().endswith(f"{self.name}/definition.json")
-                or _.objectName().endswith(f"{self.name}\\definition.json") ):
+            if _.objectName().endswith(
+                f"{self.name}/definition.json"
+            ) or _.objectName().endswith(f"{self.name}\\definition.json"):
                 self.tab = _
 
     def on_help_template(self) -> None:
@@ -92,5 +89,4 @@ class TemplateDialog(QDialog):
 
     def show_dialog(self) -> None:
         self.exec()
-        #self.show()
-
+        # self.show()

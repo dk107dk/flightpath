@@ -1,11 +1,6 @@
 import os
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QFileDialog,
-    QMessageBox,
-    QWidget
-)
+from PySide6.QtWidgets import QFileDialog, QWidget
 
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
@@ -15,10 +10,10 @@ from csvpath.util.nos import Nos
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
 
-class FileCollector:
 
+class FileCollector:
     @classmethod
-    def csvpaths_filter(cls, cfg:Config) -> str:
+    def csvpaths_filter(cls, cfg: Config) -> str:
         exts = cfg.get(section="extensions", name="csvpath_files")
         ext_str = ""
         for e in exts:
@@ -34,7 +29,9 @@ class FileCollector:
         return f"Data files ({ext_str})"
 
     @classmethod
-    def select_file(cls, *, parent:QWidget, cwd:str, title:str, file_type_filter:str ) -> str:
+    def select_file(
+        cls, *, parent: QWidget, cwd: str, title: str, file_type_filter: str
+    ) -> str:
         #
         # selects a single file. if the file is not in the project's folder tree it will be copied in.
         #
@@ -45,13 +42,16 @@ class FileCollector:
         #
         nos = Nos(cwd)
         if nos.isfile():
-            meut.message(msg="Please select a directory in the file browser", title="Not a directory")
+            meut.message(
+                msg="Please select a directory in the file browser",
+                title="Not a directory",
+            )
             return
         d = QFileDialog()
         d.setOptions(
-                QFileDialog.Option.DontResolveSymlinks |
-                QFileDialog.Option.ReadOnly |
-                QFileDialog.Option.DontUseCustomDirectoryIcons
+            QFileDialog.Option.DontResolveSymlinks
+            | QFileDialog.Option.ReadOnly
+            | QFileDialog.Option.DontUseCustomDirectoryIcons
         )
         d.setFileMode(QFileDialog.FileMode.ExistingFile)
         d.setViewMode(QFileDialog.ViewMode.List)
@@ -66,7 +66,11 @@ class FileCollector:
             the_path = paths[0]
             if not the_path.startswith(cwd):
                 name = os.path.basename(the_path)
-                new_name, ok = meut.input(title="Copy into project", msg="Enter a name for the copy:", text=name)
+                new_name, ok = meut.input(
+                    title="Copy into project",
+                    msg="Enter a name for the copy:",
+                    text=name,
+                )
                 if ok and new_name:
                     new_path = fiut.deconflicted_path(cwd, new_name)
                     print(f"FileCollector: select_file: the_path: {the_path}")
@@ -76,5 +80,3 @@ class FileCollector:
                             new_file.write(the_file.read())
                     the_path = new_path
         return the_path
-
-

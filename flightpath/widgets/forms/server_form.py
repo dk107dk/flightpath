@@ -5,17 +5,7 @@ import httpx
 import hashlib
 import traceback
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QComboBox,
-    QPushButton,
-    QLabel,
-    QScrollArea,
-    QListWidget
-)
-from csvpath.util.config import Config
+from PySide6.QtWidgets import QLineEdit, QFormLayout, QPushButton, QLabel, QScrollArea
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 from flightpath.util.message_utility import MessageUtility as meut
@@ -28,6 +18,7 @@ from flightpath.dialogs.sync_config_dialog import SyncConfigDialog
 from flightpath.dialogs.new_key_dialog import NewKeyDialog
 from .server_projects_list import ServerProjectsList
 from .blank_form import BlankForm
+
 
 class ServerForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -73,13 +64,14 @@ class ServerForm(BlankForm):
         self.setLayout(layout)
         self._setup()
 
-        self.main.config.config_panel.forms_layout.currentChanged.connect(self.on_widget_changed)
+        self.main.config.config_panel.forms_layout.currentChanged.connect(
+            self.on_widget_changed
+        )
         #
         # if we haven't been viewed we won't have loaded the server and key fields
         #
         self.server_unchanged = False
         self.viewed = False
-
 
     def on_widget_changed(self) -> None:
         #
@@ -91,7 +83,6 @@ class ServerForm(BlankForm):
             self._update_project_list()
             self.server_unchanged = True
             self.viewed = True
-
 
     def _set_projects_path(self) -> None:
         key = self.key.text()
@@ -105,7 +96,6 @@ class ServerForm(BlankForm):
         hashstr = hashlib.sha256(key.encode()).hexdigest()
         self.projects_path.setText(hashstr)
 
-
     def add_to_config(self, config) -> None:
         #
         # if we've never been viewed we won't have setup the host and key.
@@ -114,8 +104,8 @@ class ServerForm(BlankForm):
         self.populate_if()
         host = self.host.text()
         key = self.key.text()
-        config.add_to_config("server", "host", host )
-        config.add_to_config("server", "api_key", key )
+        config.add_to_config("server", "host", host)
+        config.add_to_config("server", "api_key", key)
         self._enable_server_if()
 
     def _server_is_enabled(self) -> bool:
@@ -138,7 +128,6 @@ class ServerForm(BlankForm):
     def _enable_shutdown_server(self) -> None:
         self.shut_down_server.setEnabled(True)
         self.shut_down_server.setText("Shutdown FlightPath Server")
-
 
     def _setup(self) -> None:
         self.host.textChanged.connect(self.main.on_config_changed)
@@ -182,7 +171,6 @@ class ServerForm(BlankForm):
         if en:
             self.main.config.reset_config_toolbar()
 
-
     @property
     def _headers(self) -> str:
         headers = {"access_token": self.key.text()}
@@ -197,7 +185,7 @@ class ServerForm(BlankForm):
             e = self._ping() == 200
         return e
 
-    def _create_config_str(self, name:str) -> str:
+    def _create_config_str(self, name: str) -> str:
         self.main.save_config_changes()
         config = self.main.csvpath_config._config
         string_buffer = io.StringIO()
@@ -225,7 +213,6 @@ class ServerForm(BlankForm):
             self.server_unchanged = False
             self._update_project_list()
 
-
     def _update_project_list(self, name=None) -> None:
         key = self.key.text().strip() if self.key.text() else None
         host = self.host.text().strip() if self.host.text() else None
@@ -246,7 +233,6 @@ class ServerForm(BlankForm):
         if not self._server_is_enabled():
             return
 
-
         self.proj_list.clear()
         names = self._get_project_names()
         if names is None:
@@ -263,8 +249,7 @@ class ServerForm(BlankForm):
 
         self.server_unchanged = True
 
-
-    def _write_to(self, name:str, content:str) -> None:
+    def _write_to(self, name: str, content: str) -> None:
         to_index = self.main.sidebar.file_navigator.currentIndex()
         to_path = None
         if to_index.isValid():
@@ -283,19 +268,20 @@ class ServerForm(BlankForm):
             tto.write(content)
         return to_path
 
-    def _open_if(self, path:str) -> None:
+    def _open_if(self, path: str) -> None:
         if meut.yes_no(parent=self, title="Open file?", msg=f"Open {path}?") is True:
             osut.open_file(path)
 
-#====================
-# api calls
-#====================
+    # ====================
+    # api calls
+    # ====================
 
-    def _upload_env(self, name:str) -> bool:
+    def _upload_env(self, name: str) -> bool:
         if not self._server_is_enabled():
             meut.warning(
                 parent=self,
-                msg=f"Cannot upload env JSON because the server is off or there is insufficient information to make the request")
+                msg="Cannot upload env JSON because the server is off or there is insufficient information to make the request",
+            )
             return
         #
         # open a dialog to collect the env vars
@@ -318,7 +304,7 @@ class ServerForm(BlankForm):
             # but we don't want to send something we know is completely unconsidered to
             # the server environment.
             #
-            request = {"name":name, "env_str": env_str}
+            request = {"name": name, "env_str": env_str}
             try:
                 response = client.post(url, json=request, headers=self._headers)
                 if response.status_code == 200:
@@ -334,16 +320,18 @@ class ServerForm(BlankForm):
                 print(msg)
                 return False
 
-
-    def _sync_config(self, name:str) -> None:
+    def _sync_config(self, name: str) -> None:
         d = SyncConfigDialog(name=name, parent=self)
         d.show_dialog()
 
-    def _upload_config(self, name:str, config_str:str=None, *, prompt:bool=True) -> bool:
+    def _upload_config(
+        self, name: str, config_str: str = None, *, prompt: bool = True
+    ) -> bool:
         if not self._server_is_enabled():
             meut.warning(
                 parent=self,
-                msg=f"Cannot upload config because the server is off or there is insufficient information to make the request")
+                msg="Cannot upload config because the server is off or there is insufficient information to make the request",
+            )
             return
         #
         # for uploads, mainly, we want to prompt. with syncs there is less of a need
@@ -355,7 +343,7 @@ class ServerForm(BlankForm):
             ok = meut.yes_no(
                 parent=self,
                 title="Overwrite project config?",
-                msg=f"Permanently overwrite the {name} project's config?"
+                msg=f"Permanently overwrite the {name} project's config?",
             )
         if ok is False:
             return
@@ -374,7 +362,7 @@ class ServerForm(BlankForm):
             # but we don't want to send something we know is completely unconsidered to
             # the server environment.
             #
-            request = {"name":name, "config_str": config_str}
+            request = {"name": name, "config_str": config_str}
             try:
                 response = client.post(url, json=request, headers=self._headers)
                 if response.status_code == 200:
@@ -387,24 +375,6 @@ class ServerForm(BlankForm):
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 return False
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def _create_key(self) -> None:
         new_key_dialog = NewKeyDialog(self)
         new_key_dialog.show()
@@ -413,9 +383,10 @@ class ServerForm(BlankForm):
         if not self._server_is_enabled():
             meut.warning(
                 parent=self,
-                msg=f"Cannot shutdown because the server is off or there is insufficient information to make the request")
+                msg="Cannot shutdown because the server is off or there is insufficient information to make the request",
+            )
             return
-        yn = meut.yes_no(parent=self, msg=f"Shutdown server?", title="Shutdown server?")
+        yn = meut.yes_no(parent=self, msg="Shutdown server?", title="Shutdown server?")
         if yn is False:
             return False
         with httpx.Client() as client:
@@ -427,28 +398,29 @@ class ServerForm(BlankForm):
                 msg = json["message"] if "message" in json else json["detail"]
                 msg = f"Response: {response.status_code}: {msg}"
                 self._enable_server_if()
-                #self.shut_down_server.setEnabled(False)
+                # self.shut_down_server.setEnabled(False)
             except Exception as ex:
                 msg = f"Error sending request: {ex}"
             self.response_msg.setText(msg)
 
-    def _download_log(self, name:str) -> bool:
+    def _download_log(self, name: str) -> bool:
         if not self._server_is_enabled():
             meut.warning(
                 parent=self,
-                msg=f"Cannot download log because the server is off or there is insufficient information to make the request")
+                msg="Cannot download log because the server is off or there is insufficient information to make the request",
+            )
             return
         with httpx.Client() as client:
             msg = None
             response = None
             try:
                 url = f"{self.host.text()}/projects/get_file"
-                request = {"name":name, "file_path":"logs/csvpath.log"}
+                request = {"name": name, "file_path": "logs/csvpath.log"}
                 response = client.post(url, json=request, headers=self._headers)
                 json = response.json()
                 if response.status_code == 200:
                     log = json.get("file_content")
-                    log = base64.b64decode(log).decode('utf-8')
+                    log = base64.b64decode(log).decode("utf-8")
                     local_path = self._write_to("csvpath.log", log)
                     self.main.statusBar().showMessage(f"Saved to {local_path}")
                     self._open_if(local_path)
@@ -463,18 +435,19 @@ class ServerForm(BlankForm):
                 print(msg)
                 return False
 
-    def _download_config(self, name:str) -> bool:
+    def _download_config(self, name: str) -> bool:
         if not self._server_is_enabled():
             meut.warning(
                 parent=self,
-                msg=f"Cannot download config because the server is off or there is insufficient information to make the request")
+                msg="Cannot download config because the server is off or there is insufficient information to make the request",
+            )
             return
         with httpx.Client() as client:
             msg = None
             response = None
             try:
                 url = f"{self.host.text()}/projects/get_project_config"
-                request = {"name":name}
+                request = {"name": name}
                 response = client.post(url, json=request, headers=self._headers)
                 content = response.json()
                 if response.status_code == 200:
@@ -483,7 +456,7 @@ class ServerForm(BlankForm):
                     self._open_if(local_path)
                     return True
                 else:
-                    msg = json["detail"]
+                    msg = content["detail"]
                     msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
                     meut.warning(parent=self, title="Cannot download log", msg=msg)
             except Exception as ex:
@@ -492,18 +465,19 @@ class ServerForm(BlankForm):
                 print(msg)
                 return False
 
-    def _download_env(self, name:str) -> bool:
+    def _download_env(self, name: str) -> bool:
         if not self._server_is_enabled():
             meut.warning(
                 parent=self,
-                msg=f"Cannot download env file because the server is off or there is insufficient information to make the request")
+                msg="Cannot download env file because the server is off or there is insufficient information to make the request",
+            )
             return
         with httpx.Client() as client:
             msg = None
             response = None
             try:
                 url = f"{self.host.text()}/projects/get_env_file"
-                request = {"name":name}
+                request = {"name": name}
                 response = client.post(url, json=request, headers=self._headers)
                 content = response.json()
                 if response.status_code == 200:
@@ -512,7 +486,7 @@ class ServerForm(BlankForm):
                     self._open_if(local_path)
                     return True
                 else:
-                    msg = json["detail"]
+                    msg = content["detail"]
                     msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
                     meut.warning(parent=self, title="Cannot download env", msg=msg)
             except Exception as ex:
@@ -532,7 +506,8 @@ class ServerForm(BlankForm):
             if self._is_on_top():
                 meut.warning(
                     parent=self,
-                    msg=f"Cannot get project names because the server is off or the request is incomplete")
+                    msg="Cannot get project names because the server is off or the request is incomplete",
+                )
             return []
         with httpx.Client() as client:
             msg = None
@@ -544,40 +519,49 @@ class ServerForm(BlankForm):
                 if "names" in json:
                     return json["names"]
                 elif "detail" in json:
-                    meut.warning( parent=self, msg=json["detail"], title="Error")
+                    meut.warning(parent=self, msg=json["detail"], title="Error")
                 else:
-                    meut.warning( parent=self, msg=f"Could not complete the request: {json}", title="Error")
+                    meut.warning(
+                        parent=self,
+                        msg=f"Could not complete the request: {json}",
+                        title="Error",
+                    )
             except Exception as ex:
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 print(msg)
         return []
 
-    def _delete_project(self, name:str) -> bool:
+    def _delete_project(self, name: str) -> bool:
         if not self._server_is_enabled():
             meut.warning(
                 parent=self,
-                msg=f"Cannot delete project because the server is off or there is insufficient information to make the request")
+                msg="Cannot delete project because the server is off or there is insufficient information to make the request",
+            )
             return
-        yn = meut.yesNo(parent=self, msg=f"Permanently delete project {name}?", title="")
+        yn = meut.yesNo(
+            parent=self, msg=f"Permanently delete project {name}?", title=""
+        )
         if yn is False:
             return False
         with httpx.Client() as client:
             response = None
             try:
                 url = f"{self.host.text()}/projects/delete_project"
-                response = client.post(url, json={"name":name}, headers=self._headers)
+                response = client.post(url, json={"name": name}, headers=self._headers)
                 if response.status_code == 200:
-                    json = response.json()
                     self.server_unchanged = False
                     self._update_project_list()
                     #
                     # the project list has to update and that should be enough
                     #
-                    #meut.message(msg=f"Project {name} has been deleted", title="Deleted project")
+                    # meut.message(msg=f"Project {name} has been deleted", title="Deleted project")
                     return True
                 else:
-                    meut.message(msg=f"Could not delete project {name}. Return code: {response.status_code}", title="Could not delete project")
+                    meut.message(
+                        msg=f"Could not delete project {name}. Return code: {response.status_code}",
+                        title="Could not delete project",
+                    )
                     return False
             except Exception as ex:
                 print(traceback.format_exc())
@@ -589,11 +573,12 @@ class ServerForm(BlankForm):
                 print(msg)
                 return False
 
-    def _create_project(self, name:str) -> bool:
+    def _create_project(self, name: str) -> bool:
         if not self._server_is_enabled():
             meut.warning(
                 parent=self,
-                msg=f"Cannot create project because the server is off or there is insufficient information to make the request")
+                msg="Cannot create project because the server is off or there is insufficient information to make the request",
+            )
             return
         with httpx.Client() as client:
             msg = None
@@ -606,10 +591,12 @@ class ServerForm(BlankForm):
                 if response.status_code == 200:
                     self.server_unchanged = False
                     self._update_project_list(name)
-                    json = response.json()
                     return True
                 else:
-                    meut.message(msg=f"Could not create project. Return code: {response.status_code}", title="Could not create project")
+                    meut.message(
+                        msg=f"Could not create project. Return code: {response.status_code}",
+                        title="Could not create project",
+                    )
                     return False
             except Exception as ex:
                 print(traceback.format_exc())
@@ -625,11 +612,9 @@ class ServerForm(BlankForm):
         if self.host.text() is None or self.host.text().strip() == "":
             return 400
         with httpx.Client() as client:
-            msg = None
             try:
                 url = f"{self.host.text()}/"
                 response = client.get(url, headers=self._headers)
                 return response.status_code
-            except Exception as ex:
+            except Exception:
                 return 500
-

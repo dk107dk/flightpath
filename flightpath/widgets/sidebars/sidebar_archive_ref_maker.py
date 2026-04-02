@@ -1,4 +1,4 @@
-#import sys
+# import sys
 import os
 import json
 import re
@@ -9,16 +9,14 @@ from csvpath.util.nos import Nos
 from csvpath import CsvPaths
 from csvpath.managers.paths.paths_registrar import PathsRegistrar
 from csvpath.util.path_util import PathUtility as pathu
-from csvpath.util.config import Config
 from csvpath.util.file_readers import DataFileReader
 
-class SidebarArchiveRefMaker:
 
+class SidebarArchiveRefMaker:
     def __init__(self, *, main, parent):
         super().__init__()
         self.main = main
         self.parent = parent
-
 
     def _new_run(self):
         index = self.parent.view.currentIndex()
@@ -27,7 +25,9 @@ class SidebarArchiveRefMaker:
         #
         # let's try to get the file
         #
-        self.new_run_dialog = NewRunDialog(parent=self.parent, named_paths=named_paths, named_file=named_file)
+        self.new_run_dialog = NewRunDialog(
+            parent=self.parent, named_paths=named_paths, named_file=named_file
+        )
         #
         # check for templates
         #
@@ -45,7 +45,9 @@ class SidebarArchiveRefMaker:
         index = self.parent.view.currentIndex()
         print(f"doing _repeat_run: index: {index}")
         named_paths, named_file = self._get_rerun_references(index)
-        self.new_run_dialog = NewRunDialog(parent=self.parent, named_paths=named_paths, named_file=named_file)
+        self.new_run_dialog = NewRunDialog(
+            parent=self.parent, named_paths=named_paths, named_file=named_file
+        )
         #
         # check for templates
         #
@@ -58,7 +60,7 @@ class SidebarArchiveRefMaker:
         #
         #
         self.main.show_now_or_later(self.new_run_dialog)
-        #self.new_run_dialog.show()
+        # self.new_run_dialog.show()
 
     #
     #
@@ -71,15 +73,15 @@ class SidebarArchiveRefMaker:
         path = self.parent.model.filePath(index)
         if not path:
             return ""
-        path = path[len(self._archive) + 1:]
+        path = path[len(self._archive) + 1 :]
         sep = pathu.sep(path)[0]
         if path.find(sep) > -1:
-            named_paths = path[0:path.find(sep)]
+            named_paths = path[0 : path.find(sep)]
         else:
             named_paths = path
         return named_paths
 
-    def _named_file_for_index(self, *, archive:str, index) -> str:
+    def _named_file_for_index(self, *, archive: str, index) -> str:
         named_file = None
         path = self.parent.model.filePath(index)
         m = re.search(r"^(.*\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(?:_\d)?)", path)
@@ -87,7 +89,7 @@ class SidebarArchiveRefMaker:
         if m is not None:
             d = m.group(0)
         if d is not None:
-            mani = os.path.join( d, "manifest.json")
+            mani = os.path.join(d, "manifest.json")
             mani = os.path.join(archive, mani)
             nos = Nos(mani)
             j = {}
@@ -107,28 +109,28 @@ class SidebarArchiveRefMaker:
     def _archive(self) -> str:
         return self.main.csvpath_config.get(section="results", name="archive")
 
-    def _find_run_dir(self, path:str) -> str:
+    def _find_run_dir(self, path: str) -> str:
         run_dir = None
         m = re.search(r"^(.*\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(?:_\d)?)", path)
         if m is not None:
             run_dir = m.group(0)
         return run_dir
 
-    def _is_named_path_dir(self, path:str) -> bool:
+    def _is_named_path_dir(self, path: str) -> bool:
         sep = "/" if path.find("/") > -1 else "\\"
-        name = path[len(self._archive)+1:]
+        name = path[len(self._archive) + 1 :]
         if name.find(sep) == -1:
             return name
-        name = name[0:name.find(sep)]
+        name = name[0 : name.find(sep)]
         maybe = f"{self._archive}{sep}{name}"
         return maybe == path
 
-    def _named_path_from_path(self, path:str) -> str:
+    def _named_path_from_path(self, path: str) -> str:
         sep = "/" if path.find("/") > -1 else "\\"
-        np = path[len(self._archive)+1:]
+        np = path[len(self._archive) + 1 :]
         if np.find(sep) == -1:
             return np
-        np = np[0:np.find(sep)]
+        np = np[0 : np.find(sep)]
         return np
 
     def _use_named_path_name(self, path) -> str:
@@ -140,25 +142,23 @@ class SidebarArchiveRefMaker:
             return name
         return None
 
-    def _named_paths_reference_for_path(self, path:str) -> str:
+    def _named_paths_reference_for_path(self, path: str) -> str:
         name = self._named_path_from_path(path)
         if self._use_named_path_name(path) is not None:
             return name
         reg = PathsRegistrar(CsvPaths())
         mp = reg.manifest_path(name)
         mani = reg.get_manifest(mp)
-        amani = mani[len(mani)-1]
+        amani = mani[len(mani) - 1]
         ids = amani.get("named_paths_identities")
-        index = 0
         identity = None
         for i, _ in enumerate(ids):
             if path.find(_) > -1:
-             index = i
-             identity = _
-             break
+                identity = _
+                break
         return f"${name}.csvpaths.{identity}:from"
 
-    def _get_rerun_references(self, index) -> tuple[str,str]:
+    def _get_rerun_references(self, index) -> tuple[str, str]:
         path = self.parent.model.filePath(index)
         named_paths = self._named_paths_reference_for_path(path)
         #
@@ -170,17 +170,17 @@ class SidebarArchiveRefMaker:
         #
         return (named_paths, named_file)
 
-    def _path_is_simple_named_file_name(self, path:str) -> str|None:
+    def _path_is_simple_named_file_name(self, path: str) -> str | None:
         files = self.parent.main.csvpath_config.get(section="results", name="archive")
         if not path.startswith(files):
             return None
-        path = path[len(files)+1:]
+        path = path[len(files) + 1 :]
         if path.find(pathu.sep(path)[0]) == -1:
             return path
         else:
             return None
 
-    def _named_file_reference_for_path(self, path:str) -> str:
+    def _named_file_reference_for_path(self, path: str) -> str:
         #
         # first, test for <archive>/<name>
         # if so, just return <name>
@@ -210,7 +210,6 @@ class SidebarArchiveRefMaker:
             mani = pathu.resep(mani)
             with DataFileReader(mani) as file:
                 j = json.load(file.source)
-            run_dir = None
             j.reverse()
             for m in j:
                 if m["run_home"].startswith(path):
@@ -232,6 +231,3 @@ class SidebarArchiveRefMaker:
         if not named_file.startswith("$"):
             named_file = f"${named_file}"
         return f"{named_file}.files.{fingerprint}"
-
-
-

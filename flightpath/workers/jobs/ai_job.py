@@ -1,4 +1,3 @@
-import os
 import jsonpickle
 import traceback
 
@@ -8,9 +7,9 @@ from flightpath_generator.client.function_tool import LiteLLMFunctionTool
 from flightpath.util.generator_utility import GeneratorUtility as geut
 from flightpath.workers.jobs.job import Job
 
-class AiJob(Job):
 
-    def __init__(self, *, parent, main, mdata:dict):
+class AiJob(Job):
+    def __init__(self, *, parent, main, mdata: dict):
         super().__init__(main=main)
         if mdata is None:
             raise ValueError("Metadata cannot be None")
@@ -24,11 +23,11 @@ class AiJob(Job):
         self._values = mdata.get("params", {})
 
     @property
-    def values(self) -> dict[str,str]:
+    def values(self) -> dict[str, str]:
         return self._values
 
     @values.setter
-    def values(self, vs:dict) -> None:
+    def values(self, vs: dict) -> None:
         self._values = vs
 
     def _on_generation(self, generation):
@@ -39,14 +38,16 @@ class AiJob(Job):
             self.on_turn_update(js)
 
     def do_generate(self) -> None:
-        print(f"job: do_generate: starting")
+        print("job: do_generate: starting")
         try:
             tools = [
                 LiteLLMRunTool().tool_definition(),
-                LiteLLMFunctionTool().tool_definition()
+                LiteLLMFunctionTool().tool_definition(),
             ]
-            generator = geut.new_generator(main=self.main, callbacks=[self._on_generation], tools=tools)
-            generator.version_key=self.version
+            generator = geut.new_generator(
+                main=self.main, callbacks=[self._on_generation], tools=tools
+            )
+            generator.version_key = self.version
 
             context = generator.context_manager.get_context()
             prompt = generator.prompt_manager.create_prompt()
@@ -83,31 +84,35 @@ class AiJob(Job):
             # object. all the generations are saved, mostly as json, in a set
             # of several files.
             #
-            #print(f"\n\n  >>>>>>>>> WARNING: NOT starting generations")
+            # print(f"\n\n  >>>>>>>>> WARNING: NOT starting generations")
             generation = None
             #
-            generation = generator.do_send(context=context, prompt=prompt, datapath=self.path)
+            generation = generator.do_send(
+                context=context, prompt=prompt, datapath=self.path
+            )
             #
             if generation:
-                print(f"done with generations: last generation: {generation}: {generation.name}")
+                print(
+                    f"done with generations: last generation: {generation}: {generation.name}"
+                )
             else:
                 raise ValueError("No generation returned")
             #
             # response_text is the plain text response from the assistant
             #
             if self.on_complete:
-                print(f"AiJob: calling back on_complete: {self.on_complete}: generation: {generation}")
+                print(
+                    f"AiJob: calling back on_complete: {self.on_complete}: generation: {generation}"
+                )
                 self.on_complete(generation)
-                print(f"AiJob: done with callback")
+                print("AiJob: done with callback")
             else:
-                raise Exception(f"No on_complete call back set. Cannot handle final generation: {generation}.")
+                raise Exception(
+                    f"No on_complete call back set. Cannot handle final generation: {generation}."
+                )
         except Exception as e:
             print(traceback.format_exc())
             if self.on_error:
                 self.on_error(str(e))
             else:
                 raise
-
-
-
-

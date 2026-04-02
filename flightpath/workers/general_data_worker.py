@@ -1,19 +1,17 @@
-import csv
 import random
 import traceback
 
-from PySide6.QtCore import Qt, QObject, Signal, Slot, QRunnable
+from PySide6.QtCore import QRunnable
 from PySide6.QtWidgets import QApplication
 
 from csvpath.util.file_readers import DataFileReader
 from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
 from flightpath.util.data_const import DataConst
-from flightpath.editable import EditStates
 from .data_worker_signals import DataWorkerSignals
 
-class GeneralDataWorker(QRunnable):
 
+class GeneralDataWorker(QRunnable):
     LARGE_FILE = True
     NOT_LARGE_FILE = False
     LARGE_FILE_LIMIT = 66000
@@ -23,20 +21,20 @@ class GeneralDataWorker(QRunnable):
         filepath,
         main,
         *,
-        rows:str,
-        sampling:str,
-        delimiter:str=None,
-        quotechar:str=None,
-        editable:bool=False
+        rows: str,
+        sampling: str,
+        delimiter: str = None,
+        quotechar: str = None,
+        editable: bool = False,
     ):
         super().__init__()
         self.main = main
         self.filepath = filepath
         self.signals = DataWorkerSignals()
-        self.sample_size:int = self._rows(rows) if rows else 50
+        self.sample_size: int = self._rows(rows) if rows else 50
         self.sampling = sampling if sampling else DataConst.FIRST_N
         self.line_take = 0
-        self.lines_to_take:list[int] = None
+        self.lines_to_take: list[int] = None
         self.delimiter = delimiter
         self.quotechar = quotechar
         self.editable = editable
@@ -49,13 +47,13 @@ class GeneralDataWorker(QRunnable):
             i = 50
         return i
 
-    def accept_line(self, line_num:int, line:list[str]) -> bool:
+    def accept_line(self, line_num: int, line: list[str]) -> bool:
         if self.line_take > self.LARGE_FILE_LIMIT:
             #
             # we need to warn that the file is getting too big
             #
-            #from flightpath.util.message_utility import MessageUtility as meut
-            #meut.message(msg="FlightPath is optimized for sampling, not editing large files. Stop loading here?", title="Large file warning")
+            # from flightpath.util.message_utility import MessageUtility as meut
+            # meut.message(msg="FlightPath is optimized for sampling, not editing large files. Stop loading here?", title="Large file warning")
             return False
         #
         # -1 means "All lines"
@@ -72,40 +70,44 @@ class GeneralDataWorker(QRunnable):
         #
         # if sampling is every line and we are collecting all lines
         #
-        if (self.sampling == DataConst.FIRST_N):
+        if self.sampling == DataConst.FIRST_N:
             self.line_take += 1
             return True
         elif self.sampling == DataConst.RANDOM_0:
-            if random.randint(0,1) % 2 == 0:
+            if random.randint(0, 1) % 2 == 0:
                 self.line_take += 1
                 return True
             return False
         elif self.sampling == DataConst.RANDOM_ALL:
-            if line_num == self.lines_to_take[len(self.lines_to_take)-1]:
+            if line_num == self.lines_to_take[len(self.lines_to_take) - 1]:
                 self.line_take += 1
-                removed = self.lines_to_take.pop()
+                self.lines_to_take.pop()
                 return True
         return False
 
     def run(self):
-        self.signals.messages.emit(QApplication.translate("DataWorker", "Reading file..."))
+        self.signals.messages.emit(
+            QApplication.translate("DataWorker", "Reading file...")
+        )
         if self.sampling == DataConst.RANDOM_ALL and self.lines_to_take is None:
             self.prep_sampling()
         path = str(self.filepath)
         data = []
-        lines:list[int] = []
+        lines: list[int] = []
         lines_to_take = self.lines_to_take[:] if self.lines_to_take else None
         totallines = 0
         largefile = self.NOT_LARGE_FILE
         try:
             data, lines, totallines, largefile = self._read(path=path)
-        except UnicodeDecodeError as u:
-            self.signals.messages.emit(f"  Encoding error. Trying 'windows-1252'.")
-            data, lines, totallines, largefile = self._read(path=path,  encoding="windows-1252")
+        except UnicodeDecodeError:
+            self.signals.messages.emit("  Encoding error. Trying 'windows-1252'.")
+            data, lines, totallines, largefile = self._read(
+                path=path, encoding="windows-1252"
+            )
         except Exception as e:
             print(traceback.format_exc())
             self.signals.messages.emit(f" Erroring opening {path}")
-            self.signals.finished.emit((f"Error", e, None, None, None, None))
+            self.signals.finished.emit(("Error", e, None, None, None, None))
             return
         self.signals.messages.emit(f"  Opened {path}")
         results = (
@@ -115,38 +117,40 @@ class GeneralDataWorker(QRunnable):
             data,
             lines_to_take,
             self.editable,
-            largefile
+            largefile,
         )
         self.signals.finished.emit(results)
 
-    def _read(self, *, path:str, encoding:str="utf-8") -> tuple[list,list,bool]:
+    def _read(self, *, path: str, encoding: str = "utf-8") -> tuple[list, list, bool]:
         t = 0
         i = 0
-        lines:list[int] = []
-        data:list[list[str]] = []
+        lines: list[int] = []
+        data: list[list[str]] = []
         #
         # jsonl may have all kinds of headers magic
         #
         #
-        #_all_headers = self._all_headers(path=path, encoding=encoding)
-        with DataFileReader( path, delimiter=self.delimiter, quotechar=self.quotechar, encoding=encoding ) as file:
+        # _all_headers = self._all_headers(path=path, encoding=encoding)
+        with DataFileReader(
+            path, delimiter=self.delimiter, quotechar=self.quotechar, encoding=encoding
+        ) as file:
             for line in file.next():
                 b = self.accept_line(i, line)
                 if b is False and self.line_take > self.LARGE_FILE_LIMIT:
                     return (data, lines, i, self.LARGE_FILE)
                 i += 1
                 if b is True:
-                    lines.append(i-1)
+                    lines.append(i - 1)
                     t += 1
                     data.append(line)
                 elif b is None:
-                    i = 0 if i <= 0 else i -1
+                    i = 0 if i <= 0 else i - 1
                     break
         return (data, lines, i, self.NOT_LARGE_FILE)
 
     def prep_sampling(self) -> None:
         needed = 0
-        with DataFileReader( str(self.filepath) ) as file:
+        with DataFileReader(str(self.filepath)) as file:
             for line in file.source:
                 needed += 1
         #
@@ -156,11 +160,11 @@ class GeneralDataWorker(QRunnable):
         # reflect collecting all lines.
         #
         self.lines_to_take = []
-        if self.sample_size >= needed -1:
+        if self.sample_size >= needed - 1:
             self.main.content.toolbar.rows.setCurrentIndex(4)
             self.sample_size = -1
             return
-        to = min(needed-1, self.sample_size)
+        to = min(needed - 1, self.sample_size)
         for i in range(to):
             x = -1
             while x < 0:
@@ -170,4 +174,3 @@ class GeneralDataWorker(QRunnable):
                 else:
                     self.lines_to_take.append(x)
         self.lines_to_take.sort(reverse=True)
-

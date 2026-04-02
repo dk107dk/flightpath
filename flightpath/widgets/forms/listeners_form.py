@@ -6,10 +6,9 @@ from PySide6.QtWidgets import (
     QTabWidget,
     QHBoxLayout,
     QVBoxLayout,
-    QScrollArea
+    QScrollArea,
 )
 from PySide6.QtCore import Qt, Slot
-from csvpath.util.config import Config
 from flightpath.widgets.clickable_label import ClickableLabel
 from .blank_form import BlankForm
 from .tabs.ckan_tab import CkanTab
@@ -40,7 +39,7 @@ class ListenersForm(BlankForm):
         self._setup()
 
     def add_to_config(self, config) -> None:
-        config.add_to_config("listeners", "groups", self.groups.text() )
+        config.add_to_config("listeners", "groups", self.groups.text())
         #
         #
         #
@@ -56,10 +55,10 @@ class ListenersForm(BlankForm):
         config = self.config
         nf = config.get(section="listeners", name="groups")
         if isinstance(nf, list):
-            self.groups.setText(",".join(nf) )
+            self.groups.setText(",".join(nf))
         else:
             self.groups.setText(nf)
-        #for k, v in self._group_tabs.items():
+        # for k, v in self._group_tabs.items():
         for i, k in enumerate(self._group_tabs):
             #
             # should we disable tabs of integrations that haven't been selected?
@@ -88,9 +87,9 @@ class ListenersForm(BlankForm):
         return self._group_tabs.keys()
 
     @property
-    def tab_groups(self) -> dict[str,QWidget]:
+    def tab_groups(self) -> dict[str, QWidget]:
         if self.group_names is None:
-            ... # will never be None just because we check
+            ...  # will never be None just because we check
         return self._group_tabs
 
     def _setup_tabs(self) -> None:
@@ -152,7 +151,7 @@ class ListenersForm(BlankForm):
             if i == len(groups) - 1:
                 while i % 5 != 0:
                     s = QLabel()
-                    s.setText(f"      ")
+                    s.setText("      ")
                     s.setAlignment(Qt.AlignCenter)
                     s.adjustSize()
                     hlayout.addWidget(s)
@@ -162,24 +161,24 @@ class ListenersForm(BlankForm):
         self.area_box.setStyleSheet("QWidget {border:0}")
         area_box_layout = QHBoxLayout()
         self.area_box.setLayout(area_box_layout)
-        area_box_layout.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignTop)
+        area_box_layout.setAlignment(
+            Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignTop
+        )
         area_box_layout.addWidget(self.area)
 
-
     @Slot(str)
-    def _listener_name_click(self, text:str) -> None:
+    def _listener_name_click(self, text: str) -> None:
         t = self.groups.text()
         if t is None:
             t = text
-        ts = [ t.strip() for t in t.split("|")]
+        ts = [t.strip() for t in t.split("|")]
 
         if text in ts:
             return
 
-        c = ', ' if t != '' else ''
+        c = ", " if t != "" else ""
         nt = f"{t}{c}{text}"
-        self.groups.setText( nt )
-
+        self.groups.setText(nt)
 
     @property
     def fields(self) -> list[str]:
@@ -197,5 +196,3 @@ class ListenersForm(BlankForm):
     def tabs(self) -> list[str]:
         print(f"tasxt:: {self._group_tabs}")
         return self._group_tabs.values()
-
-

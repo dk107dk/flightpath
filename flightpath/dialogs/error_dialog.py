@@ -14,14 +14,10 @@ Usage:
 """
 
 import json
-import sys
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
-    QApplication,
     QDialog,
-    QDialogButtonBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -49,7 +45,9 @@ class ErrorDialog(QDialog):
 
     _DETAILS_HEIGHT = 200  # px for the JSON text area when expanded
 
-    def __init__(self, parent=None, message: str = "", errors=None, title: str = "Error"):
+    def __init__(
+        self, parent=None, message: str = "", errors=None, title: str = "Error"
+    ):
         super().__init__(parent)
 
         self._errors = errors
@@ -58,8 +56,7 @@ class ErrorDialog(QDialog):
         self.setWindowTitle(title)
         # Remove the "?" help button; keep close button only
         self.setWindowFlags(
-            self.windowFlags()
-            & ~Qt.WindowType.WindowContextHelpButtonHint
+            self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint
         )
         self.setSizeGripEnabled(False)
         self.setMinimumWidth(380)
@@ -87,7 +84,9 @@ class ErrorDialog(QDialog):
 
         icon_label = QLabel()
         style = self.style()
-        icon = style.standardIcon(QStyle.StandardPixmap.SP_MessageBoxCritical, None, self)
+        icon = style.standardIcon(
+            QStyle.StandardPixmap.SP_MessageBoxCritical, None, self
+        )
         icon_label.setPixmap(icon.pixmap(32, 32))
         icon_label.setAlignment(Qt.AlignmentFlag.AlignTop)
         icon_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -96,7 +95,9 @@ class ErrorDialog(QDialog):
         msg_label = QLabel(message)
         msg_label.setWordWrap(True)
         msg_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        msg_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        msg_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
+        )
         top.addWidget(msg_label)
 
         root.addLayout(top)
@@ -106,7 +107,7 @@ class ErrorDialog(QDialog):
         line = QFrame()
         line.setFrameShape(QFrame.Shape.HLine)
         line.setFrameShadow(QFrame.Shadow.Sunken)
-        #root.addWidget(line)
+        # root.addWidget(line)
         root.addSpacing(8)
 
         # ── JSON details area (hidden initially) ──────────────────────
@@ -123,7 +124,7 @@ class ErrorDialog(QDialog):
         #
         # exp
         #
-        #self._text_area.setFixedHeight(self._DETAILS_HEIGHT)
+        # self._text_area.setFixedHeight(self._DETAILS_HEIGHT)
         self._text_area.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         # Monospace font for JSON readability
         font = self._text_area.font()
@@ -150,7 +151,9 @@ class ErrorDialog(QDialog):
             self._toggle_btn.clicked.connect(self._toggle_details)
             btn_row.addWidget(self._toggle_btn)
 
-        btn_row.addItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+        btn_row.addItem(
+            QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        )
 
         close_btn = QPushButton("Close")
         close_btn.setDefault(True)
@@ -166,7 +169,9 @@ class ErrorDialog(QDialog):
     def _toggle_details(self) -> None:
         self._details_visible = not self._details_visible
         self._details_widget.setVisible(self._details_visible)
-        self._toggle_btn.setText("Hide Details" if self._details_visible else "Show Details…")
+        self._toggle_btn.setText(
+            "Hide Details" if self._details_visible else "Show Details…"
+        )
 
         # Unlock fixed size, resize, then re-lock
         self.setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX)
@@ -174,11 +179,8 @@ class ErrorDialog(QDialog):
         #
         # exp
         #
-        #self.setFixedSize(self.sizeHint())
+        # self.setFixedSize(self.sizeHint())
 
 
 # A large sentinel value used to "un-fix" a QWidget's size
 QWIDGETSIZE_MAX = (1 << 24) - 1
-
-
-

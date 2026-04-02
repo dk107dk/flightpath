@@ -1,44 +1,26 @@
-import sys
 import os
 import json
-from typing import Any
 
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QTreeView,
-    QHeaderView,
-    QSizePolicy,
-    QMenu,
-    QAbstractItemView
-
-)
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 from PySide6.QtCore import Qt, QFileInfo
-from PySide6.QtGui import QAction, QKeyEvent, QShortcut, QKeySequence
+from PySide6.QtGui import QAction, QShortcut, QKeySequence
 
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.nos import Nos
 
-from flightpath.widgets.json_tree_model.json_model import JsonModel
-from flightpath.dialogs.pick_paths_dialog import PickPathsDialog
-from flightpath.dialogs.add_config_key_dialog import AddConfigKeyDialog
-from flightpath.widgets.json_tree_model.json_tree_item import TreeItem
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.file_collector import FileCollector
 from flightpath.editable import EditStates
 
 from flightpath.widgets.editor.editor import Editor
 from flightpath.util.string_utility import StringUtility as strut
 
 
-
 class JsonViewer2(QWidget):
-
-    def __init__(self, main, editable=EditStates.EDITABLE, path:str=None):
+    def __init__(self, main, editable=EditStates.EDITABLE, path: str = None):
         super().__init__()
         #
         # for a left-hand side file the path cannot be None. we need to know
@@ -70,7 +52,7 @@ class JsonViewer2(QWidget):
         # we must block saving.
         #
         if editable == EditStates.UNEDITABLE:
-            #self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            # self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
             ...
         #
         #
@@ -86,7 +68,6 @@ class JsonViewer2(QWidget):
 
         expand_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+e"), self)
         expand_shortcut_ctrl.activated.connect(self._expand)
-
 
         self.context_menu = None
         self.view.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -107,10 +88,7 @@ class JsonViewer2(QWidget):
         self.modified = False
         self._expanded = False
 
-
-
-
-    def _set_modified(self, t:bool) -> None:
+    def _set_modified(self, t: bool) -> None:
         if self.editable == EditStates.NO_SAVE_NO_CTX:
             self.modified = False
             return
@@ -118,11 +96,19 @@ class JsonViewer2(QWidget):
         tab = taut.find_tab(self.main.content.tab_widget, self.path)
         if tab is None:
             return
-        name = f"+ {os.path.basename(self.path)}" if t is True else os.path.basename(self.path)
-        self.main.content.tab_widget.setTabText( tab[0], name)
+        name = (
+            f"+ {os.path.basename(self.path)}"
+            if t is True
+            else os.path.basename(self.path)
+        )
+        self.main.content.tab_widget.setTabText(tab[0], name)
 
     def _copy_back_question(self) -> None:
-        yes = meut.yesNo( parent=self, msg="You can't edit here. Copy back to project?", title="Copy file to project?")
+        yes = meut.yesNo(
+            parent=self,
+            msg="You can't edit here. Copy back to project?",
+            title="Copy file to project?",
+        )
         if yes is True:
             try:
                 name = self.objectName()
@@ -131,6 +117,7 @@ class JsonViewer2(QWidget):
                 self.main.content.tab_widget.close_tab(name)
             except Exception:
                 import traceback
+
                 print(traceback.format_exc())
 
     def _show_context_menu(self, position):
@@ -191,7 +178,6 @@ class JsonViewer2(QWidget):
                         action.setShortcut(QKeySequence("Ctrl+d"))
                     action.setShortcutVisibleInContextMenu(True)
 
-
         info = QFileInfo(self.path)
         if info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
             expand_action = QAction()
@@ -228,14 +214,16 @@ class JsonViewer2(QWidget):
 
     def _save_as(self) -> None:
         path = os.path.dirname(self.path)
-        path, ok = meut.input(title="Save As", msg="Where should the new file live? ", text=path)
+        path, ok = meut.input(
+            title="Save As", msg="Where should the new file live? ", text=path
+        )
         if ok and path:
             self._do_save(path)
 
     def _save(self) -> None:
         self._do_save(self.path)
 
-    def _do_save(self, path:str) -> None:
+    def _do_save(self, path: str) -> None:
         if self.editable == EditStates.UNEDITABLE:
             return
         if path is None:
@@ -256,18 +244,18 @@ class JsonViewer2(QWidget):
                 # maybe there's a jsonl formatter that I just didn't find?
                 #
                 t = strut.jsonl_text_to_lines(t)
-            except:
-                print(f"cannot format as jsonl")
+            except Exception:
+                print("cannot format as jsonl")
                 ...
         else:
             try:
                 j = json.loads(t)
                 t = json.dumps(j, indent=2)
-            except:
+            except Exception:
                 #
                 # would be good to notify the user here
                 #
-                print(f"cannot format as json")
+                print("cannot format as json")
         with DataFileWriter(path=path) as file:
             file.write(t)
         #
@@ -296,7 +284,7 @@ class JsonViewer2(QWidget):
     def _expand(self) -> str:
         info = QFileInfo(self.path)
         t = None
-        if not info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
+        if info.suffix() not in ["jsonl", "ndjson", "jsonlines"]:
             return
         if self._expanded:
             self._pretty()
@@ -309,7 +297,7 @@ class JsonViewer2(QWidget):
                 try:
                     j = json.loads(_)
                     expanded += json.dumps(j, indent=2)
-                except:
+                except Exception:
                     expanded += _
                 expanded += "\n"
             self.view.setPlainText(expanded)
@@ -319,10 +307,9 @@ class JsonViewer2(QWidget):
     def _check_lines(self) -> str:
         info = QFileInfo(self.path)
         t = None
-        if not info.suffix() in ["jsonl", "ndjson", "jsonlines"]:
+        if info.suffix() not in ["jsonl", "ndjson", "jsonlines"]:
             return
         t = self.view.toPlainText()
-        expanded = ""
         for _ in t.split("\n"):
             if not self._check_one(_):
                 return
@@ -336,7 +323,7 @@ class JsonViewer2(QWidget):
                 meut.message(msg="This file is well-formed JSON", title="Well-formed")
         return t
 
-    def _check_one(self, t:str) -> bool:
+    def _check_one(self, t: str) -> bool:
         t1 = strut.sanitize_json(t)
         try:
             j = json.loads(t1)
@@ -346,33 +333,32 @@ class JsonViewer2(QWidget):
             return False
         return True
 
-    def _formatting_error(self, t:str, e) -> None:
+    def _formatting_error(self, t: str, e) -> None:
         #
         # t is the original text
         #
         msg = None
         line, line_char = self._error_location(t, e)
         if line is not None and line_char is not None:
-            msg = f"Error in JSON format at line {line+1}, char {line_char+1}\n\nOriginal error: {e}"
+            msg = f"Error in JSON format at line {line + 1}, char {line_char + 1}\n\nOriginal error: {e}"
         else:
             msg = f"Error in format.\n\nOriginal error messsage: {e}"
         meut.warning(parent=self, msg=msg, title="Malformed JSON")
 
-    def _error_location(self, t:str, e) -> tuple[int, int]:
+    def _error_location(self, t: str, e) -> tuple[int, int]:
         try:
             estr = f"{e}"
             if estr.find("line "):
-                s = t.split("\n")
                 line = 0
                 ffrom = estr.rfind("(") + 1
                 to = estr.rfind(")")
-                char = estr[ffrom+5:to]
+                char = estr[ffrom + 5 : to]
                 char = int(char)
                 line = 0
                 line_char = 0
                 for i, c in enumerate(t):
                     line_char += 1
-                    if c == '\n':
+                    if c == "\n":
                         line += 1
                         line_char = 1
                     elif i == char:
@@ -382,7 +368,7 @@ class JsonViewer2(QWidget):
             return -1, f"{ex}"
         return None, None
 
-    def open_file(self, *, path:str, data:str):
+    def open_file(self, *, path: str, data: str):
         #
         # we still want the data for the old grid view, but here we just want the
         # string. <<< means we're loading twice. that can't be right.
@@ -393,12 +379,19 @@ class JsonViewer2(QWidget):
         # do we really want / need to double check if we're handling a file?
         #
         nos = Nos(path)
-        if not nos.isfile() or info.suffix() not in ["json", "jsonl", "ndjson", "jsonlines"]:
+        if not nos.isfile() or info.suffix() not in [
+            "json",
+            "jsonl",
+            "ndjson",
+            "jsonlines",
+        ]:
             self.view.hide()
             #
             # need an alert here
             #
-            meut.warning(parent=self.main, msg="Unknown file type", title="Cannot open file")
+            meut.warning(
+                parent=self.main, msg="Unknown file type", title="Cannot open file"
+            )
             return
         t = data
         if t is None or not isinstance(t, str):
@@ -408,7 +401,7 @@ class JsonViewer2(QWidget):
             try:
                 j = json.loads(t)
                 t = json.dumps(j, indent=2)
-            except:
+            except Exception:
                 #
                 # would be good to notify the user here?
                 #  assuming there is any data to fail to format.
@@ -419,6 +412,3 @@ class JsonViewer2(QWidget):
 
     def clear(self):
         self.view.hide()
-
-
-

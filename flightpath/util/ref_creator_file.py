@@ -1,11 +1,9 @@
-import os
 import re
 
-from csvpath import CsvPaths
 from csvpath.util.path_util import PathUtility as pathu
 
-class FileRefCreator:
 
+class FileRefCreator:
     def __init__(self, *, main, named_file=None) -> None:
         self.main = main
         self.named_file = named_file
@@ -19,15 +17,14 @@ class FileRefCreator:
         # check if name is just a simple name
         #
         if self._has_name(name):
-                return name
+            return name
         print(f"FileRefC: 1 name: {name}")
-        ref = ""
         #
         # check if we're cwd + simple name. if so, just remove cwd.
         #
         cwd = self.main.state.cwd
         if name.startswith(cwd):
-            name = name[len(cwd)+1:]
+            name = name[len(cwd) + 1 :]
         if self._has_name(name):
             return name
         print(f"FileRefC: 2 name: {name}")
@@ -37,8 +34,8 @@ class FileRefCreator:
         #
         inputs = self.paths.config.get(section="inputs", name="files")
         if name.startswith(inputs):
-            inputs = name[0:len(inputs)]
-            name = name[len(inputs)+1:]
+            inputs = name[0 : len(inputs)]
+            name = name[len(inputs) + 1 :]
         if self._has_name(name):
             return name
         #
@@ -48,7 +45,7 @@ class FileRefCreator:
         #
         ps = pathu.parts(name)
         file = ps[0]
-        name = name[len(file)+1:]
+        name = name[len(file) + 1 :]
         print(f"FileRefC: 3 name: {name}, file: {file}")
         if not self._has_name(file):
             #
@@ -57,7 +54,7 @@ class FileRefCreator:
             #
             return None
         print(f"FileRefC: 4 name: {name}")
-        name_one = name[len(file)+1:]
+        name_one = name[len(file) + 1 :]
         #
         # if we're below a "." extension, we need to replace the "."
         # w/"_"
@@ -76,7 +73,7 @@ class FileRefCreator:
         print(f"FileRefC: done: {ret}")
         return ret
 
-    def _get_hash(self, name:str) -> str:
+    def _get_hash(self, name: str) -> str:
         #
         # like:
         #   $zip.files.odes_csv/71990e87a06c2d8e13299485a43f6001c7589bc6677153f7fab30c796db0a6e3.csv
@@ -88,12 +85,8 @@ class FileRefCreator:
         return None
 
     def _has_name(self, name) -> bool:
-        mgr = self.paths.file_manager
         try:
             b = self.paths.file_manager.has_named_file(name)
             return b
         except Exception:
             return False
-
-
-

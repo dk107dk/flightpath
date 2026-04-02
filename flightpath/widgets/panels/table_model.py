@@ -1,5 +1,6 @@
-from PySide6.QtCore import Qt, QAbstractTableModel, Signal, QModelIndex
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
 from .viewer_signals import ViewerSignals
+
 
 class TableModel(QAbstractTableModel):
     def __init__(self, *, data=None, editable=False):
@@ -8,7 +9,7 @@ class TableModel(QAbstractTableModel):
         super().__init__()
         self._data = data
         self._editable = editable
-        #self._column_count = self._get_column_count()
+        # self._column_count = self._get_column_count()
         self.signals = ViewerSignals()
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
@@ -18,34 +19,35 @@ class TableModel(QAbstractTableModel):
             return str(section)
         return super().headerData(section, orientation, role)
 
-    def write_data(self, filepath):
-        ...
+    def write_data(self, filepath): ...
 
     def insertRows(self, row, count=1, new_row_data=None, parent=QModelIndex()):
         if parent.isValid():
             return False  # Not applicable for a flat table model
         if new_row_data is None:
             num_cols = self.columnCount() if self.rowCount() > 0 else 0
-            new_row_data = [''] * num_cols
+            new_row_data = [""] * num_cols
         self.beginInsertRows(parent, row, row + count - 1)
         for i in range(count):
             self._data.insert(row + i, new_row_data.copy())
         self.endInsertRows()
-        self.signals.rows_inserted.emit( (row, count) )
+        self.signals.rows_inserted.emit((row, count))
         return True
 
     def insertColumns(self, column, count=1, parent=QModelIndex()):
         if parent.isValid():
-             return False
+            return False
         self.beginInsertColumns(parent, column, column + count - 1)
         for row_data in self._data:
             for i in range(count):
                 row_data.insert(column + i, "")
         self.endInsertColumns()
-        self.signals.columns_inserted.emit( (column, count) )
+        self.signals.columns_inserted.emit((column, count))
         return True
 
-    def remove_columns(self, column: int, count: int, parent: QModelIndex = QModelIndex()) -> bool:
+    def remove_columns(
+        self, column: int, count: int, parent: QModelIndex = QModelIndex()
+    ) -> bool:
         if parent.isValid():
             return False
         if column < 0 or column + count > self.columnCount():
@@ -54,10 +56,12 @@ class TableModel(QAbstractTableModel):
         for row_data in self._data:
             del row_data[column : column + count]
         self.endRemoveColumns()
-        self.signals.columns_deleted.emit( (column, count) )
+        self.signals.columns_deleted.emit((column, count))
         return True
 
-    def remove_rows(self, row: int, count: int, parent: QModelIndex = QModelIndex()) -> bool:
+    def remove_rows(
+        self, row: int, count: int, parent: QModelIndex = QModelIndex()
+    ) -> bool:
         if parent.isValid():
             return False
         # Check if the requested rows are within the valid range
@@ -70,7 +74,7 @@ class TableModel(QAbstractTableModel):
         del self._data[row : row + count]
 
         self.endRemoveRows()
-        self.signals.rows_deleted.emit( (row, count) )
+        self.signals.rows_deleted.emit((row, count))
         # self.dataModified.emit() # Optional: signal for save state
         return True
 
@@ -129,7 +133,6 @@ class TableModel(QAbstractTableModel):
         #
         return default_flags
 
-
     def setData(self, index, value, role):
         if role == Qt.ItemDataRole.EditRole:
             currentRow = self._data[index.row()]
@@ -147,7 +150,8 @@ class TableModel(QAbstractTableModel):
             # emit edit event
             #
             self.dataChanged.emit(index, index)
-            self.signals.edit_made.emit((index.row(), index.column(), currentValue, value))
+            self.signals.edit_made.emit(
+                (index.row(), index.column(), currentValue, value)
+            )
             return True
         return False
-

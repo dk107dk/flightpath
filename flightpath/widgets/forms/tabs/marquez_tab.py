@@ -1,9 +1,4 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QLabel
-)
+from PySide6.QtWidgets import QWidget, QLineEdit, QFormLayout
 
 
 class MarquezTab(QWidget):
@@ -47,30 +42,30 @@ class MarquezTab(QWidget):
     def server_fields_count(self) -> int:
         return len(self.server_fields)
 
-
     def add_to_config(self, config) -> None:
         base_url = self.base_url.text()
         self.form.config.add_to_config(self.section, "base_url", base_url)
 
         endpoint = self.endpoint.text()
-        self.form.config.add_to_config(self.section, "endpoint", endpoint )
+        self.form.config.add_to_config(self.section, "endpoint", endpoint)
 
         api_key = self.api_key.text()
-        self.form.config.add_to_config(self.section, "api_key", api_key )
+        self.form.config.add_to_config(self.section, "api_key", api_key)
 
         timeout = self.timeout.text()
-        self.form.config.add_to_config(self.section, "timeout", timeout )
+        self.form.config.add_to_config(self.section, "timeout", timeout)
 
         verify = self.verify.text()
-        self.form.config.add_to_config(self.section, "verify", verify )
-
+        self.form.config.add_to_config(self.section, "verify", verify)
 
     def populate(self):
         config = self.form.config
         base_url = config.get(section=self.section, name="base_url", default="")
         self.base_url.setText(base_url)
 
-        endpoint = config.get(section=self.section, name="endpoint", default="api/v1/lineage")
+        endpoint = config.get(
+            section=self.section, name="endpoint", default="api/v1/lineage"
+        )
         self.endpoint.setText(endpoint)
 
         api_key = config.get(section=self.section, name="api_key", default="")
@@ -81,9 +76,3 @@ class MarquezTab(QWidget):
 
         verify = config.get(section=self.section, name="verify", default="")
         self.verify.setText(verify)
-
-
-
-
-
-

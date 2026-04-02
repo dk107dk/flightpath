@@ -1,25 +1,23 @@
-from PySide6.QtWidgets import ( # pylint: disable=E0611
-        QVBoxLayout,
-        QHBoxLayout,
-        QPushButton,
-        QLabel,
-        QDialog,
-        QLineEdit,
-        QFormLayout,
-        QComboBox,
-        QSizePolicy,
-        QWidget,
-        QPlainTextEdit,
-        QMessageBox
+from PySide6.QtWidgets import (  # pylint: disable=E0611
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QDialog,
+    QLineEdit,
+    QFormLayout,
+    QComboBox,
+    QSizePolicy,
+    QMessageBox,
 )
-from PySide6.QtCore import Qt # pylint: disable=E0611
+from PySide6.QtCore import Qt  # pylint: disable=E0611
 
 from csvpath import CsvPaths
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
-from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.message_utility import MessageUtility as meut
+
 
 class NewRunDialog(QDialog):
     COLLECT_SERIAL = "collect serially"
@@ -33,13 +31,7 @@ class NewRunDialog(QDialog):
     METHODS[COLLECT_BY_LINE] = "collect_by_line"
     METHODS[FF_BY_LINE] = "fast_forward_by_line"
 
-    METHOD_NAMES = [
-                COLLECT_SERIAL,
-                FF_SERIAL,
-                COLLECT_BY_LINE,
-                FF_BY_LINE
-            ]
-
+    METHOD_NAMES = [COLLECT_SERIAL, FF_SERIAL, COLLECT_BY_LINE, FF_BY_LINE]
 
     def __init__(self, *, named_paths=None, named_file=None, parent):
         super().__init__(parent)
@@ -82,7 +74,9 @@ class NewRunDialog(QDialog):
 
         self.named_file_name_ctl = QComboBox()
         self.named_file_name_ctl.setEditable(True)
-        self.named_file_name_ctl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.named_file_name_ctl.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Preferred
+        )
         names = self.csvpaths.file_manager.named_file_names
         names.sort()
         for _ in names:
@@ -91,7 +85,7 @@ class NewRunDialog(QDialog):
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.named_file_name_ctl,
-            on_help=self.on_help_named_files
+            on_help=self.on_help_named_files,
         )
         form_layout.addRow("Named-file name: ", box)
         if self.named_file_name is not None:
@@ -103,7 +97,9 @@ class NewRunDialog(QDialog):
         #
         self.named_paths_name_ctl = QComboBox()
         self.named_paths_name_ctl.setEditable(True)
-        self.named_paths_name_ctl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.named_paths_name_ctl.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Preferred
+        )
         names = self.csvpaths.paths_manager.named_paths_names
         names.sort()
         for _ in names:
@@ -113,7 +109,7 @@ class NewRunDialog(QDialog):
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.named_paths_name_ctl,
-            on_help=self.on_help_named_paths
+            on_help=self.on_help_named_paths,
         )
         form_layout.addRow("Named-paths name: ", box)
         if self.named_paths_name is not None:
@@ -127,14 +123,16 @@ class NewRunDialog(QDialog):
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.template_ctl,
-            on_help=self.on_help_template
+            on_help=self.on_help_template,
         )
         form_layout.addRow(lbl, box)
         #
         # look for template in the named-paths group
         #
         if self.named_paths_name is not None:
-            template = self.csvpaths.paths_manager.get_template_for_paths(self.named_paths_name)
+            template = self.csvpaths.paths_manager.get_template_for_paths(
+                self.named_paths_name
+            )
             if template is not None:
                 self.template_ctl.setText(template)
 
@@ -146,10 +144,12 @@ class NewRunDialog(QDialog):
         box = HelpIconPackager.add_help(
             main=self.sidebar.main,
             widget=self.run_method_ctl,
-            on_help=self.on_help_run_method
+            on_help=self.on_help_run_method,
         )
         box.layout().addStretch()
-        form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        form_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
+        )
         form_layout.addRow("Run method: ", box)
 
         buttons_layout = QHBoxLayout()
@@ -158,34 +158,32 @@ class NewRunDialog(QDialog):
         self.on_names_change()
         main_layout.addLayout(buttons_layout)
 
-
-    def _adjust_fingerprint_if(self, name:str) -> str:
+    def _adjust_fingerprint_if(self, name: str) -> str:
         #
         # if we end in .csv check if the user rt-clicked a fingerprint file. i.e.
         # a 64 char str + is hex number. if so, remove the .csv; otherwise, swap
         # .csv for _csv
         #
         if name.endswith(".csv"):
-            _ = name[0:len(name) -4]
+            _ = name[0 : len(name) - 4]
             rdot = _.rfind(".")
             if rdot > -1:
-                fname = _[rdot+1:]
+                fname = _[rdot + 1 :]
                 if len(fname) == 64:
                     try:
                         int(fname, 16)
-                        name = name[0:len(name) -4]
+                        name = name[0 : len(name) - 4]
                     except ValueError:
-                        name = f"{name[0:len(name)-4]}_csv"
+                        name = f"{name[0 : len(name) - 4]}_csv"
                 else:
-                    name = f"{name[0:len(name)-4]}_csv"
+                    name = f"{name[0 : len(name) - 4]}_csv"
             else:
-                name = f"{name[0:len(name)-4]}_csv"
+                name = f"{name[0 : len(name) - 4]}_csv"
         return name
 
     @property
     def csvpaths(self) -> CsvPaths:
         return self.main.csvpaths
-
 
     def on_help_template(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("run/template.md")
@@ -234,7 +232,6 @@ class NewRunDialog(QDialog):
         else:
             self.run_button.setEnabled(False)
 
-
     def show_dialog(self) -> None:
         #
         # check if we have enough names to run
@@ -243,12 +240,18 @@ class NewRunDialog(QDialog):
             #
             #
             #
-            meut.message(title="No staged data", msg="You must stage data before you can start a run")
+            meut.message(
+                title="No staged data",
+                msg="You must stage data before you can start a run",
+            )
         if self.csvpaths.paths_manager.total_named_paths() == 0:
             #
             #
             #
-            meut.message(title="No CsvPath Language files", msg="You must load csvpaths into a named-paths group before you can start a run")
+            meut.message(
+                title="No CsvPath Language files",
+                msg="You must load csvpaths into a named-paths group before you can start a run",
+            )
         #
         # show the dialog
         #
@@ -273,7 +276,7 @@ class NewRunDialog(QDialog):
         try:
             nfn = self.named_file_name
             if nfn.startswith("$"):
-                nfn = nfn[1:nfn.find(".")]
+                nfn = nfn[1 : nfn.find(".")]
             has = self.csvpaths.file_manager.has_named_file(nfn)
         except Exception as e:
             print(f"Error: {type(e)}: {e}")
@@ -292,7 +295,7 @@ class NewRunDialog(QDialog):
         try:
             npn = self.named_paths_name
             if npn.startswith("$"):
-                npn = npn[1:npn.find(".")]
+                npn = npn[1 : npn.find(".")]
             has = self.csvpaths.paths_manager.has_named_paths(npn)
         except Exception as e:
             print(f"Error: {type(e)}: {e}")
@@ -313,14 +316,12 @@ class NewRunDialog(QDialog):
         #
         self._do_run(template=template)
 
-
-    def _do_run(self, template:str) -> None:
+    def _do_run(self, template: str) -> None:
         self.sidebar.main.run_paths(
-            method = NewRunDialog.METHODS.get(self.method),
-            named_paths_name = self.named_paths_name ,
-            named_file_name = self.named_file_name,
-            template = template
+            method=NewRunDialog.METHODS.get(self.method),
+            named_paths_name=self.named_paths_name,
+            named_file_name=self.named_file_name,
+            template=template,
         )
         self.close()
         return
-

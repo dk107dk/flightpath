@@ -1,15 +1,13 @@
 import traceback
-from PySide6.QtCore import QObject, Signal, Slot, QRunnable
-from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QRunnable
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.nos import Nos
-from pathlib import Path
 
 from flightpath.editable import EditStates
 from .data_worker_signals import DataWorkerSignals
 
-class MdWorker(QRunnable):
 
+class MdWorker(QRunnable):
     def __init__(self, filepath, main, editable=EditStates.EDITABLE):
         super().__init__()
         self.main = main
@@ -34,8 +32,5 @@ class MdWorker(QRunnable):
             self.signals.messages.emit(f"  Erroring opening {self.filepath}")
             self.signals.finished.emit(("Error", e, None))
             return
-        self.signals.messages.emit(f"Opened: {self.filepath}" )
+        self.signals.messages.emit(f"Opened: {self.filepath}")
         self.signals.finished.emit((self.filepath, data, self.editable))
-
-
-

@@ -8,6 +8,7 @@ from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.path_util import PathUtility as pathu
 from .os_utility import OsUtility as osut
 
+
 class FileUtility:
     APP_PATH = None
 
@@ -32,8 +33,8 @@ class FileUtility:
         print(f"fiut.join_overlapped: partsone: {partsone}")
         print(f"fiut.join_overlapped: partstwo: {partstwo}")
 
-        while partsone[len(partsone) -1] == partstwo[0]:
-            partsone = partsone[0:len(partsone) -1]
+        while partsone[len(partsone) - 1] == partstwo[0]:
+            partsone = partsone[0 : len(partsone) - 1]
         _ = partsone + partstwo
         print(f"fiut.join_overlapped: _: {_}")
         ret = os.sep.join(_)
@@ -41,7 +42,7 @@ class FileUtility:
         return ret
 
     @classmethod
-    def copy_results_back_to_cwd(self, *, main, from_path:str, use_name=None) -> str:
+    def copy_results_back_to_cwd(self, *, main, from_path: str, use_name=None) -> str:
         #
         # if use_name we attempt to use that as the new file name, with deconflicting.
         # this is helpful if you are using a named temp file because the named temp is
@@ -56,7 +57,10 @@ class FileUtility:
         to_nos = Nos(to_path)
         if to_nos.isfile():
             to_path = os.path.dirname(to_path)
-        to_path = FileUtility.deconflicted_path(to_path, use_name if use_name is not None else f"{os.path.basename(from_path)}")
+        to_path = FileUtility.deconflicted_path(
+            to_path,
+            use_name if use_name is not None else f"{os.path.basename(from_path)}",
+        )
         to_nos.path = to_path
         with DataFileReader(from_path) as ffrom:
             with DataFileWriter(path=to_path) as tto:
@@ -67,7 +71,6 @@ class FileUtility:
     def read_string(cls, path) -> str:
         with DataFileReader(path) as reader:
             return reader.read()
-
 
     @classmethod
     def deconflicted_path(cls, path, name) -> str:
@@ -83,7 +86,7 @@ class FileUtility:
         i = 0
         ss = cls.split_filename(name)
 
-        if ss[1].strip() == '':
+        if ss[1].strip() == "":
             ...
         else:
             ss[1] = f".{ss[1]}"
@@ -99,25 +102,25 @@ class FileUtility:
         name = os.path.basename(name)
         e = name.find(".")
         if e == -1:
-            return [name, '']
-        return [name[0:e], name[e+1:]]
+            return [name, ""]
+        return [name[0:e], name[e + 1 :]]
 
-#==============================
+    # ==============================
 
     @classmethod
     def make_app_path(cls, path, *, main=None) -> str:
-        #print(f"fiut: mkapppath: path: {path}")
+        # print(f"fiut: mkapppath: path: {path}")
         p = cls.app_path_or_given(path)
-        #print(f"fiut: mkapppath: p: {p}")
+        # print(f"fiut: mkapppath: p: {p}")
         if path == p:
             if main:
-                #print(f"Fiut: cannot find {path}")
+                # print(f"Fiut: cannot find {path}")
                 main.log(f"Fiut: cannot find {path}")
             else:
                 ...
-                #print(f"Fiut: cannot find {path}")
+                # print(f"Fiut: cannot find {path}")
             return None
-        #print(f"Fiut: mkapppath found path: {p}")
+        # print(f"Fiut: mkapppath found path: {p}")
         return p
 
     @classmethod
@@ -128,51 +131,50 @@ class FileUtility:
         return path
 
     @classmethod
-    def app_path_no_check(cls, path:str) -> str:
+    def app_path_no_check(cls, path: str) -> str:
         ap = cls.app_path()
         #
         # exp! added test to deal with tahoe change
         #
         t1 = None
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             ...
             t1 = ap
-            #print(f"fiut: app_path_no_check: NOT addingx 'flightpath': {t1}")
+            # print(f"fiut: app_path_no_check: NOT addingx 'flightpath': {t1}")
         else:
             t1 = os.path.join(ap, "flightpath")
-            #print(f"fiut: app_path_no_check: addingx 'flightpath': {t1}")
-        t1 = os.path.join( t1, path)
+            # print(f"fiut: app_path_no_check: addingx 'flightpath': {t1}")
+        t1 = os.path.join(t1, path)
         return t1
 
     @classmethod
     def app_path(cls) -> str:
         if cls.APP_PATH is None:
-            #print(f"getingsx attr: {getattr(sys, 'frozen', False)}")
-            if getattr(sys, 'frozen', False):
+            # print(f"getingsx attr: {getattr(sys, 'frozen', False)}")
+            if getattr(sys, "frozen", False):
                 # If the app is frozen, the base path is sys._MEIPASS
-                #path = sys._MEIPASS
+                # path = sys._MEIPASS
                 #
                 # mod claude solution vvvv:
                 #
                 bundle_dir = os.path.dirname(sys.executable)
                 t = os.path.join(os.path.dirname(bundle_dir), "Resources")
-                nos = Nos(t)
-                #print(f"getingsx path 2c exists: {t}: {nos.exists()}")
+                # print(f"getingsx path 2c exists: {t}: {nos.exists()}")
                 cls.APP_PATH = t
             else:
                 # If running in a normal dev environment
                 # path = .../flightpath/util
                 path = os.path.dirname(__file__)
-                #print(f"getingsx path 3: {path}")
+                # print(f"getingsx path 3: {path}")
                 # path = .../flightpath
                 path = os.path.dirname(path)
                 # path = .../ (home of the app)
                 cls.APP_PATH = os.path.dirname(path)
-        #print(f"getingsx path 4: {cls.APP_PATH}")
+        # print(f"getingsx path 4: {cls.APP_PATH}")
         return cls.APP_PATH
 
     @classmethod
-    def move_file_to_numbered(cls, path:str, dirpath:str=".") -> None:
+    def move_file_to_numbered(cls, path: str, dirpath: str = ".") -> None:
         nos = Nos(path)
         if not nos.exists():
             return
@@ -187,19 +189,19 @@ class FileUtility:
         nos.rename(t)
 
     @classmethod
-    def count_files(cls, dirpath:str) -> int:
+    def count_files(cls, dirpath: str) -> int:
         nos = Nos(dirpath)
         lst = nos.listdir()
         return len(lst)
 
     @classmethod
-    def is_in(path:str, is_in_dir:str) -> bool:
+    def is_in(path: str, is_in_dir: str) -> bool:
         return os.path.dirname(path) == os.path.basename(is_in_dir)
 
     @classmethod
     def real_home_dir(self) -> str:
-        """ this method gets the expected home dir for macos regardless of sandboxing
-            that may not be what you want because it may not be writable """
+        """this method gets the expected home dir for macos regardless of sandboxing
+        that may not be what you want because it may not be writable"""
         home = str(Path.home())
         if osut.is_mac():
             if home.find("Container") > -1:
@@ -218,7 +220,7 @@ class FileUtility:
                 return False
             if not os.path.exists(os.path.dirname(path)):
                 return False
-            with open( path, "w" ) as file:
+            with open(path, "w") as file:
                 file.write("test")
             nos = Nos(path)
             if nos.exists():
@@ -239,6 +241,7 @@ class FileUtility:
             if not os.path.exists(path):
                 return False
             from uuid import uuid4
+
             t = f"{uuid4()}"
             p = os.path.join(path, t)
             print(f"main.is_writable_dir: attempting to write to: {p}")
@@ -248,26 +251,32 @@ class FileUtility:
             return False
 
     @classmethod
-    def to_sandbox_path(cls, path:str) -> str:
+    def to_sandbox_path(cls, path: str) -> str:
         if osut.is_mac() and osut.is_sandboxed():
             insert = "/Library/Containers/com.flightpathdata.flightpath"
             # do stuff
             if path.find(insert) > -1:
-                print(f"FileUtility.to_sandbox_path: {path} appears to be in sandbox already.")
+                print(
+                    f"FileUtility.to_sandbox_path: {path} appears to be in sandbox already."
+                )
                 return path
             #
             # separating out Data is probably not needed, but it doesn't hurt and may help in some cases
             #
             insert = os.path.join(insert, "Data")
-            if path.startswith( os.path.expanduser('~') ):
-                print(f"FileUtility.to_sandbox_path: {path} is under the user's home at {os.path.expanduser('~')}")
-                top = path[0:len(os.path.expanduser('~'))]
-                bottom = path[len(os.path.expanduser('~')):]
+            if path.startswith(os.path.expanduser("~")):
+                print(
+                    f"FileUtility.to_sandbox_path: {path} is under the user's home at {os.path.expanduser('~')}"
+                )
+                top = path[0 : len(os.path.expanduser("~"))]
+                bottom = path[len(os.path.expanduser("~")) :]
                 new_path = f"{top}{insert}{bottom}"
             elif path.startswith("/Users/"):
-                print(f"FileUtility.to_sandbox_path: {path} is under the users home at /Users/")
+                print(
+                    f"FileUtility.to_sandbox_path: {path} is under the users home at /Users/"
+                )
                 parts = pathu.parts(path)
-                bottom = path[len(f"/Users/{parts[2]}"):]
+                bottom = path[len(f"/Users/{parts[2]}") :]
                 new_path = f"/Users/{parts[2]}{insert}{bottom}"
             print(f"FileUtility.to_sandbox_path: {path} converted to {new_path}")
             #
@@ -277,12 +286,16 @@ class FileUtility:
             if os.path.exists(ndir) and os.path.isfile(ndir):
                 ndir = os.path.dirname(ndir)
             if not cls.is_writable_dir(ndir):
-                print(f"FileUtility.to_sandbox_path: converted dir {ndir} is not writable")
+                print(
+                    f"FileUtility.to_sandbox_path: converted dir {ndir} is not writable"
+                )
                 return None
             return new_path
         elif osut.is_sandboxed():
-            print(f"Error: FileUtility.to_sandbox_path: must be a mac if sandboxed")
+            print("Error: FileUtility.to_sandbox_path: must be a mac if sandboxed")
             return None
         else:
-            print(f"FileUtility.to_sandbox_path: not a mac. Cannot try to convert {path} to sandbox path.")
+            print(
+                f"FileUtility.to_sandbox_path: not a mac. Cannot try to convert {path} to sandbox path."
+            )
             return None

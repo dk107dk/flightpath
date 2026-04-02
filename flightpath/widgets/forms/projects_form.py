@@ -1,18 +1,11 @@
 import os
 
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QPushButton,
-    QMessageBox,
-    QLabel
-)
+from PySide6.QtWidgets import QLineEdit, QFormLayout, QPushButton, QMessageBox
 
-from csvpath.util.config import Config
 from csvpath.util.nos import Nos
 from flightpath.util.os_utility import OsUtility as osut
 from .blank_form import BlankForm
+
 
 class ProjectsForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -32,7 +25,7 @@ class ProjectsForm(BlankForm):
         self._setup()
 
     def on_click_open(self) -> None:
-        path = os.path.join( self.main.state.home, self.main.state.projects_home)
+        path = os.path.join(self.main.state.home, self.main.state.projects_home)
         nos = Nos(path)
         if not nos.exists():
             print(f"ProjectsForm: on_click_open: {path} doesn't exist. Creating it.")
@@ -46,7 +39,7 @@ class ProjectsForm(BlankForm):
             o = osut.file_system_open_cmd()
             print(f"ProjectsForm: on_click_open: opening {path} with {o}")
             os.system(f'{o} "{path}"')
-        print(f"ProjectsForm: on_click_open: done.")
+        print("ProjectsForm: on_click_open: done.")
 
     def _setup(self) -> None:
         self.project_dir.textChanged.connect(self.main.on_config_changed)
@@ -59,7 +52,7 @@ class ProjectsForm(BlankForm):
             if not nos.exists():
                 try:
                     nos.makedirs()
-                except Exception as e:
+                except Exception:
                     print("ProjectsForm: add_to_config: error: {type(e)}: {e}")
                     self.alert()
             if self.main.is_writable(path):
@@ -69,15 +62,15 @@ class ProjectsForm(BlankForm):
                 print(f"ProjectsForm: add_to_config: {path} is not writable")
                 self.project_dir.setText(self.original_projects_home)
 
-
     def alert(self) -> None:
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Critical)
         msg_box.setWindowTitle("Not writable")
-        msg_box.setText(f"{path} is not a writable location. Your projects path has not been changed. Please pick another projects directory.")
+        msg_box.setText(
+            "Not a writable location. Your projects path has not been changed. Please pick another projects directory."
+        )
         msg_box.setStandardButtons(QMessageBox.Ok)
         msg_box.exec()
-
 
     def populate(self):
         self.original_projects_home = self.main.state.projects_home
@@ -98,4 +91,3 @@ class ProjectsForm(BlankForm):
     @property
     def tabs(self) -> list[str]:
         return []
-

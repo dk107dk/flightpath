@@ -1,12 +1,10 @@
 import unittest
-import os
 
-from csvpath.util.nos import Nos
 
 from flightpath.util.string_utility import StringUtility as strut
 
-class TestStringUtil(unittest.TestCase):
 
+class TestStringUtil(unittest.TestCase):
     def test_to_list(self):
         text = """
             { "a":"b"}{
@@ -18,5 +16,3 @@ class TestStringUtil(unittest.TestCase):
         print(f"lst: {lst}")
         assert lst
         assert len(lst) == 2
-
-
