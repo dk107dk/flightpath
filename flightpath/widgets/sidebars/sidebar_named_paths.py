@@ -69,11 +69,23 @@ class SidebarNamedPaths(SidebarRightBase):
             header = self.view.header()
             header.setStretchLastSection(True)
             header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+
+            title = "Csvpaths loaded locally"
+            nos = Nos(named_paths_path)
+            if nos.is_sftp:
+                title = "Csvpaths loaded in SFTP"
+            elif nos.is_s3:
+                title = "Csvpaths loaded in S3"
+            elif nos.is_azure:
+                title = "Csvpaths loaded in Azure"
+            elif nos.is_gcs:
+                title = "Csvpaths loaded in GCS"
+
             self.model = TreeModel(
                 headers=["Csvpath groups"],
                 data=nos,
                 parent=self,
-                title="Loaded named-paths groups",
+                title=title,
                 sidebar=self,
             )
             self.model.set_style(self.view.style())

@@ -90,7 +90,6 @@ class NewRunDialog(QDialog):
         form_layout.addRow("Named-file name: ", box)
         if self.named_file_name is not None:
             self.named_file_name = self._adjust_fingerprint_if(self.named_file_name)
-
             self.named_file_name_ctl.setEditText(self.named_file_name)
         #
         # named paths name

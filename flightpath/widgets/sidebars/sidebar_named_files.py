@@ -70,11 +70,26 @@ class SidebarNamedFiles(SidebarRightBase):
             self.view.setAutoScroll(True)
             self.view.setIndentation(20)
             self.view.setColumnWidth(0, 250)
+
+            title = "Files staged locally"
+            nos = Nos(named_files_path)
+            if nos.is_sftp:
+                title = "Files staged in SFTP"
+            elif nos.is_s3:
+                title = "Files staged in S3"
+            elif nos.is_azure:
+                title = "Files staged in Azure"
+            elif nos.is_gcs:
+                title = "Files staged in GCS"
+            #
+            # can we be more clear about where files are?
+            #
+
             self.model = TreeModel(
                 headers=["Staged files"],
                 data=nos,
                 parent=self,
-                title="Staged named-files",
+                title=title,
                 sidebar=self,
             )
             self.model.set_style(self.view.style())

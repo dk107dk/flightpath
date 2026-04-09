@@ -70,11 +70,22 @@ class SidebarArchive(SidebarRightBase):
             header = self.view.header()
             header.setStretchLastSection(True)
             header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+
+            title = "Local results archive"
+            if nos.is_sftp:
+                title = "SFTP results archive"
+            elif nos.is_s3:
+                title = "S3 results archive"
+            elif nos.is_azure:
+                title = "Azure results archive"
+            elif nos.is_gcs:
+                title = "GCS results archive"
+
             self.model = TreeModel(
                 headers=["Archive"],
                 data=nos,
                 parent=self,
-                title="Archived results",
+                title=title,
                 sidebar=self,
             )
             self.model.set_style(self.view.style())

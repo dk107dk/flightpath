@@ -29,7 +29,7 @@ class TemplateDialog(QDialog):
         self.set_button = QPushButton()
         self.set_button.setText("Set")
         self.set_button.clicked.connect(self.do_set)
-        self.set_button.setEnabled(False)
+        self.set_button.setEnabled(True)
         self.cancel_button = QPushButton()
         self.cancel_button.setText("Cancel")
         self.cancel_button.clicked.connect(self.reject)
@@ -81,11 +81,17 @@ class TemplateDialog(QDialog):
             self.sidebar.main.helper.on_click_help()
 
     def _edit(self) -> None:
+        ...
+        #
+        # we don't want to disable because we need to be able to set the template to "", i.e. remove it
+        #
+        """
         t = self.template_ctl.text()
         if t and t.strip() != "":
             self.set_button.setEnabled(True)
         else:
             self.set_button.setEnabled(False)
+        """
 
     def show_dialog(self) -> None:
         self.exec()

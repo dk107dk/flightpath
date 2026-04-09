@@ -16,10 +16,10 @@ from flightpath.util.message_utility import MessageUtility as meut
 
 
 class ActivationDialog(QDialog):
-    COLLECT_SERIAL = "collect_paths"
-    FF_SERIAL = "fast-forward_paths"
-    COLLECT_BY_LINE = "collect_by_line"
-    FF_BY_LINE = "fast-forward_by_line"
+    COLLECT_SERIAL = "Collect"
+    FF_SERIAL = "Fast-forward"
+    COLLECT_BY_LINE = "Collect by line"
+    FF_BY_LINE = "Fast-forward by line"
 
     METHODS = {}
     METHODS[COLLECT_SERIAL] = "collect_paths"
@@ -86,6 +86,15 @@ class ActivationDialog(QDialog):
             on_help=self.on_help_named_paths,
         )
         form_layout.addRow("Named-paths name: ", box)
+        #
+        # if we have an on_arrival already stored, select it.
+        #
+        d = self.csvpaths.file_manager.describer
+        oa = d.get_on_arrival(self.named_file_name)
+        if oa is not None and not len(oa) == 0:
+            print(f"actd: oa: {oa}")
+            n = oa["named_paths_group"]
+            self.named_paths_name_ctl.setEditText(n)
 
         self.run_method_ctl = QComboBox()
         self.run_method_ctl.setStyleSheet("QComboBox { width:450px }")
@@ -102,6 +111,16 @@ class ActivationDialog(QDialog):
             QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
         )
         form_layout.addRow("Run method: ", box)
+        #
+        # if we have an on_arrival set the existing run method
+        #
+        if oa is not None and not len(oa) == 0:
+            print(f"actd: oa: {oa}")
+            n = oa["run_method"]
+            if str(n).strip() != "":
+                k = next((k for k, v in self.METHODS.items() if v == n), None)
+                index = self.run_method_ctl.findText(k)
+                self.run_method_ctl.setCurrentIndex(index)
 
         buttons_layout = QHBoxLayout()
         buttons_layout.addWidget(self.cancel_button)
@@ -167,6 +186,8 @@ class ActivationDialog(QDialog):
             a = {}
             j[describer.ON_ARRIVAL] = a
         a[describer.NAMED_PATHS_GROUP] = npn
+        method = self.METHODS[method]
         a[describer.RUN_METHOD] = method
-        describer.store_json(self.named_file_name, j)
+        describer.store_on_arrival(self.named_file_name, a)
+        # describer.store_json(self.named_file_name, j)
         self.close()

@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QColor
 from PySide6.QtCore import QThreadPool
 
+import darkdetect
 
 from flightpath.widgets.ai.query_form import QueryFormWidget
 from flightpath.widgets.ai.query_accordion import QueryAccordionWidget
@@ -33,6 +34,13 @@ class QueryTabWidget(QWidget):
         self.form.querySubmitted.connect(self.on_query_submitted)
         self.accordion.itemClicked.connect(self.on_item_clicked)
         self.accordion.itemCloseRequested.connect(self.on_item_close_requested)
+
+    def update_style(self) -> None:
+        if darkdetect.isDark():
+            ...
+        else:
+            ...
+        self.accordion.update_style()
 
     def enable_for_extension(self, e: str) -> None:
         self.form.activity_selector.enable_for_extension(e)

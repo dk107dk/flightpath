@@ -236,6 +236,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         # call show() right away.
         #
         self.launch_shows = None
+        self.update_opens()
         #
         # react to light/dark changes
         #
@@ -244,18 +245,22 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         )
         if darkdetect.isDark():
             self.on_color_scheme_changed()
-
+        #
+        # if the user clicked config AI in the splash
+        #
+        if self.setup_ai_flag is True:
+            self.open_ai_config()
         #
         # kickoff a precache worker to collect some info about files
         #
         QTimer.singleShot(1000, self._run_precacher)
-        self.update_opens()
-        if self.setup_ai_flag is True:
-            self.open_config()
-            self.config.config_panel.forms_layout.setCurrentIndex(13)
-            fallback = f"config{os.sep}about.md"
-            self.config.show_help_for_form("llm", fallback=fallback)
-            return
+
+    def open_ai_config(self) -> None:
+        self.open_config()
+        self.config.config_panel.forms_layout.setCurrentIndex(13)
+        fallback = f"config{os.sep}about.md"
+        self.config.show_help_for_form("llm", fallback=fallback)
+        return
 
     def update_opens(self) -> None:
         data = self.state.data
@@ -315,6 +320,11 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             if self.rt_col:
                 self.rt_col.setStyleSheet(s)
             self.main.setStyleSheet(s)
+        #
+        # update the AI tab
+        #
+        self.ai_query_tab.update_style()
+
         #
         # schedule an update for the splitters
         #
@@ -490,6 +500,10 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         self.main.setSizes([5, 1])
         self.helper.assure_help_tab()
         #
+        # make the AI tab ahead of so it is present for darkdetect
+        #
+        self.ai_query_tab = QueryTabWidget(main=self)
+        #
         # left side tree
         #
         self.sidebar = Sidebar(main=self)
@@ -540,10 +554,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             main=self, config=self.csvpath_config, role=3
         )
         self.rt_col.addWidget(self.sidebar_rt_bottom)
-        #
-        # make the AI tab
-        #
-        self.ai_query_tab = QueryTabWidget(main=self)
         #
         # add two tabs to tab widget
         #
@@ -834,7 +844,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             else:
                 json_view = json_view[1]
             taut.select_tab(self.content.tab_widget, json_view)
-            self.main._rt_tabs_show()
+            self._rt_tabs_show()
         except Exception as e:
             print(traceback.format_exc())
             print(f"Error opening json: {type(e)}: {e}")
@@ -1056,7 +1066,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                 self.content.toolbar.enable()
             self.show_now_or_later(self.content.toolbar)
             taut.select_tab(self.content.tab_widget, dv)
-            self.main._rt_tabs_show()
+            self._rt_tabs_show()
         except Exception:
             print(traceback.format_exc())
             print(

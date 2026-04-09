@@ -44,6 +44,10 @@ class Welcome(QWidget):
         image_label.setPixmap(pixmap)
         image_label.setAlignment(Qt.AlignCenter)
 
+        self.button_find_data = None
+        self.button_run = None
+        self.button_ai = None
+        self.button_copy_in = None
         #
         # these boxes have a button + help icon
         #
@@ -56,12 +60,16 @@ class Welcome(QWidget):
         self.find_data_box = self._find_data_button(
             on_click=self.on_click_find_data, on_help=self.on_click_find_data_help
         )
+        self.config_ai_box = self._ai_button(
+            on_click=self.on_click_config_ai, on_help=self.on_click_config_ai_help
+        )
 
         top_layout = QVBoxLayout()
         top_layout.addWidget(image_label)
         top_layout.addWidget(self.copy_in_box)
         top_layout.addWidget(self.run_box)
         top_layout.addWidget(self.find_data_box)
+        top_layout.addWidget(self.config_ai_box)
         top_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         top_box = QWidget()
@@ -124,6 +132,9 @@ class Welcome(QWidget):
     def _new_run(self) -> None:
         self.new_run_dialog = NewRunDialog(parent=self)
         self.main.show_now_or_later(self.new_run_dialog)
+
+    def on_click_config_ai(self) -> None:
+        self.main.open_ai_config()
 
     def on_click_find_data_help(self) -> None:
         md = HelpFinder(main=self.main).help("find_file_by_reference_dialog/help.md")
@@ -209,6 +220,12 @@ class Welcome(QWidget):
         if not self.main.helper.is_showing_help():
             self.main.helper.on_click_help()
 
+    def on_click_config_ai_help(self) -> None:
+        md = HelpFinder(main=self.main).help("config/llm.md")
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
+
     def on_click_validate_help(self) -> None:
         md = HelpFinder(main=self.main).help("welcome/validate.md")
         self.main.helper.get_help_tab().setMarkdown(md)
@@ -236,6 +253,16 @@ class Welcome(QWidget):
         self.update_run_button()
         return box
 
+    def _ai_button(self, *, on_click, on_help) -> QWidget:
+        self.button_ai = QPushButton()
+        self.button_ai.setStyleSheet("QPushButton { width:170px;}")
+        box = HelpIconPackager.add_help(
+            main=self.main, widget=self.button_ai, on_help=on_help
+        )
+        self.button_ai.setText("Configure AI")
+        self.button_ai.clicked.connect(on_click)
+        return box
+
     def update_run_button(self) -> None:
         paths = self.main.csvpaths
         try:
@@ -258,7 +285,22 @@ class Welcome(QWidget):
         )
         self.button_find_data.setText("Find data")
         self.button_find_data.clicked.connect(on_click)
+        self.update_find_data_button()
         return box
+
+    def update_find_data_button(self) -> None:
+        paths = self.main.csvpaths
+        try:
+            if (
+                paths.file_manager.named_files_count == 0
+                and len(paths.results_manager.list_named_results()) == 0
+            ):
+                self.button_find_data.setEnabled(False)
+            else:
+                self.button_find_data.setEnabled(True)
+        except Exception as ex:
+            msg = f"Error during setup: {ex}"
+            meut.warning(parent=self, msg=msg, title="Error")
 
     def _validate_button(self, *, on_click, on_help) -> QWidget:
         self.button_validate = QPushButton()

@@ -2,10 +2,11 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QFrame
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Signal
 
+import darkdetect
+
 from flightpath.widgets.ai.query_accordion_item import QueryAccordionItem
 
 
-# was
 class QueryAccordionWidget(QWidget):
     itemClicked = Signal(object)
     itemCloseRequested = Signal(object)
@@ -31,9 +32,19 @@ class QueryAccordionWidget(QWidget):
 
         self._items = []
         self.setObjectName("acc")
-        self.setStyleSheet(
-            "QWidget { background-color:#fafafa;border-top:0px solid #ddd; }"
-        )
+        self.update_style()
+
+    def update_style(self) -> None:
+        if darkdetect.isDark():
+            self.setStyleSheet(
+                "QWidget { background-color:#535353;border-top:0px solid #ddd; }"
+            )
+        else:
+            self.setStyleSheet(
+                "QWidget { background-color:#fafafa;border-top:0px solid #ddd; }"
+            )
+        for _ in self.items:
+            _.update_style()
 
     @property
     def items(self) -> list:

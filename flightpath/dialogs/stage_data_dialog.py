@@ -57,7 +57,7 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
 
         file = Nos(self.path).isfile()
         if file:
-            self.setFixedHeight(200)
+            self.setFixedHeight(226)
         else:
             self.setFixedHeight(260)
 
@@ -103,7 +103,16 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
             on_help=self.on_help_template,
         )
         box.setFixedHeight(30)
-        form_layout.addRow("Template (used, not stored):", box)
+        form_layout.addRow("Template:", box)
+
+        #
+        # add checkbox for store as default template
+        #
+        self.default_ctl = QCheckBox("Yes")
+        self.default_ctl.setChecked(False)
+        self.default_ctl.setEnabled(False)
+        self.template_ctl.textChanged.connect(self._update_template)
+        form_layout.addRow("Store template:", self.default_ctl)
 
         self._setup_t_gen_area()
         form_layout.addRow("Path will be: ", self.t_gen_area)
@@ -124,6 +133,13 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
         buttons.setLayout(buttons_layout)
         main_layout.addWidget(buttons)
         self._csvpaths = None
+
+    def _update_template(self) -> None:
+        t = self.template_ctl.text()
+        if str(t).strip() in [None, ""]:
+            self.default_ctl.setEnabled(False)
+        else:
+            self.default_ctl.setEnabled(True)
 
     def _check_for_template(self) -> None:
         n = self.named_file_name_ctl.text()
@@ -191,6 +207,7 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
         self.area.setFixedWidth(487)
         self.area.setFixedHeight(27)
         self.area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.area.setAlignment(Qt.AlignVCenter)
 
         # Create a content widget that can overflow
         content_widget = QWidget()
@@ -268,4 +285,3 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
 
     def show_dialog(self) -> None:
         self.exec()
-        # self.show()

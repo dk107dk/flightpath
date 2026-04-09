@@ -9,6 +9,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QColor, QPainter, QBrush
 from PySide6.QtCore import Qt, Signal, QSize
 
+import darkdetect
+
 from flightpath.workers.ai_worker import AiWorker
 
 ACTIVITY_ICONS = {
@@ -57,34 +59,24 @@ class QueryAccordionItem(QWidget):
         main_layout.setContentsMargins(8, 4, 8, 4)
         main_layout.setSpacing(2)
 
-        header = QWidget(self)
-        header.setObjectName("ai_item")
-        # header.setStyleSheet("QWidget#ai_item { border: 0px; }")
-        header.setStyleSheet(
-            """
-QWidget#ai_item {
-    background-color: #eeeeee;
-    border: 1px solid #999;
-    border-radius:5px;
-    min-height:33px;
-    padding:2px 5px 2px 5px;
-}""".replace("\n", "")
-        )
+        self.header = QWidget(self)
+        self.header.setObjectName("ai_item")
+        self.update_style()
 
-        header_layout = QHBoxLayout(header)
+        header_layout = QHBoxLayout(self.header)
         header_layout.setContentsMargins(0, 0, 0, 0)
         header_layout.setSpacing(8)
 
-        self.status_dot = StatusDot(status_color, header)
+        self.status_dot = StatusDot(status_color, self.header)
         self.status_dot.setFixedWidth(24)
         self.status_dot.setStyleSheet("StatusDot { padding-left:10px; }")
 
-        self.icon_label = QLabel(ACTIVITY_ICONS.get(activity, ""), header)
+        self.icon_label = QLabel(ACTIVITY_ICONS.get(activity, ""), self.header)
         self.icon_label.setFixedWidth(24)
         self.icon_label.setAlignment(Qt.AlignCenter)
         self.icon_label.setStyleSheet("QLabel { border: 0px;background-color:none }")
 
-        self.title_label = QLabel(title, header)
+        self.title_label = QLabel(title, self.header)
         self.title_label.setStyleSheet(
             "font-weight: 500;border:0px;background-color:none; "
         )
@@ -105,16 +97,27 @@ QWidget#ai_item {
         header_layout.addWidget(self.title_label, 1)
         header_layout.addWidget(self.close_button)
 
-        main_layout.addWidget(header)
+        main_layout.addWidget(self.header)
 
-        # line = QFrame(self)
-        # line.setFrameShape(QFrame.HLine)
-        # line.setStyleSheet("QFrame { background-color: #999; border: none;height:1px; }")
-        # main_layout.addWidget(line)
-
-        header.mousePressEvent = self._on_header_clicked
+        self.header.mousePressEvent = self._on_header_clicked
         self.close_button.clicked.connect(self._on_close_clicked)
         self._worker = None
+
+    def update_style(self) -> None:
+        back = "333" if darkdetect.isDark() else "eee"
+        border = "777" if darkdetect.isDark() else "999"
+        o = "{"
+        c = "}"
+        self.header.setStyleSheet(
+            f"""
+            QWidget#ai_item {o}
+                background-color: #{back};
+                border: 1px solid #{border};
+                border-radius:5px;
+                min-height:33px;
+                padding:2px 5px 2px 5px;
+            {c}""".replace("\n", "")
+        )
 
     @property
     def worker(self) -> AiWorker:

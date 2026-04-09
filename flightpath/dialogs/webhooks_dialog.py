@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (  # pylint: disable=E0611
 )
 from PySide6.QtCore import Qt  # pylint: disable=E0611
 
+from csvpath.managers.paths.paths_describer import Webhook
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
@@ -32,7 +33,7 @@ class WebhooksDialog(QDialog):
         self.set_button = QPushButton()
         self.set_button.setText("Set")
         self.set_button.clicked.connect(self.do_set)
-        self.set_button.setEnabled(False)
+        self.set_button.setEnabled(True)
         self.cancel_button = QPushButton()
         self.cancel_button.setText("Cancel")
         self.cancel_button.clicked.connect(self.reject)
@@ -126,15 +127,19 @@ class WebhooksDialog(QDialog):
         c = mgr.describer.get_webhooks(self.name)
         if c is None:
             raise ValueError("Webhooks config cannot be None")
-        c.all_url = self.all_url.text()
-        c.valid_url = self.valid_url.text()
-        c.invalid_url = self.invalid_url.text()
-        c.error_url = self.error_url.text()
 
-        c.on_complete_all = self.on_complete_all.text()
-        c.on_complete_valid = self.on_complete_valid.text()
-        c.on_complete_invalid = self.on_complete_invalid.text()
-        c.on_complete_error = self.on_complete_error.text()
+        c.on_complete_all = Webhook(
+            payload=self.on_complete_all.text(), url=self.all_url.text()
+        )
+        c.on_complete_valid = Webhook(
+            payload=self.on_complete_valid.text(), url=self.valid_url.text()
+        )
+        c.on_complete_invalid = Webhook(
+            payload=self.on_complete_invalid.text(), url=self.invalid_url.text()
+        )
+        c.on_complete_error = Webhook(
+            payload=self.on_complete_error.text(), url=self.error_url.text()
+        )
 
         mgr.describer.store_webhooks(self.name, c)
         self.close()
@@ -145,20 +150,24 @@ class WebhooksDialog(QDialog):
         if c is None:
             raise ValueError("Webhooks config cannot be None")
 
-        self.all_url.setText(c.all_url if c.all_url else "")
-        self.valid_url.setText(c.valid_url if c.valid_url else "")
-        self.invalid_url.setText(c.invalid_url if c.invalid_url else "")
-        self.error_url.setText(c.error_url if c.error_url else "")
-        self.on_complete_all.setText(c.on_complete_all if c.on_complete_all else "")
-        self.on_complete_valid.setText(
-            c.on_complete_invalid if c.on_complete_invalid else ""
-        )
-        self.on_complete_invalid.setText(
-            c.on_complete_valid if c.on_complete_valid else ""
-        )
-        self.on_complete_error.setText(
-            c.on_complete_error if c.on_complete_error else ""
-        )
+        a = c.on_complete_all.url if c.on_complete_all else ""
+        v = c.on_complete_valid.url if c.on_complete_valid else ""
+        i = c.on_complete_invalid.url if c.on_complete_invalid else ""
+        e = c.on_complete_error.url if c.on_complete_error else ""
+        self.all_url.setText(a)
+        self.valid_url.setText(v)
+        self.invalid_url.setText(i)
+        self.error_url.setText(e)
+
+        a = c.on_complete_all.payload if c.on_complete_all else ""
+        v = c.on_complete_valid.payload if c.on_complete_valid else ""
+        i = c.on_complete_invalid.payload if c.on_complete_invalid else ""
+        e = c.on_complete_error.payload if c.on_complete_error else ""
+
+        self.on_complete_all.setText(a)
+        self.on_complete_valid.setText(v)
+        self.on_complete_invalid.setText(i)
+        self.on_complete_error.setText(e)
 
     def on_help_webhooks(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("webhooks/webhooks.md")
@@ -170,10 +179,16 @@ class WebhooksDialog(QDialog):
             self.sidebar.main.helper.on_click_help()
 
     def _edit(self) -> None:
+        ...
+        #
+        # we have to enable removing webhooks by saving ""
+        #
+        """
         if self._any_and_no_stragglers():
             self.set_button.setEnabled(True)
         else:
             self.set_button.setEnabled(False)
+        """
 
     def _any_and_no_stragglers(self) -> bool:
         t = False

@@ -1,5 +1,4 @@
 import os
-
 from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
@@ -748,6 +747,10 @@ class Sidebar(QWidget):
                         template=template,
                         recurse=recurse,
                     )
+            if self.stage_dialog.default_ctl.isChecked():
+                paths.file_manager.describer.store_template(
+                    named_file_name, "" if template is None else template
+                )
         except Exception as e:
             meut.message(title="Stage error", msg=f"{e}")
             return

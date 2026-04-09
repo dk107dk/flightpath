@@ -1,8 +1,12 @@
-## Large Language Model
+## Large Language Models
 
 FlightPath Data integrates with most AI LLM APIs. This form allows you to specify model and endpoint connectivity.
 
 The model is expected to be one of the commercial LLMs. The Claude, Gemini, and GPT families have been tested. Other similar models may also give good results.
+
+## The AI Config Settings
+
+In the config panel, look under the `llm` vertical tab. The `llm` tab allows you to set up your AI credentials for one project or all projects. If you add your credentials with the `Use for all projects` checkbox checked, you can still override the AI settings on a project-by-project basis.
 
 The `model` field is a technical model name, like `claude-sonnet-4-5-20250929` or `gpt-5.1-2025-11-13`.
 
