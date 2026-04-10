@@ -1,5 +1,6 @@
 import os
 import json
+import traceback
 
 from PySide6.QtWidgets import (
     QTabWidget,
@@ -16,7 +17,7 @@ from PySide6.QtCore import Slot, Qt, QMarginsF
 
 from csvpath.util.nos import Nos
 
-from flightpath.widgets.panels.json_viewer import JsonViewer
+from flightpath.widgets.panels.json_viewer import JsonViewer, KeyableTreeView
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.tabs_nonscrolling_tab_bar import NonScrollingTabBar
@@ -154,11 +155,27 @@ class ClosingTabs(QTabWidget):
             print(f"md: txt: {txt}")
             self.main.save_sample(path=path, name=ton, data=txt)
             print("done saving")
+        elif isinstance(t, DataViewer):
+            path = t.path
+            d = self.main.sidebar.selected_file_path()
+            if d is None:
+                d = self.main.state.cwd
+            else:
+                d = os.path.dirname(d)
+            p = os.path.basename(path)
+            path = os.path.join(d, p)
+            t._save(path=path)
+            print("done saving")
         else:
             layout = t.layout()
             w = layout.itemAt(0).widget()
-            txt = w.toPlainText()
-            self.main.save_sample(path=path, name=ton, data=txt)
+            if isinstance(w, KeyableTreeView):
+                j = w.parent().model.to_json()
+                self.main.save_sample(path=path, name=ton, data=j)
+            else:
+                txt = w.toPlainText()
+                self.main.save_sample(path=path, name=ton, data=txt)
+            print("done saving")
 
     @Slot(str)
     def close_tab(self, name: str) -> bool:
@@ -183,13 +200,17 @@ class ClosingTabs(QTabWidget):
         # remove and delete
         #
         if t:
-            self.removeTab(t[0])
-            t[1].deleteLater()
-            #
-            # show and hides
-            #
-            self._configure_tabs()
-            return True
+            try:
+                self.removeTab(t[0])
+                t[1].setParent(None)
+                t[1].deleteLater()
+                #
+                # show and hides
+                #
+                self._configure_tabs()
+                return True
+            except Exception:
+                print(traceback.format_exc())
         return False
 
     def close_tab_at(self, index: int) -> bool:
@@ -201,6 +222,7 @@ class ClosingTabs(QTabWidget):
         t = self.widget(index)
         if t:
             self.removeTab(index)
+            t.setParent(None)
             t.deleteLater()
             self._configure_tabs()
             return True

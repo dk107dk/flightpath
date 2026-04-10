@@ -139,15 +139,6 @@ class SidebarArchive(SidebarRightBase):
             self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
-    """
-    def update_style(self) -> None:
-        try:
-            self.model.set_style(self.view.style())
-        except Exception as e:
-            print(f"{type(e)} error in archive: {e}")
-            print(traceback.format_exc())
-    """
-
     def refresh(self) -> None:
         if self.view:
             layout = self.layout()  # Get the existing layout

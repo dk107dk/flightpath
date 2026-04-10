@@ -39,6 +39,7 @@ from PySide6.QtCore import (  # pylint: disable=E0611
 from csvpath.util.config import Config as CsvPathConfig
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
+from csvpath.util.path_util import PathUtility as pathu
 from csvpath import CsvPaths
 
 from flightpath.hidden import Hidden
@@ -1510,16 +1511,17 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         self.content.tab_widget.close_tab(source)
 
     def save_sample(self, *, path: str, name: str, data: str) -> str:
-        print(f"main.savesample: path: {path}")
-        print(f"main.savesample: data: {data}")
-        print(f"main.savesample: name: {name}")
-        #
-        # if the app entered a subpath somehow pull it off name, into path, and check if it exists
-        #
-        if name.find(os.sep):
-            path = os.path.join(path, name)
-            name = os.path.basename(path)
-            path = os.path.dirname(path)
+        parts = pathu.parts(name)
+        name = parts[len(parts) - 1]
+        path = self.sidebar.selected_file_path()
+        if path and Nos(path).isfile:
+            bpath = os.path.dirname(path)
+            if bpath == path or path == name:
+                path = ""
+            else:
+                path = bpath
+        if path in [None, ""]:
+            path = self.state.cwd
         #
         # if we're not saving to the root check that we have a location
         #
@@ -1540,7 +1542,19 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         #
         if ok and new_name and new_name.strip() != "":
-            if not isinstance(data, str) and not new_name.endswith(".csv"):
+            exts = [
+                "csv",
+                "json",
+                "jsonl",
+                "jsonlines",
+                "ndjson",
+                "xlsx",
+                "xls",
+                "parquet",
+                "md",
+                "txt",
+            ]
+            if isinstance(data, str) and not fiut.is_a(new_name, exts):
                 new_name = f"{new_name}.csv"
             #
             # do the same subpath rejiggering in case the user added a subpath to name

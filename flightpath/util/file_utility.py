@@ -13,6 +13,14 @@ class FileUtility:
     APP_PATH = None
 
     @classmethod
+    def is_a(cls, path: str, exts: list[str]) -> bool:
+        p = Path(path)
+        s = p.suffix
+        s = "" if s is None else s
+        s = s.strip(".")
+        return s in exts
+
+    @classmethod
     def join_local_overlapped(cls, pathone, pathtwo) -> str:
         if pathone is None:
             raise ValueError("pathone cannot be None")

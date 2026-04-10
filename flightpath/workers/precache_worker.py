@@ -8,21 +8,20 @@ from .precache_worker_signals import PreCacheWorkerSignals
 class PreCacheWorker(QRunnable):
     def __init__(self, cwd: str, *, main):
         super().__init__()
-        self.main = main
         self.cwd = cwd
         self.signals = PreCacheWorkerSignals()
+        self.csvpaths = main.csvpaths
 
     def run(self):
         try:
             #
             # the project directory
             #
-            csvpaths = self.main.csvpaths
-            csvpaths.config.set(
+            self.csvpaths.config.set(
                 section="cache", name="path", value=f"{self.cwd}{os.sep}cache"
             )
-            csvpaths.config.set(section="cache", name="use_cache", value="yes")
-            cacher = csvpaths.file_manager.lines_and_headers_cacher
+            self.csvpaths.config.set(section="cache", name="use_cache", value="yes")
+            cacher = self.csvpaths.file_manager.lines_and_headers_cacher
             files = Nos(self.cwd).listdir(files_only=True, recurse=True)
             if files:
                 self.signals.messages.emit("Precaching files")

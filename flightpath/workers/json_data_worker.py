@@ -17,7 +17,6 @@ class JsonDataWorker(QRunnable):
         #
         #
         #
-        self.main = main
         self.filepath = filepath
         self.editable = editable
         self.signals = DataWorkerSignals()
