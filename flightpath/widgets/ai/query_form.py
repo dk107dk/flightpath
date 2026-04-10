@@ -54,7 +54,9 @@ class QueryFormWidget(QWidget):
         # document context checkbox controls doc path visibility
         #
         self.use_doc_checkbox = QCheckBox("Include test-data as context", self)
+        self.use_doc_checkbox.setObjectName("utd")
         self.use_doc_checkbox.setChecked(False)
+        self.use_doc_checkbox.setStyleSheet("QCheckBox#utd {margin-left:4px}")
         layout.addWidget(self.use_doc_checkbox)
 
         self.doc_path = QScrollArea()

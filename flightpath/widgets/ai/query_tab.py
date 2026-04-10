@@ -3,10 +3,11 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QPlainTextEdit,
     QApplication,
+    QSplitter,
     QTextEdit,
 )
 from PySide6.QtGui import QColor
-from PySide6.QtCore import QThreadPool
+from PySide6.QtCore import QThreadPool, Qt
 
 import darkdetect
 
@@ -28,8 +29,22 @@ class QueryTabWidget(QWidget):
         self.form = QueryFormWidget(parent=self, main=main)
         self.accordion = QueryAccordionWidget(self)
 
-        layout.addWidget(self.form)
-        layout.addWidget(self.accordion, 1)
+        #
+        # orig
+        #
+        # layout.addWidget(self.form)
+        # layout.addWidget(self.accordion, 1)
+        #
+        #
+        #
+        #
+        # setup splitter here
+        #
+        self.ai_split = QSplitter(Qt.Vertical)
+        layout.addWidget(self.ai_split)
+        self.ai_split.addWidget(self.form)
+        self.ai_split.addWidget(self.accordion)
+        self.ai_split.setSizes([100, 300])
 
         self.form.querySubmitted.connect(self.on_query_submitted)
         self.accordion.itemClicked.connect(self.on_item_clicked)

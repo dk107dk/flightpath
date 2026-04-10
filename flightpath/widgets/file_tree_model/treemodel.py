@@ -12,15 +12,35 @@ from .treeitem import TreeItem
 
 class TreeModel(QAbstractItemModel):
     def __init__(
-        self, *, headers: list, data: Nos, parent, title: str = "", sidebar=None
+        self,
+        *,
+        tree=None,
+        headers: list,
+        data: Nos,
+        parent,
+        title: str = "",
+        sidebar=None,
+        frozen: bool = False,
     ):
         super().__init__(parent)
+        self.sidebar = sidebar
+        #
+        # exp
+        #
+        self._frozen = frozen
+        self._tree = tree
+        #
+        #
+        #
         self.root_data = [title]
         self.setHeaderData(value=title)
-        self.root_item = TreeItem(data)
+        #
+        self.root_item = TreeItem(data, model=self)
         self.setup_model_data(self.root_item)
         self.style = None
-        self.sidebar = sidebar
+
+    def set_frozen(self, f: bool) -> None:
+        self._frozen = f
 
     def headerData(
         self,
@@ -59,10 +79,18 @@ class TreeModel(QAbstractItemModel):
     def data(self, index: QModelIndex, role: int = None):
         if not index.isValid():
             return None
+        #
+        # exp
+        #
+        if self._frozen:
+            ...
+            # print(f"data is frozen")
+        #    return None
+        #
         if role == Qt.DecorationRole:
             pixmapi = None
             item = self.get_item(index)
-            file = item.data(index.column()).isfile()
+            file = item.isfile
             if file is True:
                 pixmapi = QStyle.StandardPixmap.SP_FileIcon
             else:
@@ -82,9 +110,6 @@ class TreeModel(QAbstractItemModel):
                 text_width = font_metrics.horizontalAdvance(name) + 30  # Add padding
                 # Return a size that's wide enough for the text
                 size = QSize(text_width, 25)  # Height is fixed at 25, adjust as needed
-                #
-                # exp!
-                #
                 if self.sidebar:
                     if size.width() > self.sidebar.view.columnWidth(0):
                         self.sidebar.view.setColumnWidth(0, size.width())
@@ -114,6 +139,15 @@ class TreeModel(QAbstractItemModel):
         # if there are contents of an sftp dir that were not registered through csvpath framework
         # we may blow-up. however, life goes on, so we just catch and drop.
         #
+        ...
+        #
+        # exp
+        #
+        if self._frozen:
+            ...
+            # print("index is frozen")
+            # return QModelIndex()
+
         try:
             if parent is None:
                 return QModelIndex()
@@ -132,7 +166,14 @@ class TreeModel(QAbstractItemModel):
             return QModelIndex()
 
     def parent(self, index: QModelIndex = QModelIndex()) -> QModelIndex:
-        # print("TreeModel.parent called")
+        #
+        # exp
+        #
+        if self._frozen:
+            ...
+            # print("parent is frozen")
+            # return QModelIndex()
+
         if not index.isValid():
             return QModelIndex()
         child_item: TreeItem = self.get_item(index)
@@ -145,6 +186,14 @@ class TreeModel(QAbstractItemModel):
         return self.createIndex(parent_item.child_number(), 0, parent_item)
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
+        #
+        # exp~!
+        #
+        if self._frozen:
+            ...
+            # print("rowCount is frozen")
+            # return 0
+
         if parent.isValid() and parent.column() > 0:
             return 0
         parent_item: TreeItem = self.get_item(parent)
@@ -167,6 +216,10 @@ class TreeModel(QAbstractItemModel):
         #
         # get the child_items in order to make it load its children
         #
+        if self._frozen:
+            ...
+            # print(f"setup_model_data is frozen")
+            # return
         parent.child_items
 
     def _repr_recursion(self, item: TreeItem, indent: int = 0) -> str:
