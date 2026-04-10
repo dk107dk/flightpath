@@ -1,3 +1,5 @@
+import traceback
+
 from PySide6.QtCore import QRunnable
 from .run_worker_signals import RunWorkerSignals
 
@@ -36,14 +38,16 @@ class RunWorker(QRunnable):
             # not sure how this could happen
             #
             return
-        # print(f"runworker: pathsname: {self.named_paths_name}")
-        # print(f"runworker: filename: {self.named_file_name}")
-        # print(f"runworker: template: {self.template}")
-        # print(f"runworker: method: {a}")
-        ref = a(
-            pathsname=self.named_paths_name,
-            filename=self.named_file_name,
-            template=self.template,
-        )
-        self.signals.messages.emit(f"Completed run {ref}")
-        self.signals.finished.emit((ref, paths))
+        try:
+            ref = a(
+                pathsname=self.named_paths_name,
+                filename=self.named_file_name,
+                template=self.template,
+            )
+            self.signals.messages.emit(f"Completed run {ref}")
+            self.signals.finished.emit((ref, paths))
+        except Exception as ex:
+            self.signals.messages.emit(f"Error in run: {ex}")
+            self.signals.error.emit((str(ex), paths))
+            print(traceback.format_exc())
+        self.main = None

@@ -612,18 +612,16 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         # exp!! view.reset()
         #
-        self.sidebar_rt_bottom.reset()
+        # self.sidebar_rt_bottom.view.reset()
         #
         #
         #
-        """
         d = self.sidebar_rt_bottom
         self.sidebar_rt_bottom = SidebarArchive(
             main=self, config=self.csvpath_config, role=3
         )
         self.rt_col.replaceWidget(2, self.sidebar_rt_bottom)
         d.deleteLater()
-        """
 
     def renew_sidebar_named_files(self) -> None:
         #
@@ -633,18 +631,16 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         # exp!! view.reset()
         #
-        self.sidebar_rt_top.reset()
+        # self.sidebar_rt_top.view.reset()
         #
         #
         #
-        """
         d = self.sidebar_rt_top
         self.sidebar_rt_top = SidebarNamedFiles(
             main=self, config=self.csvpath_config, role=3
         )
         self.rt_col.replaceWidget(0, self.sidebar_rt_top)
         d.deleteLater()
-        """
 
     def renew_sidebar_named_paths(self) -> None:
         #
@@ -654,18 +650,16 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         # exp!! view.reset()
         #
-        self.sidebar_rt_mid.reset()
+        # self.sidebar_rt_mid.view.reset()
         #
         #
         #
-        """
         d = self.sidebar_rt_mid
         self.sidebar_rt_mid = SidebarNamedPaths(
             main=self, config=self.csvpath_config, role=3
         )
         self.rt_col.replaceWidget(1, self.sidebar_rt_mid)
         d.deleteLater()
-        """
 
     def hide_rt_tabs(self) -> None:
         i = self.main_layout.currentIndex()
@@ -1254,8 +1248,18 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         #
         runner.signals.finished.connect(self._display_log)
+        runner.signals.error.connect(self._display_error)
         runner.signals.messages.connect(self.statusBar().showMessage)
         self.threadpool.start(runner)
+
+    @Slot(tuple)
+    def _display_error(self, t: tuple[str]) -> None:
+        #
+        # need a more specific way to handle errors
+        #
+        print(f"error: txxx: {t}")
+        meut.message(msg=t[0], title="Error in run")
+        self._display_log(t)
 
     @Slot(tuple)
     def _display_log(self, t: tuple[str]) -> None:
@@ -1553,6 +1557,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                 "parquet",
                 "md",
                 "txt",
+                "log",
             ]
             if isinstance(data, str) and not fiut.is_a(new_name, exts):
                 new_name = f"{new_name}.csv"
