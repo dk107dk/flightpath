@@ -108,6 +108,7 @@ class GeneralDataWorker(QRunnable):
             print(traceback.format_exc())
             self.signals.messages.emit(f" Erroring opening {path}")
             self.signals.finished.emit(("Error", e, None, None, None, None))
+            self.main = None
             return
         self.signals.messages.emit(f"  Opened {path}")
         results = (
@@ -120,6 +121,7 @@ class GeneralDataWorker(QRunnable):
             largefile,
         )
         self.signals.finished.emit(results)
+        self.main = None
 
     def _read(self, *, path: str, encoding: str = "utf-8") -> tuple[list, list, bool]:
         t = 0
@@ -134,7 +136,9 @@ class GeneralDataWorker(QRunnable):
         with DataFileReader(
             path, delimiter=self.delimiter, quotechar=self.quotechar, encoding=encoding
         ) as file:
+            print(f"GeneralDataWx: starting: {path}")
             for line in file.next():
+                print(f"GeneralDataWx: i: {i}")
                 b = self.accept_line(i, line)
                 if b is False and self.line_take > self.LARGE_FILE_LIMIT:
                     return (data, lines, i, self.LARGE_FILE)

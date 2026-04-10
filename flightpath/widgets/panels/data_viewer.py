@@ -142,13 +142,16 @@ class DataViewer(QWidget):
         if index.isValid() or row > -1:
             row = index.row()
             context_menu = QMenu(self)
-
-            save_action = QAction()
-            save_action.setText("Save")
-            save_action.triggered.connect(self.on_save)
-            save_action.setShortcut(QKeySequence("Ctrl+S"))
-            save_action.setShortcutVisibleInContextMenu(True)
-            context_menu.addAction(save_action)
+            xslt = self.path and (
+                self.path.endswith("xlsx") or self.path.endswith("xls")
+            )
+            if not xslt:
+                save_action = QAction()
+                save_action.setText("Save")
+                save_action.triggered.connect(self.on_save)
+                save_action.setShortcut(QKeySequence("Ctrl+S"))
+                save_action.setShortcutVisibleInContextMenu(True)
+                context_menu.addAction(save_action)
 
             save_as_action = QAction()
             save_as_action.setText("Save As")
@@ -216,12 +219,13 @@ class DataViewer(QWidget):
                 to_new_action.triggered.connect(self._copy_to_new)
                 context_menu.addAction(to_new_action)
 
-            toggle_action = QAction()
-            toggle_action.setText("Toggle view")
-            toggle_action.triggered.connect(self.toggle_grid_raw)
-            toggle_action.setShortcut(QKeySequence("Ctrl+T"))
-            toggle_action.setShortcutVisibleInContextMenu(True)
-            context_menu.addAction(toggle_action)
+            if not xslt:
+                toggle_action = QAction()
+                toggle_action.setText("Toggle view")
+                toggle_action.triggered.connect(self.toggle_grid_raw)
+                toggle_action.setShortcut(QKeySequence("Ctrl+T"))
+                toggle_action.setShortcutVisibleInContextMenu(True)
+                context_menu.addAction(toggle_action)
 
             generate_action = QAction()
             generate_action.setText("Generate csvpath")
@@ -512,13 +516,18 @@ class DataViewer(QWidget):
                     )
 
     def toggle_grid_raw(self):
-        i = self.current_view_index
-        i = 0 if i == 1 else 1
-        if i == 1:
-            self.show_raw()
+        from flightpath.util.json_utility import JsonUtility as jsut
+
+        if jsut.is_jsonl(self.path):
+            self.main.on_raw_source()
         else:
-            self.show_grid()
-        self.layout().setCurrentIndex(i)
+            i = self.current_view_index
+            i = 0 if i == 1 else 1
+            if i == 1:
+                self.show_raw()
+            else:
+                self.show_grid()
+            self.layout().setCurrentIndex(i)
 
     def show_grid(self) -> None:
         #

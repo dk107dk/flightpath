@@ -45,6 +45,7 @@ class StyleUtility:
                 widget = widget.content_view
             elif hasattr(widget, "view"):
                 widget = widget.view
+            print(f"sturr: widget: {widget}")
             cls._set_editable_background(widget)
 
     @classmethod
@@ -77,6 +78,7 @@ class StyleUtility:
     @classmethod
     def _set_editable_background(cls, widget) -> None:
         name = cls._name(widget)
+        print(f"_set_editable_background: namex: {name}")
         inst = name in [
             "KeyableTreeView",
             "QTreeView",
@@ -85,6 +87,7 @@ class StyleUtility:
             "CsvPathTextEdit",
             "MdTextEdit",
             "RawTextEdit",
+            "Editor",
         ]
         # inst = isinstance(widget, (QTreeView, QTableView, QPlainTextEdit, CsvPathTextEdit, MdTextEdit, RawTextEdit) )
         # name = cls._name(widget)

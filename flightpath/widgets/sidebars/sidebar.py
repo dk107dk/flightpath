@@ -1073,6 +1073,13 @@ $[*][ print("hello world") ]"""
         o = f'{o} "{path}"'
         os.system(o)
 
+    def selected_file_path(self) -> str:
+        index = self.file_navigator.currentIndex()
+        if index.isValid():
+            path = self.proxy_model.filePath(index)
+            return path
+        return None
+
     def _delete_file_navigator_item(self):
         index = self.file_navigator.currentIndex()
         if index.isValid():
