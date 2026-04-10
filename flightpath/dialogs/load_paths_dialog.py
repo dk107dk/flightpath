@@ -87,8 +87,9 @@ class LoadPathsDialog(QDialog):
                 on_help=self.on_help_name,
             )
             form_layout.addRow(clabel, box)
-            self.named_paths_name_ctl.textChanged.connect(self._name_check)
-
+            # self.named_paths_name_ctl.textChanged.connect(self._name_check)
+            # self.named_paths_name_ctl.textChanged.connect(self._check_for_template)
+            self.named_paths_name_ctl.textChanged.connect(self._name_changed)
         if file:
             form_layout.addRow("File to load: ", area)
         else:
@@ -105,8 +106,6 @@ class LoadPathsDialog(QDialog):
         )
         if not self.json:
             form_layout.addRow(tlabel, box)
-
-        self.named_paths_name_ctl.textChanged.connect(self._check_for_template)
 
         self.cancel_button = QPushButton()
         self.cancel_button.setText("Cancel")
@@ -135,6 +134,10 @@ class LoadPathsDialog(QDialog):
         buttons_layout.addWidget(self.load_button)
         buttons.setLayout(buttons_layout)
         main_layout.addWidget(buttons)
+
+    def _name_changed(self) -> None:
+        self._check_for_template()
+        self._name_check()
 
     def _check_for_template(self) -> None:
         n = self.named_paths_name_ctl.text()

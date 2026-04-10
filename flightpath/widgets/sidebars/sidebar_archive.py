@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout, QApplication
 
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QTreeView, QAbstractItemView, QHeaderView
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView
 
 from csvpath.util.nos import Nos
 from csvpath.util.path_util import PathUtility as pathu
@@ -21,6 +21,7 @@ from flightpath.util.message_utility import MessageUtility as meut
 
 from flightpath.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
+from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
 
 
 class SidebarArchive(SidebarRightBase):
@@ -28,13 +29,15 @@ class SidebarArchive(SidebarRightBase):
         super().__init__()
         self.role = role
         self.main = main
-        # self.config = config
         self.archive_path = None
         self.setMinimumWidth(300)
         self.context_menu = None
         self.view = None
         self.model = None
         self.setup()
+
+    def my_root(self) -> str:
+        return self.main.csvpath_config.get(section="results", name="archive")
 
     def setup(self) -> None:
         try:
@@ -44,16 +47,16 @@ class SidebarArchive(SidebarRightBase):
             layout.setSpacing(0)
             layout.setContentsMargins(1, 1, 1, 1)
 
-            self.archive_path = self.main.csvpath_config.get(
-                section="results", name="archive"
-            )
+            self.archive_path = self.my_root()
+
             nos = Nos(self.archive_path)
             if not nos.dir_exists():
-                #
-                #
-                #
                 nos.makedir()
-            self.view = QTreeView()
+
+            self.view = LazyTreeView(self, main=self.main)
+            #
+            #
+            #
             self.view.setSelectionBehavior(
                 QAbstractItemView.SelectionBehavior.SelectItems
             )

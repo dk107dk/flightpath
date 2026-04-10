@@ -604,28 +604,67 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         self._connects()
 
     def renew_sidebar_archive(self) -> None:
+        #
+        # we can just reset, rather than recreating. doesn't solve for
+        # adding the new items w/o changing the layout, but at least it
+        # is lighter weight and more pointer/thread friendly.
+        #
+        # exp!! view.reset()
+        #
+        self.sidebar_rt_bottom.reset()
+        #
+        #
+        #
+        """
         d = self.sidebar_rt_bottom
         self.sidebar_rt_bottom = SidebarArchive(
             main=self, config=self.csvpath_config, role=3
         )
         self.rt_col.replaceWidget(2, self.sidebar_rt_bottom)
         d.deleteLater()
+        """
 
     def renew_sidebar_named_files(self) -> None:
+        #
+        # we can just reset, rather than recreating. doesn't solve for
+        # adding the new items w/o changing the layout, but at least it
+        # is lighter weight and more pointer/thread friendly.
+        #
+        # exp!! view.reset()
+        #
+        self.sidebar_rt_top.reset()
+        #
+        #
+        #
+        """
         d = self.sidebar_rt_top
         self.sidebar_rt_top = SidebarNamedFiles(
             main=self, config=self.csvpath_config, role=3
         )
         self.rt_col.replaceWidget(0, self.sidebar_rt_top)
         d.deleteLater()
+        """
 
     def renew_sidebar_named_paths(self) -> None:
+        #
+        # we can just reset, rather than recreating. doesn't solve for
+        # adding the new items w/o changing the layout, but at least it
+        # is lighter weight and more pointer/thread friendly.
+        #
+        # exp!! view.reset()
+        #
+        self.sidebar_rt_mid.reset()
+        #
+        #
+        #
+        """
         d = self.sidebar_rt_mid
         self.sidebar_rt_mid = SidebarNamedPaths(
             main=self, config=self.csvpath_config, role=3
         )
         self.rt_col.replaceWidget(1, self.sidebar_rt_mid)
         d.deleteLater()
+        """
 
     def hide_rt_tabs(self) -> None:
         i = self.main_layout.currentIndex()

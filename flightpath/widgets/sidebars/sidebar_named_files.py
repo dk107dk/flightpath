@@ -4,13 +4,15 @@ from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout, QSizePolicy, QApp
 
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QTreeView, QAbstractItemView, QHeaderView
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView
 
 from csvpath.util.nos import Nos
 from csvpath.util.config import Config
 from csvpath.util.path_util import PathUtility as pathu
 
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
+from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
+
 from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.dialogs.activation_dialog import ActivationDialog
@@ -35,6 +37,9 @@ class SidebarNamedFiles(SidebarRightBase):
         self.setup()
         self._template_dialog = None
 
+    def my_root(self) -> str:
+        return self.main.csvpath_config.get(section="inputs", name="files")
+
     def setup(self) -> None:
         try:
             layout = self.layout()
@@ -42,10 +47,8 @@ class SidebarNamedFiles(SidebarRightBase):
                 layout = QVBoxLayout()
             layout.setSpacing(0)
             layout.setContentsMargins(1, 1, 1, 1)
+            named_files_path = self.my_root()
 
-            named_files_path = self.main.csvpath_config.get(
-                section="inputs", name="files"
-            )
             nos = Nos(named_files_path)
             try:
                 if not nos.dir_exists():
@@ -56,7 +59,8 @@ class SidebarNamedFiles(SidebarRightBase):
                 meut.warning(parent=self, msg=msg, title="Error")
                 return
 
-            self.view = QTreeView()
+            self.view = LazyTreeView(self, main=self.main)
+
             self.view.setSelectionBehavior(
                 QAbstractItemView.SelectionBehavior.SelectItems
             )
@@ -91,6 +95,7 @@ class SidebarNamedFiles(SidebarRightBase):
                 parent=self,
                 title=title,
                 sidebar=self,
+                tree=self.view,
             )
             self.model.set_style(self.view.style())
             self.view.setModel(self.model)
@@ -98,6 +103,7 @@ class SidebarNamedFiles(SidebarRightBase):
             #
             #
             self.view.updateGeometries()
+
             layout.addWidget(self.view)
             self.view.setSizePolicy(
                 QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding

@@ -3,33 +3,43 @@ from __future__ import annotations
 import os
 from csvpath.util.nos import Nos
 
+
 class TreeItem:
-    def __init__(self, data:Nos, parent: 'TreeItem' = None):
+    def __init__(self, data: Nos, parent: "TreeItem" = None, *, model):
         self.item_data = data
+        self.model = model
         self.parent_item = parent
         self._child_items = None
+        self._isfile = None
+
+    @property
+    def isfile(self) -> bool:
+        if self._isfile is None:
+            self._isfile = self.item_data.isfile()
+        return self._isfile
 
     @property
     def child_items(self):
         if self._child_items is None:
             cs = []
             data = self.item_data
-            if not data.isfile():
+            if not self.isfile:
                 try:
-                    n2 = Nos(os.path.join(os.getcwd(), data.path))
                     lst = data.listdir()
                     lst.sort()
                     for c in lst:
                         if c.startswith("."):
                             continue
-                        item = TreeItem( Nos( os.path.join( data.path, c ) ), self)
+                        item = TreeItem(
+                            Nos(os.path.join(data.path, c)), self, model=self.model
+                        )
                         cs.append(item)
                 except Exception as e:
                     print(f"error: {e}: {self.item_data} in {self.parent_item}")
             self._child_items = cs
         return self._child_items
 
-    def child(self, number: int) -> 'TreeItem':
+    def child(self, number: int) -> "TreeItem":
         if number < 0 or number >= len(self.child_items):
             return None
         return self.child_items[number]
@@ -57,7 +67,7 @@ class TreeItem:
 
         for row in range(count):
             data = [None] * columns
-            item = TreeItem(data.copy(), self)
+            item = TreeItem(data.copy(), self, model=self.model)
             self.child_items.insert(position, item)
 
         return True
@@ -106,6 +116,6 @@ class TreeItem:
 
     def __repr__(self) -> str:
         result = f"<treeitem.TreeItem at 0x{id(self):x}"
-        result += f' {self.item_data}'
+        result += f" {self.item_data}"
         result += f", {len(self.child_items)} children>"
         return result

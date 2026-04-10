@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout
 
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QTreeView, QAbstractItemView, QHeaderView
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView
 
 from csvpath import CsvPaths
 from csvpath.util.nos import Nos
@@ -11,6 +11,7 @@ from csvpath.util.path_util import PathUtility as pathu
 
 
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
+from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
 
 from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.dialogs.paths_template_dialog import PathsTemplateDialog
@@ -36,23 +37,26 @@ class SidebarNamedPaths(SidebarRightBase):
         self.view = None
         self.setup()
 
+    def my_root(self) -> str:
+        return self.main.csvpath_config.get(section="inputs", name="csvpaths")
+
     def setup(self) -> None:
         try:
-            named_paths_path = self.main.csvpath_config.get(
-                section="inputs", name="csvpaths"
-            )
+            named_paths_path = self.my_root()
+
             nos = Nos(named_paths_path)
             layout = self.layout()
             if layout is None:
                 layout = QVBoxLayout()
             layout.setSpacing(0)
             layout.setContentsMargins(1, 1, 1, 1)
-            if nos.dir_exists():
-                #
-                #
-                #
+            #
+            # do we really need to do this dir create here?
+            #
+            if not nos.dir_exists():
                 nos.makedir()
-            self.view = QTreeView()
+            self.view = LazyTreeView(self, main=self.main)
+
             self.view.setSelectionBehavior(
                 QAbstractItemView.SelectionBehavior.SelectItems
             )
