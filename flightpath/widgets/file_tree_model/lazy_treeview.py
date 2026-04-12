@@ -18,9 +18,10 @@ class LazyTreeView(QTreeView):
         self._resize_timer.timeout.connect(self._on_resize_settled)
 
     def reset(self) -> None:
-        self.model().set_frozen(False)
+        m = self.model()
+        if m:
+            m.set_frozen(False)
         super().reset()
-        print("resettsing!")
 
     def is_index_visible(self, index):
         rect = self.visualRect(index)

@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QFrame
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QFrame, QApplication
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Signal
 
@@ -10,6 +10,7 @@ from flightpath.widgets.ai.query_accordion_item import QueryAccordionItem
 class QueryAccordionWidget(QWidget):
     itemClicked = Signal(object)
     itemCloseRequested = Signal(object)
+    itemInfoRequested = Signal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -33,6 +34,12 @@ class QueryAccordionWidget(QWidget):
         self._items = []
         self.setObjectName("acc")
         self.update_style()
+
+    def beep(self) -> None:
+        try:
+            QApplication.beep()
+        except Exception:
+            ...
 
     def update_style(self) -> None:
         if darkdetect.isDark():
@@ -61,15 +68,17 @@ class QueryAccordionWidget(QWidget):
 
         item.clicked.connect(self.itemClicked)
         item.closeRequested.connect(self.itemCloseRequested)
+        item.infoRequested.connect(self.itemInfoRequested)
 
         return item
 
     def remove_item(self, metadata: dict):
-        for item in list(self._items):
-            if item.metadata is metadata or item.metadata.get("id") == metadata.get(
-                "id"
-            ):
-                self._items.remove(item)
-                item.setParent(None)
-                item.deleteLater()
-                break
+        tid = metadata.get("id")
+        if tid:
+            for item in list(self._items):
+                iid = item.metadata.get("id")
+                if iid == tid:
+                    self._items.remove(item)
+                    item.setParent(None)
+                    item.deleteLater()
+                    break

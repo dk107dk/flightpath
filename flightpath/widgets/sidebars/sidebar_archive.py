@@ -2,9 +2,8 @@ import os
 import json
 import re
 
-from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout, QApplication
-
-from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout, QApplication, QTabWidget
+from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView
 
@@ -13,11 +12,19 @@ from csvpath.util.path_util import PathUtility as pathu
 from csvpath.util.config import Config
 from csvpath.util.file_readers import DataFileReader
 
+
+from flightpath.widgets.ai.query_accordion import QueryAccordionWidget
+from flightpath.widgets.sidebars.sidebar_archive_listener import SidebarArchiveListener
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from .sidebar_archive_ref_maker import SidebarArchiveRefMaker
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.util.message_utility import MessageUtility as meut
+
+from flightpath.dialogs.reference_files.reference_file_handler import (
+    ReferenceFileHandler,
+)
+from flightpath.dialogs.run_info_dialog import RunInfoDialog
 
 from flightpath.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
@@ -25,7 +32,7 @@ from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
 
 
 class SidebarArchive(SidebarRightBase):
-    def __init__(self, *, role=1, main, config: Config):
+    def __init__(self, *, role=1, main, config: Config, tabs=None):
         super().__init__()
         self.role = role
         self.main = main
@@ -34,19 +41,169 @@ class SidebarArchive(SidebarRightBase):
         self.context_menu = None
         self.view = None
         self.model = None
+        self.tabs = tabs
+        self.runs = None
         self.setup()
+        if tabs is not None:
+            self.show_tabs(tabs)
+
+    def run_ended(self, cid: str, error: bool) -> None:
+        for _ in self.runs.items:
+            _cid = _.metadata.get("cid")
+            if _cid == cid:
+                if error:
+                    _.status_dot.setColor(QColor("#fa5252"))  # red
+                else:
+                    _.status_dot.setColor(QColor("#40c057"))  # green
+                break
+        self.runs.beep()
+
+    def on_query_submitted(self, params):
+        self.show_tabs_if()
+        #
+        # get the id(csvpaths) in order to wire together items and run workers
+        #
+        cid = params.get("cid")
+        metadata = {
+            "id": params["worker"],
+            "params": params,
+            "activity": "",
+            "status": "running",
+            "results": None,
+            "cid": cid,
+        }
+        if "named_paths_name" in params:
+            named_paths_name = params["named_paths_name"]
+        named_file_name = ""
+        if "named_file_name" in params:
+            named_file_name = params["named_file_name"]
+        title = f"{named_paths_name} results for {named_file_name}"
+        #
+        # add item representing the run
+        #
+        item = self.runs.add_item(
+            title=title,
+            activity="",
+            status_color=QColor("#ffd43b"),
+            metadata=metadata,
+        )
+        #
+        # the item will listen for results events. we replace the items metadata_update
+        # method with a simple one that handles just this specific case.
+        #
+        self.main.csvpaths.results_manager.dynamic_results_listeners.append(item)
+        lst = SidebarArchiveListener(item=item)
+        item.add_listener(lst)
+        #
+        # flip to the runs
+        #
+        self.tabs.setCurrentIndex(1)
+
+    def on_run_started(self, metadata: dict):
+        #
+        # the accordion item is a csvpath listener. but that doesn't provide
+        # a reference to the csvpath instance. and we don't get that w/
+        # on_query_submitted() either. we need the instance so that we can let
+        # the item open info about the running csvpaths and the csvpath objects
+        # it holds.
+        #
+        cid = metadata.get("cid")
+        if cid is None:
+            raise ValueError("CsvPaths ID cannot be None")
+        for _ in self.runs.items:
+            acid = _.metadata.get("cid")
+            if acid == cid:
+                paths = metadata.get("csvpaths")
+                if paths is None:
+                    raise ValueError("CsvPaths cannot be None")
+                _.metadata["csvpaths"] = paths
+
+    def on_item_clicked(self, metadata: dict):
+        #
+        # flip to results
+        #
+        self.tabs.setCurrentIndex(0)
+        #
+        # open tree to run_dir, if we have run_dir
+        #
+        run_dir = metadata.get("run_dir")
+        if run_dir is None:
+            return
+        rfh = ReferenceFileHandler(parent=self)
+        rfh._show_run_dir_for_path(self, run_dir)
+
+    def on_item_close_requested(self, metadata: dict):
+        self.runs.remove_item(metadata)
+
+    def on_item_info_requested(self, metadata: dict):
+        for _ in self.runs.items:
+            if _.metadata.get("cid") == metadata.get("cid"):
+                if _.metadata.get("run_dir") is None:
+                    return
+                d = RunInfoDialog(main=self.main, parent=self, item=_)
+                d.show_dialog()
+                break
+
+    def show_tabs(self, tabs: QTabWidget) -> None:
+        layout = self.layout()
+        layout.removeWidget(self.view)
+        layout.addWidget(self.tabs)
+        #
+        # results is the regular tree. we have a tree already because we were passed
+        # in from a past archive sidebar, but we need to replace it with our latest
+        #
+        self.tabs.removeTab(0)
+        self.view.setObjectName("results")
+        self.tabs.insertTab(0, self.view, "Results")
+        #
+        # runs should be in the tabs already
+        #
+        self.runs = self.tabs.widget(1)
+        #
+        # rewire for clicks
+        #
+        self.runs.itemClicked.connect(self.on_item_clicked)
+        self.runs.itemCloseRequested.connect(self.on_item_close_requested)
+        self.runs.itemInfoRequested.connect(self.on_item_info_requested)
+
+    def show_tabs_if(self) -> None:
+        #
+        # if we have tabs they are directly in the layout
+        # we're good. otherwise, we create the tabs and move
+        # the view into them.
+        #
+        i = -1 if self.tabs is None else self.layout().indexOf(self.tabs)
+        if self.tabs is not None and i > -1:
+            return
+        layout = self.layout()
+        if self.tabs is None:
+            self.tabs = QTabWidget(parent=self)
+            layout.removeWidget(self.view)
+        if i == -1:
+            layout.addWidget(self.tabs)
+        #
+        # results is the regular tree
+        #
+        if self.tabs.indexOf(self.view) == -1:
+            self.view.setObjectName("results")
+            self.tabs.addTab(self.view, "Results")
+        #
+        # runs is the set of all runs in the session, unless the user removes run(s)
+        # if we have runs it should be in the tabs already, but i'm paranoid
+        #
+        if self.runs is None or self.tabs.indexOf(self.runs) == -1:
+            self.runs = QueryAccordionWidget(self)
+            self.runs.itemClicked.connect(self.on_item_clicked)
+            self.runs.itemCloseRequested.connect(self.on_item_close_requested)
+            self.runs.itemInfoRequested.connect(self.on_item_info_requested)
+            self.runs.setObjectName("runs")
+            self.tabs.addTab(self.runs, "Runs")
 
     def my_root(self) -> str:
         return self.main.csvpath_config.get(section="results", name="archive")
 
-    def setup(self) -> None:
+    def setup(self, do_layout=True) -> None:
         try:
-            layout = self.layout()
-            if layout is None:
-                layout = QVBoxLayout()
-            layout.setSpacing(0)
-            layout.setContentsMargins(1, 1, 1, 1)
-
             self.archive_path = self.my_root()
 
             nos = Nos(self.archive_path)
@@ -95,7 +252,6 @@ class SidebarArchive(SidebarRightBase):
             self.view.setModel(self.model)
             self.view.updateGeometries()
 
-            layout.addWidget(self.view)
             #
             #
             #
@@ -120,7 +276,14 @@ class SidebarArchive(SidebarRightBase):
             # moved from main
             #
             self.view.clicked.connect(self.on_archive_tree_click)
-            self.setLayout(layout)
+            if do_layout is True:
+                layout = self.layout()
+                if layout is None:
+                    layout = QVBoxLayout()
+                layout.setSpacing(0)
+                layout.setContentsMargins(1, 1, 1, 1)
+                layout.addWidget(self.view)
+                self.setLayout(layout)
         except Exception as e:
             meut.message(
                 title=f"{type(e)} error loading named-paths", msg=f"Archive error: {e}"
@@ -140,16 +303,22 @@ class SidebarArchive(SidebarRightBase):
             self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
     def refresh(self) -> None:
-        if self.view:
-            layout = self.layout()  # Get the existing layout
-            if layout:
-                layout.removeWidget(self.view)
-            self.view.deleteLater()  # Delete the old widget
+        v = None
+        if self.tabs is None:
+            if self.view:
+                layout = self.layout()  # Get the existing layout
+                if layout:
+                    layout.removeWidget(self.view)
+            v = self.view
+            self.view = None
             self.setup()
-
-    #
-    # actions support
-    #
+        else:
+            self.tabs.removeTab(0)
+            v = self.view
+            self.view = None
+            self.setup(do_layout=False)
+            self.tabs.insertTab(0, self.view, "Results")
+        v.deleteLater()  # Delete the old widget
 
     def _setup_view_context_menu(self):
         self.context_menu = QMenu(self)
@@ -196,7 +365,6 @@ class SidebarArchive(SidebarRightBase):
     def _results_mani_path_for_path(self, path: str) -> str:
         if path is None:
             raise ValueError("Path cannot be None")
-        print(f"sidebar arch: _resultx_mani_path_for_path: path: {path}")
         #
         # we need the archive path as one thing; otherwise, we're likely to have trouble with the protocol.
         #
@@ -206,7 +374,6 @@ class SidebarArchive(SidebarRightBase):
         sep = pathu.sep(path)
         maniparts = []
         found = False
-        print(f"sidebar arch: _resultx_mani_path_for_path: parts: {parts}")
         for part in parts:
             m = re.search(r"^.*\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(?:_\d)?", part)
             maniparts.append(part)
@@ -214,13 +381,10 @@ class SidebarArchive(SidebarRightBase):
                 found = True
                 break
         if found is False:
-            print(f"sidebar arch: not found: path: {path}, {maniparts}")
             self._find_manifest_below(maniparts, path)
-            print(f"sidebar arch: below?: path: {path}, {maniparts}")
         else:
             maniparts.append("manifest.json")
         ret = sep[0].join(maniparts)
-        print(f"sidebar arch: done: {ret}, {maniparts}")
         return ret
 
     def _find_manifest_below(self, maniparts: list[str], path: str) -> None:
@@ -246,7 +410,6 @@ class SidebarArchive(SidebarRightBase):
         return False
 
     def _has_reference(self, path) -> bool:
-        print(f"sidebar arch: _has_reference: path 1: {path}")
         if path is None:
             raise ValueError("Path cannot be None")
         try:
@@ -258,9 +421,7 @@ class SidebarArchive(SidebarRightBase):
             #
             #
             #
-            print(f"sidebar arch: _has_reference: path 2: {path}")
             manipath = self._results_mani_path_for_path(path)
-            print(f"sidebar arch: _has_reference: manipath 1: {manipath}")
             mani = None
             with DataFileReader(manipath) as file:
                 mani = json.load(file.source)
@@ -284,7 +445,6 @@ class SidebarArchive(SidebarRightBase):
         if index.isValid():
             global_pos = self.view.viewport().mapToGlobal(position)
             path = self.model.filePath(index)
-            print(f"sidebar arch: _show_context_menu: path from index: {path}")
             self._last_path = path
             nos = Nos(path)
             #
@@ -303,7 +463,6 @@ class SidebarArchive(SidebarRightBase):
             else:
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
-                print(f"sidebar arch: _show_context_menu: path before _has_ref: {path}")
                 if self._has_reference(path) is False:
                     self.repeat_run_action.setVisible(True)
                 else:
