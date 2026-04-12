@@ -1,4 +1,5 @@
 import traceback
+from datetime import datetime
 
 from PySide6.QtCore import QRunnable
 from .run_worker_signals import RunWorkerSignals
@@ -16,7 +17,11 @@ class RunWorker(QRunnable):
     ) -> None:
         super().__init__()
         self.main = main
-        self.csvpaths = main.csvpaths
+        #
+        # need a new csvpaths because a) we don't encourage reusing them; although, it
+        # is possible, and b) the listeners in the accordian require separate hook-ups.
+        #
+        self.csvpaths = main.new_csvpaths()
         self.method = method
         self.named_paths_name = named_paths_name
         self.named_file_name = named_file_name
@@ -39,6 +44,21 @@ class RunWorker(QRunnable):
             #
             return
         try:
+            #
+            # we'd like to get the run_dir and exact start time, at least. maybe
+            # other things too. we do that by adding the accordian item as a
+            # results listener. cid = str(id(csvpath)) links item, csvpaths
+            # and listener. and we want the csvpaths to use to get info re: the
+            # state of any/all of the set of csvpath held by the running csvpaths.
+            #
+            self.signals.started.emit(
+                {
+                    "id": str(id(self)),
+                    "cid": str(id(self.csvpaths)),
+                    "start_time": str(datetime.now()),
+                    "csvpaths": paths,
+                }
+            )
             ref = a(
                 pathsname=self.named_paths_name,
                 filename=self.named_file_name,

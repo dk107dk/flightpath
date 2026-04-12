@@ -1,7 +1,8 @@
 import os
 import json
+import traceback
 
-from PySide6.QtCore import Slot  # pylint: disable=E0611
+from PySide6.QtCore import Slot, QItemSelectionModel
 from PySide6.QtWidgets import QApplication
 
 from csvpath.util.path_util import PathUtility as pathu
@@ -87,24 +88,42 @@ class ReferenceFileHandler:
         t = self._item(row)
         try:
             sidebar = self.main.sidebar_rt_bottom
-            view = sidebar.view
-            model = sidebar.model
             path = self._trim_results_root(t)
+            self._show_run_dir_for_path(sidebar, path)
+        except Exception:
+            print(traceback.format_exc())
+
+    #
+    # path is the root-stripped path to the item
+    # e.g. archive = "x/y/z"
+    # full path = "x/y/z/a/b/c"
+    # pass in "a/b/c"
+    #
+    def _show_run_dir_for_path(self, sidebar, path: str) -> None:
+        try:
+            model = sidebar.model
+            view = sidebar.view
+            index = None
             parts = pathu.parts(path)
             item = sidebar.model.root_item
             for part in parts:
                 for i, ii in enumerate(item.child_items):
                     data = ii.data(0)
                     if data.path.endswith(part):
-                        idx = model.createIndex(i, 0, ii)
-                        view.expand(idx)
-                        item = ii
+                        index = model.createIndex(i, 0, ii)
+                        view.expand(index)
+                        # item = ii # is item or ii doing anything here? seems not.
                         break
-        except Exception as e:
-            import traceback
-
+            if index:
+                selection_model = view.selectionModel()
+                # Select a specific index and ensure it's visually highlighted
+                selection_model.select(
+                    index, QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows
+                )
+                # Optional: Scroll to the item so the user can see it
+                view.scrollTo(index)
+        except Exception:
             print(traceback.format_exc())
-            print(f"Error in _show_run_dir: {type(e)}: {e}")
 
     # ===== COPY PATH ================
 

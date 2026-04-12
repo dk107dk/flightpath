@@ -1,0 +1,232 @@
+import traceback
+
+from PySide6.QtWidgets import (
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QDialog,
+    QWidget,
+    QFormLayout,
+)
+from PySide6.QtCore import Qt
+
+
+class RunInfoDialog(QDialog):
+    def __init__(self, *, main, parent, item):
+        super().__init__(parent)
+        self.sidebar = parent
+        self.main = main
+        self.item = item
+        self.setWindowTitle(f"Run Information: {item.title.text()}")
+
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.NonModal)
+
+        self._total_statements: QLabel = None
+        self._current_statement: QLabel = None
+        self._current_line: QLabel = None
+        self._total_lines: QLabel = None
+
+        self.stop_button = QPushButton()
+        self.stop_button.setText("Stop run")
+        self.stop_button.clicked.connect(self.stop)
+        self.refresh_button = QPushButton()
+        self.refresh_button.setText("Refresh")
+        self.refresh_button.clicked.connect(self.refresh)
+        self.close_button = QPushButton()
+        self.close_button.setText("Close")
+        self.close_button.clicked.connect(self.reject)
+        #
+        #
+        #
+        self.setFixedHeight(150)
+        self.setFixedWidth(560)
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        form = QWidget()
+        form_layout = QFormLayout()
+        form_layout.setRowWrapPolicy(QFormLayout.RowWrapPolicy.DontWrapRows)
+        form.setLayout(form_layout)
+        layout.addWidget(form)
+
+        form_layout.addRow("Current line: ", self.current_line)
+        form_layout.addRow("Total lines: ", self.total_lines)
+
+        form_layout.addRow("Current statement: ", self.current_statement)
+        form_layout.addRow("Total statements: ", self.total_statements)
+
+        buttons = QWidget()
+        buttons_layout = QHBoxLayout()
+        buttons.setLayout(buttons_layout)
+        buttons_layout.addWidget(self.stop_button)
+        buttons_layout.addWidget(self.refresh_button)
+        buttons_layout.addWidget(self.close_button)
+        layout.addWidget(buttons)
+
+    def show_dialog(self) -> None:
+        #
+        # show the dialog
+        #
+        self.show()
+
+    def refresh(self) -> None:
+        self.total_statements.setText(self.total_statements_str)
+        self.current_statement.setText(self.current_statement_str)
+        self.current_line.setText(self.current_line_str)
+        self.total_lines.setText(self.total_lines_str)
+
+    def stop(self) -> None:
+        try:
+            csvpaths = self.csvpaths
+            if csvpaths is None:
+                return
+            for _ in csvpaths.csvpath_instances():
+                _.stopped = True
+        except Exception:
+            print(traceback.format_exc())
+
+    @property
+    def total_statements_str(self) -> str:
+        s = ""
+        try:
+            csvpaths = self.csvpaths
+            if csvpaths and csvpaths.csvpath_instances():
+                s = str(len(csvpaths.csvpath_instances()))
+        except Exception:
+            print(traceback.format_exc())
+        return s
+
+    @property
+    def total_statements(self) -> QLabel:
+        if self._total_statements is None:
+            s = self.total_statements_str
+            self._total_statements = QLabel(s)
+        return self._total_statements
+
+    @property
+    def current_statement_str(self) -> str:
+        s = ""
+        try:
+            s = self.current_identity()
+            i = self.current_index()
+            i = 0 if i is None else i
+            i += 1
+            if s:
+                s = f"{s} ({i} of {self.total_statements_str})"
+            else:
+                s = str(i)
+        except Exception:
+            print(traceback.format_exc())
+        return s
+
+    @property
+    def current_statement(self) -> QLabel:
+        if self._current_statement is None:
+            s = self.current_statement_str
+            self._current_statement = QLabel(s)
+        return self._current_statement
+
+    def current_index(self) -> int | None:
+        try:
+            m = self._current_matcher()
+            if m:
+                for i, _ in enumerate(self.csvpaths.csvpath_instances()):
+                    if _ == m:
+                        return i
+        except Exception:
+            print(traceback.format_exc())
+        return None
+
+    def current_identity(self) -> str:
+        s = ""
+        try:
+            m = self._current_matcher()
+            if m:
+                s = m.identity
+                if s and s.strip() == "":
+                    s = None
+        except Exception:
+            print(traceback.format_exc())
+        return s
+
+    @property
+    def csvpaths(self):
+        return self.item.metadata.get("csvpaths")
+
+    def _current_matcher(self):
+        m = None
+        try:
+            m = self.csvpaths.current_matcher
+            if m is None:
+                insts = self.csvpaths.csvpath_instances()
+                if len(insts) > 0:
+                    m = insts[len(insts) - 1]
+        except Exception:
+            print(traceback.format_exc())
+        return m
+
+    @property
+    def current_line_str(self) -> QLabel:
+        s = ""
+        try:
+            m = self._current_matcher()
+            if not m or m._run_started_at is None:
+                #
+                # we don't want to force line_monitor to give us a current or total
+                # line count because it is dealing with remote, cache, etc. so we
+                # check to see if it's found its feet first, if not, return ""
+                #
+                ...
+            elif m and m.line_monitor is not None:
+                n = m.line_monitor.data_line_number
+                s = str(n)
+        except Exception as ex:
+            print(f"Warning: {ex}")
+        return s
+
+    @property
+    def current_line(self) -> QLabel:
+        if self._current_line is None:
+            s = self.current_line_str
+            self._current_line = QLabel(self._not_none(s))
+        return self._current_line
+
+    def _not_none(self, s: str) -> str:
+        #
+        # not sure what crack in the pavement actually causes this, but it's
+        # seen and easy to just remove it, in case.
+        #
+        if s is None:
+            return ""
+        if s.strip() == "None":
+            return ""
+        return s
+
+    @property
+    def total_lines_str(self) -> str:
+        s = ""
+        try:
+            m = self._current_matcher()
+            if not m or m._run_started_at is None:
+                #
+                # we don't want to force line_monitor to give us a current or total
+                # line count because it is dealing with remote, cache, etc. so we
+                # check to see if it's found its feet first, if not, return ""
+                #
+                ...
+            elif m and m.line_monitor is not None:
+                n = m.line_monitor.data_end_line_number
+                s = str(n)
+        except Exception as ex:
+            print(f"Warning: {ex}")
+        return s
+
+    @property
+    def total_lines(self) -> QLabel:
+        if self._total_lines is None:
+            s = self.total_lines_str
+            self._total_lines = QLabel(self._not_none(s))
+        return self._total_lines

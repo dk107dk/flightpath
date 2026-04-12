@@ -270,6 +270,10 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         data["opens"] = i
         self.state.data = data
 
+    def new_csvpaths(self) -> CsvPaths:
+        self._csvpaths = None
+        return self.csvpaths
+
     @property
     def csvpaths(self) -> CsvPaths:
         if self._csvpaths is None:
@@ -618,7 +622,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         d = self.sidebar_rt_bottom
         self.sidebar_rt_bottom = SidebarArchive(
-            main=self, config=self.csvpath_config, role=3
+            main=self, config=self.csvpath_config, role=3, tabs=d.tabs
         )
         self.rt_col.replaceWidget(2, self.sidebar_rt_bottom)
         d.deleteLater()
@@ -1028,12 +1032,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         table_model = TableModel(data=data, editable=(editable == EditStates.EDITABLE))
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(1)
-
-        """
-        from csvpath.util.log_utility import LogUtility as lout
-        lout.log_brief_trace()
-        """
-
         #
         # need to add a tab
         #   need to check if a tab already exists?
@@ -1239,6 +1237,19 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             main=self,
         )
         #
+        #
+        #
+        params = {
+            "named_paths_name": named_paths_name,
+            "run_dir": "",
+            "worker": id(runner),
+            "named_file_name": named_file_name,
+            "template": template,
+            "method": method,
+            "cid": str(id(runner.csvpaths)),
+        }
+        self.sidebar_rt_bottom.on_query_submitted(params)
+        #
         # clear any existing logs to .bak. we have to shutdown to be sure that the
         # file is released. that's not a problem because it is CsvPath logging, not
         # FlightPath logging.
@@ -1247,6 +1258,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         #
         #
+        runner.signals.started.connect(self.sidebar_rt_bottom.on_run_started)
         runner.signals.finished.connect(self._display_log)
         runner.signals.error.connect(self._display_error)
         runner.signals.messages.connect(self.statusBar().showMessage)
@@ -1259,12 +1271,19 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         print(f"error: txxx: {t}")
         meut.message(msg=t[0], title="Error in run")
-        self._display_log(t)
+        self._display_log(t, error=True)
 
     @Slot(tuple)
-    def _display_log(self, t: tuple[str]) -> None:
+    def _display_log(self, t: tuple[str], error=False) -> None:
+        #
+        # first let the archive know if the item is green or red
+        #
+        cid = str(id(t[1]))
+        if t and len(t) >= 2:
+            self.sidebar_rt_bottom.run_ended(cid, error)
+
         log = QWidget()
-        log.setObjectName("Log")
+        log.setObjectName(f"Log-{cid}")
         self.helper.help_and_feedback.addTab(log, "Log")
         #
         # the logs tab should be the first showing, at least unless/until

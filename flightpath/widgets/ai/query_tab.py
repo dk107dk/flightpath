@@ -25,18 +25,8 @@ class QueryTabWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
-
         self.form = QueryFormWidget(parent=self, main=main)
         self.accordion = QueryAccordionWidget(self)
-
-        #
-        # orig
-        #
-        # layout.addWidget(self.form)
-        # layout.addWidget(self.accordion, 1)
-        #
-        #
-        #
         #
         # setup splitter here
         #
@@ -96,10 +86,6 @@ class QueryTabWidget(QWidget):
             "results": None,
             "turns_limit": params.get("turns_limit"),
         }
-        """
-        import json
-        print(json.dumps(metadata, indent=2))
-        """
         #
         # get this from a user-driven form control?
         #
@@ -160,7 +146,6 @@ class QueryTabWidget(QWidget):
                 errors = f"{errors}\n{_}"
             self.on_worker_error(item, metadata, errors)
             return
-        print(f"querytab.on_worker_finished: {item}, {metadata}, {generation}")
         metadata["results"] = generation
         metadata["status"] = "complete"
         item.status_dot.setColor(QColor("#40c057"))  # green
@@ -171,7 +156,6 @@ class QueryTabWidget(QWidget):
         try:
             QApplication.beep()
         except Exception:
-            print("beep error")
             ...
 
     def on_worker_error(self, item, metadata, msg):

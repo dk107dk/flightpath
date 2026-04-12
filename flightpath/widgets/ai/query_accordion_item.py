@@ -11,6 +11,9 @@ from PySide6.QtCore import Qt, Signal, QSize
 
 import darkdetect
 
+from csvpath.managers.listener import Listener
+from csvpath.managers.metadata import Metadata
+
 from flightpath.workers.ai_worker import AiWorker
 
 ACTIVITY_ICONS = {
@@ -18,6 +21,7 @@ ACTIVITY_ICONS = {
     "question": "✍️",
     "explain": "❓",
     "testdata": "▒",
+    "run": "⚙️",
 }
 
 
@@ -26,6 +30,12 @@ class StatusDot(QWidget):
         super().__init__(parent)
         self._color = color
         self.setFixedSize(12, 12)
+
+    clicked = Signal()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.clicked.emit()
 
     def setColor(self, color: QColor):
         self._color = color
@@ -41,8 +51,21 @@ class StatusDot(QWidget):
 
 
 class QueryAccordionItem(QWidget):
+    #
+    # the label and close button work like:
+    #    item.button->item.signal
+    #      item.signal->emit->accordian.slot
+    #        accordian.signal->emit->container slot on method that reacts
+    #
+    # clicked         == a click on the title
+    # closeRequested  == click on the x to dismiss the item from the
+    #                    list
+    # infoRequested   == click the status icon to open info about the
+    #                    running process
+    #
     clicked = Signal(object)
     closeRequested = Signal(object)
+    infoRequested = Signal(object)
 
     def __init__(
         self,
@@ -54,7 +77,12 @@ class QueryAccordionItem(QWidget):
     ):
         super().__init__(parent)
         self._metadata = metadata
-
+        #
+        # this is here for csvpath, but should be unnecessary soon:
+        #        /csvpath/managers/registrar.py", line 37, in add_internal_listener
+        #            if not lst.config:
+        #
+        self.config = None
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(8, 4, 8, 4)
         main_layout.setSpacing(2)
@@ -71,15 +99,39 @@ class QueryAccordionItem(QWidget):
         self.status_dot.setFixedWidth(24)
         self.status_dot.setStyleSheet("StatusDot { padding-left:10px; }")
 
-        self.icon_label = QLabel(ACTIVITY_ICONS.get(activity, ""), self.header)
-        self.icon_label.setFixedWidth(24)
-        self.icon_label.setAlignment(Qt.AlignCenter)
-        self.icon_label.setStyleSheet("QLabel { border: 0px;background-color:none }")
+        self.icon_label = None
+        if str(activity).strip() != "":
+            self.icon_label = QLabel(ACTIVITY_ICONS.get(activity, ""), self.header)
+            self.icon_label.setFixedWidth(24)
+            self.icon_label.setAlignment(Qt.AlignCenter)
+            self.icon_label.setStyleSheet(
+                "QLabel { border: 0px;background-color:none }"
+            )
 
-        self.title_label = QLabel(title, self.header)
-        self.title_label.setStyleSheet(
-            "font-weight: 500;border:0px;background-color:none; "
+        #
+        # title and subtitle, if any
+        #
+        atitle = None
+        if title is None:
+            title = ""
+        atitle = QWidget()
+        atitle.setObjectName("title")
+        title_layout = QVBoxLayout()
+        atitle.setStyleSheet("border:0px;background-color:none;")
+        self.title = QLabel(title)
+        self.title.setStyleSheet(
+            "font-weight: 500;font-size:12pt;border:0px;background-color:none;"
         )
+        title_layout.addWidget(self.title)
+        subtitle = ""
+        if subtitle in metadata:
+            subtitle = metadata["subtitle"]
+        self.subtitle = QLabel(subtitle)
+        self.subtitle.setStyleSheet(
+            "font-weight:300;font-size:10pt;font-style:italic;border:0px;background-color:none;"
+        )
+        title_layout.addWidget(self.subtitle)
+        atitle.setLayout(title_layout)
 
         self.close_button = QPushButton()
         self.close_button.setFixedSize(25, 22)
@@ -93,15 +145,25 @@ class QueryAccordionItem(QWidget):
         self.close_button.setIconSize(QSize(16, 16))
 
         header_layout.addWidget(self.status_dot)
-        header_layout.addWidget(self.icon_label)
-        header_layout.addWidget(self.title_label, 1)
+        if self.icon_label is not None:
+            header_layout.addWidget(self.icon_label)
+        header_layout.addWidget(atitle, 1)
         header_layout.addWidget(self.close_button)
 
         main_layout.addWidget(self.header)
 
         self.header.mousePressEvent = self._on_header_clicked
         self.close_button.clicked.connect(self._on_close_clicked)
+        self.status_dot.clicked.connect(self._on_status_clicked)
         self._worker = None
+        self._listeners: list[Listener] = []
+
+    def add_listener(self, lst: Listener) -> None:
+        self._listeners.append(lst)
+
+    def metadata_update(self, mdata: Metadata) -> None:
+        for _ in self._listeners:
+            _.metadata_update(mdata)
 
     def update_style(self) -> None:
         back = "333" if darkdetect.isDark() else "eee"
@@ -136,3 +198,6 @@ class QueryAccordionItem(QWidget):
 
     def _on_close_clicked(self):
         self.closeRequested.emit(self._metadata)
+
+    def _on_status_clicked(self):
+        self.infoRequested.emit(self._metadata)
