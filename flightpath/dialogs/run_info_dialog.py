@@ -64,6 +64,7 @@ class RunInfoDialog(QDialog):
         buttons_layout.addWidget(self.stop_button)
         buttons_layout.addWidget(self.refresh_button)
         buttons_layout.addWidget(self.close_button)
+        self.set_buttons()
         layout.addWidget(buttons)
 
     def show_dialog(self) -> None:
@@ -77,6 +78,12 @@ class RunInfoDialog(QDialog):
         self.current_statement.setText(self.current_statement_str)
         self.current_line.setText(self.current_line_str)
         self.total_lines.setText(self.total_lines_str)
+        self.set_buttons()
+
+    def set_buttons(self) -> None:
+        if self.item.status in ["done", "error"]:
+            self.stop_button.setEnabled(False)
+            self.refresh_button.setEnabled(False)
 
     def stop(self) -> None:
         try:

@@ -1269,7 +1269,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         # need a more specific way to handle errors
         #
-        print(f"error: txxx: {t}")
         meut.message(msg=t[0], title="Error in run")
         self._display_log(t, error=True)
 
@@ -1318,6 +1317,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         # and if we did that the refresh might slow down potentially a lot. so long-term,
         # seems like we should capture what is registered and manually add it.
         #
+        # self.sidebar_rt_bottom.update_run_item_status(cid, "error" if error is True else "done")
         self.renew_sidebar_archive()
 
     @Slot(QModelIndex)

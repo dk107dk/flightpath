@@ -69,11 +69,13 @@ class QueryAccordionItem(QWidget):
 
     def __init__(
         self,
+        *,
         title: str,
         activity: str,
         status_color: QColor,
         metadata: dict,
         parent=None,
+        status: str = "pending",
     ):
         super().__init__(parent)
         self._metadata = metadata
@@ -83,6 +85,11 @@ class QueryAccordionItem(QWidget):
         #            if not lst.config:
         #
         self.config = None
+        #
+        #
+        #
+        self.status = None
+        #
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(8, 4, 8, 4)
         main_layout.setSpacing(2)

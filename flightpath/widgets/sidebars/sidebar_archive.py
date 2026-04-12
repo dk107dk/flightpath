@@ -55,6 +55,9 @@ class SidebarArchive(SidebarRightBase):
                     _.status_dot.setColor(QColor("#fa5252"))  # red
                 else:
                     _.status_dot.setColor(QColor("#40c057"))  # green
+                print(f"rjeended: {_}: \n{_.status}")
+                _.status = "done"
+                print(f"rjeended2: {_.status}")
                 break
         self.runs.beep()
 
@@ -68,7 +71,6 @@ class SidebarArchive(SidebarRightBase):
             "id": params["worker"],
             "params": params,
             "activity": "",
-            "status": "running",
             "results": None,
             "cid": cid,
         }
@@ -85,6 +87,7 @@ class SidebarArchive(SidebarRightBase):
             title=title,
             activity="",
             status_color=QColor("#ffd43b"),
+            status="pending",
             metadata=metadata,
         )
         #
@@ -117,6 +120,7 @@ class SidebarArchive(SidebarRightBase):
                 if paths is None:
                     raise ValueError("CsvPaths cannot be None")
                 _.metadata["csvpaths"] = paths
+                _.status = "running"
 
     def on_item_clicked(self, metadata: dict):
         #

@@ -59,9 +59,21 @@ class QueryAccordionWidget(QWidget):
             self._items = []
         return self._items
 
-    def add_item(self, title: str, activity: str, status_color: QColor, metadata: dict):
+    def add_item(
+        self,
+        title: str,
+        activity: str,
+        status_color: QColor,
+        metadata: dict,
+        status: str = None,
+    ):
         item = QueryAccordionItem(
-            title, activity, status_color, metadata, self.container
+            title=title,
+            activity=activity,
+            status_color=status_color,
+            metadata=metadata,
+            parent=self.container,
+            status=status,
         )
         self.vbox.insertWidget(self.vbox.count() - 1, item)
         self._items.append(item)

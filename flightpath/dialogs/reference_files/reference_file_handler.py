@@ -85,10 +85,10 @@ class ReferenceFileHandler:
 
     @Slot(tuple)
     def _show_run_dir(self, row: int) -> None:
-        t = self._item(row)
+        path = self._item(row)
         try:
             sidebar = self.main.sidebar_rt_bottom
-            path = self._trim_results_root(t)
+            # path = self._trim_results_root(t)
             self._show_run_dir_for_path(sidebar, path)
         except Exception:
             print(traceback.format_exc())
@@ -101,6 +101,7 @@ class ReferenceFileHandler:
     #
     def _show_run_dir_for_path(self, sidebar, path: str) -> None:
         try:
+            path = self._trim_results_root(path)
             model = sidebar.model
             view = sidebar.view
             index = None
@@ -112,7 +113,7 @@ class ReferenceFileHandler:
                     if data.path.endswith(part):
                         index = model.createIndex(i, 0, ii)
                         view.expand(index)
-                        # item = ii # is item or ii doing anything here? seems not.
+                        item = ii
                         break
             if index:
                 selection_model = view.selectionModel()
