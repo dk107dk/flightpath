@@ -31,5 +31,7 @@ class SqliteTab(QWidget):
 
     def populate(self):
         config = self.form.config
-        db = config.get(section=self.section, name="db", default="")
+        db = config.get(
+            section=self.section, name="db", default="", string_parse=False, swaps=False
+        )
         self.db.setText(db)

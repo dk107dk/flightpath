@@ -94,6 +94,8 @@ class SftpPlusTab(QWidget):
             section=self.section,
             name="admin_username",
             default="SFTPPLUS_ADMIN_USERNAME",
+            string_parse=False,
+            swaps=False,
         )
         self.admin_username.setText(admin_username)
 
@@ -101,24 +103,44 @@ class SftpPlusTab(QWidget):
             section=self.section,
             name="admin_password",
             default="SFTPPLUS_ADMIN_PASSWORD",
+            string_parse=False,
+            swaps=False,
         )
         self.admin_password.setText(admin_password)
 
         api_url = config.get(
-            section=self.section, name="api_url", default="https://localhost:10020/json"
+            section=self.section,
+            name="api_url",
+            default="https://localhost:10020/json",
+            string_parse=False,
+            swaps=False,
         )
         self.api_url.setText(api_url)
 
-        scripts_dir = config.get(section=self.section, name="scripts_dir", default="")
+        scripts_dir = config.get(
+            section=self.section,
+            name="scripts_dir",
+            default="",
+            string_parse=False,
+            swaps=False,
+        )
         self.scripts_dir.setText(scripts_dir)
 
         execute_timeout = config.get(
-            section=self.section, name="execute_timeout", default="300"
+            section=self.section,
+            name="execute_timeout",
+            default="300",
+            string_parse=False,
+            swaps=False,
         )
         self.execute_timeout.setText(execute_timeout)
 
         mailbox_user = config.get(
-            section=self.section, name="mailbox_user", default="mailbox"
+            section=self.section,
+            name="mailbox_user",
+            default="mailbox",
+            string_parse=False,
+            swaps=False,
         )
         self.mailbox_user.setText(mailbox_user)
 
@@ -130,9 +152,19 @@ class SftpPlusTab(QWidget):
         self.mailbox_password.setText(mailbox_password)
 
         server = config.get(
-            section=self.section, name="server", default="SFTPPLUS_SERVER"
+            section=self.section,
+            name="server",
+            default="SFTPPLUS_SERVER",
+            string_parse=False,
+            swaps=False,
         )
         self.server.setText(server)
 
-        port = config.get(section=self.section, name="port", default="SFTPPLUS_PORT")
+        port = config.get(
+            section=self.section,
+            name="port",
+            default="SFTPPLUS_PORT",
+            string_parse=False,
+            swaps=False,
+        )
         self.port.setText(port)

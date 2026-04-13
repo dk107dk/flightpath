@@ -170,6 +170,8 @@ class EnvForm(BlankForm):
         # update table
         #
         self.refresh_table()
+        self.add_name.setText("")
+        self.add_value.setText("")
 
     def _on_item_changed(self, item: QTableWidgetItem) -> None:
         if self.refreshing is True:

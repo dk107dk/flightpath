@@ -1633,9 +1633,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             self.config.reset_config_toolbar()
 
     def cancel_config_changes(self):
-        # exp
         self.csvpath_config.reload()
-        #
         self.config.config_panel.populate_all_forms()
         self.reset_config_toolbar()
 

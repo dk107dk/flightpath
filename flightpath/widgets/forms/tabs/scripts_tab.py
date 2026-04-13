@@ -38,8 +38,20 @@ class ScriptsTab(QWidget):
 
     def populate(self):
         config = self.form.config
-        run_scripts = config.get(section=self.section, name="run_scripts", default="no")
+        run_scripts = config.get(
+            section=self.section,
+            name="run_scripts",
+            default="no",
+            string_parse=False,
+            swaps=False,
+        )
         self.run_scripts.setText(run_scripts)
 
-        shell = config.get(section=self.section, name="shell", default="/bin/bash")
+        shell = config.get(
+            section=self.section,
+            name="shell",
+            default="/bin/bash",
+            string_parse=False,
+            swaps=False,
+        )
         self.shell.setText(shell)

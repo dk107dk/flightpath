@@ -1,6 +1,14 @@
 import os
-from PySide6.QtWidgets import QLineEdit, QFormLayout, QPushButton, QComboBox
-
+from PySide6.QtWidgets import (
+    QLineEdit,
+    QFormLayout,
+    QPushButton,
+    QComboBox,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+)
+from PySide6.QtCore import Qt
 from csvpath.util.nos import Nos
 
 from flightpath.util.os_utility import OsUtility as osut
@@ -10,7 +18,11 @@ from .blank_form import BlankForm
 class LoggingForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        overall = QVBoxLayout()
+        self.setLayout(overall)
+        form = QWidget()
         layout = QFormLayout()
+        form.setLayout(layout)
 
         self.handler = QComboBox()
         layout.addRow("Handler type: ", self.handler)
@@ -34,7 +46,14 @@ class LoggingForm(BlankForm):
         self.csvpaths_level = QComboBox()
         layout.addRow("CsvPaths log level: ", self.csvpaths_level)
 
-        self.setLayout(layout)
+        overall.addWidget(form)
+        check = QWidget()
+        check_layout = QHBoxLayout()
+        check.setLayout(check_layout)
+        check_layout.addWidget(self.table)
+        overall.addWidget(check, alignment=Qt.AlignBottom)
+        self.setLayout(overall)
+
         self._setup()
 
     def on_click_open_dir(self) -> None:
@@ -78,22 +97,36 @@ class LoggingForm(BlankForm):
     def populate(self):
         config = self.config
         path = config.get(
-            section="logging", name="log_file", default="logs/csvpath.log"
+            section="logging",
+            name="log_file",
+            default="logs/csvpath.log",
+            string_parse=False,
+            swaps=False,
         )
         self.path.setText(path)
         log_files_to_keep = config.get(
-            section="logging", name="log_files_to_keep", default="10"
+            section="logging",
+            name="log_files_to_keep",
+            default="10",
+            string_parse=False,
+            swaps=False,
         )
         self.log_files_to_keep.setText(str(log_files_to_keep))
         log_file_size = config.get(
-            section="logging", name="log_file_size", default="50000000"
+            section="logging",
+            name="log_file_size",
+            default="50000000",
+            string_parse=False,
+            swaps=False,
         )
         self.log_file_size.setText(str(log_file_size))
 
         self.handler.clear()
         self.handler.addItem("file")
         self.handler.addItem("rotating")
-        handler = config.get(section="logging", name="handler", default="file")
+        handler = config.get(
+            section="logging", name="handler", default="file", swaps=False
+        )
         handler = handler.strip()
         if handler == "file":
             self.handler.setCurrentText("file")
@@ -105,7 +138,9 @@ class LoggingForm(BlankForm):
         self.csvpath_level.addItem("info")
         self.csvpath_level.addItem("warn")
         self.csvpath_level.addItem("error")
-        level = config.get(section="logging", name="csvpath", default="info")
+        level = config.get(
+            section="logging", name="csvpath", default="info", swaps=False
+        )
         level = level.strip()
         if level == "debug":
             self.csvpath_level.setCurrentText("debug")
@@ -121,7 +156,9 @@ class LoggingForm(BlankForm):
         self.csvpaths_level.addItem("info")
         self.csvpaths_level.addItem("warn")
         self.csvpaths_level.addItem("error")
-        level = config.get(section="logging", name="csvpaths", default="info")
+        level = config.get(
+            section="logging", name="csvpaths", default="info", swaps=False
+        )
         level = level.strip()
         if level == "debug":
             self.csvpaths_level.setCurrentText("debug")

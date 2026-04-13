@@ -1,5 +1,12 @@
-from PySide6.QtWidgets import QLineEdit, QPushButton, QFormLayout
-
+from PySide6.QtWidgets import (
+    QLineEdit,
+    QPushButton,
+    QFormLayout,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+)
+from PySide6.QtCore import Qt
 from csvpath.matching.functions.function_factory import FunctionFactory
 
 from .blank_form import BlankForm
@@ -8,7 +15,11 @@ from .blank_form import BlankForm
 class FunctionsForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        overall = QVBoxLayout()
+        self.setLayout(overall)
+        form = QWidget()
         layout = QFormLayout()
+        form.setLayout(layout)
 
         self.imports_dir_path = QLineEdit()
         layout.addRow("Custom functions imports file: ", self.imports_dir_path)
@@ -16,7 +27,14 @@ class FunctionsForm(BlankForm):
         button.clicked.connect(self.on_click_reset)
         layout.addRow("", button)
 
-        self.setLayout(layout)
+        overall.addWidget(form)
+        check = QWidget()
+        check_layout = QHBoxLayout()
+        check.setLayout(check_layout)
+        check_layout.addWidget(self.table)
+        overall.addWidget(check, alignment=Qt.AlignBottom)
+        self.setLayout(overall)
+
         self._setup()
 
     def on_click_reset(self) -> None:
@@ -24,7 +42,7 @@ class FunctionsForm(BlankForm):
         if path is None or str(path).strip() == "":
             return
         FunctionFactory.clear_to_reload(path)
-        print("cleared custom functions for {path}")
+        print(f"cleared custom functions for {path}")
 
     def _setup(self) -> None:
         self.imports_dir_path.textChanged.connect(self.main.on_config_changed)
@@ -35,7 +53,13 @@ class FunctionsForm(BlankForm):
 
     def populate(self):
         config = self.config
-        imports_path = config.get(section="functions", name="imports", default="")
+        imports_path = config.get(
+            section="functions",
+            name="imports",
+            default="",
+            string_parse=False,
+            swaps=False,
+        )
         self.imports_dir_path.setText(imports_path)
 
     @property

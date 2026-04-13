@@ -1,6 +1,15 @@
 import os
 import json
-from PySide6.QtWidgets import QLineEdit, QFormLayout, QLabel, QComboBox
+from PySide6.QtWidgets import (
+    QLineEdit,
+    QFormLayout,
+    QLabel,
+    QComboBox,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+)
+from PySide6.QtCore import Qt
 
 from csvpath.util.nos import Nos
 from .blank_form import BlankForm
@@ -9,7 +18,13 @@ from .blank_form import BlankForm
 class ConfigForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        overall = QVBoxLayout()
+        self.setLayout(overall)
+        form = QWidget()
         layout = QFormLayout()
+        form.setLayout(layout)
+
         self.config_dir_path = QLineEdit()
         layout.addRow("Config file path: ", self.config_dir_path)
         msg = QLabel("The default is config/config.ini")
@@ -27,7 +42,14 @@ class ConfigForm(BlankForm):
         msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
         layout.addRow("", msg)
 
-        self.setLayout(layout)
+        overall.addWidget(form)
+        check = QWidget()
+        check_layout = QHBoxLayout()
+        check.setLayout(check_layout)
+        check_layout.addWidget(self.table)
+        overall.addWidget(check, alignment=Qt.AlignBottom)
+        self.setLayout(overall)
+
         self._setup()
 
     def _setup(self) -> None:
@@ -104,14 +126,25 @@ class ConfigForm(BlankForm):
     def populate(self):
         config = self.config
         config_path = config.get(
-            section="config", name="path", default="config/config.ini"
+            section="config",
+            name="path",
+            default="config/config.ini",
+            string_parse=False,
+            swaps=False,
         )
+        print(f"\nconfgipath: {config_path}")
         self.config_dir_path.setText(config_path)
 
         self.allow_var_sub.clear()
         self.allow_var_sub.addItem("yes")
         self.allow_var_sub.addItem("no")
-        allow = config.get(section="config", name="allow_var_sub", default="yes")
+        allow = config.get(
+            section="config",
+            name="allow_var_sub",
+            default="yes",
+            string_parse=False,
+            swaps=False,
+        )
         allow = allow.strip().lower()
         #
         # no is correct, but we'll take false because it's a reasonable guess.
@@ -122,7 +155,13 @@ class ConfigForm(BlankForm):
         else:
             self.allow_var_sub.setCurrentText("yes")
 
-        env_path = config.get(section="config", name="var_sub_source", default="env")
+        env_path = config.get(
+            section="config",
+            name="var_sub_source",
+            default="env",
+            string_parse=False,
+            swaps=False,
+        )
         self.var_sub_source.setText(env_path)
 
     @property

@@ -53,12 +53,13 @@ class ListenersForm(BlankForm):
 
     def populate(self):
         config = self.config
-        nf = config.get(section="listeners", name="groups")
+        nf = config.get(
+            section="listeners", name="groups", string_parse=False, swaps=False
+        )
         if isinstance(nf, list):
             self.groups.setText(",".join(nf))
         else:
             self.groups.setText(nf)
-        # for k, v in self._group_tabs.items():
         for i, k in enumerate(self._group_tabs):
             #
             # should we disable tabs of integrations that haven't been selected?

@@ -39,9 +39,19 @@ class CkanTab(QWidget):
     def populate(self):
         config = self.form.config
         server = config.get(
-            section=self.section, name="server", default="localhost:8443"
+            section=self.section,
+            name="server",
+            default="localhost:8443",
+            string_parse=False,
+            swaps=False,
         )
         self.server.setText(server)
 
-        api_token = config.get(section=self.section, name="api_token", default="")
+        api_token = config.get(
+            section=self.section,
+            name="api_token",
+            default="",
+            string_parse=False,
+            swaps=False,
+        )
         self.api_token.setText(api_token)

@@ -31,5 +31,11 @@ class SlackTab(QWidget):
 
     def populate(self):
         config = self.form.config
-        webhook_url = config.get(section=self.section, name="webhook_url", default="")
+        webhook_url = config.get(
+            section=self.section,
+            name="webhook_url",
+            default="",
+            string_parse=False,
+            swaps=False,
+        )
         self.webhook_url.setText(webhook_url)

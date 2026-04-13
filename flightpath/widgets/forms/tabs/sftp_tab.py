@@ -53,14 +53,39 @@ class SftpTab(QWidget):
 
     def populate(self):
         config = self.form.config
-        server = config.get(section=self.section, name="server", default="")
+        server = config.get(
+            section=self.section,
+            name="server",
+            default="",
+            string_parse=False,
+            swaps=False,
+        )
+        print(f"sftptab: server: {server}")
         self.server.setText(server)
 
-        port = config.get(section=self.section, name="port", default="")
+        port = config.get(
+            section=self.section,
+            name="port",
+            default="",
+            string_parse=False,
+            swaps=False,
+        )
         self.port.setText(port)
 
-        username = config.get(section=self.section, name="username", default="")
+        username = config.get(
+            section=self.section,
+            name="username",
+            default="",
+            string_parse=False,
+            swaps=False,
+        )
         self.username.setText(username)
 
-        password = config.get(section=self.section, name="password", default="")
+        password = config.get(
+            section=self.section,
+            name="password",
+            default="",
+            swaps=False,
+            string_parse=False,
+        )
         self.password.setText(password)

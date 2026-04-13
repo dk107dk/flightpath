@@ -1,6 +1,14 @@
 import os
-from PySide6.QtWidgets import QLineEdit, QFormLayout, QCheckBox, QPushButton
-
+from PySide6.QtWidgets import (
+    QLineEdit,
+    QFormLayout,
+    QCheckBox,
+    QPushButton,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+)
+from PySide6.QtCore import Qt
 from flightpath.util.generator_utility import GeneratorUtility as geut
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
@@ -12,7 +20,13 @@ from .blank_form import BlankForm
 class LlmForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        overall = QVBoxLayout()
+        self.setLayout(overall)
+        form = QWidget()
         layout = QFormLayout()
+        form.setLayout(layout)
+
         self.model = QLineEdit()
         layout.addRow("AI Model: ", self.model)
 
@@ -30,7 +44,14 @@ class LlmForm(BlankForm):
         layout.addRow("", button)
         button.clicked.connect(self.on_click_open)
 
-        self.setLayout(layout)
+        overall.addWidget(form)
+        check = QWidget()
+        check_layout = QHBoxLayout()
+        check.setLayout(check_layout)
+        check_layout.addWidget(self.table)
+        overall.addWidget(check, alignment=Qt.AlignBottom)
+        self.setLayout(overall)
+
         self._setup()
 
     def on_click_open(self) -> None:
@@ -107,16 +128,22 @@ class LlmForm(BlankForm):
         config = self.config
 
         local = False
-        _ = config.get(section="llm", name="model", default="")
+        _ = config.get(
+            section="llm", name="model", default="", string_parse=False, swaps=False
+        )
         local = local if _ == "" else True
         _ = ai.get("model", "") if _ == "" else _
         self.model.setText(_)
 
-        _ = config.get(section="llm", name="api_base", default="")
+        _ = config.get(
+            section="llm", name="api_base", default="", string_parse=False, swaps=False
+        )
         _ = ai.get("api_base", "") if _ == "" and local is False else _
         self.base.setText(_)
 
-        _ = config.get(section="llm", name="api_key", default="")
+        _ = config.get(
+            section="llm", name="api_key", default="", string_parse=False, swaps=False
+        )
         _ = ai.get("api_key", "") if _ == "" and local is False else _
         self.key.setText(_)
 

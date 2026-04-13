@@ -53,7 +53,7 @@ class ServerForm(BlankForm):
         self.projects_path_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.projects_path_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.projects_path_area.setFixedHeight(33)
-        self.projects_path_area.setFixedWidth(384)
+        self.projects_path_area.setWidgetResizable(True)
         self.projects_path = QLabel()
         self.projects_path.setText("")
         self.projects_path.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -159,11 +159,15 @@ class ServerForm(BlankForm):
     def really_populate(self) -> None:
         en = self.main.config.toolbar.button_close.isEnabled()
         config = self.config
-        host = config.get(section="server", name="host")
+        host = config.get(
+            section="server", name="host", string_parse=False, swaps=False
+        )
         if host and self.host.text() != host:
             self.host.setText(host)
             self.server_unchanged = False
-        key = config.get(section="server", name="api_key")
+        key = config.get(
+            section="server", name="api_key", string_parse=False, swaps=False
+        )
         if key and self.key.text() != key:
             self.key.setText(key)
             self.server_unchanged = False

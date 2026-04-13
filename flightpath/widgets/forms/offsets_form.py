@@ -1,4 +1,11 @@
-from PySide6.QtWidgets import QWidget, QLineEdit, QFormLayout, QPushButton, QHBoxLayout
+from PySide6.QtWidgets import (
+    QWidget,
+    QLineEdit,
+    QFormLayout,
+    QPushButton,
+    QHBoxLayout,
+    QLabel,
+)
 
 from csvpath.util.date_util import DateUtility as daut
 from .blank_form import BlankForm
@@ -13,9 +20,11 @@ class OffsetsForm(BlankForm):
         self.days = QLineEdit()
         self.months = QLineEdit()
         self.years = QLineEdit()
+        self.now = QLabel(str(daut.now()))
         layout.addRow("Days: ", self.days)
         layout.addRow("Months: ", self.months)
         layout.addRow("Years: ", self.years)
+        layout.addRow("Now: ", self.now)
         setbutton = QPushButton("Set date offsets")
         resetbutton = QPushButton("Reset")
 
@@ -71,6 +80,8 @@ class OffsetsForm(BlankForm):
         daut.OFFSET_DAYS = di
         daut.OFFSET_MONTHS = mi
         daut.OFFSET_YEARS = yi
+        self.now.setText(str(daut.now()))
+        # print(f"setting now: daut.now: {daut.now()}")
 
     def add_to_config(self, config) -> None: ...
 

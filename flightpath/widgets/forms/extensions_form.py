@@ -1,12 +1,24 @@
-from PySide6.QtWidgets import QLineEdit, QPushButton, QFormLayout
-
+from PySide6.QtWidgets import (
+    QLineEdit,
+    QPushButton,
+    QFormLayout,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+)
+from PySide6.QtCore import Qt
 from .blank_form import BlankForm
 
 
 class ExtensionsForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        overall = QVBoxLayout()
+        self.setLayout(overall)
+        form = QWidget()
         layout = QFormLayout()
+        form.setLayout(layout)
 
         self.csvs = QLineEdit()
         layout.addRow("Data file extensions: ", self.csvs)
@@ -21,7 +33,14 @@ class ExtensionsForm(BlankForm):
         self.reload_button.clicked.connect(self._refresh)
         layout.addRow("", self.reload_button)
 
-        self.setLayout(layout)
+        overall.addWidget(form)
+        check = QWidget()
+        check_layout = QHBoxLayout()
+        check.setLayout(check_layout)
+        check_layout.addWidget(self.table)
+        overall.addWidget(check, alignment=Qt.AlignBottom)
+        self.setLayout(overall)
+
         self._setup()
 
     def _refresh(self) -> None:
@@ -54,9 +73,13 @@ class ExtensionsForm(BlankForm):
 
     def populate(self):
         config = self.config
-        csvs = config.get(section="extensions", name="csv_files")
+        csvs = config.get(
+            section="extensions", name="csv_files", string_parse=False, swaps=False
+        )
         self.csvs.setText(", ".join(csvs))
-        csvpaths = config.get(section="extensions", name="csvpath_files")
+        csvpaths = config.get(
+            section="extensions", name="csvpath_files", string_parse=False, swaps=False
+        )
         self.csvpaths.setText(", ".join(csvpaths))
 
     @property

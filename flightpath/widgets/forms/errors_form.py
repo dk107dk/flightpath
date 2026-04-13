@@ -1,12 +1,25 @@
-from PySide6.QtWidgets import QLineEdit, QFormLayout, QComboBox, QHBoxLayout, QCheckBox
-
+from PySide6.QtWidgets import (
+    QLineEdit,
+    QFormLayout,
+    QComboBox,
+    QCheckBox,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+)
+from PySide6.QtCore import Qt
 from .blank_form import BlankForm
 
 
 class ErrorsForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        overall = QVBoxLayout()
+        self.setLayout(overall)
+        form = QWidget()
         layout = QFormLayout()
+        form.setLayout(layout)
 
         self.pattern = QLineEdit()
         layout.addRow("Error pattern: ", self.pattern)
@@ -54,7 +67,14 @@ class ErrorsForm(BlankForm):
 
         layout.addRow("CsvPaths errors: ", self.h_layout_csvpaths)
 
-        self.setLayout(layout)
+        overall.addWidget(form)
+        check = QWidget()
+        check_layout = QHBoxLayout()
+        check.setLayout(check_layout)
+        check_layout.addWidget(self.table)
+        overall.addWidget(check, alignment=Qt.AlignBottom)
+        self.setLayout(overall)
+
         self._setup()
 
     def add_to_config(self, config) -> None:
@@ -105,21 +125,29 @@ class ErrorsForm(BlankForm):
 
     def populate(self):
         config = self.config
-        pattern = config.get(section="errors", name="pattern")
+        pattern = config.get(
+            section="errors", name="pattern", string_parse=False, swaps=False
+        )
         pattern = pattern if pattern else ""
         self.pattern.setText(pattern)
 
         self.use_format.clear()
         self.use_format.addItem("bare")
         self.use_format.addItem("full")
-        use = config.get(section="errors", name="use_format", default="full")
+        use = config.get(
+            section="errors",
+            name="use_format",
+            default="full",
+            string_parse=False,
+            swaps=False,
+        )
         use = use.strip()
         if use == "bare":
             self.use_format.setCurrentText("bare")
         else:
             self.use_format.setCurrentText("full")
 
-        csvpath_errors = config.get(section="errors", name="csvpath")
+        csvpath_errors = config.get(section="errors", name="csvpath", swaps=False)
         if csvpath_errors is not None:
             self.csvpath_raise.setChecked("raise" in csvpath_errors)
             self.csvpath_print.setChecked("print" in csvpath_errors)
@@ -127,7 +155,7 @@ class ErrorsForm(BlankForm):
             self.csvpath_fail.setChecked("fail" in csvpath_errors)
             self.csvpath_collect.setChecked("collect" in csvpath_errors)
 
-        csvpaths_errors = config.get(section="errors", name="csvpaths")
+        csvpaths_errors = config.get(section="errors", name="csvpaths", swaps=False)
         if csvpaths_errors is not None:
             self.csvpaths_raise.setChecked("raise" in csvpaths_errors)
             self.csvpaths_print.setChecked("print" in csvpaths_errors)

@@ -1,4 +1,12 @@
-from PySide6.QtWidgets import QLineEdit, QFormLayout, QLabel
+from PySide6.QtWidgets import (
+    QLineEdit,
+    QFormLayout,
+    QLabel,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+)
+from PySide6.QtCore import Qt
 
 from .blank_form import BlankForm
 
@@ -6,7 +14,14 @@ from .blank_form import BlankForm
 class InputsForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        overall = QVBoxLayout()
+        self.setLayout(overall)
+
+        form = QWidget()
         layout = QFormLayout()
+        form.setLayout(layout)
+
         self.named_files = QLineEdit()
         layout.addRow("Named-files path or URL: ", self.named_files)
 
@@ -19,7 +34,13 @@ class InputsForm(BlankForm):
         msg.setWordWrap(True)
         layout.addRow("", msg)
 
-        self.setLayout(layout)
+        overall.addWidget(form)
+        check = QWidget()
+        check_layout = QHBoxLayout()
+        check.setLayout(check_layout)
+        check_layout.addWidget(self.table)
+        overall.addWidget(check, alignment=Qt.AlignBottom)
+
         self._setup()
 
     def _setup(self) -> None:
@@ -32,10 +53,18 @@ class InputsForm(BlankForm):
 
     def populate(self):
         config = self.config
-        nf = config.get(section="inputs", name="files")
+        nf = config.get(section="inputs", name="files", string_parse=False, swaps=False)
         self.named_files.setText(nf)
-        np = config.get(section="inputs", name="csvpaths")
+        np = config.get(
+            section="inputs", name="csvpaths", string_parse=False, swaps=False
+        )
         self.named_paths.setText(np)
+
+        print(f"inputsfprls: np 1: {nf}")
+        print(f"inputsfprls: np 2: {config.get(section='inputs', name='files')}")
+
+        print(f"inputsfprls: np 1: {np}")
+        print(f"inputsfprls: np 2: {config.get(section='inputs', name='csvpaths')}")
 
     @property
     def fields(self) -> list[str]:

@@ -40,10 +40,20 @@ class SqlTab(QWidget):
 
     def populate(self):
         config = self.form.config
-        dialect = config.get(section=self.section, name="dialect", default="")
+        dialect = config.get(
+            section=self.section,
+            name="dialect",
+            default="",
+            string_parse=False,
+            swaps=False,
+        )
         self.dialect.setText(dialect)
 
         connection_string = config.get(
-            section=self.section, name="connection_string", default=""
+            section=self.section,
+            name="connection_string",
+            default="",
+            string_parse=False,
+            swaps=False,
         )
         self.connection_string.setText(connection_string)

@@ -1,10 +1,5 @@
 import os
-from PySide6.QtWidgets import (
-    QWidget,
-    QLineEdit,
-    QFormLayout,
-    QLabel
-)
+from PySide6.QtWidgets import QWidget, QLineEdit, QFormLayout, QLabel
 
 
 class OtlpTab(QWidget):
@@ -22,11 +17,12 @@ class OtlpTab(QWidget):
         layout.addRow("Exporter headers: ", self.headers)
 
         msg = QLabel(
-"""These values live in the OS env or a FlightPath Server
+            """These values live in the OS env or a FlightPath Server
  project env file. You can also manage them in the env
  tab in the vertical tab list to the left as
  OTEL_EXPORTER_OTLP_HEADERS and
- OTEL_EXPORTER_OTLP_ENDPOINT.""")
+ OTEL_EXPORTER_OTLP_ENDPOINT."""
+        )
         msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
         layout.addRow("", msg)
 
@@ -44,8 +40,6 @@ class OtlpTab(QWidget):
     @property
     def server_fields_count(self) -> int:
         return len(self.server_fields)
-
-
 
     def add_to_config(self, config) -> None:
         #
@@ -68,19 +62,23 @@ class OtlpTab(QWidget):
 
     def populate(self):
         config = self.form.config
-        headers = config.get(section=None, name="OTEL_EXPORTER_OTLP_HEADERS")
+        headers = config.get(
+            section=None,
+            name="OTEL_EXPORTER_OTLP_HEADERS",
+            string_parse=False,
+            swaps=False,
+        )
         if headers:
             self.headers.setText(headers)
         #
         # setting section=None passes this down to the ConfigEnv which knows
         # how to do var lookup/sub without going through config.ini
         #
-        endpoint = config.get(section=None, name="OTEL_EXPORTER_OTLP_ENDPOINT")
+        endpoint = config.get(
+            section=None,
+            name="OTEL_EXPORTER_OTLP_ENDPOINT",
+            string_parse=False,
+            swaps=False,
+        )
         if endpoint:
             self.endpoint.setText(endpoint)
-
-
-
-
-
-

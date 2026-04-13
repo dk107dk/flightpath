@@ -1,12 +1,23 @@
-from PySide6.QtWidgets import QLineEdit, QFormLayout, QLabel
-
+from PySide6.QtWidgets import (
+    QLineEdit,
+    QFormLayout,
+    QLabel,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+)
+from PySide6.QtCore import Qt
 from .blank_form import BlankForm
 
 
 class ResultsForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        overall = QVBoxLayout()
+        self.setLayout(overall)
+        form = QWidget()
         layout = QFormLayout()
+        form.setLayout(layout)
 
         self.archive = QLineEdit()
         layout.addRow("Archive path or URL: ", self.archive)
@@ -20,7 +31,14 @@ class ResultsForm(BlankForm):
         msg.setWordWrap(True)
         layout.addRow("", msg)
 
-        self.setLayout(layout)
+        overall.addWidget(form)
+        check = QWidget()
+        check_layout = QHBoxLayout()
+        check.setLayout(check_layout)
+        check_layout.addWidget(self.table)
+        overall.addWidget(check, alignment=Qt.AlignBottom)
+        self.setLayout(overall)
+
         self._setup()
 
     def add_to_config(self, config) -> None:
@@ -33,9 +51,13 @@ class ResultsForm(BlankForm):
 
     def populate(self):
         config = self.config
-        archive = config.get(section="results", name="archive")
+        archive = config.get(
+            section="results", name="archive", string_parse=False, swaps=False
+        )
         self.archive.setText(archive)
-        transfers = config.get(section="results", name="transfers")
+        transfers = config.get(
+            section="results", name="transfers", string_parse=False, swaps=False
+        )
         self.transfers.setText(transfers)
 
     @property
