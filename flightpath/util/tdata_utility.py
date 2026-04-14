@@ -1,25 +1,24 @@
-
 from csvpath.util.metadata_parser import MetadataParser
 from csvpath.util.file_readers import DataFileReader
 from csvpath.managers.paths.paths_manager import PathsManager
 
 
-class TestDataUtility:
-    MARKER:str = PathsManager.MARKER
+class TDataUtility:
+    MARKER: str = PathsManager.MARKER
 
     @classmethod
-    def get_test_data_path(cls, path:str) -> str:
-        print(f"TestDataUtility: get_test_data_path: path: {path}")
+    def get_test_data_path(cls, path: str) -> str:
+        print(f"TDataUtility: get_test_data_path: path: {path}")
         csvpath = None
         with DataFileReader(path) as file:
             csvpath = file.read()
         return cls.test_data_path_from_csvpath(csvpath)
 
     @classmethod
-    def test_data_path_from_csvpath(cls, csvpath:str) -> str:
+    def test_data_path_from_csvpath(cls, csvpath: str) -> str:
         stmt = None
         c = None
-        for _ in csvpath.split(TestDataUtility.MARKER):
+        for _ in csvpath.split(TDataUtility.MARKER):
             if _.find("test-data:") > -1:
                 stmt, c = cls.statement_and_comment(_)
                 break
@@ -30,7 +29,7 @@ class TestDataUtility:
         return ret
 
     @classmethod
-    def statement_and_comment(cls, csvpath:str) -> tuple[str,str]:
+    def statement_and_comment(cls, csvpath: str) -> tuple[str, str]:
         mdatap = MetadataParser(None)
         cstr, comment = mdatap.extract_csvpath_and_comment(csvpath)
         cstr = cstr.strip()
@@ -38,7 +37,7 @@ class TestDataUtility:
         return cstr, comment
 
     @classmethod
-    def get_filepath(cls, cstr:str, comment:str) -> str:
+    def get_filepath(cls, cstr: str, comment: str) -> str:
         comment = "" if comment is None else comment.strip()
         mdata = {}
         if len(comment) > 0:
@@ -51,21 +50,22 @@ class TestDataUtility:
         if filepath is None:
             return None
         filepath = filepath.strip()
-        filepath = filepath if filepath.find("\n") == -1 else filepath[0:filepath.find("\n")]
+        filepath = (
+            filepath if filepath.find("\n") == -1 else filepath[0 : filepath.find("\n")]
+        )
         if not filepath.startswith("/"):
             #
             # check if we lopped off a leading '/'. metadata parser has a bug.
             # this is a stupid hack.  :/
             #
             i = comment.find(filepath)
-            if i > 0 and comment[i-1] == '/':
+            if i > 0 and comment[i - 1] == "/":
                 return f"/{filepath}"
         return filepath
 
     @classmethod
-    def get_metadata(cls, comment:str) -> None:
+    def get_metadata(cls, comment: str) -> None:
         mdatap = MetadataParser(None)
         mdata = {}
         mdatap._collect_metadata(mdata, comment)
         return mdata
-

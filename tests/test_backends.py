@@ -19,6 +19,7 @@ class TestBackends(unittest.TestCase):
             "gs": "gs://bucket/blob",
         }
         for scheme, uri in schemes.items():
+            print(f"scheme: {scheme}: {uri}")
             with pytest.raises(
                 (OSError, ValueError, TypeError, ClientError, socket.gaierror)
             ):

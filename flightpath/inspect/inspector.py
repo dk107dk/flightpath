@@ -66,7 +66,7 @@ class Inspector:
         info["file"] = self.filepath
         info["sample_size"] = self.sample_size
         info["from_line"] = self.from_line
-        info["scan"] = self.compile_scan()
+        info["scan"] = self.scan()
         info["header_count"] = self.header_count
         info["headers"] = self.headers
         info["total_lines"] = self.total_lines
@@ -150,13 +150,23 @@ class Inspector:
             m = f"""{m} \n\tin(datatype(#{header}), "integer|decimal") -> @m = max.{header}_max(#{header}) \n"""
         return m
 
+    def scan(self) -> str:
+        if self.main is None:
+            return self._compile_scan(c=50)
+        else:
+            return self._compile_scan()
+
     def compile_scan(self) -> str:
         i = self.main.content.tab_widget.currentIndex()
         w = self.main.content.tab_widget.widget(i)
         c = w.table_view.model().rowCount()
+        return self._compile_scan(c=c)
+
+    def _compile_scan(self, c: int) -> str:
         #
-        # we won't sample more data than we have showing in the grid. trying to do that would
-        # often put us outside the length of the data.
+        # c is the max we'll look at. we won't sample more data than we have
+        # showing in the grid. trying to do that would often put us outside the
+        # length of the data.
         #
         if self._sample_size > c:
             self._sample_size = c
@@ -186,7 +196,7 @@ class Inspector:
 
     def compile_csvpath(self, filepath: str) -> str:
         match = self.compile_match()
-        scan = self.compile_scan()
+        scan = self.scan()
         pathstr = f"""
 ~
 validation-mode:print, no-raise

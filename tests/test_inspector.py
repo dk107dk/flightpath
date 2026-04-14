@@ -23,5 +23,7 @@ class TestInspector(unittest.TestCase):
         path = "tests/test_resources/examples/test.csv"
         inspector = Inspector(main=None, filepath=path)
         inspector.sample_size = 50
-        scan = inspector.compile_scan()
+        scan = inspector._compile_scan(c=5000)
         assert scan == "0-50"
+        scan = inspector._compile_scan(c=5)
+        assert scan == "0-5"

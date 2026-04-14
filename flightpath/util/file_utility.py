@@ -46,6 +46,8 @@ class FileUtility:
         _ = partsone + partstwo
         print(f"fiut.join_overlapped: _: {_}")
         ret = os.sep.join(_)
+        if pathone.startswith(os.sep) and not ret[0] == os.sep:
+            ret = f"{os.sep}{ret}"
         print(f"fiut.join_overlapped: ret: {ret}")
         return ret
 

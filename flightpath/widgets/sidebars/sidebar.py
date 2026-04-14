@@ -712,6 +712,8 @@ class Sidebar(QWidget):
             )
             return
         named_file_name = self.stage_dialog.named_file_name_ctl.text()
+        named_file_name = named_file_name.strip() if named_file_name else ""
+
         recurse = self.stage_dialog.recurse_ctl.isChecked()
         name = self.stage_dialog.path
         paths = self.main.csvpaths

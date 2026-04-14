@@ -14,8 +14,8 @@ from PySide6.QtCore import Qt # pylint: disable=E0611
 
 from .template_dialog import TemplateDialog
 
-class FilesTemplateDialog(TemplateDialog):
 
+class FilesTemplateDialog(TemplateDialog):
     def __init__(self, *, main, name, parent, ttype="paths"):
         super().__init__(parent=parent, main=main, name=name)
         self.setWindowTitle(f"Add a file staging template to {name}")
@@ -28,6 +28,7 @@ class FilesTemplateDialog(TemplateDialog):
     def do_set(self) -> None:
         t = self.template_ctl.text()
         mgr = self.csvpaths.file_manager
+        print(f"ftempdia: self.name: {self.name}, t: {t}")
         mgr.describer.store_template(self.name, t)
 
         #
@@ -41,5 +42,3 @@ class FilesTemplateDialog(TemplateDialog):
         #
         #
         self.close()
-
-

@@ -80,19 +80,7 @@ class TemplateDialog(QDialog):
         if not self.sidebar.main.helper.is_showing_help():
             self.sidebar.main.helper.on_click_help()
 
-    def _edit(self) -> None:
-        ...
-        #
-        # we don't want to disable because we need to be able to set the template to "", i.e. remove it
-        #
-        """
-        t = self.template_ctl.text()
-        if t and t.strip() != "":
-            self.set_button.setEnabled(True)
-        else:
-            self.set_button.setEnabled(False)
-        """
+    def _edit(self) -> None: ...
 
     def show_dialog(self) -> None:
         self.exec()
-        # self.show()

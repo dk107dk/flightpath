@@ -17,7 +17,7 @@ from csvpath.util.file_readers import DataFileReader
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.ai.activity_selector import ActivitySelector
 from flightpath.util.help_finder import HelpFinder
-from flightpath.util.test_data_utility import TestDataUtility as tdut
+from flightpath.util.tdata_utility import TDataUtility as tdut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.generator_utility import GeneratorUtility as geut
 
