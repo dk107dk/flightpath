@@ -27,39 +27,35 @@ class Token:
 
 
 tokens = (
-    Token(TokenID.COLON, re.compile(':')),
-    Token(TokenID.COMMA, re.compile(',')),
-    Token(TokenID.LEFT_SQ_BRACKET, re.compile(r'\[')),
-    Token(TokenID.RIGHT_SQ_BRACKET, re.compile(']')),
-    Token(TokenID.LEFT_CURL_BRACKET, re.compile(r'\{')),
-    Token(TokenID.RIGHT_CURL_BRACKET, re.compile(r'}')),
-    Token(TokenID.SPACE, re.compile(r'(\t|\n|\s|\r)+')),
+    Token(TokenID.COLON, re.compile(":")),
+    Token(TokenID.COMMA, re.compile(",")),
+    Token(TokenID.LEFT_SQ_BRACKET, re.compile(r"\[")),
+    Token(TokenID.RIGHT_SQ_BRACKET, re.compile("]")),
+    Token(TokenID.LEFT_CURL_BRACKET, re.compile(r"\{")),
+    Token(TokenID.RIGHT_CURL_BRACKET, re.compile(r"}")),
+    Token(TokenID.SPACE, re.compile(r"(\t|\n|\s|\r)+")),
     Token(TokenID.KEY, re.compile(r'"[^"\\]*(?:\\.[^"\\]*)*"(?=\s*:)')),
     Token(TokenID.STRING, re.compile(r'"[^"\\]*(?:\\.[^"\\]*)*"')),
-    Token(TokenID.INT, re.compile(r'[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?')),
+    Token(TokenID.INT, re.compile(r"[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")),
     Token(TokenID.BOOL, re.compile(r"true|false")),
-    Token(TokenID.NULL, re.compile(r"null"))
+    Token(TokenID.NULL, re.compile(r"null")),
 )
 
+
 class Lexer:
-    def __init__(self, text:str) -> None:
+    def __init__(self, text: str) -> None:
         self.text = text
 
     def lex(self) -> (TokenID, int, int):
         start = 0
-        #print(f"{len(self.text)=}")
         while start < len(self.text):
-            #print(f"{start=}")
             for token in tokens:
                 if mo := token.pattern.match(self.text, start):
                     end = mo.end(0)
-                    #print(f"{mo.group(0)=}")
                     yield token.ID, start, end
                     start = end
                     break
             else:
-                #print(f"{start=}")
-                #print(f"{self.text[start]=} NOT FOUND")
                 start += 1
         else:
             yield None, 0, 0

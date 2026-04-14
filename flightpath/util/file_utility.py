@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+import traceback
 
 from csvpath.util.nos import Nos
 from csvpath.util.file_readers import DataFileReader
@@ -34,21 +35,14 @@ class FileUtility:
         # if pathone ends in the start of pathtwo, remove the start of pathtwo before
         # joining.
         #
-        print(f"fiut.join_overlapped: pathone: {pathone}")
-        print(f"fiut.join_overlapped: pathtwo: {pathtwo}")
         partsone = pathu.parts(pathone)
         partstwo = pathu.parts(pathtwo)
-        print(f"fiut.join_overlapped: partsone: {partsone}")
-        print(f"fiut.join_overlapped: partstwo: {partstwo}")
-
         while partsone[len(partsone) - 1] == partstwo[0]:
             partsone = partsone[0 : len(partsone) - 1]
         _ = partsone + partstwo
-        print(f"fiut.join_overlapped: _: {_}")
         ret = os.sep.join(_)
         if pathone.startswith(os.sep) and not ret[0] == os.sep:
             ret = f"{os.sep}{ret}"
-        print(f"fiut.join_overlapped: ret: {ret}")
         return ret
 
     @classmethod
@@ -119,18 +113,13 @@ class FileUtility:
 
     @classmethod
     def make_app_path(cls, path, *, main=None) -> str:
-        # print(f"fiut: mkapppath: path: {path}")
         p = cls.app_path_or_given(path)
-        # print(f"fiut: mkapppath: p: {p}")
         if path == p:
             if main:
-                # print(f"Fiut: cannot find {path}")
                 main.log(f"Fiut: cannot find {path}")
             else:
                 ...
-                # print(f"Fiut: cannot find {path}")
             return None
-        # print(f"Fiut: mkapppath found path: {p}")
         return p
 
     @classmethod
@@ -150,17 +139,14 @@ class FileUtility:
         if getattr(sys, "frozen", False):
             ...
             t1 = ap
-            # print(f"fiut: app_path_no_check: NOT addingx 'flightpath': {t1}")
         else:
             t1 = os.path.join(ap, "flightpath")
-            # print(f"fiut: app_path_no_check: addingx 'flightpath': {t1}")
         t1 = os.path.join(t1, path)
         return t1
 
     @classmethod
     def app_path(cls) -> str:
         if cls.APP_PATH is None:
-            # print(f"getingsx attr: {getattr(sys, 'frozen', False)}")
             if getattr(sys, "frozen", False):
                 # If the app is frozen, the base path is sys._MEIPASS
                 # path = sys._MEIPASS
@@ -169,18 +155,15 @@ class FileUtility:
                 #
                 bundle_dir = os.path.dirname(sys.executable)
                 t = os.path.join(os.path.dirname(bundle_dir), "Resources")
-                # print(f"getingsx path 2c exists: {t}: {nos.exists()}")
                 cls.APP_PATH = t
             else:
                 # If running in a normal dev environment
                 # path = .../flightpath/util
                 path = os.path.dirname(__file__)
-                # print(f"getingsx path 3: {path}")
                 # path = .../flightpath
                 path = os.path.dirname(path)
                 # path = .../ (home of the app)
                 cls.APP_PATH = os.path.dirname(path)
-        # print(f"getingsx path 4: {cls.APP_PATH}")
         return cls.APP_PATH
 
     @classmethod
@@ -216,7 +199,6 @@ class FileUtility:
         if osut.is_mac():
             if home.find("Container") > -1:
                 parts = pathu.parts(home)
-                print(f"fiut: real_home_dir: {parts}")
                 home = f"/{parts[1]}/{parts[2]}"
         return home
 
@@ -234,19 +216,16 @@ class FileUtility:
                 file.write("test")
             nos = Nos(path)
             if nos.exists():
-                print("main.is_new_writable: file exists")
                 nos.remove()
                 return True
             else:
-                print("main.is_new_writable: not writable")
                 return False
-        except Exception as e:
-            print(f"Error in is_new_writable: {type(e)}: {e}")
+        except Exception:
+            print(traceback.format_exc())
             return False
 
     @classmethod
     def is_writable_dir(cls, path) -> bool:
-        print(f"main.is_writable_dir: checking writeability of: {path}")
         try:
             if not os.path.exists(path):
                 return False
@@ -254,10 +233,9 @@ class FileUtility:
 
             t = f"{uuid4()}"
             p = os.path.join(path, t)
-            print(f"main.is_writable_dir: attempting to write to: {p}")
             return cls.is_new_writable(p)
-        except Exception as e:
-            print(f"Error in is_writable_dir: {type(e)}: {e}")
+        except Exception:
+            print(traceback.format_exc())
             return False
 
     @classmethod

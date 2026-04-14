@@ -55,7 +55,6 @@ class IconPackager:
             icon.setPixmap(pixmap)
             main.show_now_or_later(icon)
             box_layout.addWidget(icon, stretch=0)
-            # box_layout.addWidget(icon)
             icon.icon_pixmap = pixmap
             icon.click_callback = on_click[i]
         return box

@@ -84,7 +84,6 @@ class TreeModel(QAbstractItemModel):
         #
         if self._frozen:
             ...
-            # print(f"data is frozen")
         #    return None
         #
         if role == Qt.DecorationRole:
@@ -145,7 +144,6 @@ class TreeModel(QAbstractItemModel):
         #
         if self._frozen:
             ...
-            # print("index is frozen")
             # return QModelIndex()
 
         try:
@@ -171,7 +169,6 @@ class TreeModel(QAbstractItemModel):
         #
         if self._frozen:
             ...
-            # print("parent is frozen")
             # return QModelIndex()
 
         if not index.isValid():
@@ -191,7 +188,6 @@ class TreeModel(QAbstractItemModel):
         #
         if self._frozen:
             ...
-            # print("rowCount is frozen")
             # return 0
 
         if parent.isValid() and parent.column() > 0:
@@ -218,7 +214,6 @@ class TreeModel(QAbstractItemModel):
         #
         if self._frozen:
             ...
-            # print(f"setup_model_data is frozen")
             # return
         parent.child_items
 

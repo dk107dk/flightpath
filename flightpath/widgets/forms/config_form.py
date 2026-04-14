@@ -132,9 +132,7 @@ class ConfigForm(BlankForm):
             string_parse=False,
             swaps=False,
         )
-        print(f"\nconfgipath: {config_path}")
         self.config_dir_path.setText(config_path)
-
         self.allow_var_sub.clear()
         self.allow_var_sub.addItem("yes")
         self.allow_var_sub.addItem("no")

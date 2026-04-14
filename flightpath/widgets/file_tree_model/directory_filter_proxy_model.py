@@ -1,4 +1,6 @@
+import traceback
 from PySide6 import QtCore
+
 
 class DirectoryFilterProxyModel(QtCore.QSortFilterProxyModel):
     def __init__(self, parent=None, excluded_dirs=None, *, sidebar):
@@ -36,14 +38,12 @@ class DirectoryFilterProxyModel(QtCore.QSortFilterProxyModel):
             else:
                 # Accept all non-directory files
                 return True
-        except Exception as e:
-            print(f"Proxy model: filterAcceptsRow Error: e: {type(e)}: {e}: {source_model}")
+        except Exception:
+            print(traceback.format_exc())
             return False
-
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if not index.isValid():
             return None
         data = super().data(index, role)
         return data
-

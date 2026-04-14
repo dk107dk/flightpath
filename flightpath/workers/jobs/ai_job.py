@@ -31,14 +31,12 @@ class AiJob(Job):
         self._values = vs
 
     def _on_generation(self, generation):
-        print(f"AiJob._on_generation: {generation}: {self.on_turn_update}")
         if generation and self.on_turn_update:
             turns = generation.generator.get_turns(text_list=False)
             js = jsonpickle.encode(turns, unpicklable=False, indent=2)
             self.on_turn_update(js)
 
     def do_generate(self) -> None:
-        print("job: do_generate: starting")
         try:
             tools = [
                 LiteLLMRunTool().tool_definition(),
@@ -84,9 +82,7 @@ class AiJob(Job):
             # object. all the generations are saved, mostly as json, in a set
             # of several files.
             #
-            # print(f"\n\n  >>>>>>>>> WARNING: NOT starting generations")
             generation = None
-            #
             generation = generator.do_send(
                 context=context, prompt=prompt, datapath=self.path
             )

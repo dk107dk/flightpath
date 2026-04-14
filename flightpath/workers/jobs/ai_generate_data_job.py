@@ -1,10 +1,9 @@
 from flightpath.workers.jobs.ai_job import AiJob
 
-class AiGenerateDataJob(AiJob):
 
-    def __init__(self, *, parent, main, mdata:dict):
+class AiGenerateDataJob(AiJob):
+    def __init__(self, *, parent, main, mdata: dict):
         super().__init__(parent=parent, main=main, mdata=mdata)
-        print("AiGenerateDataJob: generating test CSV data")
 
     @property
     def example(self) -> None:
@@ -16,6 +15,3 @@ class AiGenerateDataJob(AiJob):
     @property
     def version(self) -> str:
         return "testdata"
-
-
-

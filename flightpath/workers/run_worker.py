@@ -67,7 +67,6 @@ class RunWorker(QRunnable):
             self.signals.messages.emit(f"Completed run {ref}")
             self.signals.finished.emit((ref, paths))
         except Exception as ex:
-            self.signals.messages.emit(f"Error in run: {ex}")
             self.signals.error.emit((str(ex), paths))
             print(traceback.format_exc())
         self.main = None

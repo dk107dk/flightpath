@@ -70,7 +70,6 @@ class CsvpathLoader:
         try:
             if paths.paths_manager.has_named_paths(named_paths_name):
                 if not self._check_ok_to_proceed(overwrite):
-                    print("loading 67")
                     return
             name = self.load_dialog.path
             name = "" if not name else name.strip()
@@ -85,10 +84,6 @@ class CsvpathLoader:
                     # change to add append to add_named_paths_from_file() is done, but needs
                     # testing and a local release so we can use it. till then, this will
                     # break
-                    #
-                    print(
-                        f"loading 85: {named_paths_name}, {name}, {template}, {overwrite}"
-                    )
                     #
                     # have to override the filesystem prohibit because it doesn't make sense
                     # here. we are all local file-based atm and also control config.

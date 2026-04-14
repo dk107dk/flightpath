@@ -17,7 +17,6 @@ class PLineEdit(QLineEdit):
         from csvpath.util.log_utility import LogUtility as lout
 
         lout.log_brief_trace()
-        print(f">>>> plinest: t: {t}")
         super().setText(t)
 
 

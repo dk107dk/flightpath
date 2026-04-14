@@ -28,7 +28,6 @@ class FilesTemplateDialog(TemplateDialog):
     def do_set(self) -> None:
         t = self.template_ctl.text()
         mgr = self.csvpaths.file_manager
-        print(f"ftempdia: self.name: {self.name}, t: {t}")
         mgr.describer.store_template(self.name, t)
 
         #

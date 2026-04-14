@@ -62,7 +62,6 @@ class AddConfigKeyDialog(QDialog):
         self.show_dialog()
 
     def _add(self):
-        print("add_config_key_dialog: adding")
         self.tree.beginResetModel()
         item = TreeItem(self.parent)
         item.key = self.key_ctl.text()

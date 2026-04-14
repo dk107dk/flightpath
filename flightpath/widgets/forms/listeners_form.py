@@ -195,5 +195,4 @@ class ListenersForm(BlankForm):
 
     @property
     def tabs(self) -> list[str]:
-        print(f"tasxt:: {self._group_tabs}")
         return self._group_tabs.values()

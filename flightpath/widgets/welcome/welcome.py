@@ -38,7 +38,6 @@ class Welcome(QWidget):
         imgpath = fiut.make_app_path(
             f"assets{os.sep}images{os.sep}flightpath-gray.svg", main=main
         )
-        # print(f"Welcome: central image path: {imgpath}")
         self.main.log(f"Welcome: central image path: {imgpath}")
         pixmap = QPixmap(imgpath)
         image_label.setPixmap(pixmap)
@@ -121,10 +120,9 @@ class Welcome(QWidget):
         #
         # pick and copy
         #
-        path = FileCollector.select_file(
+        FileCollector.select_file(
             parent=self, cwd=cwd, title="Select File", file_type_filter=afilter
         )
-        print(f"welcome: on_click_copy_in: path: {path}")
 
     def on_click_run(self) -> None:
         self._new_run()
@@ -175,7 +173,6 @@ class Welcome(QWidget):
 
     def _on_run_one_load(self) -> None:
         csvpath = self._run_one_time
-        print(f"welcome._on_run_one_load: looking for: {csvpath}")
         #
         # iterate content's tabs to find one with widget.objectName() == csvpath
         #
@@ -205,7 +202,6 @@ class Welcome(QWidget):
             if cs[0].strip() == "":
                 cs[0] = cs[1]
         # self.main.content.csvpath_source_view.run_one_csvpath(cs[0], None)
-        print(f"welcome._on_run_one_load: cs: {cs}")
         w[1].run_one_csvpath(cs[0], None)
 
     def on_click_copy_in_help(self) -> None:

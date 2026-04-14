@@ -8,7 +8,6 @@ class TDataUtility:
 
     @classmethod
     def get_test_data_path(cls, path: str) -> str:
-        print(f"TDataUtility: get_test_data_path: path: {path}")
         csvpath = None
         with DataFileReader(path) as file:
             csvpath = file.read()
@@ -22,7 +21,6 @@ class TDataUtility:
             if _.find("test-data:") > -1:
                 stmt, c = cls.statement_and_comment(_)
                 break
-        print(f"ask: _get_data_path: stmt: {stmt}")
         if stmt is None:
             return None
         ret = cls.get_filepath(stmt, c)

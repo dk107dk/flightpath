@@ -131,14 +131,10 @@ class GeneralDataWorker(QRunnable):
         #
         # jsonl may have all kinds of headers magic
         #
-        #
-        # _all_headers = self._all_headers(path=path, encoding=encoding)
         with DataFileReader(
             path, delimiter=self.delimiter, quotechar=self.quotechar, encoding=encoding
         ) as file:
-            print(f"GeneralDataWx: starting: {path}")
             for line in file.next():
-                print(f"GeneralDataWx: i: {i}")
                 b = self.accept_line(i, line)
                 if b is False and self.line_take > self.LARGE_FILE_LIMIT:
                     return (data, lines, i, self.LARGE_FILE)

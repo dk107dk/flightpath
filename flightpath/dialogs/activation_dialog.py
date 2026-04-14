@@ -92,7 +92,6 @@ class ActivationDialog(QDialog):
         d = self.csvpaths.file_manager.describer
         oa = d.get_on_arrival(self.named_file_name)
         if oa is not None and not len(oa) == 0:
-            print(f"actd: oa: {oa}")
             n = oa["named_paths_group"]
             self.named_paths_name_ctl.setEditText(n)
 
@@ -115,7 +114,6 @@ class ActivationDialog(QDialog):
         # if we have an on_arrival set the existing run method
         #
         if oa is not None and not len(oa) == 0:
-            print(f"actd: oa: {oa}")
             n = oa["run_method"]
             if str(n).strip() != "":
                 k = next((k for k, v in self.METHODS.items() if v == n), None)

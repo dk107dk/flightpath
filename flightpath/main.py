@@ -292,8 +292,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                 worker.signals.messages.connect(self.statusBar().showMessage)
                 self.threadpool.start(worker, priority=QThread.LowestPriority.value)
         except Exception:
-            import traceback
-
             print(traceback.format_exc())
 
     def show_now_or_later(self, showable) -> None:
@@ -855,9 +853,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             #
             json_view = taut.find_tab(self.content.tab_widget, filepath)
 
-            print(
-                f"main: update json viewss: jsongview: {json_view}, filepath: {filepath}"
-            )
             if json_view is None:
                 if (
                     filepath.endswith("manifest.json")
@@ -883,9 +878,8 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                 json_view = json_view[1]
             taut.select_tab(self.content.tab_widget, json_view)
             self._rt_tabs_show()
-        except Exception as e:
+        except Exception:
             print(traceback.format_exc())
-            print(f"Error opening json: {type(e)}: {e}")
         finally:
             self._clear_is_opening(filepath)
 
@@ -1101,9 +1095,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             self._rt_tabs_show()
         except Exception:
             print(traceback.format_exc())
-            print(
-                f"Error in update views at signals connect on: {type(dv)} showing {filepath}"
-            )
         finally:
             self._clear_is_opening(filepath)
 
@@ -1194,7 +1185,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             self.spin_up_md_worker(
                 path=path, editable=editable, finished_callback=finished_callback
             )
-            print("aftsa")
         elif not info.isFile():
             meut.message(title="File opening error", msg=f"Cannot open {path}")
         else:

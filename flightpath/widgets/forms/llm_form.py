@@ -15,6 +15,7 @@ from flightpath.util.file_utility import FileUtility as fiut
 
 from csvpath.util.nos import Nos
 from .blank_form import BlankForm
+from flightpath.util.message_utility import MessageUtility as meut
 
 
 class LlmForm(BlankForm):
@@ -64,10 +65,7 @@ class LlmForm(BlankForm):
         if not nos.exists():
             nos.makedirs()
         elif nos.isfile():
-            #
-            # TODO: this could, rarely, happen. we should alert the user of the misconfig.
-            #
-            print(f"LlmForm: on_click_open: {path} is a file. Cannot open.")
+            meut.message(msg=f"{path} is a file", title="Cannot Open")
         else:
             o = osut.file_system_open_cmd()
             os.system(f'{o} "{path}"')

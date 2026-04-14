@@ -1,3 +1,5 @@
+import traceback
+
 from PySide6.QtCore import QRunnable
 from csvpath import CsvPath
 from .run_worker_signals import RunWorkerSignals
@@ -27,8 +29,6 @@ class OneOffRunWorker(QRunnable):
                 f"Test run complete. Matched {len(lines)} line{'s' if len(lines) != 1 else ''}."
             )
         except Exception as ex:
-            import traceback
-
             print(traceback.format_exc())
             self.csvpath.logger.error(ex)
             self.signals.messages.emit("Test run failed")

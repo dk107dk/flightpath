@@ -22,16 +22,13 @@ class JsonModel(QAbstractItemModel):
         item = index.internalPointer()
         rc = self.rowCount(parent=index)
         cc = self.columnCount(parent=index)
-        print(f"jsonmodel.relmove: item.key: {item.key}, rc: {rc}, cc: {cc}")
         self.beginRemoveRows(QModelIndex(), rc, cc)
         item.parent.children.remove(item)
         self.endRemoveRows()
 
     def item_path(self, item) -> list[str]:
-        print(f"jsonmodel: itempath: starting with item: {item.key}")
         path = []
         while item.key != "root":
-            print(f"jsonmodel: itempath: item: {item.key}")
             path.append(item.key)
             item = item.parent
         path.append("root")

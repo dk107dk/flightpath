@@ -157,7 +157,6 @@ class MdViewer(QWidget):
             data = self._make_paragraphs(data)
             self.text_edit.setMarkdown(data)
             self.text_edit.display = "rich"
-
         elif info.suffix() == "html":
             #
             # we don't allow editing HTML
@@ -218,7 +217,6 @@ class MdViewer(QWidget):
         self.reset_saved()
 
     def on_save(self) -> None:
-        print(f"---asdf: {self.editable}")
         if self.editable == EditStates.UNEDITABLE:
             return
         self._save(path=self.path)

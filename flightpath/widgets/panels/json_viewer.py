@@ -1,6 +1,7 @@
 import os
 import json
 import tempfile
+import traceback
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -50,8 +51,6 @@ class KeyableTreeView(QTreeView):
                 save_shortcut_cmd_save.activated.connect(self.save_callback)
             stut.set_editable_background(self)
         except Exception:
-            import traceback
-
             print(traceback.format_exc())
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -190,7 +189,6 @@ class JsonViewer(QWidget):
         self.modified = t
         tab = taut.find_tab(self.main.content.tab_widget, self.path)
         if tab is None:
-            print(f"Error: cannot find view tab in main.content for {self.path}")
             return
         name = (
             f"+ {os.path.basename(self.path)}"
@@ -259,7 +257,6 @@ class JsonViewer(QWidget):
         if yes is True:
             try:
                 name = self.objectName()
-                print(f"jsonviewer:_copy_back_question: name: {name}")
                 if not name or str(name).strip() == "":
                     #
                     # we're probably a vars or errors results tab with no file backing us up
@@ -286,8 +283,6 @@ class JsonViewer(QWidget):
                     self.main.read_validate_and_display_file_for_path(to_path)
                     self.main.content.tab_widget.close_tab(name)
             except Exception:
-                import traceback
-
                 print(traceback.format_exc())
 
     def _show_context_menu(self, position):

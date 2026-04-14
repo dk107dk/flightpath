@@ -43,7 +43,6 @@ class SidebarArchiveRefMaker:
 
     def _repeat_run(self):
         index = self.parent.view.currentIndex()
-        print(f"doing _repeat_run: index: {index}")
         named_paths, named_file = self._get_rerun_references(index)
         self.new_run_dialog = NewRunDialog(
             parent=self.parent, named_paths=named_paths, named_file=named_file

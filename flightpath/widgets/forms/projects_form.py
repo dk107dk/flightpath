@@ -3,8 +3,10 @@ import os
 from PySide6.QtWidgets import QLineEdit, QFormLayout, QPushButton, QMessageBox
 
 from csvpath.util.nos import Nos
-from flightpath.util.os_utility import OsUtility as osut
 from .blank_form import BlankForm
+
+from flightpath.util.os_utility import OsUtility as osut
+from flightpath.util.message_utility import MessageUtility as meut
 
 
 class ProjectsForm(BlankForm):
@@ -28,18 +30,22 @@ class ProjectsForm(BlankForm):
         path = os.path.join(self.main.state.home, self.main.state.projects_home)
         nos = Nos(path)
         if not nos.exists():
-            print(f"ProjectsForm: on_click_open: {path} doesn't exist. Creating it.")
+            meut.message(
+                msg=f"{path} does not exist. Creating it.",
+                title="Not Found",
+            )
             nos.makedirs()
         elif nos.isfile():
             #
             # TODO: this could, rarely, happen. we should alert the user of the misconfig.
             #
-            print(f"ProjectsForm: on_click_open: {path} is a file. Cannot open.")
+            meut.message(
+                msg=f"{path} is a file.",
+                title="Cannot Open",
+            )
         else:
             o = osut.file_system_open_cmd()
-            print(f"ProjectsForm: on_click_open: opening {path} with {o}")
             os.system(f'{o} "{path}"')
-        print("ProjectsForm: on_click_open: done.")
 
     def _setup(self) -> None:
         self.project_dir.textChanged.connect(self.main.on_config_changed)
@@ -53,13 +59,10 @@ class ProjectsForm(BlankForm):
                 try:
                     nos.makedirs()
                 except Exception:
-                    print("ProjectsForm: add_to_config: error: {type(e)}: {e}")
                     self.alert()
             if self.main.is_writable(path):
-                print(f"ProjectsForm: add_to_config: {path} is writable")
                 self.main.state.projects_home = home
             else:
-                print(f"ProjectsForm: add_to_config: {path} is not writable")
                 self.project_dir.setText(self.original_projects_home)
 
     def alert(self) -> None:

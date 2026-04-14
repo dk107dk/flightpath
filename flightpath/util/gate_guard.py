@@ -1,6 +1,8 @@
 import hashlib
 import os
 import argparse
+import sys
+import traceback
 from .state import State
 
 
@@ -146,13 +148,11 @@ This requirement will be removed in a future release.
                 key = str(os.getenv(key))
             h = hashlib.sha256(key.encode()).hexdigest()
             ret = h == GateGuard.TICKET_HASH
-        except Exception as ex:
-            print(f"Error: {type(ex)}: {ex}")
+        except Exception:
+            print(traceback.format_exc())
         if ret is False:
             print(f"""{cls.TICKET_REQUIRED}
 
 """)
-            import sys
-
             sys.exit(1)
         return ret

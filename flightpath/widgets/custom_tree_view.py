@@ -1,3 +1,4 @@
+import traceback
 from PySide6.QtWidgets import QTreeView
 from PySide6.QtCore import Signal
 
@@ -20,8 +21,8 @@ class CustomTreeView(QTreeView):
         # Add safeguards before passing to base implementation
         try:
             super().selectionChanged(selected, deselected)
-        except Exception as e:
-            print(f"Error in selection change: {e}")
+        except Exception:
+            print(traceback.format_exc())
 
     def expanded(self, index):
         # Safety check before passing to base implementation

@@ -1,3 +1,4 @@
+import traceback
 from PySide6.QtCore import QRunnable
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.nos import Nos
@@ -25,7 +26,7 @@ class CsvpathFileWorker(QRunnable):
             with DataFileReader(self.filepath) as file:
                 data = file.source.read()
         except Exception as e:
-            print(f"Error: {type(e)}: {e}")
+            print(traceback.format_exc())
             self.signals.messages.emit(f"  Erroring opening {self.filepath}")
             self.signals.finished.emit(("Error", e, None))
             return

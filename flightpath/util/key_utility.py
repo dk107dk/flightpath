@@ -1,12 +1,10 @@
-
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtCore import Qt
 
 
 class KeyUtility:
-
     @classmethod
-    def is_edit_key(cls, event:QKeyEvent) -> bool:
+    def is_edit_key(cls, event: QKeyEvent) -> bool:
         ret = True
         if event is None:
             ret = False
@@ -18,16 +16,13 @@ class KeyUtility:
             ret = True
         elif event.text() == "":
             ret = False
-        #print(f"is_regular_key: {event}: {ret}")
         return ret
 
     @classmethod
-    def has_control_key(cls, event:QKeyEvent) -> bool:
+    def has_control_key(cls, event: QKeyEvent) -> bool:
         #
         # this detects cmd on MacOS, not ctrl.
         #
         m = event.modifiers() & Qt.ControlModifier
         ret = m and m != Qt.KeyboardModifier.NoModifier
-        #print(f"has_control_key: {event}: {m} == {ret}")
         return ret
-

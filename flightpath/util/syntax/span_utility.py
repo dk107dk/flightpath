@@ -1,4 +1,3 @@
-
 class SpanUtility:
     STOPPED = 0
     CONTINUING = 1
@@ -10,7 +9,6 @@ class SpanUtility:
             text = cls.chomp(spans, text, span_char)
             if text == "":
                 break
-            t = spans[len(spans)-1]
         return spans
 
     @classmethod
@@ -29,15 +27,14 @@ class SpanUtility:
         if a == -1:
             a = len(text)
 
-        a = a+1 if first and len(text) > 1 else a
+        a = a + 1 if first and len(text) > 1 else a
         take = text[0:a]
         ret = text[a:]
-        spans.append( [0, a, active, take] )
+        spans.append([0, a, active, take])
         return ret
 
-
     @classmethod
-    def in_comment(cls, text:str, pos:int) -> bool:
+    def in_comment(cls, text: str, pos: int) -> bool:
         #
         # TODO: make this method just returnthe set of booleans and another
         # that returns if in an external comment or not.
@@ -48,7 +45,6 @@ class SpanUtility:
         inscan = False
         inmatch = False
         for i, c in enumerate(text):
-            #print(c, end="")
             if i == pos:
                 break
             if c == "$":
@@ -64,7 +60,7 @@ class SpanUtility:
                     inc = False
                 else:
                     inc = True
-            elif c == '[':
+            elif c == "[":
                 if inroot:
                     inroot = False
                     inscan = True
@@ -76,7 +72,7 @@ class SpanUtility:
                     ...
                 else:
                     inmatch = True
-            elif c == ']':
+            elif c == "]":
                 if inmatch:
                     inmatch = False
                     ins = False
@@ -104,5 +100,3 @@ class SpanUtility:
     @classmethod
     def insert(self, *, text, position, insert) -> str:
         return f"{text[:position]}{insert}{text[position:]}"
-
-

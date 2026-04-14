@@ -18,7 +18,6 @@ class FileRefCreator:
         #
         if self._has_name(name):
             return name
-        print(f"FileRefC: 1 name: {name}")
         #
         # check if we're cwd + simple name. if so, just remove cwd.
         #
@@ -27,7 +26,6 @@ class FileRefCreator:
             name = name[len(cwd) + 1 :]
         if self._has_name(name):
             return name
-        print(f"FileRefC: 2 name: {name}")
         #
         # check if we're cwd + the file staging area + simple name.
         # cwd is gone, so just remove file staging.
@@ -46,14 +44,12 @@ class FileRefCreator:
         ps = pathu.parts(name)
         file = ps[0]
         name = name[len(file) + 1 :]
-        print(f"FileRefC: 3 name: {name}, file: {file}")
         if not self._has_name(file):
             #
             # not sure how this could happen since we're driven off
             # the mouse click, but fwiw
             #
             return None
-        print(f"FileRefC: 4 name: {name}")
         name_one = name[len(file) + 1 :]
         #
         # if we're below a "." extension, we need to replace the "."
@@ -70,7 +66,6 @@ class FileRefCreator:
             name_one = name.replace(".", "_")
             name_one = f"{name_one}:last"
         ret = f"${file}.files.{name_one}"
-        print(f"FileRefC: done: {ret}")
         return ret
 
     def _get_hash(self, name: str) -> str:

@@ -11,8 +11,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from csvpath.util.nos import Nos
 
-from flightpath.util.os_utility import OsUtility as osut
 from .blank_form import BlankForm
+from flightpath.util.os_utility import OsUtility as osut
+from flightpath.util.message_utility import MessageUtility as meut
 
 
 class LoggingForm(BlankForm):
@@ -63,18 +64,16 @@ class LoggingForm(BlankForm):
         path = os.path.dirname(path)
         nos = Nos(path)
         if not nos.exists():
-            print(f"LoggingForm: on_click_open: {path} doesn't exist. Creating it.")
+            meut.message(msg=f"{path} doesn't exist. Creating it.", title="Not Found")
             nos.makedirs()
         elif nos.isfile():
             #
             # TODO: this could, rarely, happen. we should alert the user of the misconfig.
             #
-            print(f"LoggingForm: on_click_open: {path} is a file. Cannot open.")
+            meut.message(msg=f"{path} is a file", title="Cannot Open")
         else:
             o = osut.file_system_open_cmd()
-            print(f"LoggingForm: on_click_open: opening {path} with {o}")
             os.system(f'{o} "{path}"')
-        print("LoggingForm: on_click_open: done.")
 
     def add_to_config(self, config) -> None:
         config.add_to_config("logging", "handler", self.handler.currentText())

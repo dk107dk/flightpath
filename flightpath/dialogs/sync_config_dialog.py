@@ -1,4 +1,6 @@
 import io
+import traceback
+
 from configparser import ConfigParser
 from PySide6.QtWidgets import (
     QVBoxLayout,
@@ -144,10 +146,8 @@ class SyncConfigDialog(QDialog):
                 for tab in form.tabs:
                     if tab is None:
                         continue
-                    print(f"tasx: {tab}: {tab.server_fields}")
                     for k, field in enumerate(tab.server_fields):
                         value = config[tab.section][field]
-                        print(f"tax: {tab.section}: {field}: {value}")
                         if isinstance(value, list):
                             value = ",".join(value)
                         k = QTableWidgetItem(f"[{tab.section}] {field}")
@@ -159,11 +159,8 @@ class SyncConfigDialog(QDialog):
                         table.setItem(row, 1, v)
                         row += 1
 
-            except Exception as ex:
-                import traceback
-
+            except Exception:
                 print(traceback.format_exc())
-                print(f"error in populate existing: {ex}")
 
     def populate_sending(self) -> None:
         form = self.main.config.config_panel.get_form("ServerForm")

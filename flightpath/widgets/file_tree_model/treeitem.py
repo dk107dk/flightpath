@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import traceback
 import os
 from csvpath.util.nos import Nos
 
@@ -34,8 +34,8 @@ class TreeItem:
                             Nos(os.path.join(data.path, c)), self, model=self.model
                         )
                         cs.append(item)
-                except Exception as e:
-                    print(f"error: {e}: {self.item_data} in {self.parent_item}")
+                except Exception:
+                    print(traceback.format_exc())
             self._child_items = cs
         return self._child_items
 

@@ -190,8 +190,8 @@ class RunInfoDialog(QDialog):
             elif m and m.line_monitor is not None:
                 n = m.line_monitor.data_line_number
                 s = str(n)
-        except Exception as ex:
-            print(f"Warning: {ex}")
+        except Exception:
+            print(traceback.format_exc())
         return s
 
     @property
@@ -227,8 +227,8 @@ class RunInfoDialog(QDialog):
             elif m and m.line_monitor is not None:
                 n = m.line_monitor.data_end_line_number
                 s = str(n)
-        except Exception as ex:
-            print(f"Warning: {ex}")
+        except Exception:
+            print(traceback.format_exc())
         return s
 
     @property

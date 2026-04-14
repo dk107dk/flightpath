@@ -35,8 +35,6 @@ class FileCollector:
         #
         # selects a single file. if the file is not in the project's folder tree it will be copied in.
         #
-        print(f"file_col: select_file: cwd: {cwd}")
-        #
         # check if base copy-to is a file. if it is, user must select a dir in the
         # left-hand navigator.
         #
@@ -73,8 +71,6 @@ class FileCollector:
                 )
                 if ok and new_name:
                     new_path = fiut.deconflicted_path(cwd, new_name)
-                    print(f"FileCollector: select_file: the_path: {the_path}")
-                    print(f"FileCollector: select_file: new_path: {new_path}")
                     with DataFileReader(the_path, mode="rb") as the_file:
                         with DataFileWriter(path=new_path, mode="wb") as new_file:
                             new_file.write(the_file.read())

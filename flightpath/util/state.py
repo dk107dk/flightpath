@@ -2,7 +2,7 @@ import sys
 import os
 import json
 from pathlib import Path
-
+import traceback
 from csvpath import CsvPaths
 from csvpath.util.config import Config as CsvPath_Config
 from csvpath.util.nos import Nos
@@ -75,7 +75,6 @@ class State:
                 self.data = data
             else:
                 ...
-                # print(f"state.project_home: cannot set project home in state")
         return projs
 
     @projects_home.setter
@@ -199,8 +198,8 @@ class State:
         for k, v in env.items():
             try:
                 os.environ[k] = v
-            except ValueError as e:
-                print(f"Error setting {k} to {v}: {e}")
+            except ValueError:
+                print(traceback.format_exc())
 
     def set_env(self, k: str, v: str) -> None:
         data = self.data

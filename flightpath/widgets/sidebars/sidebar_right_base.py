@@ -17,8 +17,7 @@ class SidebarRightBase(QWidget):
     def update_style(self) -> None:
         try:
             self.model.set_style(self.view.style())
-        except Exception as e:
-            print(f"{type(e)} error in archive: {e}")
+        except Exception:
             print(traceback.format_exc())
 
     def _copy_back_to_cwd(self) -> None:

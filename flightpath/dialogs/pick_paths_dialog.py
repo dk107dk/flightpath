@@ -12,8 +12,6 @@ from PySide6.QtCore import Qt  # pylint: disable=E0611
 
 from csvpath import CsvPaths
 
-# from flightpath.widgets.help.plus_help import HelpIconPackager
-# from flightpath.util.help_finder import HelpFinder
 from flightpath.widgets.json_tree_model.json_tree_item import TreeItem
 
 
@@ -72,11 +70,9 @@ class PickPathsDialog(QDialog):
         self.show_dialog()
 
     def _add(self):
-        print("pick_paths_dialog: adding")
         named_paths_name = self.named_paths_name_ctl.text()
         existing = self.existing_group_ctl.currentText()
         if named_paths_name and named_paths_name.strip() == "" and existing == "...":
-            print("pick_paths_dialog: not adding")
             self.close()
             return
 
@@ -85,14 +81,12 @@ class PickPathsDialog(QDialog):
             if (named_paths_name and named_paths_name.strip() != "")
             else existing
         )
-        print(f"pick_paths_dialog: adding name: {named_paths_name}")
         self.tree.beginResetModel()
         item = TreeItem(self.parent)
         item.key = named_paths_name
         item.value_type = type([])
         self.parent.appendChild(item)
         self.tree.endResetModel()
-        print(f"pick_paths_dialog: added: {item}")
         self.close()
 
     def show_dialog(self) -> None:

@@ -150,11 +150,8 @@ class ClosingTabs(QTabWidget):
             data = m.get_data()
             self.main.save_sample(path=path, name="sample.csv", data=data)
         elif isinstance(t, QTextEdit):
-            print("found a qutext ed")
             txt = t.toMarkdown()
-            print(f"md: txt: {txt}")
             self.main.save_sample(path=path, name=ton, data=txt)
-            print("done saving")
         elif isinstance(t, DataViewer):
             path = t.path
             d = self.main.sidebar.selected_file_path()
@@ -165,7 +162,6 @@ class ClosingTabs(QTabWidget):
             p = os.path.basename(path)
             path = os.path.join(d, p)
             t._save(path=path)
-            print("done saving")
         else:
             layout = t.layout()
             w = layout.itemAt(0).widget()
@@ -175,7 +171,6 @@ class ClosingTabs(QTabWidget):
             else:
                 txt = w.toPlainText()
                 self.main.save_sample(path=path, name=ton, data=txt)
-            print("done saving")
 
     @Slot(str)
     def close_tab(self, name: str) -> bool:

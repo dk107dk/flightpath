@@ -42,7 +42,6 @@ class FunctionsForm(BlankForm):
         if path is None or str(path).strip() == "":
             return
         FunctionFactory.clear_to_reload(path)
-        print(f"cleared custom functions for {path}")
 
     def _setup(self) -> None:
         self.imports_dir_path.textChanged.connect(self.main.on_config_changed)

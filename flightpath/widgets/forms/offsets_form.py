@@ -81,7 +81,6 @@ class OffsetsForm(BlankForm):
         daut.OFFSET_MONTHS = mi
         daut.OFFSET_YEARS = yi
         self.now.setText(str(daut.now()))
-        # print(f"setting now: daut.now: {daut.now()}")
 
     def add_to_config(self, config) -> None: ...
 

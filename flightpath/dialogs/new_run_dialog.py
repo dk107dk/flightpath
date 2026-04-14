@@ -1,3 +1,4 @@
+import traceback
 from PySide6.QtWidgets import (  # pylint: disable=E0611
     QVBoxLayout,
     QHBoxLayout,
@@ -277,8 +278,8 @@ class NewRunDialog(QDialog):
             if nfn.startswith("$"):
                 nfn = nfn[1 : nfn.find(".")]
             has = self.csvpaths.file_manager.has_named_file(nfn)
-        except Exception as e:
-            print(f"Error: {type(e)}: {e}")
+        except Exception:
+            print(traceback.format_exc())
         if not has:
             #
             # pop an error prompt
@@ -296,8 +297,8 @@ class NewRunDialog(QDialog):
             if npn.startswith("$"):
                 npn = npn[1 : npn.find(".")]
             has = self.csvpaths.paths_manager.has_named_paths(npn)
-        except Exception as e:
-            print(f"Error: {type(e)}: {e}")
+        except Exception:
+            print(traceback.format_exc())
         if not has:
             #
             # pop an error prompt

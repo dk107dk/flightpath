@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QListWidget, QMenu
 from PySide6.QtCore import Qt, QPoint
 from flightpath.util.message_utility import MessageUtility as meut
 
+
 class ServerProjectsList(QListWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -41,7 +42,7 @@ class ServerProjectsList(QListWidget):
         # Execute the menu at the global position
         menu.exec(global_pos)
 
-    def handle_action(self, action:str) -> None:
+    def handle_action(self, action: str) -> None:
         if action is None:
             raise ValueError("Action cannot be None")
         if action == "download_log":
@@ -59,10 +60,8 @@ class ServerProjectsList(QListWidget):
         elif action == "refresh":
             self.refresh()
 
-
     def refresh(self) -> None:
         self.parent.populate()
-
 
     def select_item_by_name(self, name):
         found_items = self.findItems(name, Qt.MatchExactly)
@@ -74,7 +73,6 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            print(f"set config for project named: {name}")
             self.parent._upload_config(name)
         else:
             meut.message(msg="Please select a project", title="Select project")
@@ -83,7 +81,6 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            print(f"Sync config for project named: {name}")
             self.parent._sync_config(name)
         else:
             meut.message(msg="Please select a project", title="Select project")
@@ -100,7 +97,6 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            print(f"get log for project named: {name}")
             self.parent._download_log(name)
         else:
             meut.message(msg="Please select a project", title="Select project")
@@ -109,7 +105,6 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            print(f"get config for project named: {name}")
             self.parent._download_config(name)
         else:
             meut.message(msg="Please select a project", title="Select project")
@@ -118,7 +113,6 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            print(f"get env for project named: {name}")
             self.parent._download_env(name)
         else:
             meut.message(msg="Please select a project", title="Select project")
@@ -127,13 +121,14 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            print(f"delete project named: {name}")
             self.parent._delete_project(name)
         else:
             meut.message(msg="Please select a project", title="Select project")
 
     def new_project(self) -> None:
-        proj, ok = meut.input(title="New server project", msg="Enter the new FlightPath Server project name")
+        proj, ok = meut.input(
+            title="New server project",
+            msg="Enter the new FlightPath Server project name",
+        )
         if ok and proj and proj.strip() != "":
             self.parent._create_project(proj)
-

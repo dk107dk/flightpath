@@ -1,4 +1,5 @@
 import httpx
+import traceback
 from PySide6.QtWidgets import (  # pylint: disable=E0611
     QWidget,
     QVBoxLayout,
@@ -91,7 +92,6 @@ class NewKeyDialog(QDialog):
             key = None
             try:
                 response = client.post(url, json=key_data, headers=self.parent._headers)
-                print(f"response: {response}")
                 if response.status_code == 200:
                     key = response.json().get("api_key")
                 else:
@@ -103,8 +103,6 @@ class NewKeyDialog(QDialog):
                     self.reject()
                     return
             except Exception as ex:
-                import traceback
-
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 print(msg)

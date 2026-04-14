@@ -60,12 +60,6 @@ class InputsForm(BlankForm):
         )
         self.named_paths.setText(np)
 
-        print(f"inputsfprls: np 1: {nf}")
-        print(f"inputsfprls: np 2: {config.get(section='inputs', name='files')}")
-
-        print(f"inputsfprls: np 1: {np}")
-        print(f"inputsfprls: np 2: {config.get(section='inputs', name='csvpaths')}")
-
     @property
     def fields(self) -> list[str]:
         return ["files", "csvpaths"]

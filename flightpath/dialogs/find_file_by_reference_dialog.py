@@ -1,4 +1,5 @@
 import os
+import traceback
 from PySide6.QtWidgets import (  # pylint: disable=E0611
     QVBoxLayout,
     QHBoxLayout,
@@ -367,12 +368,12 @@ class FindFileByReferenceDialog(QDialog):
                 f"  {number} named-{datatype} found with reference {r}"
             )
             self.stack_layout.setCurrentIndex(0)
-        except Exception as e:
+        except Exception:
             self.model.clear()
             if self.name_one.text() is None or self.name_one.text().strip() == "":
                 t = self._generate_hints([])
                 self.hints_text.setText(t)
-            print(f"Error: {type(e)}: {e}")
+            print(traceback.format_exc())
         self.last_name = name
 
     def _generate_hints(self, tokens: list[str]) -> str:

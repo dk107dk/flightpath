@@ -51,18 +51,15 @@ class RawViewer(QWidget):
         self.loaded = False
 
     def on_toggle(self) -> None:
-        print("on_toggled")
         self.parent.toggle_grid_raw()
 
     def on_save(self) -> None:
-        print("raw_viewer: on_save")
         self.parent.on_save()
         #
         # we also need to refresh the grid so it is synched up when we toggle back.
         #
 
     def on_save_as(self) -> None:
-        print("raw_viewer: on_save_as")
         ap = self.main.csvpath_config.archive_path
         ncp = self.main.csvpath_config.inputs_csvpaths_path
         if self.parent.path.startswith(ap) or self.parent.path.startswith(ncp):
@@ -74,7 +71,6 @@ class RawViewer(QWidget):
         #
 
     def on_text_changed(self) -> None:
-        print("raw_viewrr: on_text_changed")
         self.parent.mark_unsaved()
 
     #

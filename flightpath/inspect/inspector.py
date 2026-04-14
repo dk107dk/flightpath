@@ -7,13 +7,6 @@ from csvpath.util.file_readers import DataFileReader
 
 class Inspector:
     def __init__(self, *, main, filepath: str) -> None:
-        """
-        print(f"\n\n\n")
-        from csvpath.util.code import Code
-        _ = Code.get_source_path(CountDups)
-        print(f"{_}\n\n\n")
-        """
-
         self.main = main
         self._filepath = filepath
         self._csvpath_str = None

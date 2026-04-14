@@ -1,5 +1,6 @@
 import os
 import json
+import traceback
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 from PySide6.QtCore import Qt, QFileInfo
@@ -116,8 +117,6 @@ class JsonViewer2(QWidget):
                 self.main.read_validate_and_display_file_for_path(to_path)
                 self.main.content.tab_widget.close_tab(name)
             except Exception:
-                import traceback
-
                 print(traceback.format_exc())
 
     def _show_context_menu(self, position):

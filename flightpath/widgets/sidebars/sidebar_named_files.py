@@ -22,6 +22,7 @@ from flightpath.dialogs.files_template_dialog import FilesTemplateDialog
 from .sidebar_file_ref_maker import SidebarFileRefMaker
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.util.file_utility import FileUtility as fiut
 
 from flightpath.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
@@ -130,7 +131,6 @@ class SidebarNamedFiles(SidebarRightBase):
 
         except Exception as e:
             print(traceback.format_exc())
-            print(f"error in named files: {type(e)}: {e}")
             meut.message(
                 title=f"{type(e)} error loading named-files",
                 msg=f"Named-files error: {e}",
@@ -214,29 +214,33 @@ class SidebarNamedFiles(SidebarRightBase):
             #
             # individual files may not be deleted, but we can allow dir deletes for cleanup
             #
-            if nos.isfile():
+            if (
+                fiut.is_a(path, ["db", "md", "txt"])
+                or path.endswith("manifest.json")
+                or path.endswith("definition.json")
+            ):
+                self.copy_action.setVisible(True)
+                self.copy_path_action.setVisible(False)
+                self.arrival_action.setVisible(False)
+                self.find_data_action.setVisible(False)
+                self.delete_action.setVisible(False)
+                self.new_run_action.setVisible(False)
+            elif nos.isfile():
                 self.copy_path_action.setVisible(True)
+                self.copy_action.setVisible(True)
+                self.new_run_action.setVisible(True)
                 self.arrival_action.setVisible(False)
                 self.template_action.setVisible(False)
-                self.copy_action.setVisible(True)
                 self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(False)
-                self.new_run_action.setVisible(True)
             else:
                 self.copy_path_action.setVisible(True)
-                self.copy_action.setVisible(False)
                 self.template_action.setVisible(True)
                 self.arrival_action.setVisible(True)
                 self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
-            if path and (path.endswith("manifest.json") or path.endswith(".db")):
-                self.copy_path_action.setVisible(False)
-                self.arrival_action.setVisible(False)
-                self.copy_action.setVisible(True)
-                self.find_data_action.setVisible(False)
-                self.delete_action.setVisible(False)
-                self.new_run_action.setVisible(False)
+                self.copy_action.setVisible(False)
             if global_pos:
                 self.context_menu.exec(global_pos)
 

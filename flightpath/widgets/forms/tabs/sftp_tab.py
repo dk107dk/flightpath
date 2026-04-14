@@ -60,7 +60,6 @@ class SftpTab(QWidget):
             string_parse=False,
             swaps=False,
         )
-        print(f"sftptab: server: {server}")
         self.server.setText(server)
 
         port = config.get(
