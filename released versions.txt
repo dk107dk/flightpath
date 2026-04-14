@@ -112,6 +112,20 @@ tag with version (e.g. v1.0.3) in all three repos. push tags with: git push --ta
 
 
 
+#################
+# April release: 1.1.88
+#################
+~Oct 23 2025
+ Version: 1.1.88
+    - CsvPath 0.0.605
+    - FlightPath Server: 0.1.40
+    - FlightPath Generator: 0.1.41
+    - FlightPath Data: 0.1.29
+ git tag -a v1.1.87 -m "jan release candidate; build number sync"
+ git push origin v1.1.87
+
+
+
 
 
 
