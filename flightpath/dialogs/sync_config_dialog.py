@@ -131,8 +131,13 @@ class SyncConfigDialog(QDialog):
         row = 0
         for i, form in enumerate(forms):
             try:
+                if not config.has_section(form.section):
+                    config.add_section(form.section)
                 for j, field in enumerate(form.server_fields):
-                    value = config[form.section][field]
+                    if field in config[form.section]:
+                        value = config[form.section][field]
+                    else:
+                        value = ""
                     if isinstance(value, list):
                         value = ",".join(value)
                     k = QTableWidgetItem(f"[{form.section}] {field}")
@@ -146,8 +151,12 @@ class SyncConfigDialog(QDialog):
                 for tab in form.tabs:
                     if tab is None:
                         continue
+
                     for k, field in enumerate(tab.server_fields):
-                        value = config[tab.section][field]
+                        if field in config[tab.section]:
+                            value = config[tab.section][field]
+                        else:
+                            value = ""
                         if isinstance(value, list):
                             value = ",".join(value)
                         k = QTableWidgetItem(f"[{tab.section}] {field}")

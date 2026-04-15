@@ -127,6 +127,7 @@ class ConfigPanel(QWidget):
             form.config = self.main.csvpath_config
             if populate is True:
                 form.populate()
+                form.update_dark()
         self.ready = True
 
     def populate_all_forms(self) -> None:
@@ -138,6 +139,7 @@ class ConfigPanel(QWidget):
             self.setup_forms(populate=False)
         for form in self.forms:
             form.populate()
+            form.update_dark()
 
     def switch_form(self, index: QModelIndex):
         form = index.data()

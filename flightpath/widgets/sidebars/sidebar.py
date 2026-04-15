@@ -775,6 +775,7 @@ class Sidebar(QWidget):
         self.stage_dialog.deleteLater()
         self.stage_dialog = None
         self.main.welcome.update_run_button()
+        self.main.welcome.update_find_data_button()
 
     def _rename_file_navigator_item(self):
         index = self.file_navigator.currentIndex()

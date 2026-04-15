@@ -91,12 +91,14 @@ class CsvpathLoader:
                     paths.config.set(
                         section="inputs", name="allow_local_files", value=True
                     )
-                    paths.paths_manager.add_named_paths_from_file(
+                    ref = paths.paths_manager.add_named_paths_from_file(
                         name=named_paths_name,
                         file_path=name,
                         template=template,
                         append=(not overwrite),
                     )
+                    if ref is None or str(ref).strip() == "":
+                        meut.message(msg="Cannot load file.", title="Cannot Load")
                 else:
                     raise ValueError(f"Unknown file type: {name}")
             self.main.sidebar._renew_sidebars()
@@ -126,7 +128,9 @@ class CsvpathLoader:
         ex = None
         msg = None
         try:
-            paths.paths_manager.add_named_paths_from_json(file_path=name)
+            lst = paths.paths_manager.add_named_paths_from_json(file_path=name)
+            if lst is None or len(lst) == 0:
+                meut.message(msg="Cannot load file.", title="Cannot Load")
         except Exception as e:
             msg = traceback.format_exc()
             ex = e
@@ -169,9 +173,16 @@ class CsvpathLoader:
         if paths.paths_manager.has_named_paths(named_paths_name):
             if not self._check_ok_to_proceed(overwrite):
                 return
-        paths.paths_manager.add_named_paths_from_dir(
+        #
+        # atm, paths_manager gacks on "". this has been fixed in csvpath as of 507
+        #
+        if str(template).strip() == "":
+            template = None
+        lst = paths.paths_manager.add_named_paths_from_dir(
             name=named_paths_name, directory=name, template=template
         )
+        if lst is None or len(lst) == 0:
+            meut.message(msg="Cannot load directory.", title="Cannot Load")
         #
         # have to check if the named-paths group has a definition file. if not
         # we need to create one.
@@ -179,7 +190,8 @@ class CsvpathLoader:
         #
         # def store_json_for_paths(self, name: NamedPathsName, definition: str) -> None:
         #
-        self._renew_sidebars()
+        self.main.sidebar._renew_sidebars()
+        # self._renew_sidebars()
         self._delete_load_dialog()
 
     def _check_ok_to_proceed(self, overwrite: bool) -> bool:

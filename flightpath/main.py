@@ -324,6 +324,13 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                 self.rt_col.setStyleSheet(s)
             self.main.setStyleSheet(s)
         #
+        # update config
+        #
+        if self.config and self.config.config_panel and self.config.config_panel.forms:
+            for form in self.config.config_panel.forms:
+                form.update_dark()
+
+        #
         # update the AI tab
         #
         self.ai_query_tab.update_style()

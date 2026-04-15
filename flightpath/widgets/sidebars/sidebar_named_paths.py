@@ -313,3 +313,5 @@ class SidebarNamedPaths(SidebarRightBase):
                     #
                     # self.main._setup_central_widget()
                     self.main.renew_sidebar_named_paths()
+                    self.main.welcome.update_run_button()
+                    self.main.welcome.update_find_data_button()

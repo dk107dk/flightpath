@@ -309,39 +309,42 @@ class JsonViewer2(QWidget):
         if info.suffix() not in ["jsonl", "ndjson", "jsonlines"]:
             return
         t = self.view.toPlainText()
-        for _ in t.split("\n"):
-            if not self._check_one(_):
+        for i, _ in enumerate(t.split("\n")):
+            if not self._check_one(line_number=i, t=_):
                 return
         meut.message(msg="This file is well-formed JSONL", title="Well-formed")
         return t
 
     def _check(self, *, show_good_message=True) -> str:
         t = self.view.toPlainText()
-        if self._check_one(t):
+        if self._check_one(t=t):
             if show_good_message is True:
                 meut.message(msg="This file is well-formed JSON", title="Well-formed")
         return t
 
-    def _check_one(self, t: str) -> bool:
+    def _check_one(self, *, t: str, line_number: int = 0) -> bool:
         t1 = strut.sanitize_json(t)
         try:
             j = json.loads(t1)
             t1 = json.dumps(j, indent=2)
         except json.decoder.JSONDecodeError as e:
-            self._formatting_error(t, e)
+            self._formatting_error(t=t, line_number=line_number, error=e)
             return False
         return True
 
-    def _formatting_error(self, t: str, e) -> None:
+    def _formatting_error(self, t: str, error: Exception, line_number=0) -> None:
         #
         # t is the original text
         #
         msg = None
-        line, line_char = self._error_location(t, e)
+        line, line_char = self._error_location(t, error)
         if line is not None and line_char is not None:
-            msg = f"Error in JSON format at line {line + 1}, char {line_char + 1}\n\nOriginal error: {e}"
+            if line_number > 0:
+                msg = f"Error in JSON at {line_number + 1 + line}, char {line_char + 1}. \n\nThe error was reported as: {error}"
+            else:
+                msg = f"Error in JSON format at line {line + 1}, char {line_char + 1}\n\nOriginal error: {error}"
         else:
-            msg = f"Error in format.\n\nOriginal error messsage: {e}"
+            msg = f"Error in format.\n\nOriginal error messsage: {error}"
         meut.warning(parent=self, msg=msg, title="Malformed JSON")
 
     def _error_location(self, t: str, e) -> tuple[int, int]:

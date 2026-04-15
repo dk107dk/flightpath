@@ -1,10 +1,13 @@
 from typing import Self
+import darkdetect
+
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QLabel,
     QTableWidget,
     QTableWidgetItem,
+    QHeaderView,
 )
 from PySide6.QtCore import Qt
 from csvpath.util.config import Config
@@ -21,12 +24,27 @@ class BlankForm(QWidget):
 
     def actuals_table(self):
         self.table = QTableWidget()
-        self.setStyleSheet("QTableWidget { background-color:#f8f8f8;max-height:140px;}")
+        # self.setStyleSheet("QTableWidget { background-color:#f8f8f8;max-height:140px;}")
         self.table.setColumnCount(2)
-        self.table.setHorizontalHeaderLabels(["Name", "Value"])
+        self.table.setHorizontalHeaderLabels(["Name", "Actual Value"])
         self.table.verticalHeader().setVisible(False)
         header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
+
+        # Compact data rows
+        self.table.verticalHeader().setDefaultSectionSize(24)
+        self.table.verticalHeader().setMinimumSectionSize(16)
+
+        # Compact header row
+        self.table.horizontalHeader().setDefaultSectionSize(24)
+        self.table.horizontalHeader().setMinimumSectionSize(16)
+
+        # Prevent column collapse
+        self.table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeToContents
+        )
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+
         self._update_table()
         self.table.itemChanged.connect(self._update_table)
 
@@ -58,29 +76,104 @@ class BlankForm(QWidget):
 
         self.display = QWidget()
         self.display.setLayout(QVBoxLayout())
-        msg = QLabel(
+        self.msg1 = QLabel(
             f"Use the vertical tabs to the left to update project config settings. You are editing {self.main.csvpath_config.configpath}."
         )
-        msg.setStyleSheet(
+        self.msg1.setStyleSheet(
             "QLabel { margin-left:auto; margin-right:auto; font-style:italic;color:#222222; }"
         )
-        msg.setFixedWidth(500)
-        msg.setWordWrap(True)
-        self.display.layout().addWidget(msg, alignment=Qt.AlignmentFlag.AlignBottom)
+        self.msg1.setFixedWidth(500)
+        self.msg1.setWordWrap(True)
+        self.display.layout().addWidget(
+            self.msg1, alignment=Qt.AlignmentFlag.AlignBottom
+        )
 
-        msg = QLabel(
+        self.msg2 = QLabel(
             "Some env var substitution changes may require reopening the config panel. See the table at the bottom of most forms to see the current actual values."
         )
-        msg.setStyleSheet(
+        self.msg2.setStyleSheet(
             "QLabel { margin-left:auto; margin-right:auto; font-style:italic;color:#222222; }"
         )
-        msg.setFixedWidth(500)
-        msg.setWordWrap(True)
-        self.display.layout().addWidget(msg, alignment=Qt.AlignmentFlag.AlignTop)
-
+        self.msg2.setFixedWidth(500)
+        self.msg2.setWordWrap(True)
+        self.display.layout().addWidget(self.msg2, alignment=Qt.AlignmentFlag.AlignTop)
+        self.update_dark()
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.display)
         return self
+
+    def update_dark(self) -> None:
+        if hasattr(self, "msg1"):
+            css = (
+                "QLabel { margin-left:auto; margin-right:auto; font-style:italic;color:#bbb; }"
+                if darkdetect.isDark()
+                else "QLabel { margin-left:auto; margin-right:auto; font-style:italic;color:#222; }"
+            )
+            self.msg1.setStyleSheet(css)
+            self.msg2.setStyleSheet(css)
+
+        if self.table is not None:
+            color = "222"
+            background = "eee"
+            header_background = "ccc"
+            widget_background = "eee"
+            grid = "aaa"
+            header_border = "ccc"
+            selected = "fff"
+            if darkdetect.isDark():
+                color = "fff"
+                background = "888"
+                header_background = "666"
+                widget_background = "333"
+                selected = "aaa"
+                grid = "ccc"
+                header_border = "aaa"
+
+            s = f"""
+QTableWidget {{
+    background-color: #{widget_background};
+    color: #{color};
+    gridline-color: #{grid};
+    selection-background-color: #4d4d4d;
+    outline: none;
+    border:none;
+    font-size:12pt;
+}}
+
+/* The viewport actually draws the cells */
+QTableWidget::viewport {{
+    /* not working */
+    border-left: 2px solid #000;
+}}
+
+/* Table items */
+QTableWidget::item {{
+    background-color: #{background};
+    color: #{color};
+}}
+
+/* Selected items */
+QTableWidget::item:selected {{
+    background-color: #{selected};
+    color: #{color};
+}}
+
+/* Header sections */
+QHeaderView::section {{
+    background-color: #{header_background};
+    color: #222;
+    padding: 4px;
+    border: 1px solid #{header_border};
+    font-size:12pt;
+}}
+
+/* Corner button */
+QTableCornerButton::section {{
+    background-color: #{background};
+    border: 1px solid #444444;
+}}"""
+
+            self.table.setStyleSheet(s)
 
     @property
     def config(self) -> Config:
