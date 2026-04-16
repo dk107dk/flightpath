@@ -132,9 +132,7 @@ class FileUtility:
     @classmethod
     def app_path_no_check(cls, path: str) -> str:
         ap = cls.app_path()
-        #
-        # exp! added test to deal with tahoe change
-        #
+        # added test to deal with tahoe change
         t1 = None
         if getattr(sys, "frozen", False):
             ...
@@ -146,16 +144,30 @@ class FileUtility:
 
     @classmethod
     def app_path(cls) -> str:
+        print(f"fiut: cls.APP_PATH 1: {cls.APP_PATH}")
         if cls.APP_PATH is None:
-            if getattr(sys, "frozen", False):
+            frozen = getattr(sys, "frozen", False)
+            print(f"fiut: app_path: {frozen}")
+            if frozen:
                 # If the app is frozen, the base path is sys._MEIPASS
                 # path = sys._MEIPASS
                 #
-                # mod claude solution vvvv:
-                #
+                print(f"fiut: sys.platform: {sys.platform}")
+                if sys.platform == "win32":
+                    # cls.APP_PATH = os.path.dirname(sys.executable)
+                    cls.APP_PATH = sys._MEIPASS
+                    print(f"fiut: cls.APP_PATH 2: {cls.APP_PATH}")
+                else:  # Mac .app bundle
+                    bundle_dir = os.path.dirname(sys.executable)
+                    cls.APP_PATH = os.path.join(
+                        os.path.dirname(bundle_dir), "Resources"
+                    )
+                """
+                # working for mac! 16 apr 2026
                 bundle_dir = os.path.dirname(sys.executable)
                 t = os.path.join(os.path.dirname(bundle_dir), "Resources")
                 cls.APP_PATH = t
+                """
             else:
                 # If running in a normal dev environment
                 # path = .../flightpath/util
