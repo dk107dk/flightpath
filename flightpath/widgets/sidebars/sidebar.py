@@ -799,7 +799,7 @@ class Sidebar(QWidget):
                     named_file_name, "" if template is None else template
                 )
         except Exception as e:
-            meut.warning(parent=self, title="Stage error", msg=f"{e}")
+            meut.warning(parent=self.stage_dialog, title="Stage error", msg=f"{e}")
             return
         #
         # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
