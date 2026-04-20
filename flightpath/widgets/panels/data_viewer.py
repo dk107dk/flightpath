@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QMenu,
     QApplication,
     QInputDialog,
-    QMessageBox,
 )
 from PySide6.QtGui import QKeySequence, QAction, QKeyEvent
 
@@ -254,10 +253,14 @@ class DataViewer(QWidget):
                         new_name = os.path.join(self.main.state.cwd, new_name)
                     self._write_new_from_selected(new_name)
                 except PermissionError:
-                    QMessageBox.warning(self, "Error", "Operation not permitted.")
+                    meut.warning(
+                        parent=self, title="Error", msg="Operation not permitted."
+                    )
                 except OSError:
-                    QMessageBox.warning(
-                        self, "Error", "File with this name already exists."
+                    meut.warning(
+                        parent=self,
+                        title="Error",
+                        msg="File with this name already exists.",
                     )
             else:
                 self.window().statusBar().showMessage(self.tr("Bad file name"))

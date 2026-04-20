@@ -187,11 +187,10 @@ class Welcome(QWidget):
             csvpath = file.read()
         cs = csvpath.split("---- CSVPATH ----")
         if len(cs) > 1:
-            confirm = QMessageBox.question(
-                self,
-                "Multiple statements",
-                "The file has multiple cvspaths. Do you want to run the first one?",
-                QMessageBox.Yes | QMessageBox.No,
+            confirm = meut.yesNo(
+                parent=self,
+                title="Multiple statements",
+                msg="The file has multiple cvspaths. Do you want to run the first one?",
             )
             if confirm == QMessageBox.No:
                 return

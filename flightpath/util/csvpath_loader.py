@@ -208,7 +208,6 @@ class CsvpathLoader:
         # def store_json_for_paths(self, name: NamedPathsName, definition: str) -> None:
         #
         self.main.sidebar._renew_sidebars()
-        # self._renew_sidebars()
         self._delete_load_dialog()
 
     def _check_ok_to_proceed(self, overwrite: bool) -> bool:
@@ -219,12 +218,7 @@ class CsvpathLoader:
             if overwrite
             else "Are you sure you want to append to an existing named-paths group?"
         )
-        confirm = QMessageBox.question(
-            self.main.sidebar,
-            "Load Paths",
-            msg,
-            QMessageBox.Yes | QMessageBox.No,
-        )
+        confirm = meut.yesNo(parent=self, title="Load Paths", msg=msg)
         confirm == QMessageBox.Yes
         self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, True)
         self.load_dialog.show()

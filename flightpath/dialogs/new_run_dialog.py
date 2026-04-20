@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (  # pylint: disable=E0611
     QFormLayout,
     QComboBox,
     QSizePolicy,
-    QMessageBox,
 )
 from PySide6.QtCore import Qt  # pylint: disable=E0611
 
@@ -287,7 +286,11 @@ class NewRunDialog(QDialog):
             # pop an error prompt
             # then leave ourselves open so they can cancel or try again
             #
-            meut.warning(parent=self, title="Unknown data", msg=f"Unknown data name: {self.named_file_name}")
+            meut.warning(
+                parent=self,
+                title="Unknown data",
+                msg=f"Unknown data name: {self.named_file_name}",
+            )
             return
         try:
             npn = self.named_paths_name
@@ -301,7 +304,11 @@ class NewRunDialog(QDialog):
             # pop an error prompt
             # then leave ourselves open so they can cancel or try again
             #
-            meut.warning(parent=self, title="Unknown name", msg=f"Unknown csvpaths name: {self.named_paths_name}")
+            meut.warning(
+                parent=self,
+                title="Unknown name",
+                msg=f"Unknown csvpaths name: {self.named_paths_name}",
+            )
             return
         #
         # we may need to shut the paths CsvPath down to release the logger. not sure yet.

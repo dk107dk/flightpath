@@ -849,20 +849,18 @@ class Sidebar(QWidget):
                             if not nos.exists():
                                 nos.makedirs()
                         except Exception:
-                            msg_box = QMessageBox()
-                            msg_box.setIcon(QMessageBox.Critical)
-                            msg_box.setWindowTitle("Path error")
-                            msg_box.setText(f"Error: invalid path: {np}")
-                            msg_box.setStandardButtons(QMessageBox.Ok)
-                            msg_box.exec()
+                            meut.warning(
+                                parent=self,
+                                title="Path error",
+                                msg=f"Error: invalid path: {np}",
+                            )
                             return
                     else:
-                        msg_box = QMessageBox()
-                        msg_box.setIcon(QMessageBox.Critical)
-                        msg_box.setWindowTitle("Path error")
-                        msg_box.setText(f"Error: invalid path: {np}")
-                        msg_box.setStandardButtons(QMessageBox.Ok)
-                        msg_box.exec()
+                        meut.warning(
+                            parent=self,
+                            title="Path error",
+                            msg=f"Error: invalid path: {np}",
+                        )
                         return
                 nos = Nos(path).rename(os.path.join(dir_name, new_name))
 
@@ -890,14 +888,14 @@ class Sidebar(QWidget):
                     #
                     os.mkdir(new_name)
                 except PermissionError:
-                    QMessageBox.warning(
-                        self, self.tr("Error"), self.tr("Operation not permitted.")
+                    meut.warning(
+                        parent=self, title="Error", msg="Operation not permitted."
                     )
                 except OSError:
-                    QMessageBox.warning(
-                        self,
-                        self.tr("Error"),
-                        self.tr("File with this name already exists."),
+                    meut.warning(
+                        parent=self,
+                        title="Error",
+                        msg="File with this name already exists.",
                     )
             else:
                 #
@@ -997,7 +995,9 @@ class Sidebar(QWidget):
 
 $[*][ print("hello world") ]"""
                 else:
-                    QMessageBox.warning(self, "Error", "Unknown file extension")
+                    meut.warning(
+                        parent=self, title="Error", msg="Unknown file extension"
+                    )
                     return
                 try:
                     if not new_name.startswith(self.main.state.cwd):
@@ -1012,10 +1012,14 @@ $[*][ print("hello world") ]"""
                 # create file
                 #
                 except PermissionError:
-                    QMessageBox.warning(self, "Error", "Operation not permitted.")
+                    meut.warning(
+                        parent=self, title="Error", msg="Operation not permitted."
+                    )
                 except OSError:
-                    QMessageBox.warning(
-                        self, "Error", "File with this name already exists."
+                    meut.warning(
+                        parent=self,
+                        title="Error",
+                        msg="File with this name already exists.",
                     )
             else:
                 #
@@ -1134,17 +1138,16 @@ $[*][ print("hello world") ]"""
             path = self.proxy_model.filePath(index)
             path = str(path)
             is_selected = self.window().selected_file_path == path
-            confirm = QMessageBox.question(
-                self,
-                self.tr("Delete"),
-                self.tr(f"Are you sure you want to delete {path}?"),
-                QMessageBox.Yes | QMessageBox.No,
+            confirm = meut.yesNo(
+                parent=self,
+                title="Delete",
+                msg=f"Are you sure you want to delete {path}?",
             )
             if confirm == QMessageBox.Yes:
                 try:
                     Nos(path).remove()
                 except OSError as e:
-                    QMessageBox.warning(self, self.tr("Error"), str(e))
+                    meut.warning(parent=self, title="Error", msg=str(e))
                 else:
                     if is_selected:
                         self.window().show_welcome_screen()

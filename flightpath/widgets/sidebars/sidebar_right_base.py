@@ -1,13 +1,14 @@
 import os
 import traceback
 
-from PySide6.QtWidgets import QWidget, QMessageBox
+from PySide6.QtWidgets import QWidget
 
 from csvpath.util.nos import Nos
 from csvpath.util.file_readers import DataFileReader
 from csvpath.util.file_writers import DataFileWriter
 
 from flightpath.util.file_utility import FileUtility as fiut
+from flightpath.util.message_utility import MessageUtility as meut
 
 
 #
@@ -52,13 +53,17 @@ class SidebarRightBase(QWidget):
                 to_path = fiut.deconflicted_path(to_dir, from_name)
                 to_nos.path = to_path
             if to_nos.exists():
-                QMessageBox.warning(self, "Error", f"Cannot copy file to {to_nos.path}")
+                meut.warning(
+                    parent=self, title="Error", msg=f"Cannot copy file to {to_nos.path}"
+                )
                 return
             try:
                 with DataFileReader(from_path) as ffrom:
                     with DataFileWriter(path=to_nos.path) as tto:
                         tto.write(ffrom.read())
             except NotADirectoryError:
-                QMessageBox.warning(self, "Error", "Cannot copy item over another file")
+                meut.warning(
+                    parent=self, title="Error", msg="Cannot copy item over another file"
+                )
         else:
-            QMessageBox.warning(self, "Error", "Cannot copy item")
+            meut.warning(parent=self, title="Error", msg="Cannot copy item")

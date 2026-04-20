@@ -296,17 +296,14 @@ class SidebarNamedPaths(SidebarRightBase):
         if index.isValid():
             path = self.model.filePath(index)
             nos = Nos(path)
-            confirm = QMessageBox.question(
-                self,
-                self.tr("Delete"),
-                self.tr(f"Permanently delete {path}?"),
-                QMessageBox.Yes | QMessageBox.No,
+            confirm = meut.yes_no(
+                parent=self, title="Delete", msg=f"Permanently delete {path}?"
             )
             if confirm == QMessageBox.Yes:
                 try:
                     nos.remove()
                 except OSError as e:
-                    QMessageBox.warning(self, self.tr("Error"), str(e))
+                    meut.warning(parent=self, title="Error", msg=str(e))
                 else:
                     #
                     # TODO: this will have to change because we don't want to dismiss

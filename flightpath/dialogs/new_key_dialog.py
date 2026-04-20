@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (  # pylint: disable=E0611
     QFormLayout,
 )
 from PySide6.QtCore import Qt  # pylint: disable=E0611
-
 from flightpath.util.message_utility import MessageUtility as meut
 
 

@@ -20,8 +20,8 @@ from PySide6.QtCore import Qt, Slot
 from csvpath.util.config_env import ConfigEnv
 
 from flightpath.util.help_finder import HelpFinder
-from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.server_utility import ServerUtility as seut
+from flightpath.util.message_utility import MessageUtility as meut
 
 
 class CompileEnvDialog(QDialog):

@@ -1,6 +1,6 @@
 import os
 
-from PySide6.QtWidgets import QLineEdit, QFormLayout, QPushButton, QMessageBox
+from PySide6.QtWidgets import QLineEdit, QFormLayout, QPushButton
 
 from csvpath.util.nos import Nos
 from .blank_form import BlankForm
@@ -68,14 +68,11 @@ class ProjectsForm(BlankForm):
                 self.project_dir.setText(self.original_projects_home)
 
     def alert(self) -> None:
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Critical)
-        msg_box.setWindowTitle("Not writable")
-        msg_box.setText(
-            "Not a writable location. Your projects path has not been changed. Please pick another projects directory."
+        meut.warning(
+            parent=self,
+            title="Not Writable",
+            msg="Not a writable location. Your projects path has not been changed. Please pick another projects directory.",
         )
-        msg_box.setStandardButtons(QMessageBox.Ok)
-        msg_box.exec()
 
     def populate(self):
         self.original_projects_home = self.main.state.projects_home

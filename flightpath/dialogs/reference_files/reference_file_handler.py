@@ -157,7 +157,7 @@ class ReferenceFileHandler:
         nos = Nos(path)
         if not nos.exists():
             meut.message(
-                parent=self,
+                parent=self.dialog,
                 title="Manifest Not Found",
                 msg=f"The named-results manifest was not found at {t}",
             )
@@ -173,7 +173,7 @@ class ReferenceFileHandler:
         nos = Nos(path)
         if not nos.exists():
             meut.message(
-                parent=self,
+                parent=self.dialog,
                 title="Manifest Not Found",
                 msg=f"The named-file manifest was not found at {path}",
             )

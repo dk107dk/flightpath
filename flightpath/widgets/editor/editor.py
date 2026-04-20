@@ -1,11 +1,20 @@
 from PySide6.QtWidgets import QWidget, QPlainTextEdit, QTextEdit
 from PySide6.QtCore import QSize, QRect, Qt
-from PySide6.QtGui import QColor, QPainter, QTextFormat, QFontDatabase, QTextBlockFormat, QTextCursor, QKeyEvent
+from PySide6.QtGui import (
+    QColor,
+    QPainter,
+    QTextFormat,
+    QFontDatabase,
+    QTextBlockFormat,
+    QTextCursor,
+    QKeyEvent,
+)
 
 from flightpath.editable import EditStates
 from flightpath.widgets.editor.syntax import JsonHighlighter
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.key_utility import KeyUtility as keut
+
 
 class LineNumberArea(QWidget):
     def __init__(self, editor):
@@ -55,12 +64,8 @@ class Editor(QPlainTextEdit):
         cursor: QTextCursor = self.textCursor()
         line = cursor.blockNumber()
         column = cursor.positionInBlock()
-        msg = f"[{line+1}, {column}]"
+        msg = f"[{line + 1}, {column}]"
         self.parentWidget().main.statusBar().showMessage(msg)
-
-
-
-
 
     def line_number_area_paint_event(self, event):
         painter = QPainter(self.lineNumberArea)
@@ -77,11 +82,14 @@ class Editor(QPlainTextEdit):
                 number = str(block_number + 1)
                 painter.setPen(Qt.GlobalColor.gray)
                 # Start writing the line numbers to give enough margin between the border and the text
-                painter.drawText(-5,
-                                 top,
-                                 self.lineNumberArea.width(),
-                                 self.fontMetrics().height(),
-                                 Qt.AlignRight, number)
+                painter.drawText(
+                    -5,
+                    top,
+                    self.lineNumberArea.width(),
+                    self.fontMetrics().height(),
+                    Qt.AlignRight,
+                    number,
+                )
             block = block.next()
             top = bottom
             bottom = top + self.blockBoundingRect(block).height()
@@ -94,13 +102,15 @@ class Editor(QPlainTextEdit):
         # digits = len(str(self.blockCount()))
         digits = 7  # Fixed gutter size
         # TODO: improve calculation for gutter
-        space = 3 + self.fontMetrics().horizontalAdvance('9')*digits
+        space = 3 + self.fontMetrics().horizontalAdvance("9") * digits
         return space
 
     def resizeEvent(self, event):
         QPlainTextEdit.resizeEvent(self, event)
         cr = self.contentsRect()
-        self.lineNumberArea.setGeometry(QRect(cr.left(), cr.top(), self.line_number_area_width(), cr.height()))
+        self.lineNumberArea.setGeometry(
+            QRect(cr.left(), cr.top(), self.line_number_area_width(), cr.height())
+        )
 
     def update_line_number_area_width(self):
         self.setViewportMargins(self.line_number_area_width(), 0, 0, 0)
@@ -136,6 +146,8 @@ class Editor(QPlainTextEdit):
         if dy:
             self.lineNumberArea.scroll(0, dy)
         else:
-            self.lineNumberArea.update(0, rect.y(), self.lineNumberArea.width(), rect.height())
+            self.lineNumberArea.update(
+                0, rect.y(), self.lineNumberArea.width(), rect.height()
+            )
         if rect.contains(self.viewport().rect()):
             self.update_line_number_area_width()

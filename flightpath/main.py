@@ -780,11 +780,8 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             and self.config.ready is True
             and self.config.toolbar._button_save.isEnabled()
         ):
-            save = QMessageBox.question(
-                self,
-                "Config changed",
-                "Save config changes?",
-                QMessageBox.Yes | QMessageBox.No,
+            save = meut.yesNo(
+                parent=self, title="Config changed", msg="Save config changes?"
             )
             if save == QMessageBox.Yes:
                 self.save_config_changes()
@@ -896,12 +893,9 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         filepath, data, editable = worker_data  # pylint: disable=W0612
         try:
             if isinstance(data, Exception):
-                msg_box = QMessageBox()
-                msg_box.setIcon(QMessageBox.Critical)
-                msg_box.setWindowTitle("File opening error")
-                msg_box.setText(f"Error: {data}")
-                msg_box.setStandardButtons(QMessageBox.Ok)
-                msg_box.exec()
+                meut.warning(
+                    parent=self, title="File opening error", msg=f"Error: {data}"
+                )
                 self._clear_is_opening(filepath)
                 return
             self.last_main = self.main_layout.currentIndex()
@@ -962,12 +956,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
     def update_csvpath_views(self, worker_data):
         filepath, data, editable = worker_data  # pylint: disable=W0612
         if isinstance(data, Exception):
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle("File opening error")
-            msg_box.setText(f"Error: {data}")
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.exec()
+            meut.warning(parent=self, title="File opening error", msg=f"Error: {data}")
             self._clear_is_opening(filepath)
             return
         try:
@@ -1013,23 +1002,15 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
     def update_views(self, worker_data):
         msg, lines, filepath, data, lines_to_take, editable, largefile = worker_data  # pylint: disable=W0612
         if isinstance(lines, Exception):
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle("File opening error")
-            msg_box.setText(f"Error: {lines}")
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.exec()
+            meut.warning(parent=self, title="File opening error", msg=f"Error: {lines}")
             self._clear_is_opening(filepath)
             return
         if largefile is True:
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle("Large file warning")
-            msg_box.setText(
-                "FlightPath is optimized for samples, not large files. Only 66,000 lines loaded."
+            meut.warning(
+                parent=self,
+                title="Large file warning",
+                msg="FlightPath is optimized for samples, not large files. Only 66,000 lines loaded.",
             )
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.exec()
 
         table_model = TableModel(data=data, editable=(editable == EditStates.EDITABLE))
         self.last_main = self.main_layout.currentIndex()
@@ -1409,14 +1390,11 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             if self.is_writable(path):
                 self.state.cwd = path
             else:
-                msg_box = QMessageBox()
-                msg_box.setIcon(QMessageBox.Critical)
-                msg_box.setWindowTitle("Not writable")
-                msg_box.setText(
-                    f"{path} is not a writable location. Please pick another."
+                meut.warning(
+                    parent=self,
+                    title="Not writable",
+                    msg=f"{path} is not a writable location. Please pick another.",
                 )
-                msg_box.setStandardButtons(QMessageBox.Ok)
-                msg_box.exec()
                 self.on_set_cwd_click()
 
     def on_reload_data(self) -> None:
