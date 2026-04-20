@@ -67,12 +67,16 @@ class SidebarArchive(SidebarRightBase):
         # get the id(csvpaths) in order to wire together items and run workers
         #
         cid = params.get("cid")
+        csvpaths = params.get("csvpaths")
+        if csvpaths is None:
+            raise ValueError("CsvPaths instance cannot be None")
         metadata = {
             "id": params["worker"],
             "params": params,
             "activity": "",
             "results": None,
             "cid": cid,
+            "csvpaths": csvpaths,
         }
         if "named_paths_name" in params:
             named_paths_name = params["named_paths_name"]
@@ -94,7 +98,12 @@ class SidebarArchive(SidebarRightBase):
         # the item will listen for results events. we replace the items metadata_update
         # method with a simple one that handles just this specific case.
         #
-        self.main.csvpaths.results_manager.dynamic_results_listeners.append(item)
+        # this is no good. if another run is triggered self.main.csvpaths would (presumably) be different
+        # we're going to create the csvpaths outside the run worker, pass it in, and pass it back to the
+        # list directly. avoiding this, and also the csvpath coming from the worker itself, which can
+        # be destroyed before the csvpaths is used
+        #
+        csvpaths.results_manager.dynamic_results_listeners.append(item)
         lst = SidebarArchiveListener(item=item)
         item.add_listener(lst)
         #
@@ -116,10 +125,20 @@ class SidebarArchive(SidebarRightBase):
         for _ in self.runs.items:
             acid = _.metadata.get("cid")
             if acid == cid:
-                paths = metadata.get("csvpaths")
-                if paths is None:
-                    raise ValueError("CsvPaths cannot be None")
-                _.metadata["csvpaths"] = paths
+                #
+                # csvpaths should already be in metadata. this changed so that we aren't
+                # passing state through the worker. the worker's lifecycle is unpredictable
+                # relative to the sidebar and the object-delete race can result in the app
+                # crashing. we'll put a check here to make sure we make noise if i missed
+                # something.
+                #
+                # paths = metadata.get("csvpaths")
+                # if paths is None:
+                #    raise ValueError("CsvPaths cannot be None")
+                # _.metadata["csvpaths"] = paths
+                #
+                if "csvpaths" not in _.metadata:
+                    raise ValueError("CsvPaths instance must be available in metadata")
                 _.status = "running"
 
     def on_item_clicked(self, metadata: dict):
@@ -289,8 +308,10 @@ class SidebarArchive(SidebarRightBase):
                 layout.addWidget(self.view)
                 self.setLayout(layout)
         except Exception as e:
-            meut.message(
-                title=f"{type(e)} error loading named-paths", msg=f"Archive error: {e}"
+            meut.warning(
+                parent=self,
+                title=f"{type(e)} error loading named-paths",
+                msg=f"Archive error: {e}",
             )
 
     #

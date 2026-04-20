@@ -119,7 +119,8 @@ class SidebarNamedPaths(SidebarRightBase):
             self.view.clicked.connect(self.on_named_paths_tree_click)
             self.setLayout(layout)
         except Exception as e:
-            meut.message(
+            meut.warning(
+                parent=self,
                 title=f"{type(e)} error loading named-paths",
                 msg=f"Named-paths error: {e}",
             )

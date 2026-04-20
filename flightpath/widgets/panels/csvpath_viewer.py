@@ -200,6 +200,7 @@ class CsvpathViewer(QWidget):
             or csvpath.find("$") == -1
         ):
             meut.message(
+                parent=self,
                 msg="Check that your cursor is in a csvpath statement",
                 title="No csvpath selected",
             )
@@ -236,7 +237,9 @@ class CsvpathViewer(QWidget):
             #
             if filepath is None:
                 meut.message(
-                    title="No File", msg="No file was selected. Cannot continue."
+                    parent=self,
+                    title="No File",
+                    msg="No file was selected. Cannot continue.",
                 )
                 return
             #
@@ -318,7 +321,7 @@ class CsvpathViewer(QWidget):
         except Exception as e:
             estr = traceback.format_exc()
             self._display_stacktrace(estr)
-            meut.message(title="Error", msg=f"Error: {e}")
+            meut.message(parent=self, title="Error", msg=f"Error: {e}")
             return
 
     @Slot(tuple)

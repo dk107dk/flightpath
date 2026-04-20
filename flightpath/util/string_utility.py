@@ -3,6 +3,32 @@ import json
 
 class StringUtility:
     @classmethod
+    def good_name(self, name: str, chars: str = None) -> bool:
+        if name is None:
+            return False
+        if name.strip() == "":
+            return False
+        cs = []
+        for c in range(48, 57):
+            cs.append(chr(c))
+        for c in range(65, 90):
+            cs.append(chr(c))
+        for c in range(97, 122):
+            cs.append(chr(c))
+        #
+        # minimally take dash, underscore, and space;
+        # alternatively take all in string passed in
+        #
+        if chars is None:
+            cs.append(chr(32))
+            cs.append(chr(45))
+            cs.append(chr(95))
+        else:
+            for _ in chars:
+                cs.append(_)
+        return all(char in cs for char in name)
+
+    @classmethod
     def sanitize_json(cls, text: str) -> bool:
         # Create a translation table to remove all control characters (0 to 31)
         # except for the standard JSON allowed ones: \n, \r, \t, and the space (32)

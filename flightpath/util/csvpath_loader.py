@@ -52,6 +52,7 @@ class CsvpathLoader:
         elif not template.endswith(":run_dir"):
             self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
             meut.message(
+                parent=self.load_dialog,
                 title="Incorrect Template",
                 msg="A named-path group template must end in :run_dir",
             )
@@ -98,14 +99,22 @@ class CsvpathLoader:
                         append=(not overwrite),
                     )
                     if ref is None or str(ref).strip() == "":
-                        meut.message(msg="Cannot load file.", title="Cannot Load")
+                        meut.message(
+                            parent=self.load_dialog,
+                            msg="Cannot load file.",
+                            title="Cannot Load",
+                        )
                 else:
                     raise ValueError(f"Unknown file type: {name}")
             self.main.sidebar._renew_sidebars()
             self._delete_load_dialog()
         except Exception as e:
             print(traceback.format_exc())
-            meut.message(title="Error", msg=f"Cannot load named-paths group: {e}")
+            meut.message(
+                parent=self.load_dialog,
+                title="Error",
+                msg=f"Cannot load named-paths group: {e}",
+            )
 
     def do_load_json(self) -> None:
         paths = self.main.csvpaths
@@ -130,7 +139,11 @@ class CsvpathLoader:
         try:
             lst = paths.paths_manager.add_named_paths_from_json(file_path=name)
             if lst is None or len(lst) == 0:
-                meut.message(msg="Cannot load file.", title="Cannot Load")
+                meut.message(
+                    parent=self.load_dialog,
+                    msg="Cannot load file.",
+                    title="Cannot Load",
+                )
         except Exception as e:
             msg = traceback.format_exc()
             ex = e
@@ -148,7 +161,7 @@ class CsvpathLoader:
             else:
                 msg = f"There were {len(paths.errors)} errors"
 
-            meut.error(msg=msg, title="Error", errors_json=ja)
+            meut.error(parent=self.load_dialog, msg=msg, title="Error", errors_json=ja)
 
         else:
             self.main.sidebar._renew_sidebars()
@@ -182,7 +195,11 @@ class CsvpathLoader:
             name=named_paths_name, directory=name, template=template
         )
         if lst is None or len(lst) == 0:
-            meut.message(msg="Cannot load directory.", title="Cannot Load")
+            meut.message(
+                parent=self.load_dialog,
+                msg="Cannot load directory.",
+                title="Cannot Load",
+            )
         #
         # have to check if the named-paths group has a definition file. if not
         # we need to create one.

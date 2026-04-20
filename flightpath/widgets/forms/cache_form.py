@@ -4,54 +4,62 @@ from PySide6.QtWidgets import (
     QComboBox,
     QLabel,
     QVBoxLayout,
-    QHBoxLayout,
     QWidget,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt
 
 from .blank_form import BlankForm
 
-
+"""
 class PLineEdit(QLineEdit):
     def setText(self, t: str) -> None:
         pass
+"""
 
 
 class CacheForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        #
+        # =====================
+        #
         overall = QVBoxLayout()
-        self.setLayout(overall)
-
+        overall.setContentsMargins(0, 0, 0, 0)
         form = QWidget()
         layout = QFormLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         form.setLayout(layout)
 
         self.use_cache = QComboBox()
         layout.addRow("Use cache: ", self.use_cache)
-
-        self._cache_dir_path = PLineEdit()
-        layout.addRow("Cache directory: ", self.cache_dir_path)
+        self._cache_dir_path = QLineEdit()
+        layout.addRow("Cache directory: ", self._cache_dir_path)
         msg = QLabel("The default is cache.")
         msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
         layout.addRow("", msg)
 
-        overall.addWidget(form)
-        check = QWidget()
-        check_layout = QHBoxLayout()
-        check.setLayout(check_layout)
-        check_layout.addWidget(self.table)
-        overall.addWidget(check, alignment=Qt.AlignBottom)
+        #
+        # =====================
+        #
+        self.table.setContentsMargins(0, 0, 0, 0)
+        self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.table.setMinimumHeight(
+            self.table.verticalHeader().length()
+            + self.table.horizontalHeader().height()
+            + self.table.frameWidth() * 2
+            + 4
+        )
+        overall.addWidget(form, 0)
+        overall.addStretch(1)
+        overall.addWidget(self.table, 0)
+        overall.setAlignment(self.table, Qt.AlignBottom)
         self.setLayout(overall)
-
         self._setup()
 
     @property
     def cache_dir_path(self) -> QLineEdit:
-        # from csvpath.util.log_utility import LogUtility as lout
-        # lout.log_brief_trace()
-
         return self._cache_dir_path
 
     def _setup(self) -> None:
@@ -65,29 +73,36 @@ class CacheForm(BlankForm):
         config.add_to_config("cache", "use_cache", usecache)
 
     def populate(self):
-        config = self.config
-        cache_path = config.get(
-            section="cache",
-            name="path",
-            default="cache",
-            string_parse=False,
-            swaps=False,
-        )
-
-        self.cache_dir_path.setText(cache_path)
-        self.use_cache.clear()
-        self.use_cache.addItem("yes")
-        self.use_cache.addItem("no")
-        use = config.get(section="cache", name="use_cache", default="yes", swaps=False)
-        use = use.strip().lower()
-        #
-        # no is correct, but we'll take false because it's a reasonable guess.
-        # everything else indicates yes.
-        #
-        if use in ["no", "false"]:
-            self.use_cache.setCurrentText("no")
+        if self.is_populating:
+            return
         else:
-            self.use_cache.setCurrentText("yes")
+            self.is_popualting = True
+            config = self.config
+            cache_path = config.get(
+                section="cache",
+                name="path",
+                default="cache",
+                string_parse=False,
+                swaps=False,
+            )
+            self.cache_dir_path.setText(cache_path)
+
+            self.use_cache.clear()
+            self.use_cache.addItem("yes")
+            self.use_cache.addItem("no")
+            use = config.get(
+                section="cache", name="use_cache", default="yes", swaps=False
+            )
+            use = use.strip().lower()
+            #
+            # no is correct, but we'll take false because it's a reasonable guess.
+            # everything else indicates yes.
+            #
+            if use in ["no", "false"]:
+                self.use_cache.setCurrentText("no")
+            else:
+                self.use_cache.setCurrentText("yes")
+            self.is_populating = False
 
     @property
     def fields(self) -> list[str]:

@@ -52,8 +52,6 @@ class GeneralDataWorker(QRunnable):
             #
             # we need to warn that the file is getting too big
             #
-            # from flightpath.util.message_utility import MessageUtility as meut
-            # meut.message(msg="FlightPath is optimized for sampling, not editing large files. Stop loading here?", title="Large file warning")
             return False
         #
         # -1 means "All lines"

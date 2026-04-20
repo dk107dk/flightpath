@@ -32,6 +32,11 @@ class OneOffRunWorker(QRunnable):
             print(traceback.format_exc())
             self.csvpath.logger.error(ex)
             self.signals.messages.emit("Test run failed")
+        #
+        # note that self.csvpath is held by the caller so should remain available
+        # and this has never crashed, but passing state through the worker isn't
+        # the best way to do it.
+        #
         self.signals.finished.emit(
             (self.csvpath, self.csvpath_str, lines, self.printer)
         )

@@ -128,6 +128,7 @@ class ConfigPanel(QWidget):
             if populate is True:
                 form.populate()
                 form.update_dark()
+                form.update_table()
         self.ready = True
 
     def populate_all_forms(self) -> None:
@@ -140,6 +141,7 @@ class ConfigPanel(QWidget):
         for form in self.forms:
             form.populate()
             form.update_dark()
+            form.update_table()
 
     def switch_form(self, index: QModelIndex):
         form = index.data()

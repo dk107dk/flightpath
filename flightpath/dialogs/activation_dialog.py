@@ -160,6 +160,7 @@ class ActivationDialog(QDialog):
             #
             #
             meut.message(
+                parent=self,
                 title="No CsvPath statement groups",
                 msg="You must load a named-paths group before you set an arrival activation",
             )

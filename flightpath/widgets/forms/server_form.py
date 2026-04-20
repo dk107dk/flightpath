@@ -73,6 +73,15 @@ class ServerForm(BlankForm):
         self.server_unchanged = False
         self.viewed = False
 
+    @property
+    def hostname(self) -> str:
+        host = self.host.text()
+        if host is None:
+            return None
+        host = host.strip()
+        host = host.rstrip("/")
+        return host
+
     def on_widget_changed(self) -> None:
         #
         # watches for when a new form becomes visibile. if it is us, we want to check the
@@ -102,14 +111,14 @@ class ServerForm(BlankForm):
         # if we don't do that and save we'll be saving blanks.
         #
         self.populate_if()
-        host = self.host.text()
+        host = self.hostname
         key = self.key.text()
         config.add_to_config("server", "host", host)
         config.add_to_config("server", "api_key", key)
         self._enable_server_if()
 
     def _server_is_enabled(self) -> bool:
-        host = self.host.text()
+        host = self.hostname
         key = self.key.text()
         e = True if host and host.strip() != "" else False
         e = True if e and key and key.strip() != "" else False
@@ -123,7 +132,7 @@ class ServerForm(BlankForm):
 
     def _disable_shutdown_server(self) -> None:
         self.shut_down_server.setEnabled(False)
-        self.shut_down_server.setText("Server is not available")
+        self.shut_down_server.setText("Server is not accessible")
 
     def _enable_shutdown_server(self) -> None:
         self.shut_down_server.setEnabled(True)
@@ -162,7 +171,7 @@ class ServerForm(BlankForm):
         host = config.get(
             section="server", name="host", string_parse=False, swaps=False
         )
-        if host and self.host.text() != host:
+        if host and self.hostname != host:
             self.host.setText(host)
             self.server_unchanged = False
         key = config.get(
@@ -181,7 +190,7 @@ class ServerForm(BlankForm):
         return headers
 
     def _enableable(self, *, host=None, key=None) -> bool:
-        host = host if host else self.host.text()
+        host = host if host else self.hostname
         key = key if key else self.key.text()
         e = True if host and host.strip() != "" else False
         e = True if e and key and key.strip() != "" else False
@@ -202,7 +211,7 @@ class ServerForm(BlankForm):
         return config_str
 
     def _update_project_list_new_host(self) -> None:
-        text = self.host.text()
+        text = self.hostname
         if text and text.strip() == "":
             self.proj_list.clear()
         else:
@@ -219,7 +228,7 @@ class ServerForm(BlankForm):
 
     def _update_project_list(self, name=None) -> None:
         key = self.key.text().strip() if self.key.text() else None
-        host = self.host.text().strip() if self.host.text() else None
+        host = self.hostname if self.hostname else None
         if key in [None, ""] or host in ["", None]:
             self.proj_list.clear()
             self.server_unchanged = False
@@ -301,7 +310,7 @@ class ServerForm(BlankForm):
         with httpx.Client() as client:
             msg = None
             response = None
-            url = f"{self.host.text()}/projects/set_env_file"
+            url = f"{self.hostname}/projects/set_env_file"
             #
             # create a server-safeish config str here. this isn't a full cleaning. the
             # server needs to also work on the paths and check the sensitive settings
@@ -354,7 +363,7 @@ class ServerForm(BlankForm):
         with httpx.Client() as client:
             msg = None
             response = None
-            url = f"{self.host.text()}/projects/set_project_config"
+            url = f"{self.hostname}/projects/set_project_config"
             if config_str is None:
                 config_str = self._create_config_str(name)
 
@@ -396,7 +405,7 @@ class ServerForm(BlankForm):
         with httpx.Client() as client:
             msg = None
             try:
-                url = f"{self.host.text()}/admin/shutdown"
+                url = f"{self.hostname}/admin/shutdown"
                 response = client.get(url, headers=self._headers)
                 json = response.json()
                 msg = json["message"] if "message" in json else json["detail"]
@@ -418,7 +427,7 @@ class ServerForm(BlankForm):
             msg = None
             response = None
             try:
-                url = f"{self.host.text()}/projects/get_file"
+                url = f"{self.hostname}/projects/get_file"
                 request = {"name": name, "file_path": "logs/csvpath.log"}
                 response = client.post(url, json=request, headers=self._headers)
                 json = response.json()
@@ -450,7 +459,7 @@ class ServerForm(BlankForm):
             msg = None
             response = None
             try:
-                url = f"{self.host.text()}/projects/get_project_config"
+                url = f"{self.hostname}/projects/get_project_config"
                 request = {"name": name}
                 response = client.post(url, json=request, headers=self._headers)
                 content = response.json()
@@ -480,7 +489,7 @@ class ServerForm(BlankForm):
             msg = None
             response = None
             try:
-                url = f"{self.host.text()}/projects/get_env_file"
+                url = f"{self.hostname}/projects/get_env_file"
                 request = {"name": name}
                 response = client.post(url, json=request, headers=self._headers)
                 content = response.json()
@@ -517,7 +526,7 @@ class ServerForm(BlankForm):
             msg = None
             response = None
             try:
-                url = f"{self.host.text()}/projects/get_project_names"
+                url = f"{self.hostname}/projects/get_project_names"
                 response = client.post(url, headers=self._headers)
                 json = response.json()
                 if "names" in json:
@@ -551,7 +560,7 @@ class ServerForm(BlankForm):
         with httpx.Client() as client:
             response = None
             try:
-                url = f"{self.host.text()}/projects/delete_project"
+                url = f"{self.hostname}/projects/delete_project"
                 response = client.post(url, json={"name": name}, headers=self._headers)
                 if response.status_code == 200:
                     self.server_unchanged = False
@@ -562,7 +571,8 @@ class ServerForm(BlankForm):
                     # meut.message(msg=f"Project {name} has been deleted", title="Deleted project")
                     return True
                 else:
-                    meut.message(
+                    meut.warning(
+                        parent=self,
                         msg=f"Could not delete project {name}. Return code: {response.status_code}",
                         title="Could not delete project",
                     )
@@ -590,14 +600,15 @@ class ServerForm(BlankForm):
             try:
                 config_str = self._create_config_str(name)
                 project_data = {"name": name, "config_str": config_str}
-                url = f"{self.host.text()}/projects/new_project"
+                url = f"{self.hostname}/projects/new_project"
                 response = client.post(url, json=project_data, headers=self._headers)
                 if response.status_code == 200:
                     self.server_unchanged = False
                     self._update_project_list(name)
                     return True
                 else:
-                    meut.message(
+                    meut.warning(
+                        parent=self,
                         msg=f"Could not create project. Return code: {response.status_code}",
                         title="Could not create project",
                     )
@@ -613,11 +624,11 @@ class ServerForm(BlankForm):
                 return False
 
     def _ping(self) -> int:
-        if self.host.text() is None or self.host.text().strip() == "":
+        if self.hostname is None or self.hostname == "":
             return 400
         with httpx.Client() as client:
             try:
-                url = f"{self.host.text()}/"
+                url = f"{self.hostname}/"
                 response = client.get(url, headers=self._headers)
                 return response.status_code
             except Exception:

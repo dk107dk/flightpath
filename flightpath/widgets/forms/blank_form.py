@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QHeaderView,
+    QAbstractItemView,
 )
 from PySide6.QtCore import Qt
 from csvpath.util.config import Config
@@ -19,11 +20,14 @@ class BlankForm(QWidget):
         self.main = main
         self.updating = False
         self.table = None
+        self.is_populating = False
         if self.fields is not None and len(self.fields) > 0:
             self.actuals_table()
 
     def actuals_table(self):
         self.table = QTableWidget()
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table.setObjectName("actuals_table")
         # self.setStyleSheet("QTableWidget { background-color:#f8f8f8;max-height:140px;}")
         self.table.setColumnCount(2)
         self.table.setHorizontalHeaderLabels(["Name", "Actual Value"])
@@ -44,11 +48,16 @@ class BlankForm(QWidget):
             0, QHeaderView.ResizeToContents
         )
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        #
+        # is this needed or helpful? we don't change the actuals table. we change
+        # the fields and update the actuals behind the scenes. also update table
+        # pulls from the config, not the form -- and it isn't straightforward to
+        # update from the fields because we would need them to be dereferenced
+        # against the env vars.
+        #
+        self.table.itemChanged.connect(self.update_table)
 
-        self._update_table()
-        self.table.itemChanged.connect(self._update_table)
-
-    def _update_table(self) -> None:
+    def update_table(self) -> None:
         if self.updating is True:
             return
         if self.table is None:
@@ -111,7 +120,7 @@ class BlankForm(QWidget):
             )
             self.msg1.setStyleSheet(css)
             self.msg2.setStyleSheet(css)
-
+        """
         if self.table is not None:
             color = "222"
             background = "eee"
@@ -128,52 +137,7 @@ class BlankForm(QWidget):
                 selected = "aaa"
                 grid = "ccc"
                 header_border = "aaa"
-
-            s = f"""
-QTableWidget {{
-    background-color: #{widget_background};
-    color: #{color};
-    gridline-color: #{grid};
-    selection-background-color: #4d4d4d;
-    outline: none;
-    border:none;
-    font-size:12pt;
-}}
-
-/* The viewport actually draws the cells */
-QTableWidget::viewport {{
-    /* not working */
-    border-left: 2px solid #000;
-}}
-
-/* Table items */
-QTableWidget::item {{
-    background-color: #{background};
-    color: #{color};
-}}
-
-/* Selected items */
-QTableWidget::item:selected {{
-    background-color: #{selected};
-    color: #{color};
-}}
-
-/* Header sections */
-QHeaderView::section {{
-    background-color: #{header_background};
-    color: #222;
-    padding: 4px;
-    border: 1px solid #{header_border};
-    font-size:12pt;
-}}
-
-/* Corner button */
-QTableCornerButton::section {{
-    background-color: #{background};
-    border: 1px solid #444444;
-}}"""
-
-            self.table.setStyleSheet(s)
+        """
 
     @property
     def config(self) -> Config:

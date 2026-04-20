@@ -163,6 +163,7 @@ class JsonViewer(QWidget):
             if self.editable == EditStates.NO_SAVE_NO_CTX:
                 if self._shown_no_edit_msg is None:
                     meut.message(
+                        parent=self,
                         title="Not Editable",
                         msg="This file is not editable. Any changes you make will be discarded.",
                     )

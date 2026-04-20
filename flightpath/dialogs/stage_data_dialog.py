@@ -238,7 +238,9 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
     def _source_path_click(self, text: str) -> None:
         if self.template_ctl.text().endswith(":filename"):
             meut.message(
-                msg="Filename must be the last component of the path", title="Complete"
+                parent=self,
+                msg="Filename must be the last component of the path",
+                title="Complete",
             )
             return
         cursor_pos = self.template_ctl.cursorPosition()

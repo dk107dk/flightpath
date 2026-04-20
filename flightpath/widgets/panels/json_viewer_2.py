@@ -214,7 +214,10 @@ class JsonViewer2(QWidget):
     def _save_as(self) -> None:
         path = os.path.dirname(self.path)
         path, ok = meut.input(
-            title="Save As", msg="Where should the new file live? ", text=path
+            parent=self,
+            title="Save As",
+            msg="Where should the new file live? ",
+            text=path,
         )
         if ok and path:
             self._do_save(path)
@@ -312,14 +315,20 @@ class JsonViewer2(QWidget):
         for i, _ in enumerate(t.split("\n")):
             if not self._check_one(line_number=i, t=_):
                 return
-        meut.message(msg="This file is well-formed JSONL", title="Well-formed")
+        meut.message(
+            parent=self, msg="This file is well-formed JSONL", title="Well-formed"
+        )
         return t
 
     def _check(self, *, show_good_message=True) -> str:
         t = self.view.toPlainText()
         if self._check_one(t=t):
             if show_good_message is True:
-                meut.message(msg="This file is well-formed JSON", title="Well-formed")
+                meut.message(
+                    parent=self,
+                    msg="This file is well-formed JSON",
+                    title="Well-formed",
+                )
         return t
 
     def _check_one(self, *, t: str, line_number: int = 0) -> bool:
@@ -391,9 +400,7 @@ class JsonViewer2(QWidget):
             #
             # need an alert here
             #
-            meut.warning(
-                parent=self.main, msg="Unknown file type", title="Cannot open file"
-            )
+            meut.warning(parent=self, msg="Unknown file type", title="Cannot open file")
             return
         t = data
         if t is None or not isinstance(t, str):

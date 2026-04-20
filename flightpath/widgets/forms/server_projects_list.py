@@ -75,7 +75,9 @@ class ServerProjectsList(QListWidget):
             name = proj.text()
             self.parent._upload_config(name)
         else:
-            meut.message(msg="Please select a project", title="Select project")
+            meut.message(
+                parent=self, msg="Please select a project", title="Select project"
+            )
 
     def sync_config(self) -> None:
         proj = self.currentItem()
@@ -83,7 +85,9 @@ class ServerProjectsList(QListWidget):
             name = proj.text()
             self.parent._sync_config(name)
         else:
-            meut.message(msg="Please select a project", title="Select project")
+            meut.message(
+                parent=self, msg="Please select a project", title="Select project"
+            )
 
     def upload_env(self) -> None:
         proj = self.currentItem()
@@ -91,7 +95,9 @@ class ServerProjectsList(QListWidget):
             name = proj.text()
             self.parent._upload_env(name)
         else:
-            meut.message(msg="Please select a project", title="Select project")
+            meut.message(
+                parent=self, msg="Please select a project", title="Select project"
+            )
 
     def download_log(self) -> None:
         proj = self.currentItem()
@@ -99,7 +105,9 @@ class ServerProjectsList(QListWidget):
             name = proj.text()
             self.parent._download_log(name)
         else:
-            meut.message(msg="Please select a project", title="Select project")
+            meut.message(
+                parent=self, msg="Please select a project", title="Select project"
+            )
 
     def download_config(self) -> None:
         proj = self.currentItem()
@@ -107,7 +115,9 @@ class ServerProjectsList(QListWidget):
             name = proj.text()
             self.parent._download_config(name)
         else:
-            meut.message(msg="Please select a project", title="Select project")
+            meut.message(
+                parent=self, msg="Please select a project", title="Select project"
+            )
 
     def download_env(self) -> None:
         proj = self.currentItem()
@@ -115,7 +125,9 @@ class ServerProjectsList(QListWidget):
             name = proj.text()
             self.parent._download_env(name)
         else:
-            meut.message(msg="Please select a project", title="Select project")
+            meut.message(
+                parent=self, msg="Please select a project", title="Select project"
+            )
 
     def delete_project(self) -> None:
         proj = self.currentItem()
@@ -123,10 +135,13 @@ class ServerProjectsList(QListWidget):
             name = proj.text()
             self.parent._delete_project(name)
         else:
-            meut.message(msg="Please select a project", title="Select project")
+            meut.message(
+                parent=self, msg="Please select a project", title="Select project"
+            )
 
     def new_project(self) -> None:
         proj, ok = meut.input(
+            parent=self,
             title="New server project",
             msg="Enter the new FlightPath Server project name",
         )

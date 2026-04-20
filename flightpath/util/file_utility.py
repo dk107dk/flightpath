@@ -144,19 +144,15 @@ class FileUtility:
 
     @classmethod
     def app_path(cls) -> str:
-        print(f"fiut: cls.APP_PATH 1: {cls.APP_PATH}")
         if cls.APP_PATH is None:
             frozen = getattr(sys, "frozen", False)
-            print(f"fiut: app_path: {frozen}")
             if frozen:
                 # If the app is frozen, the base path is sys._MEIPASS
                 # path = sys._MEIPASS
                 #
-                print(f"fiut: sys.platform: {sys.platform}")
                 if sys.platform == "win32":
                     # cls.APP_PATH = os.path.dirname(sys.executable)
                     cls.APP_PATH = sys._MEIPASS
-                    print(f"fiut: cls.APP_PATH 2: {cls.APP_PATH}")
                 else:  # Mac .app bundle
                     bundle_dir = os.path.dirname(sys.executable)
                     cls.APP_PATH = os.path.join(

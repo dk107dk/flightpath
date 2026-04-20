@@ -34,6 +34,7 @@ from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.tabs_utility import TabsUtility as taut
+from flightpath.util.string_utility import StringUtility as strut
 
 
 class Sidebar(QWidget):
@@ -100,6 +101,31 @@ class Sidebar(QWidget):
         self.stage_dialog = None
         self.load_dialog = None
 
+    def _new_project_name(self) -> str:
+        while True:
+            proj, ok = meut.input(
+                parent=self, title=self.NEW_PROJECT, msg="Enter the new project's name"
+            )
+            if not ok:
+                return None
+            if not strut.good_name(proj):
+                meut.warning(
+                    parent=self,
+                    msg="Project names can only have alpha-numeric characters, spaces, dashes, and underscores",
+                    title="Bad name",
+                )
+            else:
+                proj = proj.strip()
+                ps = self._project_names()
+                if proj in ps:
+                    meut.warning(
+                        parent=self,
+                        msg=f"A {proj} project already exists",
+                        title="Bad name",
+                    )
+                else:
+                    return proj
+
     def on_project_changed(self) -> None:
         proj = self.projects.currentText()
         if proj == self.main.state.current_project:
@@ -111,21 +137,19 @@ class Sidebar(QWidget):
         # we need to clear the Config panel and reload it or let it lazy load
         #
         if proj == self.NEW_PROJECT:
-            proj, ok = meut.input(
-                title=self.NEW_PROJECT, msg="Enter the new project's name"
-            )
-            if ok and proj and proj.strip() != "":
-                self.main.state.current_project = proj
-                self.main.load_state_and_cd()
-                self.main.cancel_config_changes()
-            else:
+            proj = self._new_project_name()
+            if proj is None:
                 #
                 # reset the combobox back to the current project
                 #
                 index = self.projects.findText(self.main.state.current_project)
                 if index >= 0:
                     self.projects.setCurrentIndex(index)
-            return
+                return
+            else:
+                self.main.state.current_project = proj
+                self.main.load_state_and_cd()
+                self.main.cancel_config_changes()
         self.main.state.current_project = proj
         self.main.load_state_and_cd()
         self.main.cancel_config_changes()
@@ -143,6 +167,7 @@ class Sidebar(QWidget):
 
     def _build_combo(self) -> None:
         self.projects.clear()
+        """
         proj = self.main.state.current_project
         projs = os.path.join(self.main.state.home, self.main.state.projects_home)
         nos = Nos(projs)
@@ -158,12 +183,31 @@ class Sidebar(QWidget):
         #
         ps = lst
         ps.sort()
+        """
+        proj = self.main.state.current_project
+        ps = self._project_names()
         for p in ps:
             self.projects.addItem(p)
             if p == proj:
                 self.projects.setCurrentText(p)
         self.projects.insertSeparator(self.projects.count())
         self.projects.addItem(Sidebar.NEW_PROJECT)
+
+    def _project_names(self) -> list[str]:
+        projs = os.path.join(self.main.state.home, self.main.state.projects_home)
+        nos = Nos(projs)
+        lst = nos.listdir(dirs_only=True)
+        #
+        # should not have to filter dirs because dirs_only=True, but stupidly the files
+        # version of Nos only filters for files. to-be-fixed soon!
+        #
+        # csvpath has a clear test: /Users/davidkershaw/dev/csvpath/tests/dirs/test_dirs_local.py
+        #
+        # ps = [p for p in lst if not Nos(os.path.join(projs, p)).isfile()]
+        #
+        ps = lst
+        ps.sort()
+        return ps
 
     @property
     def last_file_index(self) -> QModelIndex:
@@ -543,6 +587,8 @@ class Sidebar(QWidget):
             # was in the tree view, but not over an item. this is where the new option
             # needs to happen.
             #
+            self.save_file_action.setVisible(False)
+
             self.rename_action.setVisible(False)
             self.generate_csvpath_action.setVisible(False)
             self.generate_csv_action.setVisible(False)
@@ -704,6 +750,7 @@ class Sidebar(QWidget):
             template = None
         if template and not template.endswith(":filename"):
             meut.message(
+                parent=self,
                 msg="The :filename token must be the last component of the template",
                 title="Incomplete",
             )
@@ -736,6 +783,7 @@ class Sidebar(QWidget):
                 else:
                     if not named_file_name or named_file_name.strip() == "":
                         meut.message(
+                            parent=self,
                             title="No name given",
                             msg="You must provide a named-file name",
                         )
@@ -751,7 +799,7 @@ class Sidebar(QWidget):
                     named_file_name, "" if template is None else template
                 )
         except Exception as e:
-            meut.message(title="Stage error", msg=f"{e}")
+            meut.warning(parent=self, title="Stage error", msg=f"{e}")
             return
         #
         # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.

@@ -13,15 +13,14 @@ class RunWorker(QRunnable):
         named_paths_name: str,
         named_file_name: str,
         template: str,
-        main,
+        csvpaths,
     ) -> None:
         super().__init__()
-        self.main = main
         #
         # need a new csvpaths because a) we don't encourage reusing them; although, it
         # is possible, and b) the listeners in the accordian require separate hook-ups.
         #
-        self.csvpaths = main.new_csvpaths()
+        self.csvpaths = csvpaths
         self.method = method
         self.named_paths_name = named_paths_name
         self.named_file_name = named_file_name
@@ -56,9 +55,19 @@ class RunWorker(QRunnable):
                     "id": str(id(self)),
                     "cid": str(id(self.csvpaths)),
                     "start_time": str(datetime.now()),
-                    "csvpaths": paths,
                 }
             )
+            #
+            # exp.
+            #
+            # removing csvpaths from the emit because it causes race condition that seems to have resulted in a crash
+            # not sure who uses it, if anyone.
+            #
+            # ^^^^ got it. the run status dialog uses it to get the current line and total lines from the current
+            # matcher.
+            #
+            #                     "csvpaths": paths,
+
             ref = a(
                 pathsname=self.named_paths_name,
                 filename=self.named_file_name,

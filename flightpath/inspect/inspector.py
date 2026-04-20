@@ -147,7 +147,7 @@ class Inspector:
         if self.main is None:
             return self._compile_scan(c=50)
         else:
-            return self._compile_scan()
+            return self.compile_scan()
 
     def compile_scan(self) -> str:
         i = self.main.content.tab_widget.currentIndex()
@@ -163,6 +163,9 @@ class Inspector:
         #
         if self._sample_size > c:
             self._sample_size = c
+        #
+        # if num of rows in c is more than sample size we keep the sample size
+        #
         s = None
         if self._from_line:
             if self._from_line == 1 and self.filepath is not None:

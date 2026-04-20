@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (  # pylint: disable=E0611
 )
 from PySide6.QtCore import Qt  # pylint: disable=E0611
 
-
 from flightpath.util.message_utility import MessageUtility as meut
 
 
@@ -112,6 +111,7 @@ class NewKeyDialog(QDialog):
         # use meut to show the key 1 and only 1 time
         #
         meut.input(
+            parent=self,
             msg="Copy this key. It will not be shown again",
             title="API key created",
             text=key,

@@ -131,7 +131,8 @@ class SidebarNamedFiles(SidebarRightBase):
 
         except Exception as e:
             print(traceback.format_exc())
-            meut.message(
+            meut.warning(
+                parent=self,
                 title=f"{type(e)} error loading named-files",
                 msg=f"Named-files error: {e}",
             )

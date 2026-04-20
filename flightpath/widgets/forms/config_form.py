@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QComboBox,
     QVBoxLayout,
-    QHBoxLayout,
     QWidget,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt
 
@@ -19,10 +19,14 @@ class ConfigForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        #
+        # =====================
+        #
         overall = QVBoxLayout()
-        self.setLayout(overall)
+        overall.setContentsMargins(0, 0, 0, 0)
         form = QWidget()
         layout = QFormLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         form.setLayout(layout)
 
         self.config_dir_path = QLineEdit()
@@ -34,7 +38,6 @@ class ConfigForm(BlankForm):
         layout.addRow("Allow variable substitution: ", self.allow_var_sub)
         self.var_sub_source = QLineEdit()
         layout.addRow("Variable substitution source: ", self.var_sub_source)
-
         msg = QLabel(
             """The default is env, meaning use OS env vars; otherwise,
  a path to a JSON dict."""
@@ -42,14 +45,22 @@ class ConfigForm(BlankForm):
         msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
         layout.addRow("", msg)
 
-        overall.addWidget(form)
-        check = QWidget()
-        check_layout = QHBoxLayout()
-        check.setLayout(check_layout)
-        check_layout.addWidget(self.table)
-        overall.addWidget(check, alignment=Qt.AlignBottom)
+        #
+        # =====================
+        #
+        self.table.setContentsMargins(0, 0, 0, 0)
+        self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.table.setMinimumHeight(
+            self.table.verticalHeader().length()
+            + self.table.horizontalHeader().height()
+            + self.table.frameWidth() * 2
+            + 4
+        )
+        overall.addWidget(form, 0)
+        overall.addStretch(1)
+        overall.addWidget(self.table, 0)
+        overall.setAlignment(self.table, Qt.AlignBottom)
         self.setLayout(overall)
-
         self._setup()
 
     def _setup(self) -> None:

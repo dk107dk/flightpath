@@ -844,6 +844,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             filepath, data, editable = worker_data  # pylint: disable=W0612
             if isinstance(data, Exception):
                 meut.message(
+                    parent=self,
                     icon=QMessageBox.Critical,
                     title="File opening error",
                     msg=f"Error: {data}",
@@ -1193,7 +1194,9 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                 path=path, editable=editable, finished_callback=finished_callback
             )
         elif not info.isFile():
-            meut.message(title="File opening error", msg=f"Cannot open {path}")
+            meut.message(
+                parent=self, title="File opening error", msg=f"Cannot open {path}"
+            )
         else:
             meut.warning(
                 parent=self,
@@ -1226,12 +1229,13 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
     def run_paths(
         self, *, method: str, named_paths_name: str, named_file_name: str, template: str
     ) -> None:
+        csvpaths = self.new_csvpaths()
         runner = RunWorker(
             method=method,
             named_paths_name=named_paths_name,
             named_file_name=named_file_name,
             template=template,
-            main=self,
+            csvpaths=csvpaths,
         )
         #
         #
@@ -1243,7 +1247,8 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             "named_file_name": named_file_name,
             "template": template,
             "method": method,
-            "cid": str(id(runner.csvpaths)),
+            "cid": str(id(csvpaths)),
+            "csvpaths": csvpaths,
         }
         self.sidebar_rt_bottom.on_query_submitted(params)
         #
@@ -1266,7 +1271,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         # need a more specific way to handle errors
         #
-        meut.message(msg=t[0], title="Error in run")
+        meut.message(parent=self, msg=t[0], title="Error in run")
         self._display_log(t, error=True)
 
     @Slot(tuple)
@@ -1640,7 +1645,11 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             self.config.config_panel.populate_all_forms()
             self.reset_config_toolbar()
         except Exception as e:
-            meut.message(title="Error saving config", msg=f"Error saving config: {e}")
+            meut.message(
+                parent=self,
+                title="Error saving config",
+                msg=f"Error saving config: {e}",
+            )
 
     def on_config_changed(self):
         if hasattr(self, "config") and self.config:

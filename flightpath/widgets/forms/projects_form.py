@@ -31,6 +31,7 @@ class ProjectsForm(BlankForm):
         nos = Nos(path)
         if not nos.exists():
             meut.message(
+                parent=self,
                 msg=f"{path} does not exist. Creating it.",
                 title="Not Found",
             )
@@ -40,6 +41,7 @@ class ProjectsForm(BlankForm):
             # TODO: this could, rarely, happen. we should alert the user of the misconfig.
             #
             meut.message(
+                parent=self,
                 msg=f"{path} is a file.",
                 title="Cannot Open",
             )

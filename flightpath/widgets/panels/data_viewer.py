@@ -120,11 +120,13 @@ class DataViewer(QWidget):
         viewport_position = self.table_view.viewport().mapFrom(
             self.table_view, position
         )
-
         # use viewport_position for all calculations
         index = self.table_view.indexAt(viewport_position)
         row = self.table_view.rowAt(viewport_position.y())
+        column = index.column()
+        index_row = index.row()
 
+        print(f"_shw_ctx_mnu: row: {row}, column: {column}, index_row: {index_row}")
         if row < 0:
             last_row_index = self.table_view.model().rowCount() - 1
             if last_row_index >= 0:
@@ -159,9 +161,7 @@ class DataViewer(QWidget):
             save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
             save_as_action.setShortcutVisibleInContextMenu(True)
             context_menu.addAction(save_as_action)
-
             context_menu.addSeparator()
-
             if row > -1:
                 insert_line_above_action = QAction()
                 insert_line_above_action.setText("Insert line above")
@@ -171,41 +171,34 @@ class DataViewer(QWidget):
                 context_menu.addAction(insert_line_above_action)
 
             insert_line_below_action = QAction()
-            t = "Insert line below" if row > -1 else "Insert line at 0"
+            t = "Insert line below"
             insert_line_below_action.setText(t)
             insert_line_below_action.triggered.connect(
                 lambda: self._insert_line_below(row)
             )
             context_menu.addAction(insert_line_below_action)
-
             delete_line_action = QAction()
             delete_line_action.setText("Delete line")
             delete_line_action.triggered.connect(lambda: self._delete_line(row))
             context_menu.addAction(delete_line_action)
-
             context_menu.addSeparator()
-
-            if index.column() > -1:
+            if column > -1:
                 insert_header_left_action = QAction()
                 insert_header_left_action.setText("Insert header left")
                 insert_header_left_action.triggered.connect(
-                    lambda: self._insert_header_left(index.column())
+                    lambda: self._insert_header_left(column)
                 )
                 context_menu.addAction(insert_header_left_action)
-
             insert_header_right_action = QAction()
-            t = "Insert header right" if index.column() > -1 else "Insert header at 0"
+            t = "Insert header right"
             insert_header_right_action.setText(t)
             insert_header_right_action.triggered.connect(
-                lambda: self._insert_header_right(index.column())
+                lambda: self._insert_header_right(column)
             )
             context_menu.addAction(insert_header_right_action)
-
             delete_header_action = QAction()
             delete_header_action.setText("Delete header")
-            delete_header_action.triggered.connect(
-                lambda: self._delete_header(index.column())
-            )
+            delete_header_action.triggered.connect(lambda: self._delete_header(column))
             context_menu.addAction(delete_header_action)
             #
             #
@@ -236,9 +229,7 @@ class DataViewer(QWidget):
 
             context_menu.exec(global_position)
         else:
-            print(
-                f"index not valid: {index}: {index.row()}, {index.column()}; row: {row}"
-            )
+            print(f"index not valid: {index}: {index.row()}, {column}; row: {row}")
 
     def _relative_path_to_parent_dir(self) -> str:
         path = os.path.dirname(self.path)
@@ -479,13 +470,17 @@ class DataViewer(QWidget):
         clipboard = QApplication.clipboard()
         pasted_text = clipboard.text()
         if not pasted_text:
-            meut.message(msg="There is nothing to paste", title="Clipboard Error")
+            meut.message(
+                parent=self, msg="There is nothing to paste", title="Clipboard Error"
+            )
             return
 
         pcells = json.loads(pasted_text)
         start_index = self.table_view.selectionModel().currentIndex()
         if not start_index.isValid():
-            meut.message(msg="Select a cell to paste into", title="Clipboard Error")
+            meut.message(
+                parent=self, msg="Select a cell to paste into", title="Clipboard Error"
+            )
             return
 
         source_x = pcells[0][0]
@@ -684,14 +679,15 @@ class DataViewer(QWidget):
         for _ in exts:
             if path.endswith(_):
                 found = True
-        if found is not True:
+        if found is False:
             meut.warning(
                 parent=self,
                 title="Bad Filename",
-                msg=f"The path must end in one of these data format extensions: {exts}",
+                msg="Saving as a text delimited file with the .csv extension",
             )
-            self.on_save_as()
-            return
+            path = f"{path}.csv"
+            # self.on_save_as()
+            # return
         self._save_csv(path=path, delimiter=delimiter, quotechar=quotechar)
 
     def _save_csv(

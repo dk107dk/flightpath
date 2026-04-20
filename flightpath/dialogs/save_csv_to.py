@@ -60,9 +60,7 @@ class SaveCsvToDialog(QDialog):
         )
         form_layout.addRow("Delimiter: ", self.delimiter)
         form_layout.addRow("Quotechar: ", self.quotechar)
-        layout.addWidget(box)  # , alignment=Qt.AlignLeft
-
-        # self.path_ctrl.textChanged.connect(self._show_hide)
+        layout.addWidget(box)
 
     #
     # do we want this? we're always saving to csv.

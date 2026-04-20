@@ -384,7 +384,9 @@ class CsvPathTextEdit(QPlainTextEdit):
             thepath = os.path.dirname(thepath)
 
         name = os.path.basename(self.parent.path)
-        name, ok = meut.input(title="Save As", msg="Where should the new file live? ")
+        name, ok = meut.input(
+            parent=self, title="Save As", msg="Where should the new file live? "
+        )
         if ok and name:
             text = self.toPlainText()
             path = fiut.deconflicted_path(thepath, name)

@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
 )
+from PySide6.QtCore import Qt
 
 from csvpath.util.box import Box
 from csvpath.util.config_env import ConfigEnv
@@ -35,14 +36,14 @@ class EnvForm(BlankForm):
         form_layout.addRow("", button)
         button.clicked.connect(self._on_click_update)
 
-        self.table = QTableWidget()
-        self.table.setColumnCount(2)
-        self.table.setHorizontalHeaderLabels(["Name", "Value"])
-        self.table.verticalHeader().setVisible(False)
-        header = self.table.horizontalHeader()
+        self.env_table = QTableWidget()
+        self.env_table.setColumnCount(2)
+        self.env_table.setHorizontalHeaderLabels(["Name", "Value"])
+        self.env_table.verticalHeader().setVisible(False)
+        header = self.env_table.horizontalHeader()
         header.setStretchLastSection(True)
-        self.table.itemChanged.connect(self._on_item_changed)
-        self.layout.addWidget(self.table)
+        self.env_table.itemChanged.connect(self._on_item_changed)
+        self.layout.addWidget(self.env_table)
 
         add = QWidget()
         add_form_layout = QFormLayout()
@@ -70,19 +71,11 @@ class EnvForm(BlankForm):
         add_form_layout.addRow("Add: ", add_form_inputs)
 
         self.refreshing = False
-        self.refresh_table()
-        self.main.show_now_or_later(self.table)
-
-    def _os(self) -> bool:
-        source = self.config.get(section="config", name="var_sub_source")
-        return str(source).strip() == "env"
-
-    def envs(self) -> dict:
-        if self._os():
-            return os.environ.items()
-        else:
-            ce = ConfigEnv(config=self.config)
-            return ce.env
+        #
+        # why is this not populating the table?
+        #
+        # self.refresh_table()
+        self.main.show_now_or_later(self.env_table)
 
     def _delete_key(self, name: str) -> None:
         if self._os():
@@ -94,6 +87,7 @@ class EnvForm(BlankForm):
             if name in env:
                 del env[name]
             ConfigEnv(config=self.config).write_env_file(env)
+        self.refresh_table()
 
     def _set_key(self, name: str, value: str) -> None:
         if self._os():
@@ -103,12 +97,6 @@ class EnvForm(BlankForm):
             env = self.envs()
             env[name] = value
             ConfigEnv(config=self.config).write_env_file(env)
-
-    def _has_key(self, name: str) -> bool:
-        if self._os():
-            return name in os.environ
-        else:
-            return name in self.envs()
 
     def _on_click_reload_helpers(self) -> None:
         #
@@ -125,18 +113,25 @@ class EnvForm(BlankForm):
         Box().empty_my_stuff()
         self.main.load_state_and_cd()
 
-    def _enum(self):
+    def _os(self) -> bool:
+        source = self.config.get(section="config", name="var_sub_source")
+        return str(source).strip() == "env"
+
+    def envs(self) -> dict:
         if self._os():
-            return self.envs()
+            return os.environ
         else:
-            return self.envs().items()
+            ce = ConfigEnv(config=self.config)
+            return ce.env
 
     def refresh_table(self) -> None:
+        if self.refreshing is True:
+            return
         self.refreshing = True
         ffilter = self.filter_input.text()
         ffilter = ffilter if ffilter and ffilter.strip() != "" else None
         rows = {}
-        for k, v in self._enum():
+        for k, v in self.envs().items():
             if ffilter is not None:
                 r = re.compile(ffilter)
                 m = r.findall(k)
@@ -144,12 +139,14 @@ class EnvForm(BlankForm):
                     continue
             rows[k] = v
         row = 0
-        self.table.setRowCount(len(rows))
+        self.env_table.setRowCount(len(rows))
         for k, v in rows.items():
+            # ki should be immutable
             ki = QTableWidgetItem(k)
+            ki.setFlags(ki.flags() & ~Qt.ItemIsEditable)
             vi = QTableWidgetItem(v)
-            self.table.setItem(row, 0, ki)
-            self.table.setItem(row, 1, vi)
+            self.env_table.setItem(row, 0, ki)
+            self.env_table.setItem(row, 1, vi)
             row += 1
         self.refreshing = False
 
@@ -176,18 +173,19 @@ class EnvForm(BlankForm):
     def _on_item_changed(self, item: QTableWidgetItem) -> None:
         if self.refreshing is True:
             return
+        self.refreshing = True
         row = item.row()
-        value = self.table.item(row, 1)
-        if value is None:
-            return
-        new_text = item.text()
-        key = self.table.item(row, 0)
-        k = key.text()
-        if new_text is None or new_text.strip() == "":
-            if self._has_key(k):
-                self._delete_key(k)
-        else:
-            self._set_key(k, new_text)
+        value = self.env_table.item(row, 1)
+        if value is not None:
+            new_text = item.text()
+            key = self.env_table.item(row, 0)
+            k = key.text()
+            if new_text is None or new_text.strip() == "":
+                if k in self.envs():
+                    self._delete_key(k)
+            else:
+                self._set_key(k, new_text)
+        self.refreshing = False
         self.refresh_table()
 
     def add_to_config(self, config) -> None:

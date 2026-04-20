@@ -41,6 +41,7 @@ class FileCollector:
         nos = Nos(cwd)
         if nos.isfile():
             meut.message(
+                parent=parent,
                 msg="Please select a directory in the file browser",
                 title="Not a directory",
             )
@@ -65,6 +66,7 @@ class FileCollector:
             if not the_path.startswith(cwd):
                 name = os.path.basename(the_path)
                 new_name, ok = meut.input(
+                    parent=parent,
                     title="Copy into project",
                     msg="Enter a name for the copy:",
                     text=name,

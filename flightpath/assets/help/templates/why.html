@@ -237,7 +237,7 @@ Detailed Run Configuration
 
     <tr>
         <td class='left '>
-            Errors policy
+            Errors policy in config.ini
         </td>
         <td class='center '>
                 {{data.csvpath_errors_policy}}
@@ -250,7 +250,7 @@ Detailed Run Configuration
             The errors policy can have a huge effect on what you see. If your run has an error and your policy is to raise exceptions on errors, your run will fail and you will only see the log trail. Likewise, if your policy is to stop the run on errors your run will terminate at the first error. For development you probably want to print errors rather than raise exceptions to them.
             </p>
             <p>
-            There are two ways to set the error policy. First, the config file. But overriding that, there is a mode that allows you to set the behavior on a csvpath-by-csvpath, run-by-run basis. The mode is <i>validation-mode</i>. See the documentation window on the left-hand side for more on the modes, including <i>validation-mode</i>.
+            There are two ways to set the error policy. First, the config file, as shown here. But overriding that, there is a mode that allows you to set the behavior on a csvpath-by-csvpath, run-by-run basis. The mode is <i>validation-mode</i>. See the documentation window on the left-hand side for more on the modes, including <i>validation-mode</i>.
             </p>
         </td>
     </tr>
@@ -267,6 +267,8 @@ Detailed Run Configuration
             </p>
             <p>
             You can set this policy in two ways. First, using the main config file at <i>config/config.ini</i>. Second, and overriding the config file, you can set <i>validation-mode</i> to include <i>stop</i> or <i>no-stop</i>. See the documentation window on the left-hand side for more on the modes.
+            </p>
+            <p>If this value is <i>None</i>, the value set in config.ini (see above) determines the behavior.
             </p>
         </td>
     </tr>
@@ -286,6 +288,8 @@ Detailed Run Configuration
             <p>
  You can set this policy in two ways. First, using the main config file at <i>config/config.ini</i>. Second, and overriding the config file, you can set <i>validation-mode</i> to include <i>fail</i> or <i>no-fail</i>. See the documentation window on the left-hand side for more on the modes.
             </p>
+            <p>If this value is <i>None</i>, the value set in config.ini (see above) determines the behavior.
+            </p>
         </td>
     </tr>
 
@@ -302,6 +306,8 @@ Detailed Run Configuration
             </p>
             <p>
  You can set this policy in two ways. First, using the main config file at <i>config/config.ini</i>. Second, and overriding the config file, you can set <i>validation-mode</i> to include <i>print</i> or <i>no-print</i>. See the documentation window on the left-hand side for more on the modes.
+            </p>
+            <p>If this value is <i>None</i>, the value set in config.ini (see above) determines the behavior.
             </p>
         </td>
     </tr>
@@ -327,6 +333,8 @@ Detailed Run Configuration
         <td class='right '>
             Raising validation errors is valuable for some purposes, especially in development. However, it tends to minimize the information you receive from a run. It is generally better print errors when you are working in development.
         </td>
+            <p>If this value is <i>None</i>, the value set in config.ini (see above) determines the behavior.
+            </p>
     </tr>
 
     <tr>
@@ -339,6 +347,8 @@ Detailed Run Configuration
         <td class='right '>
             You can choose to match lines with errors, rather than matching lines without errors, the default. This means that calling <i>collect()</i> or <i>next()</i> will return only the bad lines. Match on error is a mode called <i>match-mode</i>. You can learn more about the modes in the top right-hand documentation window.
         </td>
+            <p>If this value is <i>None</i>, the value set in config.ini (see above) determines the behavior.
+            </p>
     </tr>
 
     <tr>
@@ -354,6 +364,8 @@ Detailed Run Configuration
             </p>
             <p>
  You can set this policy in two ways. First, using the main config file at <i>config/config.ini</i>. Second, and overriding the config file, you can set <i>validation-mode</i> to include <i>collect</i> or <i>no-collect</i>. See the documentation window on the left-hand side for more on the modes.
+            </p>
+            <p>If this value is <i>None</i>, the value set in config.ini (see above) determines the behavior.
             </p>
         </td>
     </tr>

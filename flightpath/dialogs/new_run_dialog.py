@@ -241,6 +241,7 @@ class NewRunDialog(QDialog):
             #
             #
             meut.message(
+                parent=self,
                 title="No staged data",
                 msg="You must stage data before you can start a run",
             )
@@ -249,6 +250,7 @@ class NewRunDialog(QDialog):
             #
             #
             meut.message(
+                parent=self,
                 title="No CsvPath Language files",
                 msg="You must load csvpaths into a named-paths group before you can start a run",
             )

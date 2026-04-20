@@ -218,7 +218,7 @@ class CompileEnvDialog(QDialog):
     def populate_sending(self) -> None:
         try:
             form = self.main.config.config_panel.get_form("ServerForm")
-            host = form.host.text()
+            host = form.hostname
             r = seut.download_env(host=host, project=self.name, headers=form._headers)
             j = json.loads(r)
             self.table_of_sending.setRowCount(len(j))

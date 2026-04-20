@@ -190,7 +190,9 @@ class MdViewer(QWidget):
         thepath = os.path.dirname(thepath)
         name = os.path.basename(self.path)
 
-        name, ok = meut.input(title="Save As", msg="Where should the new file live? ")
+        name, ok = meut.input(
+            parent=self, title="Save As", msg="Where should the new file live? "
+        )
         if ok and name:
             path = fiut.deconflicted_path(thepath, name)
             self._save(path=path)

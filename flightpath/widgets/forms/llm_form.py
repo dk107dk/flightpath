@@ -5,8 +5,8 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QPushButton,
     QVBoxLayout,
-    QHBoxLayout,
     QWidget,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt
 from flightpath.util.generator_utility import GeneratorUtility as geut
@@ -22,10 +22,14 @@ class LlmForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        #
+        # =====================
+        #
         overall = QVBoxLayout()
-        self.setLayout(overall)
+        overall.setContentsMargins(0, 0, 0, 0)
         form = QWidget()
         layout = QFormLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         form.setLayout(layout)
 
         self.model = QLineEdit()
@@ -45,14 +49,22 @@ class LlmForm(BlankForm):
         layout.addRow("", button)
         button.clicked.connect(self.on_click_open)
 
-        overall.addWidget(form)
-        check = QWidget()
-        check_layout = QHBoxLayout()
-        check.setLayout(check_layout)
-        check_layout.addWidget(self.table)
-        overall.addWidget(check, alignment=Qt.AlignBottom)
+        #
+        # =====================
+        #
+        self.table.setContentsMargins(0, 0, 0, 0)
+        self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.table.setMinimumHeight(
+            self.table.verticalHeader().length()
+            + self.table.horizontalHeader().height()
+            + self.table.frameWidth() * 2
+            + 4
+        )
+        overall.addWidget(form, 0)
+        overall.addStretch(1)
+        overall.addWidget(self.table, 0)
+        overall.setAlignment(self.table, Qt.AlignBottom)
         self.setLayout(overall)
-
         self._setup()
 
     def on_click_open(self) -> None:
@@ -65,7 +77,7 @@ class LlmForm(BlankForm):
         if not nos.exists():
             nos.makedirs()
         elif nos.isfile():
-            meut.message(msg=f"{path} is a file", title="Cannot Open")
+            meut.message(parent=self, msg=f"{path} is a file", title="Cannot Open")
         else:
             o = osut.file_system_open_cmd()
             os.system(f'{o} "{path}"')

@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QWidget,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt
 from .blank_form import BlankForm
@@ -15,10 +16,14 @@ class ErrorsForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        #
+        # =====================
+        #
         overall = QVBoxLayout()
-        self.setLayout(overall)
+        overall.setContentsMargins(0, 0, 0, 0)
         form = QWidget()
         layout = QFormLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         form.setLayout(layout)
 
         self.pattern = QLineEdit()
@@ -67,14 +72,22 @@ class ErrorsForm(BlankForm):
 
         layout.addRow("CsvPaths errors: ", self.h_layout_csvpaths)
 
-        overall.addWidget(form)
-        check = QWidget()
-        check_layout = QHBoxLayout()
-        check.setLayout(check_layout)
-        check_layout.addWidget(self.table)
-        overall.addWidget(check, alignment=Qt.AlignBottom)
+        #
+        # =====================
+        #
+        self.table.setContentsMargins(0, 0, 0, 0)
+        self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.table.setMinimumHeight(
+            self.table.verticalHeader().length()
+            + self.table.horizontalHeader().height()
+            + self.table.frameWidth() * 2
+            + 4
+        )
+        overall.addWidget(form, 0)
+        overall.addStretch(1)
+        overall.addWidget(self.table, 0)
+        overall.setAlignment(self.table, Qt.AlignBottom)
         self.setLayout(overall)
-
         self._setup()
 
     def add_to_config(self, config) -> None:
