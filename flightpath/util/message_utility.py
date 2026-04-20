@@ -1,10 +1,24 @@
 from PySide6.QtWidgets import QMessageBox, QWidget, QInputDialog
 from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QTimer
 
 from flightpath.dialogs.error_dialog import ErrorDialog
 
 
 class MessageUtility:
+    @classmethod
+    def _z(cls, box) -> None:
+        box.setWindowModality(Qt.ApplicationModal)
+        box.setWindowFlags(
+            box.windowFlags()
+            | Qt.WindowTitleHint
+            | Qt.WindowSystemMenuHint
+            | Qt.WindowStaysOnTopHint
+        )
+        # Fire raise/activate after exec()'s event loop has started
+        QTimer.singleShot(0, box.raise_)
+        QTimer.singleShot(0, box.activateWindow)
+
     @classmethod
     def message(
         cls, *, parent: QWidget, msg: str, title: str = "", icon: str = None
@@ -14,35 +28,25 @@ class MessageUtility:
         if title is None:
             title = "Attention"
         box = QMessageBox(parent=parent)
-        box.setWindowFlags(
-            Qt.Dialog
-            | Qt.WindowTitleHint
-            | Qt.WindowSystemMenuHint
-            | Qt.WindowStaysOnTopHint
-        )
         box.setIcon(icon)
         box.setWindowTitle(title)
         box.setText(msg)
         box.setStandardButtons(QMessageBox.Ok)
-        box.show()
-        box.raise_()
-        box.activateWindow()
+        cls._z(box)
         box.exec()
+
+    @classmethod
+    def warning(cls, *, parent: QWidget, msg: str, title: str = "") -> None:
+        if title is None:
+            title = "Warning"
+        QMessageBox.warning(parent, title, msg)
 
     @classmethod
     def error(
         cls, *, parent: QWidget, msg: str, title: str = "", errors_json=None
     ) -> None:
         box = ErrorDialog(parent=parent, message=msg, title=title, errors=errors_json)
-        box.setWindowFlags(
-            Qt.Dialog
-            | Qt.WindowTitleHint
-            | Qt.WindowSystemMenuHint
-            | Qt.WindowStaysOnTopHint
-        )
-        box.show()
-        box.raise_()
-        box.activateWindow()
+        cls._z(box)
         box.exec()
 
     @classmethod
@@ -56,34 +60,10 @@ class MessageUtility:
         box.setInformativeText(msg)
         box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         box.setDefaultButton(QMessageBox.No)
-        #
-        # this line fixed what seems to have been a modality problem. it unblocks the
-        # ui but also gives yet another (3rd?) slightly different style of input/message
-        # dialog. also shadows the whole of FlightPath in a way we don't do elsewhere.
-        #
-        # TODO: long-term we should figure out how to be consistent.
-        # it would also be nice to know why we had the problem. There's more information
-        # and suggestions to try re: the bug in Copilot from 29 sept 2025.
-        #
-        box.setWindowModality(Qt.WindowModal)
-        box.setWindowFlags(
-            Qt.Dialog
-            | Qt.WindowTitleHint
-            | Qt.WindowSystemMenuHint
-            | Qt.WindowStaysOnTopHint
-        )
-        box.show()
-        box.raise_()
-        box.activateWindow()
+        cls._z(box)
         ret = box.exec()
         ret = ret == QMessageBox.Yes
         return ret
-
-    @classmethod
-    def warning(cls, *, parent: QWidget, msg: str, title: str = "") -> None:
-        if title is None:
-            title = "Warning"
-        QMessageBox.warning(parent, title, msg)
 
     @classmethod
     def input(
@@ -102,15 +82,7 @@ class MessageUtility:
         box.setWindowTitle(title)
         if text is not None:
             box.setTextValue(text)
-        box.setWindowFlags(
-            Qt.Dialog
-            | Qt.WindowTitleHint
-            | Qt.WindowSystemMenuHint
-            | Qt.WindowStaysOnTopHint
-        )
-        box.show()
-        box.raise_()
-        box.activateWindow()
+        cls._z(box)
         ok = box.exec()
         text = box.textValue()
         return (text, ok)

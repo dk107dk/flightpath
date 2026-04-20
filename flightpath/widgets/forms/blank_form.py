@@ -120,24 +120,6 @@ class BlankForm(QWidget):
             )
             self.msg1.setStyleSheet(css)
             self.msg2.setStyleSheet(css)
-        """
-        if self.table is not None:
-            color = "222"
-            background = "eee"
-            header_background = "ccc"
-            widget_background = "eee"
-            grid = "aaa"
-            header_border = "ccc"
-            selected = "fff"
-            if darkdetect.isDark():
-                color = "fff"
-                background = "888"
-                header_background = "666"
-                widget_background = "333"
-                selected = "aaa"
-                grid = "ccc"
-                header_border = "aaa"
-        """
 
     @property
     def config(self) -> Config:

@@ -134,7 +134,7 @@ class SidebarNamedFiles(SidebarRightBase):
             meut.warning(
                 parent=self,
                 title=f"{type(e)} error loading named-files",
-                msg=f"Named-files error: {e}",
+                msg=f"Data files error: {e}",
             )
 
     #
