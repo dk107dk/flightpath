@@ -287,12 +287,7 @@ class NewRunDialog(QDialog):
             # pop an error prompt
             # then leave ourselves open so they can cancel or try again
             #
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle("Named-file name error")
-            msg_box.setText(f"Unknown name: {self.named_file_name}")
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.exec()
+            meut.warning(parent=self, title="Unknown data", msg=f"Unknown data name: {self.named_file_name}")
             return
         try:
             npn = self.named_paths_name
@@ -306,12 +301,7 @@ class NewRunDialog(QDialog):
             # pop an error prompt
             # then leave ourselves open so they can cancel or try again
             #
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle("Named-paths name error")
-            msg_box.setText(f"Unknown name: {self.named_paths_name}")
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.exec()
+            meut.warning(parent=self, title="Unknown name", msg=f"Unknown csvpaths name: {self.named_paths_name}")
             return
         #
         # we may need to shut the paths CsvPath down to release the logger. not sure yet.
