@@ -20,6 +20,18 @@ class SidebarRightBase(QWidget):
         except Exception:
             print(traceback.format_exc())
 
+    def check_sftp(self, path: str) -> bool:
+        if path is None:
+            raise ValueError("Path cannot be None")
+        nos = Nos(path)
+        if not nos.is_sftp:
+            return True
+        s = "a" if str(self.config.get(section="sftp", name="server")).strip() else None
+        s = str(self.config.get(section="sftp", name="port")).strip() if s else None
+        s = str(self.config.get(section="sftp", name="username")).strip() if s else None
+        s = str(self.config.get(section="sftp", name="password")).strip() if s else None
+        return s is not None
+
     def _copy_back_to_cwd(self) -> None:
         from_index = self.view.currentIndex()
         if from_index.isValid():

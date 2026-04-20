@@ -33,9 +33,10 @@ from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
 
 class SidebarArchive(SidebarRightBase):
     def __init__(self, *, role=1, main, config: Config, tabs=None):
-        super().__init__()
+        super().__init__(parent=main)
         self.role = role
         self.main = main
+        self.config = main.config if config is None else config
         self.archive_path = None
         self.setMinimumWidth(300)
         self.context_menu = None
@@ -43,7 +44,16 @@ class SidebarArchive(SidebarRightBase):
         self.model = None
         self.tabs = tabs
         self.runs = None
-        self.setup()
+        #
+        # sftp is easy to screw up because it requires a server path + the integration fields.
+        # it is also easy to check, so we do if we're looking at sftp. True means Ok or N/A.
+        #
+        if self.check_sftp(self.config.get(section="results", name="archive")) is True:
+            self.setup()
+        else:
+            meut.warning(
+                parent=self, title="Check SFTP", msg="SFTP is used but not configured"
+            )
         if tabs is not None:
             self.show_tabs(tabs)
 

@@ -26,16 +26,26 @@ from .sidebar_right_base import SidebarRightBase
 
 class SidebarNamedPaths(SidebarRightBase):
     def __init__(self, *, main, role=1, config: Config):
-        super().__init__()
+        super().__init__(parent=main)
         self.main = main
-        # self.config = config
+        self.config = main.config if config is None else config
         self.setMinimumWidth(300)
         self.new_run_action = None
         self.copy_action = None
         self.delete_action = None
         self.find_data_action = None
         self.view = None
-        self.setup()
+        self.model = None
+        #
+        # sftp is easy to screw up because it requires a server path + the integration fields.
+        # it is also easy to check, so we do if we're looking at sftp. True means Ok or N/A.
+        #
+        if self.check_sftp(self.config.get(section="inputs", name="csvpaths")) is True:
+            self.setup()
+        else:
+            meut.warning(
+                parent=self, title="Check SFTP", msg="SFTP is used but not configured"
+            )
 
     def my_root(self) -> str:
         return self.main.csvpath_config.get(section="inputs", name="csvpaths")

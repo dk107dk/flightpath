@@ -30,13 +30,24 @@ from .sidebar_right_base import SidebarRightBase
 
 class SidebarNamedFiles(SidebarRightBase):
     def __init__(self, *, main, role=1, config: Config):
-        super().__init__()
+        super().__init__(parent=main)
         self.role = role
         self.setMinimumWidth(300)
         self.main = main
+        self.config = main.config if config is None else config
         self.view = None
-        self.setup()
         self._template_dialog = None
+        self.model = None
+        #
+        # sftp is easy to screw up because it requires a server path + the integration fields.
+        # it is also easy to check, so we do if we're looking at sftp. True means Ok or N/A.
+        #
+        if self.check_sftp(self.config.get(section="inputs", name="files")) is True:
+            self.setup()
+        else:
+            meut.warning(
+                parent=self, title="Check SFTP", msg="SFTP is used but not configured"
+            )
 
     def my_root(self) -> str:
         return self.main.csvpath_config.get(section="inputs", name="files")
@@ -52,6 +63,7 @@ class SidebarNamedFiles(SidebarRightBase):
 
             nos = Nos(named_files_path)
             try:
+                print(f"config: {self.config}")
                 if not nos.dir_exists():
                     nos.makedir()
             except Exception as ex:
