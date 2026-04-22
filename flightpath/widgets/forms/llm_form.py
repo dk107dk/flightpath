@@ -7,6 +7,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QSizePolicy,
+    QScrollArea,
+    QLabel,
 )
 from PySide6.QtCore import Qt
 from flightpath.util.generator_utility import GeneratorUtility as geut
@@ -49,6 +51,22 @@ class LlmForm(BlankForm):
         layout.addRow("", button)
         button.clicked.connect(self.on_click_open)
 
+        button = QPushButton("Open AI config file")
+        layout.addRow("", button)
+        button.clicked.connect(self.on_click_ai_idi)
+
+        self.ai_config_path_area = QScrollArea()
+        self.ai_config_path_area.setWidgetResizable(True)
+        self.ai_config_path_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.ai_config_path_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.ai_config_path_area.setFixedHeight(33)
+        self.ai_config_path_area.setWidgetResizable(True)
+        self.ai_config_path = QLabel()
+        self.ai_config_path.setText(self._generator_config_path())
+        self.ai_config_path.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.ai_config_path_area.setWidget(self.ai_config_path)
+        layout.addRow("AI config file: ", self.ai_config_path_area)
+
         #
         # =====================
         #
@@ -81,6 +99,16 @@ class LlmForm(BlankForm):
         else:
             o = osut.file_system_open_cmd()
             os.system(f'{o} "{path}"')
+
+    def _generator_config_path(self) -> str:
+        path = self.config.get(section="config", name="path")
+        path = os.path.dirname(path)
+        path = os.path.join(path, "generator.ini")
+        return path
+
+    def on_click_ai_idi(self) -> None:
+        path = self._generator_config_path()
+        osut.open_file(path)
 
     def _setup(self) -> None:
         self.model.textChanged.connect(self.main.on_config_changed)

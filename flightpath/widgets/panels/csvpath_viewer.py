@@ -517,7 +517,7 @@ lines = path.collect()
         layout = QVBoxLayout()
         errors.setLayout(layout)
 
-        errors_view = JsonViewer(self.main, EditStates.UNEDITABLE)
+        errors_view = JsonViewer(main=self.main, editable=EditStates.UNEDITABLE)
         errors_view.function = "errors"
         sdata = json.dumps(es)
         errors_view.open_file(path=None, data=sdata)
@@ -537,7 +537,7 @@ lines = path.collect()
         #
         # exp!
         #
-        variables_view = JsonViewer(self.main, EditStates.UNEDITABLE)
+        variables_view = JsonViewer(main=self.main, editable=EditStates.UNEDITABLE)
         variables_view.function = "variables"
         sdata = json.dumps(vdata)
         variables_view.open_file(path=None, data=sdata)

@@ -72,7 +72,7 @@ An idchain is a parent-child path to a match component within a statement. Each 
 
 By default the pattern is:
 ```
-    {{time}}:{{file}}:{{line}}:{{paths}}:{{instance}}:{{chain}}:  {{message}}
+    {time}:{file}:{line}:{paths}:{instance}:{chain}:  {message}
 ```
 
 This is a simple csvpath statement with a error in the `add()` function:

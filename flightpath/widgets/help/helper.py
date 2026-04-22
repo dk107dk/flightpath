@@ -7,8 +7,8 @@ from flightpath.widgets.tabs_closing_holder import ClosingTabsHolder
 
 
 class Helper(ClosingTabsHolder):
-    def __init__(self, main) -> None:
-        super().__init__()
+    def __init__(self, *, main, parent=None) -> None:
+        super().__init__(parent=main if parent is None else parent)
         self.main = main
         self._help = None
         self.help_and_feedback = None

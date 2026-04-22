@@ -11,7 +11,7 @@ from PySide6.QtGui import (
 )
 
 from flightpath.editable import EditStates
-from flightpath.widgets.editor.syntax import JsonHighlighter
+from flightpath.widgets.json_editor.syntax import JsonHighlighter
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.key_utility import KeyUtility as keut
 
@@ -30,7 +30,7 @@ class LineNumberArea(QWidget):
         self.codeEditor.line_number_area_paint_event(event)
 
 
-class Editor(QPlainTextEdit):
+class JsonEditor(QPlainTextEdit):
     def __init__(self, parent=None, *, editable=EditStates.EDITABLE):
         super().__init__(parent)
         self.highlighter = JsonHighlighter(self.document())

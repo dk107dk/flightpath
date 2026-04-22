@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QSizePolicy,
     QSpacerItem,
-    QMessageBox,
 )
 
 from csvpath.util.file_readers import DataFileReader
@@ -192,7 +191,7 @@ class Welcome(QWidget):
                 title="Multiple statements",
                 msg="The file has multiple cvspaths. Do you want to run the first one?",
             )
-            if confirm == QMessageBox.No:
+            if confirm is False:
                 return
             #
             # in some cases we see ---- CSVPATH ---- coming before every csvpath

@@ -94,13 +94,10 @@ class QueryFormWidget(QWidget):
             main=self.main, widget=self.submit_btn, on_help=self.on_ai_help
         )
         box.setMinimumWidth(150)
-
         box.setStyleSheet(
             "QWidget { margin-bottom:9px; height:25px; padding-right:4px;} "
         )
-
         layout.addWidget(box)
-        # layout.addWidget(self.submit_btn)
         #
         # signals
         #
@@ -126,7 +123,12 @@ class QueryFormWidget(QWidget):
                 self.submit_btn.setText("Name your request to continue")
 
     def assure_state(self) -> None:
-        fs = fiut.split_filename(self.main.selected_file_path)
+        doc = self.main.current_doc_tab
+        if doc is None:
+            return
+        path = doc.objectName()
+        print(f"queryform: assure_state: doc: {doc}, path: {path}")
+        fs = fiut.split_filename(path)
         if fs[1] in self.main.csvpath_config.get(
             section="extensions", name="csv_files"
         ):
@@ -186,8 +188,12 @@ class QueryFormWidget(QWidget):
             self.use_doc_checkbox.isChecked()
             and str(self.doc_path_text.text()).strip() != ""
         )
-        if use_doc_path:
+        if use_doc_path is True:
             docpath = self.doc_path_text.text()
+        else:
+            t = self.main.current_doc_tab
+            if t is not None:
+                docpath = t.objectName()
         #
         #
         #
@@ -212,21 +218,25 @@ class QueryFormWidget(QWidget):
             "instructions": self.instructions.toPlainText(),
             #
             # example == the main document we're giving to the AI to explain, Q&A, generate schema for, or generate data for
+            # example is the Prompt.example.
             #
             "example": self.get_example_content(),
             #
             # the next three are all about the optional data sample that we would pull
-            # from the first test-data: metadata token we find, if any.
+            # from the first test-data: metadata token we find, if any. if found, it
+            # would be added to the prompt as an extra piece of content in some way appended.
             #
             # we'll take use_document though it's more for us here than something that
             # would be used down stream. regardless of the checkbox, which may or may
             # not be shown, we do not always even optionally use the doc
             #
-            "use_document": self.use_doc_checkbox.isChecked(),
+            "use_document": use_doc_path,
             #
             # data_example == file contents at document_path
             #
-            "data_example": self.get_data_context_from_path_if(docpath),
+            "data_example": self.get_data_context_from_path_if(docpath)
+            if use_doc_path is True
+            else "",
             #
             # document_path == the optional use-context control's path
             #

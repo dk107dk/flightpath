@@ -1,16 +1,11 @@
-
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QStackedLayout
-)
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QStackedLayout
 
 from flightpath.widgets.panels.config_panel import ConfigPanel
 from flightpath.widgets.toolbars.config_toolbar import ConfigToolbar
 from flightpath.util.help_finder import HelpFinder
 
-class Config(QWidget):
 
+class Config(QWidget):
     def __init__(self, main):
         super().__init__()
         self.main = main
@@ -69,7 +64,7 @@ class Config(QWidget):
         self.toolbar.button_cancel_changes.setEnabled(False)
         self.toolbar.disable_save()
 
-    def show_help_for_form(self, name:str, fallback=None) -> None:
+    def show_help_for_form(self, name: str, fallback=None) -> None:
         md = HelpFinder(main=self.main).help(f"config/{name}.md", fallback=fallback)
         if md is None:
             self.close_help()
@@ -84,5 +79,3 @@ class Config(QWidget):
     def close_help(self) -> None:
         if self.main.helper.is_showing_help():
             self.main.helper.on_click_help()
-
-

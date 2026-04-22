@@ -2,7 +2,7 @@ import os
 import json
 import re
 
-from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout, QApplication, QTabWidget
+from PySide6.QtWidgets import QMenu, QVBoxLayout, QApplication, QTabWidget
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView
@@ -13,7 +13,7 @@ from csvpath.util.config import Config
 from csvpath.util.file_readers import DataFileReader
 
 
-from flightpath.widgets.ai.query_accordion import QueryAccordionWidget
+from flightpath.widgets.accordion.query_accordion import QueryAccordionWidget
 from flightpath.widgets.sidebars.sidebar_archive_listener import SidebarArchiveListener
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.widgets.help.plus_help import HelpHeaderView
@@ -571,7 +571,7 @@ class SidebarArchive(SidebarRightBase):
             confirm = meut.yes_no(
                 parent=self, title="Delete", msg=f"Permanently delete {path}?"
             )
-            if confirm == QMessageBox.Yes:
+            if confirm is True:
                 try:
                     nos.remove()
                 except OSError as e:

@@ -10,12 +10,9 @@ class MessageUtility:
     def _z(cls, box) -> None:
         box.setWindowModality(Qt.ApplicationModal)
         box.setWindowFlags(
-            box.windowFlags()
-            | Qt.WindowTitleHint
-            | Qt.WindowSystemMenuHint
-            | Qt.WindowStaysOnTopHint
+            box.windowFlags() | Qt.WindowTitleHint | Qt.WindowSystemMenuHint
+            # Remove WindowStaysOnTopHint — let ApplicationModal handle exclusivity
         )
-        # Fire raise/activate after exec()'s event loop has started
         QTimer.singleShot(0, box.raise_)
         QTimer.singleShot(0, box.activateWindow)
 
@@ -55,14 +52,39 @@ class MessageUtility:
 
     @classmethod
     def yesNo(cls, *, parent: QWidget, msg: str, title: str = "") -> bool:
-        box = QMessageBox(parent=parent)
+        box = QMessageBox()  # parent=parent
         box.setText(title)
         box.setInformativeText(msg)
         box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         box.setDefaultButton(QMessageBox.No)
-        cls._z(box)
+        # cls._z(box)
         ret = box.exec()
         ret = ret == QMessageBox.Yes
+        return ret
+
+    # return cls.yesNoButtons(parent=parent, msg=msg, title=title, std_buttons=std_buttons)
+
+    @classmethod
+    def yesNoButtons(
+        cls,
+        *,
+        parent: QWidget,
+        msg: str,
+        title: str = "",
+        std_buttons=None,
+        truth_button=QMessageBox.Yes,
+        def_button=QMessageBox.No,
+    ) -> bool:
+        if std_buttons is None:
+            std_buttons = QMessageBox.Yes | QMessageBox.No
+        box = QMessageBox(parent=parent)
+        box.setText(title)
+        box.setInformativeText(msg)
+        box.setStandardButtons(std_buttons)
+        box.setDefaultButton(def_button)
+        cls._z(box)
+        ret = box.exec()
+        ret = ret == truth_button
         return ret
 
     @classmethod

@@ -14,7 +14,7 @@ from flightpath.util.message_utility import MessageUtility as meut
 
 class Content(ClosingTabsHolder):
     def __init__(self, main):
-        super().__init__(can_have_edit_tabs=True)
+        super().__init__(parent=main, can_have_edit_tabs=True)
         self.main = main
         layout = QVBoxLayout()
         layout.setSpacing(0)

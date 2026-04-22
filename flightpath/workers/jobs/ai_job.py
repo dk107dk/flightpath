@@ -1,9 +1,7 @@
 import jsonpickle
 import traceback
 
-from flightpath_generator.client.run_tool import LiteLLMRunTool
-from flightpath_generator.client.function_tool import LiteLLMFunctionTool
-
+from flightpath_generator.generator import Generator
 from flightpath.util.generator_utility import GeneratorUtility as geut
 from flightpath.workers.jobs.job import Job
 
@@ -20,6 +18,7 @@ class AiJob(Job):
         self.on_turn_update = None
         self.on_complete = None
         self.on_error = None
+        self._generator = None
         self._values = mdata.get("params", {})
 
     @property
@@ -30,6 +29,16 @@ class AiJob(Job):
     def values(self, vs: dict) -> None:
         self._values = vs
 
+    @property
+    def generator(self) -> Generator:
+        if self._generator is None:
+            generator = geut.new_generator(
+                main=self.main, callbacks=[self._on_generation]
+            )
+            generator.version_key = self.version
+            self._generator = generator
+        return self._generator
+
     def _on_generation(self, generation):
         if generation and self.on_turn_update:
             turns = generation.generator.get_turns(text_list=False)
@@ -38,15 +47,14 @@ class AiJob(Job):
 
     def do_generate(self) -> None:
         try:
-            tools = [
-                LiteLLMRunTool().tool_definition(),
-                LiteLLMFunctionTool().tool_definition(),
-            ]
-            generator = geut.new_generator(
-                main=self.main, callbacks=[self._on_generation], tools=tools
-            )
-            generator.version_key = self.version
-
+            #
+            # these should be additional tools, not the baseline
+            #
+            # tools = [
+            #    LiteLLMRunTool().tool_definition(),
+            #    LiteLLMFunctionTool().tool_definition(),
+            # ]
+            generator = self.generator
             context = generator.context_manager.get_context()
             prompt = generator.prompt_manager.create_prompt()
             #

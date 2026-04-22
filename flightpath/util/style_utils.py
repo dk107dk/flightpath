@@ -85,7 +85,7 @@ class StyleUtility:
             "CsvPathTextEdit",
             "MdTextEdit",
             "RawTextEdit",
-            "Editor",
+            "JsonEditor",
         ]
         # inst = isinstance(widget, (QTreeView, QTableView, QPlainTextEdit, CsvPathTextEdit, MdTextEdit, RawTextEdit) )
         # name = cls._name(widget)

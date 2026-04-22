@@ -60,8 +60,10 @@ class KeyableTreeView(QTreeView):
 
 
 class JsonViewer(QWidget):
-    def __init__(self, main, editable=EditStates.EDITABLE, path: str = None):
-        super().__init__()
+    def __init__(
+        self, *, main, editable=EditStates.EDITABLE, path: str = None, parent=None
+    ):
+        super().__init__(main if parent is None else parent)
         #
         # for a left-hand side file the path cannot be None. we need to know
         # where to save the data. a right-hand side file can be none. we need
@@ -250,11 +252,13 @@ class JsonViewer(QWidget):
         self.context_menu.addAction(self.save_action)
 
     def _copy_back_question(self) -> None:
+        print(f"cpbm question: parent: {self.parent()}")
         yes = meut.yesNo(
-            parent=self,
+            parent=self.main.helper.help_and_feedback,
             msg="You can't edit here. Copy back to project?",
             title="Copy file to project?",
         )
+        print(f"cpbm question: yes: {yes}")
         if yes is True:
             try:
                 name = self.objectName()
@@ -277,12 +281,38 @@ class JsonViewer(QWidget):
                         #
                         # no tab to close
                         # self.main.content.tab_widget.close_tab(name)
+                elif name.endswith(".tracking"):
+                    #
+                    # this is a turn-by-turn metadata from an AI request. i'm not convinced we
+                    # don't want to handle .tracking files differently so putting it in its own
+                    # place.
+                    #
+                    with tempfile.NamedTemporaryFile(
+                        mode="w", delete=True, suffix=".json"
+                    ) as file:
+                        _data = json.dumps(self.model.to_json(), indent=2)
+                        file.write(_data)
+                        file.flush()
+                        to_path = fiut.copy_results_back_to_cwd(
+                            main=self.main,
+                            from_path=file.name,
+                            use_name=f"{name}.json",
+                        )
+                        print(f"jsonver: doing redcva for path: {to_path}")
+                        self.main.read_validate_and_display_file_for_path(to_path)
+                        print(
+                            f"jsonver: done doing redcva for path: {to_path}. should be open."
+                        )
                 else:
+                    print(f"cpbm question: name: {name}")
                     to_path = fiut.copy_results_back_to_cwd(
                         main=self.main, from_path=name
                     )
+                    print("cpbm question: fiut done")
                     self.main.read_validate_and_display_file_for_path(to_path)
+                    print("cpbm question: main.read done")
                     self.main.content.tab_widget.close_tab(name)
+                    print("cpbm question: done")
             except Exception:
                 print(traceback.format_exc())
 
@@ -291,7 +321,9 @@ class JsonViewer(QWidget):
             #
             # if we aren't editable we need to ask the user if they want to copy back to the project.
             #
+            print("before ocpyback quest")
             self._copy_back_question()
+            print("after ocpyback quest")
             return
         index = self.view.indexAt(position)
         global_pos = self.view.viewport().mapToGlobal(position)

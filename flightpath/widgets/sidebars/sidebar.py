@@ -1143,7 +1143,7 @@ $[*][ print("hello world") ]"""
                 title="Delete",
                 msg=f"Are you sure you want to delete {path}?",
             )
-            if confirm == QMessageBox.Yes:
+            if confirm is True:
                 try:
                     Nos(path).remove()
                 except OSError as e:

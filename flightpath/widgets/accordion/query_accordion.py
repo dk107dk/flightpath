@@ -4,7 +4,7 @@ from PySide6.QtCore import Signal
 
 import darkdetect
 
-from flightpath.widgets.ai.query_accordion_item import QueryAccordionItem
+from flightpath.widgets.accordion.query_accordion_item import QueryAccordionItem
 
 
 class QueryAccordionWidget(QWidget):
@@ -61,11 +61,13 @@ class QueryAccordionWidget(QWidget):
 
     def add_item(
         self,
+        *,
         title: str,
         activity: str,
         status_color: QColor,
         metadata: dict,
         status: str = None,
+        subtitle: str = "",
     ):
         item = QueryAccordionItem(
             title=title,
@@ -74,6 +76,7 @@ class QueryAccordionWidget(QWidget):
             metadata=metadata,
             parent=self.container,
             status=status,
+            subtitle=subtitle,
         )
         self.vbox.insertWidget(self.vbox.count() - 1, item)
         self._items.append(item)

@@ -1,6 +1,6 @@
 import traceback
 
-from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout, QSizePolicy, QApplication
+from PySide6.QtWidgets import QMenu, QVBoxLayout, QSizePolicy, QApplication
 
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt
@@ -63,7 +63,6 @@ class SidebarNamedFiles(SidebarRightBase):
 
             nos = Nos(named_files_path)
             try:
-                print(f"config: {self.config}")
                 if not nos.dir_exists():
                     nos.makedir()
             except Exception as ex:
@@ -310,7 +309,7 @@ class SidebarNamedFiles(SidebarRightBase):
             confirm = meut.yes_no(
                 parent=self, title="Delete", msg=f"Permanently delete {path}?"
             )
-            if confirm == QMessageBox.Yes:
+            if confirm is True:
                 try:
                     nos.remove()
                 except OSError as e:

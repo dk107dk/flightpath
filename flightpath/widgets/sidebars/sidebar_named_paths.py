@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMenu, QMessageBox, QVBoxLayout
+from PySide6.QtWidgets import QMenu, QVBoxLayout
 
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt
@@ -299,7 +299,7 @@ class SidebarNamedPaths(SidebarRightBase):
             confirm = meut.yes_no(
                 parent=self, title="Delete", msg=f"Permanently delete {path}?"
             )
-            if confirm == QMessageBox.Yes:
+            if confirm is True:
                 try:
                     nos.remove()
                 except OSError as e:

@@ -66,14 +66,12 @@ from flightpath.widgets.sidebars.sidebar_named_paths import SidebarNamedPaths
 from flightpath.widgets.sidebars.sidebar_archive import SidebarArchive
 from flightpath.widgets.sidebars.sidebar_functions import SidebarFunctions
 from flightpath.widgets.sidebars.sidebar_docs import SidebarDocs
-from flightpath.widgets.welcome.welcome import Welcome
-from flightpath.widgets.content.content import Content
-from flightpath.widgets.config.config import Config
+from flightpath.widgets.pages.welcome import Welcome
+from flightpath.widgets.pages.content import Content
+from flightpath.widgets.pages.config import Config
 from flightpath.widgets.help.helper import Helper
 
 from flightpath.widgets.ai.query_tab import QueryTabWidget
-
-# from flightpath.widgets.ai import QueryTabWidget
 
 from flightpath.util.gate_guard import GateGuard
 from flightpath.util.file_utility import FileUtility as fiut
@@ -146,6 +144,10 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         self.setup_ai_flag = False
 
         noai = State().data.get("llm", {}).get("model", "").strip() == ""
+        #
+        # if the current project has llm but the env.json doesn't we will still show the
+        # splash. this is fine, imho -- the splash isn't completely unexpected.
+        #
         guard = GateGuard.show_splash()
         if noai is True or guard is True:
             splashpath = fiut.make_app_path(f"assets{os.sep}images{os.sep}splash.png")
@@ -565,7 +567,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         )
         self.rt_col.addWidget(self.sidebar_rt_bottom)
         #
-        # add two tabs to tab widget
+        # add tabs to tab widget
         #
         self.rt_tab_widget.addTab(self.rt_col, "Ops")
         self.rt_tab_widget.addTab(self.ai_query_tab, "AI")
@@ -678,7 +680,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
     @property
     def helper(self) -> QTextEdit:
         if self._helper is None:
-            self._helper = Helper(self)
+            self._helper = Helper(main=self)
         return self._helper
 
     def _on_data_toolbar_show(self) -> None:
@@ -745,6 +747,13 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         self.main_layout.setCurrentIndex(0)
         self.statusBar().showMessage(self.state.cwd)
 
+    @property
+    def current_doc_tab(self) -> QWidget:
+        di = self.content.tab_widget.currentIndex()
+        if di is not None and di > -1:
+            return self.content.tab_widget.widget(di)
+        return None
+
     def _on_rt_tab_changed(self) -> None:
         #
         # find if we're looking at the AI tab. if we are, find the currently visible doc's path.
@@ -754,15 +763,31 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         i = self.rt_tab_widget.currentIndex()
         w = self.rt_tab_widget.widget(i)
         if isinstance(w, QueryTabWidget):
-            di = self.content.tab_widget.currentIndex()
-            doc = self.content.tab_widget.widget(di)
+            query_tab = w
+            doc = self.current_doc_tab
             if doc is not None:
                 e = Path(doc.objectName()).suffix
                 e = e.lstrip(".")
-                w.enable_for_extension(e)
-        w = self.rt_tab_widget.widget(1)
-        w.form.assure_state()
-        # _on_activity_changed
+                query_tab.enable_for_extension(e)
+            query_tab.form.assure_state()
+            #
+            # only alert on missing config if AI tab selected. we
+            # don't check api_base because LiteLLM doesn't always
+            # require base. tho, others do.
+            #
+            m = self.csvpath_config.get(section="llm", name="model")
+            k = self.csvpath_config.get(section="llm", name="api_key")
+            if str(m).strip() in ["None", ""] or str(k).strip() in ["None", ""]:
+                o = meut.yesNoButtons(
+                    parent=self,
+                    title="No AI Config",
+                    msg="Config is not complete. Open AI configuration?",
+                    std_buttons=QMessageBox.Open | QMessageBox.Cancel,
+                    truth_button=QMessageBox.Open,
+                    def_button=QMessageBox.Cancel,
+                )
+                if o is True:
+                    self.open_ai_config()
 
     def _rt_tabs_hide(self) -> None:
         self.rt_tab_widget.tabBar().setCurrentIndex(0)
@@ -772,7 +797,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         self.show_now_or_later(self.rt_tab_widget.tabBar())
         self.ai_query_tab.form.use_doc_checkbox.setChecked(False)
         self.ai_query_tab.form.on_use_doc(Qt.CheckState.Unchecked)
-        # self.rt_tab_widget.tabBar().show()
 
     def question_config_close(self) -> None:
         if (
@@ -783,7 +807,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             save = meut.yesNo(
                 parent=self, title="Config changed", msg="Save config changes?"
             )
-            if save == QMessageBox.Yes:
+            if save is True:
                 self.save_config_changes()
             self.reset_config_toolbar()
 
@@ -863,7 +887,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                     filepath.endswith("manifest.json")
                     and EditStates.UNEDITABLE == editable
                 ):
-                    json_view = JsonViewer(self, editable)
+                    json_view = JsonViewer(main=self, editable=editable)
                     import json
 
                     data = json.dumps(data, indent=2)
@@ -1117,6 +1141,19 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         self.read_validate_and_display_file()
 
+    def is_doc_editable(self, path) -> str:
+        #
+        # rough & ready check. it's possible a false positive based on location
+        # could happen, but unlikely. it may be that in the future we want to consider
+        # file type as well, but not needed today.
+        #
+        a = self.csvpath_config.get(section="results", name="archive")
+        f = self.csvpath_config.get(section="inputs", name="files")
+        p = self.csvpath_config.get(section="inputs", name="csvpaths")
+        if a in path or f in path or p in path:
+            return False
+        return True
+
     def read_validate_and_display_file(
         self, editable=EditStates.EDITABLE, *, finished_callback=None
     ) -> QRunnable:
@@ -1264,7 +1301,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         if t and len(t) >= 2:
             self.sidebar_rt_bottom.run_ended(cid, error)
 
-        log = QWidget()
+        log = QWidget(self.helper.help_and_feedback)
         log.setObjectName(f"Log-{cid}")
         self.helper.help_and_feedback.addTab(log, "Log")
         #

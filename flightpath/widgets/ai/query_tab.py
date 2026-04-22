@@ -1,3 +1,7 @@
+import json
+import tempfile
+import traceback
+
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -5,16 +9,20 @@ from PySide6.QtWidgets import (
     QApplication,
     QSplitter,
     QTextEdit,
+    QMessageBox,
 )
 from PySide6.QtGui import QColor
 from PySide6.QtCore import QThreadPool, Qt
 
 import darkdetect
 
+from flightpath.editable import EditStates
 from flightpath.widgets.ai.query_form import QueryFormWidget
-from flightpath.widgets.ai.query_accordion import QueryAccordionWidget
+from flightpath.widgets.accordion.query_accordion import QueryAccordionWidget
+from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.workers.dispatcher import JobDispatcher
 from flightpath.util.feedback_utility import FeedbackUtility as feut
+from flightpath.util.message_utility import MessageUtility as meut
 
 
 class QueryTabWidget(QWidget):
@@ -49,7 +57,6 @@ class QueryTabWidget(QWidget):
 
     def enable_for_extension(self, e: str) -> None:
         self.form.activity_selector.enable_for_extension(e)
-
         #
         # we need the doc checkbox only if "question" or "explain", not "testdata" or "validate"
         # this isn't there yet
@@ -90,17 +97,22 @@ class QueryTabWidget(QWidget):
         # get this from a user-driven form control?
         #
         activity = self.form.activity_selector.activity
+        subtitle = ""
+        if activity in self.form.activity_selector.SUBTITLES_INITIAL:
+            subtitle = self.form.activity_selector.SUBTITLES_INITIAL[activity]
         item = self.accordion.add_item(
             title=params.get("title", "Untitled Query"),
             activity=activity,
             status_color=QColor("#ffd43b"),
             metadata=metadata,
+            subtitle=subtitle,
         )
+
         instructions = metadata.get("params").get("instructions")
-        if (
-            self.form._current_activity == "question"
-            and str(instructions).strip() == ""
-        ):
+        if self.form._current_activity == "question" and str(instructions).strip() in [
+            "None",
+            "",
+        ]:
             self.on_worker_error(
                 item,
                 metadata,
@@ -111,14 +123,11 @@ class QueryTabWidget(QWidget):
         worker.signals.finished.connect(
             lambda generation: self.on_worker_finished(item, metadata, generation)
         )
-
         worker.signals.turn.connect(lambda js: self.on_turn_update(item, js))
-
         worker.signals.error.connect(
             lambda msg: self.on_worker_error(item, metadata, msg)
         )
         item.worker = worker
-
         self.threadpool.start(worker)
 
     def on_turn_update(self, item, js):
@@ -130,6 +139,20 @@ class QueryTabWidget(QWidget):
             # do we want to clear? we don't want to do it here because the user may have been
             # working on something.
             #
+            self.update_subtitle(item)
+
+    def update_subtitle(self, item) -> str:
+        n = None
+        if item and item.worker and item.worker.job and item.worker.job.generator:
+            n = item.worker.job.generator.turn_number
+            n = n + 1
+        if n is None:
+            return
+        t = item.subtitle.text()
+        if t.strip().endswith("."):
+            t = t[0 : t.find(".")]
+        t = f"{t}. Turn {n}."
+        item.subtitle.setText(t)
 
     def on_worker_finished(self, item, metadata, generation):
         if generation is None:
@@ -138,9 +161,11 @@ class QueryTabWidget(QWidget):
             )
             return
         if generation.errors is not None:
+            print(f"querytab: error 1: {generation.errors}")
             self.on_worker_error(item, metadata, generation.errors)
             return
         if generation.generator.exceptions and len(generation.generator.exceptions) > 0:
+            print(f"querytab: error 2: {generation.generator.exceptions}")
             errors = ""
             for _ in generation.generator.exceptions:
                 errors = f"{errors}\n{_}"
@@ -158,11 +183,36 @@ class QueryTabWidget(QWidget):
         except Exception:
             ...
 
+    #
+    # {'activity': 'validation',
+    #  'data_example': '',
+    #  'data_input_lines': 25,
+    #  'data_output_lines': 25,
+    #  'document_path': None,
+    #  'example': '...'
+    #  'instructions': '',
+    #  'number_of_lines': '25',
+    #  'title': 'health',
+    #  'turns_limit': '15',
+    #  'use_document': False
+    # },
+    # 'activity': 'validation',
+    # 'status': 'running',
+    # 'document_path': None,
+    # 'results': None,
+    # 'turns_limit': '15'},
+    #
+    # item: <flightpath.widgets.ai.query_accordion_item.QueryAccordionItem(0x17fc53af0) at 0x15e9f7e00>,
+    # msg: litellm.RateLimitError: RateLimitError: OpenAIException - Request too large for gpt-4o-mini in organization org-IMB8R5BT37cEOcGYZ04vJaxY on tokens per min (TPM): Limit 200000, Requested 523138. The input or output tokens must be reduced in order to run successfully. Visit https://platform.openai.com/account/rate-limits to learn more.
+    #
     def on_worker_error(self, item, metadata, msg):
+        print(f"query acc item: metadata: {metadata}, item: {item}, msg: {msg}")
         metadata["status"] = "error"
+        metadata["error"] = msg
         item.status_dot.setColor(QColor("#fa5252"))  # red
+        item.subtitle.setText("Error")
         QApplication.beep()
-        item.title_label.setText("Error")
+        # item.title.setText("Error")
         self._beep()
         #
         # put the error in the Tracking tab
@@ -186,6 +236,7 @@ class QueryTabWidget(QWidget):
     # document context) is presented together. we'll see tho.
     #
     def on_item_clicked(self, metadata: dict):
+        print(f"quertab: on_item_clicked: metadata: {metadata}")
         self.form.load_params(metadata["params"])
         feut.clear_feedback(self.main)
         #
@@ -203,25 +254,95 @@ class QueryTabWidget(QWidget):
                 main=self.main, tab_id=response, name="Results", tab=view
             )
         else:
-            print("on_item_clicked: no generation available from metadata")
+            if self.main and self.main.csvpath_config:
+                if self.main.csvpath_config.get(section="llm", name="model") is None:
+                    o = meut.yesNoButtons(
+                        parent=self,
+                        title="Assistance Failed",
+                        msg="Request did not complete. Open AI configuration?",
+                        std_buttons=QMessageBox.Open | QMessageBox.Cancel,
+                        truth_button=QMessageBox.Open,
+                        def_button=QMessageBox.Cancel,
+                    )
+                    if o is True:
+                        self.main.open_ai_config()
+                        return
+                else:
+                    meut.warning(
+                        parent=self,
+                        title="Assistance Failed",
+                        msg="Request did not complete.",
+                    )
+            else:
+                meut.warning(
+                    parent=self,
+                    title="Config Failed",
+                    msg="Configuration is unavailable.",
+                )
         #
-        # log info
+        # show log info
         #
         if "log" in metadata["params"]:
             js = metadata["params"]["log"]
+
+            print(f"\n\nquerytwsb: js: {js}")
+
+            with tempfile.NamedTemporaryFile(
+                mode="w", delete=True, suffix=".json"
+            ) as file:
+                #
+                # for the moment, loading js confirms that it is good json. probably not necessary.
+                #
+                _data = json.loads(js)
+                _data = json.dumps(_data, indent=2)
+                file.write(_data)
+                file.flush()
+                view = JsonViewer(
+                    parent=self.main.rt_tab_widget,
+                    main=self.main,
+                    editable=EditStates.UNEDITABLE,
+                )
+                view.open_file(path=file.name, data=_data)
+                view.setObjectName(file.name)
         else:
             js = "No tracking available"
-        view = QPlainTextEdit()
-        view.setPlainText(js)
-        view.setReadOnly(True)
+            view = QPlainTextEdit()
+            view.setPlainText(js)
+            view.setReadOnly(True)
+
         feut.add_feedback_tab(
             main=self.main, tab_id=tracking, name="Tracking", tab=view
         )
+
+        #
+        # show any error
+        #
+        error = metadata.get("error")
+        if error is not None:
+            view = QPlainTextEdit()
+            view.setPlainText(error)
+            view.setReadOnly(True)
+            error = f"{metadata['id']}.error"
+            feut.add_feedback_tab(main=self.main, tab_id=error, name="Error", tab=view)
         #
         # display feedback
         #
         feut.switch_to_feedback(self.main, response if generation else tracking)
         feut.open_feedback(self.main)
+        #
+        # open or switch to the original doc. it is possible the doc could be gone so we'll
+        # take a bit more care to not crash. if the doc is not there we don't really care.
+        #
+        try:
+            path = metadata.get("document_path")
+            editable = self.main.is_doc_editable(path)
+            if path is not None:
+                self.main.read_validate_and_display_file_for_path(
+                    path,
+                    EditStates.EDITABLE if editable is True else EditStates.UNEDITABLE,
+                )
+        except Exception:
+            print(traceback.format_exc())
 
     def on_item_close_requested(self, metadata: dict):
         self.accordion.remove_item(metadata)

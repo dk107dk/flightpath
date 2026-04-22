@@ -16,7 +16,7 @@ from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.editable import EditStates
 
-from flightpath.widgets.editor.editor import Editor
+from flightpath.widgets.json_editor.editor import JsonEditor
 from flightpath.util.string_utility import StringUtility as strut
 
 
@@ -46,7 +46,7 @@ class JsonViewer2(QWidget):
         self.setLayout(layout)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.view = Editor(parent=self, editable=self.editable)
+        self.view = JsonEditor(parent=self, editable=self.editable)
         #
         # blocks double click to edit
         # we want to enable edit in some cases to make copying easier. but if we aren't explicitly editable

@@ -218,10 +218,10 @@ class CsvpathLoader:
             if overwrite
             else "Are you sure you want to append to an existing named-paths group?"
         )
-        confirm = meut.yesNo(parent=self, title="Load Paths", msg=msg)
-        confirm == QMessageBox.Yes
-        self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, True)
-        self.load_dialog.show()
+        confirm = meut.yesNo(parent=self.load_dialog, title="Load Paths", msg=msg)
+        # confirm = meut.yesNo(parent=self, title="Load Paths", msg=msg)
+        # self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, True)
+        # self.load_dialog.show()
         return confirm
 
     def _delete_load_dialog(self):

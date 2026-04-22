@@ -1,6 +1,6 @@
 from PySide6 import QtCore, QtGui
 import darkdetect
-from flightpath.widgets.editor.lexer import TokenID, Lexer
+from flightpath.widgets.json_editor.lexer import TokenID, Lexer
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 
 

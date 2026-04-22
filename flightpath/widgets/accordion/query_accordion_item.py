@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QStyle,
 )
-from PySide6.QtGui import QColor, QPainter, QBrush
+from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt, Signal, QSize
 
 import darkdetect
@@ -15,42 +15,18 @@ from csvpath.managers.listener import Listener
 from csvpath.managers.metadata import Metadata
 
 from flightpath.workers.ai_worker import AiWorker
-
-ACTIVITY_ICONS = {
-    "validation": "🪄",
-    "question": "✍️",
-    "explain": "❓",
-    "testdata": "▒",
-    "run": "⚙️",
-}
-
-
-class StatusDot(QWidget):
-    def __init__(self, color: QColor, parent=None):
-        super().__init__(parent)
-        self._color = color
-        self.setFixedSize(12, 12)
-
-    clicked = Signal()
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.clicked.emit()
-
-    def setColor(self, color: QColor):
-        self._color = color
-        self.update()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(QBrush(self._color))
-        painter.setPen(Qt.NoPen)
-        r = min(self.width(), self.height()) - 2
-        painter.drawEllipse((self.width() - r) / 2, (self.height() - r) / 2, r, r)
+from .status_dot import StatusDot
 
 
 class QueryAccordionItem(QWidget):
+    ACTIVITY_ICONS = {
+        "validation": "🪄",
+        "question": "✍️",
+        "explain": "❓",
+        "testdata": "▒",
+        "run": "⚙️",
+    }
+
     #
     # the label and close button work like:
     #    item.button->item.signal
@@ -76,6 +52,7 @@ class QueryAccordionItem(QWidget):
         metadata: dict,
         parent=None,
         status: str = "pending",
+        subtitle: str = "",
     ):
         super().__init__(parent)
         self._metadata = metadata
@@ -108,7 +85,9 @@ class QueryAccordionItem(QWidget):
 
         self.icon_label = None
         if str(activity).strip() != "":
-            self.icon_label = QLabel(ACTIVITY_ICONS.get(activity, ""), self.header)
+            self.icon_label = QLabel(
+                QueryAccordionItem.ACTIVITY_ICONS.get(activity, ""), self.header
+            )
             self.icon_label.setFixedWidth(24)
             self.icon_label.setAlignment(Qt.AlignCenter)
             self.icon_label.setStyleSheet(
@@ -130,8 +109,7 @@ class QueryAccordionItem(QWidget):
             "font-weight: 500;font-size:12pt;border:0px;background-color:none;"
         )
         title_layout.addWidget(self.title)
-        subtitle = ""
-        if subtitle in metadata:
+        if str(subtitle).strip() in ["", "None"] and subtitle in metadata:
             subtitle = metadata["subtitle"]
         self.subtitle = QLabel(subtitle)
         self.subtitle.setStyleSheet(

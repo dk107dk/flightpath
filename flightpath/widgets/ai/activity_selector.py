@@ -1,5 +1,11 @@
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QSizePolicy
+from PySide6.QtWidgets import (
+    QWidget,
+    QHBoxLayout,
+    QToolButton,
+    QButtonGroup,
+    QSizePolicy,
+)
 
 
 class ActivitySelector(QWidget):
@@ -12,9 +18,24 @@ class ActivitySelector(QWidget):
         ("testdata", "▒", "Data"),
     ]
 
+    SUBTITLES_INITIAL = {
+        "validation": "Creating csvpath",
+        "question": "Answering question",
+        "explain": "Explaining csvpath",
+        "testdata": "Generating test data",
+    }
+
+    SUBTITLES_FINAL = {
+        "validation": "Created csvpath",
+        "question": "Answered question",
+        "explain": "Explained csvpath",
+        "testdata": "Generated test data",
+    }
+
     def __init__(self, *, main, parent=None):
         super().__init__(parent)
         self.main = main
+        self.form = parent
         self.setMinimumHeight(23)
 
         layout = QHBoxLayout(self)
@@ -23,7 +44,6 @@ class ActivitySelector(QWidget):
 
         self.group = QButtonGroup(self)
         self.group.setExclusive(True)
-
         self.buttons = {}
 
         for key, icon, label in self.ACTIVITIES:
@@ -39,22 +59,17 @@ class ActivitySelector(QWidget):
             self.group.addButton(btn)
             self.buttons[key] = btn
         layout.addStretch(1)
-
         self.buttons["validation"].setChecked(True)
-
         self.group.buttonClicked.connect(self._on_clicked)
 
-
-
-
-    def enable_for_extension(self, e:str, activity:str="validation") -> None:
-        csv = [True,False,False,False]
-        csvpath = [False,True,True,True]
+    def enable_for_extension(self, e: str, activity: str = "validation") -> None:
+        # csv = [True, False, False, False]
+        csvpath = [False, True, True, True]
         me = [
             self.buttons["validation"].isEnabled(),
             self.buttons["question"].isEnabled(),
             self.buttons["explain"].isEnabled(),
-            self.buttons["testdata"].isEnabled()
+            self.buttons["testdata"].isEnabled(),
         ]
         if e in self.main.csvpath_config.get(section="extensions", name="csv_files"):
             self.buttons["validation"].setEnabled(True)
@@ -69,7 +84,9 @@ class ActivitySelector(QWidget):
             self.buttons["validation"].setChecked(False)
             self.buttons["question"].setChecked(False)
             self.buttons["explain"].setChecked(False)
-        elif e in self.main.csvpath_config.get(section="extensions", name="csvpath_files"):
+        elif e in self.main.csvpath_config.get(
+            section="extensions", name="csvpath_files"
+        ):
             if me != csvpath:
                 self.buttons["question"].setChecked(True)
             self.buttons["validation"].setEnabled(False)
@@ -97,7 +114,6 @@ class ActivitySelector(QWidget):
             self.buttons["explain"].setEnabled(False)
             self.buttons["testdata"].setEnabled(False)
 
-
     def _on_clicked(self, btn):
         for key, b in self.buttons.items():
             if b is btn:
@@ -112,6 +128,4 @@ class ActivitySelector(QWidget):
         return None
 
     def set_activity(self, key: str):
-        if key in self.buttons:
-            self.buttons[key].setChecked(True)
-
+        self.form._on_activity_changed(key)

@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QFileDialog,
     QTextEdit,
+    QPlainTextEdit,
 )
 from PySide6.QtGui import QIcon, QAction, QPageLayout, QPageSize
 from PySide6.QtPrintSupport import QPrinter
@@ -26,13 +27,13 @@ from flightpath.util.tabs_utility import TabsUtility as taut
 
 class ClosingTabs(QTabWidget):
     def __init__(self, main, *, parent=None):
-        super().__init__()
+        super().__init__(main)
         self.main = main
         #
         # if we live in content we (may) need to know it.
         # if we're the info & feedback we don't.
         #
-        self.parent = parent
+        self.my_parent = parent  # was self.parent, but that overrides the qt parent
         self.currentChanged.connect(self.on_tab_change)
         self.setup_context_menu()
         #
@@ -119,6 +120,7 @@ class ClosingTabs(QTabWidget):
         if nos.isfile():
             path = os.path.dirname(path)
         t = self.widget(index)
+        print(f"onsavesample: t: {t}")
         ton = t.objectName()
         if ton in ["Code", "Why", "Help Content"]:
             return
@@ -152,6 +154,10 @@ class ClosingTabs(QTabWidget):
         elif isinstance(t, QTextEdit):
             txt = t.toMarkdown()
             self.main.save_sample(path=path, name=ton, data=txt)
+        elif isinstance(t, QPlainTextEdit):
+            self.main.save_sample(
+                path=path, name=f"{t.objectName()}.txt", data=t.toPlainText()
+            )
         elif isinstance(t, DataViewer):
             path = t.path
             d = self.main.sidebar.selected_file_path()
@@ -162,8 +168,13 @@ class ClosingTabs(QTabWidget):
             p = os.path.basename(path)
             path = os.path.join(d, p)
             t._save(path=path)
+        elif isinstance(t, JsonViewer):
+            print(
+                f"\n\n\n==============================================\nreceived a JSON viewer that i don'tknow what tod o with: {t}"
+            )
         else:
             layout = t.layout()
+            print(f"tabsclsing: t: {t}, lasyout: {layout}")
             w = layout.itemAt(0).widget()
             if isinstance(w, KeyableTreeView):
                 j = w.parent().model.to_json()
@@ -186,8 +197,8 @@ class ClosingTabs(QTabWidget):
         #
         if t is None:
             raise ValueError(f"Tab named {name} cannot be None")
-        if self.parent and hasattr(self.parent, "do_i_close"):
-            if not self.parent.do_i_close(t[0]):
+        if self.my_parent and hasattr(self.my_parent, "do_i_close"):
+            if not self.my_parent.do_i_close(t[0]):
                 return False
         elif not self.main.content.do_i_close(t[0]):
             return False
@@ -227,7 +238,7 @@ class ClosingTabs(QTabWidget):
         #
         # show and hides
         #
-        if self.parent.can_have_edit_tabs:
+        if self.my_parent.can_have_edit_tabs:
             if not self.has_data_tabs():
                 self.main._on_data_toolbar_hide()
             if not self.has_csvpath_tabs():
@@ -238,10 +249,10 @@ class ClosingTabs(QTabWidget):
         # there is a parent we have a helper; checking the attr is probably
         # one better.
         #
-        if self.count() == 0 and not hasattr(self.parent, "close_help"):
+        if self.count() == 0 and not hasattr(self.my_parent, "close_help"):
             self.main.main_layout.setCurrentIndex(0)
-        elif self.count() == 0 and hasattr(self.parent, "close_help"):
-            self.parent.close_help()
+        elif self.count() == 0 and hasattr(self.my_parent, "close_help"):
+            self.my_parent.close_help()
         return True
 
     def has_csvpath_tabs(self) -> bool:
@@ -268,7 +279,7 @@ class ClosingTabs(QTabWidget):
         w = self.widget(i)
         if w:
             path = w.objectName()
-            if self.main.content == self.parent:
+            if self.main.content == self.my_parent:
                 self.main.selected_file_path = path
                 self.main.statusBar().showMessage(f"  {path}")
                 if isinstance(w, DataViewer):
