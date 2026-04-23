@@ -27,7 +27,7 @@ from csvpath.util.references.results_reference_finder_2 import (
 )
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
-from flightpath.widgets.icon_packager import IconPackager
+from flightpath.util.icon_packager import IconPackager
 from flightpath.dialogs.find_file_name_one_context_menu import NameOneLineEdit
 from flightpath.dialogs.reference_files.reference_file_handler import (
     ReferenceFileHandler,

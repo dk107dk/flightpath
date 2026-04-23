@@ -59,7 +59,7 @@ from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
 from flightpath.widgets.panels.json_viewer import JsonViewer
-from flightpath.widgets.panels.table_model import TableModel
+from flightpath.widgets.table_model import TableModel
 from flightpath.widgets.sidebars.sidebar import Sidebar
 from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.sidebars.sidebar_named_paths import SidebarNamedPaths
@@ -85,7 +85,7 @@ from flightpath.util.html_generator import HtmlGenerator
 from flightpath.util.state import State
 
 from flightpath.inspect.inspector import Inspector
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 from flightpath_server.main import Main as ServerMain
 
 

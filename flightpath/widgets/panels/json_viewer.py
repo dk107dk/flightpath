@@ -27,7 +27,7 @@ from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.file_collector import FileCollector
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 
 class KeyableTreeView(QTreeView):

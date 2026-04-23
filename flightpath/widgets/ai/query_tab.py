@@ -16,7 +16,7 @@ from PySide6.QtCore import QThreadPool, Qt
 
 import darkdetect
 
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 from flightpath.widgets.ai.query_form import QueryFormWidget
 from flightpath.widgets.accordion.query_accordion import QueryAccordionWidget
 from flightpath.widgets.panels.json_viewer import JsonViewer

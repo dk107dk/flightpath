@@ -5,7 +5,7 @@ from PySide6.QtGui import QAction, QKeyEvent, QKeySequence
 
 from flightpath.util.key_utility import KeyUtility as keut
 
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 
 class MdTextEdit(QTextEdit):

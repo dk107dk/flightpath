@@ -14,7 +14,7 @@ from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 from flightpath.widgets.json_editor.editor import JsonEditor
 from flightpath.util.string_utility import StringUtility as strut

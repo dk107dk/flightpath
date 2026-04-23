@@ -9,7 +9,7 @@ from csvpath.managers.paths.paths_manager import PathsManager
 from flightpath.util.csvpath_loader import CsvpathLoader
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut

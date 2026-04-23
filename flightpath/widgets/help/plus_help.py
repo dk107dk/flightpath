@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget, QHeaderView
 from PySide6.QtCore import Qt
 
 from flightpath.widgets.clickable_label import ClickableLabel
-from flightpath.widgets.icon_packager import IconPackager
+from flightpath.util.icon_packager import IconPackager
 
 
 class HelpIconPackager:

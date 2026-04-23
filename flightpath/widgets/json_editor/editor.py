@@ -10,7 +10,7 @@ from PySide6.QtGui import (
     QKeyEvent,
 )
 
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 from flightpath.widgets.json_editor.syntax import JsonHighlighter
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.key_utility import KeyUtility as keut

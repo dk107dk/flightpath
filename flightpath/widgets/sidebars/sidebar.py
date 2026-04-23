@@ -29,7 +29,7 @@ from flightpath.widgets.file_tree_model.directory_filter_proxy_model import (
 )
 from flightpath.util.csvpath_loader import CsvpathLoader
 from flightpath.util.help_finder import HelpFinder
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut

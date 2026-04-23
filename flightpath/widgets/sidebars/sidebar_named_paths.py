@@ -20,7 +20,7 @@ from flightpath.dialogs.webhooks_dialog import WebhooksDialog
 
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
 
 

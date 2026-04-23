@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QStackedLayout
 
-from flightpath.widgets.panels.config_panel import ConfigPanel
+from flightpath.widgets.panels.config_forms.config_panel import ConfigPanel
 from flightpath.widgets.toolbars.config_toolbar import ConfigToolbar
 from flightpath.util.help_finder import HelpFinder
 

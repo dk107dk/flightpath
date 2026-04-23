@@ -26,7 +26,7 @@ from flightpath.dialogs.reference_files.reference_file_handler import (
 )
 from flightpath.dialogs.run_info_dialog import RunInfoDialog
 
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
 from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
 

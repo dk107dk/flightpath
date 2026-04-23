@@ -12,21 +12,21 @@ from PySide6.QtWidgets import (
     QTreeWidgetItem,
 )
 
-from flightpath.widgets.forms.blank_form import BlankForm
-from flightpath.widgets.forms.server_form import ServerForm
-from flightpath.widgets.forms.projects_form import ProjectsForm
-from flightpath.widgets.forms.functions_form import FunctionsForm
-from flightpath.widgets.forms.env_form import EnvForm
-from flightpath.widgets.forms.cache_form import CacheForm
-from flightpath.widgets.forms.config_form import ConfigForm
-from flightpath.widgets.forms.extensions_form import ExtensionsForm
-from flightpath.widgets.forms.errors_form import ErrorsForm
-from flightpath.widgets.forms.inputs_form import InputsForm
-from flightpath.widgets.forms.listeners_form import ListenersForm
-from flightpath.widgets.forms.logging_form import LoggingForm
-from flightpath.widgets.forms.results_form import ResultsForm
-from flightpath.widgets.forms.llm_form import LlmForm
-from flightpath.widgets.forms.offsets_form import OffsetsForm
+from flightpath.widgets.config_forms.blank_form import BlankForm
+from flightpath.widgets.config_forms.server_form import ServerForm
+from flightpath.widgets.config_forms.projects_form import ProjectsForm
+from flightpath.widgets.config_forms.functions_form import FunctionsForm
+from flightpath.widgets.config_forms.env_form import EnvForm
+from flightpath.widgets.config_forms.cache_form import CacheForm
+from flightpath.widgets.config_forms.config_form import ConfigForm
+from flightpath.widgets.config_forms.extensions_form import ExtensionsForm
+from flightpath.widgets.config_forms.errors_form import ErrorsForm
+from flightpath.widgets.config_forms.inputs_form import InputsForm
+from flightpath.widgets.config_forms.listeners_form import ListenersForm
+from flightpath.widgets.config_forms.logging_form import LoggingForm
+from flightpath.widgets.config_forms.results_form import ResultsForm
+from flightpath.widgets.config_forms.llm_form import LlmForm
+from flightpath.widgets.config_forms.offsets_form import OffsetsForm
 from flightpath.util.style_utils import StyleUtility as stut
 
 

@@ -9,7 +9,7 @@ from csvpath.util.path_util import PathUtility as pathu
 from csvpath.util.nos import Nos
 
 from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 
 class ReferenceFileHandler:

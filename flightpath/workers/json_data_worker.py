@@ -7,7 +7,7 @@ from csvpath.util.file_readers import DataFileReader
 from csvpath import CsvPaths
 from csvpath.util.box import Box
 
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 from .data_worker_signals import DataWorkerSignals
 
 

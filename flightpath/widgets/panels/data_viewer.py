@@ -21,11 +21,11 @@ from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 
 from flightpath.dialogs.save_csv_to import SaveCsvToDialog
-from flightpath.widgets.panels.table_model import TableModel
+from flightpath.widgets.table_model import TableModel
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 from .raw_viewer import RawViewer
 

@@ -21,7 +21,7 @@ from csvpath.managers.errors.error_comms import ErrorCommunications
 from csvpath.matching.util.expression_utility import ExpressionUtility as exut
 
 from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit
-from flightpath.widgets.panels.table_model import TableModel
+from flightpath.widgets.table_model import TableModel
 from flightpath.widgets.panels.json_viewer import JsonViewer
 
 from flightpath.workers.one_off_run import OneOffRunWorker
@@ -36,7 +36,7 @@ from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.os_utility import OsUtility as osut
 
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 
 class CsvpathViewer(QWidget):

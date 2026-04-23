@@ -15,7 +15,7 @@ from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
 
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 
 class MdViewer(QWidget):

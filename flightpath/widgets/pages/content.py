@@ -8,7 +8,7 @@ from flightpath.widgets.tab_overlay import TabWidgetOverlayButton
 from flightpath.widgets.tabs_closing import ClosingTabs
 from flightpath.widgets.tabs_closing_holder import ClosingTabsHolder
 from flightpath.widgets.toolbars.data_toolbar import DataToolbar
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 from flightpath.util.message_utility import MessageUtility as meut
 
 

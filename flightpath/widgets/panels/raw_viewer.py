@@ -6,7 +6,7 @@ from csvpath.util.nos import Nos
 
 from flightpath.widgets.raw_text_edit import RawTextEdit
 from flightpath.util.style_utils import StyleUtility as stut
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 
 class RawViewer(QWidget):
