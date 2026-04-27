@@ -121,20 +121,20 @@ class ErrorsForm(BlankForm):
         config.csvpaths_errors_policy = csvpaths_policy
 
     def _setup(self) -> None:
-        self.use_format.activated.connect(self.main.on_config_changed)
-        self.pattern.textChanged.connect(self.main.on_config_changed)
+        self.use_format.activated.connect(self.main.reactor.on_config_changed)
+        self.pattern.textChanged.connect(self.main.reactor.on_config_changed)
 
-        self.csvpath_raise.stateChanged.connect(self.main.on_config_changed)
-        self.csvpath_print.stateChanged.connect(self.main.on_config_changed)
-        self.csvpath_stop.stateChanged.connect(self.main.on_config_changed)
-        self.csvpath_fail.stateChanged.connect(self.main.on_config_changed)
-        self.csvpath_collect.stateChanged.connect(self.main.on_config_changed)
+        self.csvpath_raise.stateChanged.connect(self.main.reactor.on_config_changed)
+        self.csvpath_print.stateChanged.connect(self.main.reactor.on_config_changed)
+        self.csvpath_stop.stateChanged.connect(self.main.reactor.on_config_changed)
+        self.csvpath_fail.stateChanged.connect(self.main.reactor.on_config_changed)
+        self.csvpath_collect.stateChanged.connect(self.main.reactor.on_config_changed)
 
-        self.csvpaths_raise.stateChanged.connect(self.main.on_config_changed)
-        self.csvpaths_print.stateChanged.connect(self.main.on_config_changed)
-        self.csvpaths_stop.stateChanged.connect(self.main.on_config_changed)
-        self.csvpaths_fail.stateChanged.connect(self.main.on_config_changed)
-        self.csvpaths_collect.stateChanged.connect(self.main.on_config_changed)
+        self.csvpaths_raise.stateChanged.connect(self.main.reactor.on_config_changed)
+        self.csvpaths_print.stateChanged.connect(self.main.reactor.on_config_changed)
+        self.csvpaths_stop.stateChanged.connect(self.main.reactor.on_config_changed)
+        self.csvpaths_fail.stateChanged.connect(self.main.reactor.on_config_changed)
+        self.csvpaths_collect.stateChanged.connect(self.main.reactor.on_config_changed)
 
     def populate(self):
         config = self.config

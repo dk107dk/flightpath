@@ -14,8 +14,8 @@ class CkanTab(QWidget):
         self.api_token = QLineEdit()
         layout.addRow("Api token: ", self.api_token)
 
-        self.server.textChanged.connect(self.form.main.on_config_changed)
-        self.api_token.textChanged.connect(self.form.main.on_config_changed)
+        self.server.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.api_token.textChanged.connect(self.form.main.reactor.on_config_changed)
 
     @property
     def section(self) -> str:

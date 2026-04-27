@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
-from .viewer_signals import ViewerSignals
+from flightpath.widgets.panels.viewer_signals import ViewerSignals
 
 
 class TableModel(QAbstractTableModel):

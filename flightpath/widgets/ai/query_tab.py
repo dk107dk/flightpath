@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 from PySide6.QtGui import QColor
-from PySide6.QtCore import QThreadPool, Qt
+from PySide6.QtCore import QThreadPool, Qt, Slot
 
 import darkdetect
 
@@ -228,6 +228,12 @@ class QueryTabWidget(QWidget):
         feut.switch_to_feedback(self.main, error)
         feut.open_feedback(self.main)
 
+    @Slot(int)
+    def _open_ai_config(self, doit: int) -> None:
+        if doit == QMessageBox.Yes:
+            self.main.open_ai_config()
+            return
+
     #
     # do we want the user to have to click a link within the item, or is it
     # better for the doc to open when the item is selected? with no slider
@@ -256,25 +262,21 @@ class QueryTabWidget(QWidget):
         else:
             if self.main and self.main.csvpath_config:
                 if self.main.csvpath_config.get(section="llm", name="model") is None:
-                    o = meut.yesNoButtons(
+                    meut.yesNo2(
                         parent=self,
                         title="Assistance Failed",
                         msg="Request did not complete. Open AI configuration?",
-                        std_buttons=QMessageBox.Open | QMessageBox.Cancel,
-                        truth_button=QMessageBox.Open,
-                        def_button=QMessageBox.Cancel,
+                        callback=self._open_ai_config,
                     )
-                    if o is True:
-                        self.main.open_ai_config()
-                        return
+                    return
                 else:
-                    meut.warning(
+                    meut.warning2(
                         parent=self,
                         title="Assistance Failed",
                         msg="Request did not complete.",
                     )
             else:
-                meut.warning(
+                meut.warning2(
                     parent=self,
                     title="Config Failed",
                     msg="Configuration is unavailable.",

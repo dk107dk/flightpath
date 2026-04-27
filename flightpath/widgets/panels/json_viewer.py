@@ -10,9 +10,10 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QSizePolicy,
     QMenu,
+    QMessageBox,
     QAbstractItemView,
 )
-from PySide6.QtCore import Qt, QFileInfo
+from PySide6.QtCore import Qt, QFileInfo, Slot
 from PySide6.QtGui import QAction, QKeyEvent, QShortcut, QKeySequence
 
 from csvpath.util.file_writers import DataFileWriter
@@ -33,8 +34,8 @@ from flightpath.util.editable import EditStates
 class KeyableTreeView(QTreeView):
     def __init__(
         self,
-        parent=None,
         *,
+        parent=None,
         key_callback=None,
         save_callback=None,
         editable=EditStates.EDITABLE,
@@ -60,10 +61,8 @@ class KeyableTreeView(QTreeView):
 
 
 class JsonViewer(QWidget):
-    def __init__(
-        self, *, main, editable=EditStates.EDITABLE, path: str = None, parent=None
-    ):
-        super().__init__(main if parent is None else parent)
+    def __init__(self, *, main, editable=EditStates.EDITABLE, path: str = None, parent):
+        super().__init__(parent)
         #
         # for a left-hand side file the path cannot be None. we need to know
         # where to save the data. a right-hand side file can be none. we need
@@ -92,10 +91,11 @@ class JsonViewer(QWidget):
         #
         #
         layout = QVBoxLayout()
-        self.setLayout(layout)
         layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.view = KeyableTreeView(
+            parent=self,
             key_callback=self.key_click,
             save_callback=self._save,
             editable=self.editable,
@@ -164,12 +164,12 @@ class JsonViewer(QWidget):
                 return
             if self.editable == EditStates.NO_SAVE_NO_CTX:
                 if self._shown_no_edit_msg is None:
-                    meut.message(
+                    self._shown_no_edit_msg = True
+                    meut.message2(
                         parent=self,
                         title="Not Editable",
                         msg="This file is not editable. Any changes you make will be discarded.",
                     )
-                    self._shown_no_edit_msg = True
                 # we can let them edit, but not save
                 return
             #
@@ -252,14 +252,16 @@ class JsonViewer(QWidget):
         self.context_menu.addAction(self.save_action)
 
     def _copy_back_question(self) -> None:
-        print(f"cpbm question: parent: {self.parent()}")
-        yes = meut.yesNo(
-            parent=self.main.helper.help_and_feedback,
+        meut.yesNo2(
+            parent=self,
+            callback=self._copy_back_answer,
             msg="You can't edit here. Copy back to project?",
             title="Copy file to project?",
         )
-        print(f"cpbm question: yes: {yes}")
-        if yes is True:
+
+    @Slot(int)
+    def _copy_back_answer(self, answer) -> None:
+        if answer == QMessageBox.Yes:
             try:
                 name = self.objectName()
                 if not name or str(name).strip() == "":
@@ -298,21 +300,13 @@ class JsonViewer(QWidget):
                             from_path=file.name,
                             use_name=f"{name}.json",
                         )
-                        print(f"jsonver: doing redcva for path: {to_path}")
                         self.main.read_validate_and_display_file_for_path(to_path)
-                        print(
-                            f"jsonver: done doing redcva for path: {to_path}. should be open."
-                        )
                 else:
-                    print(f"cpbm question: name: {name}")
                     to_path = fiut.copy_results_back_to_cwd(
                         main=self.main, from_path=name
                     )
-                    print("cpbm question: fiut done")
                     self.main.read_validate_and_display_file_for_path(to_path)
-                    print("cpbm question: main.read done")
                     self.main.content.tab_widget.close_tab(name)
-                    print("cpbm question: done")
             except Exception:
                 print(traceback.format_exc())
 
@@ -321,9 +315,7 @@ class JsonViewer(QWidget):
             #
             # if we aren't editable we need to ask the user if they want to copy back to the project.
             #
-            print("before ocpyback quest")
             self._copy_back_question()
-            print("after ocpyback quest")
             return
         index = self.view.indexAt(position)
         global_pos = self.view.viewport().mapToGlobal(position)
@@ -414,7 +406,11 @@ class JsonViewer(QWidget):
         if self.editable == EditStates.UNEDITABLE:
             return
         if self.path is None:
-            print("Error: cannot save json to file path None")
+            meut.warning2(
+                parent=self,
+                title="Cannot Save",
+                msg="Error: cannot save json to file path None",
+            )
             return
         d = self.model.to_json()
         j = json.dumps(d, indent=2)
@@ -428,7 +424,6 @@ class JsonViewer(QWidget):
     def _add_config(self) -> None:
         invalid = self.context_menu_invalid
         if not invalid:
-            # shouldn't happen
             return
         parent = self.model.root
         self.model.beginResetModel()
@@ -452,12 +447,16 @@ class JsonViewer(QWidget):
     def _add_csvpath(self) -> None:
         index = self.view.currentIndex()
         parent = index.internalPointer()
-        path = FileCollector.select_file(
+        FileCollector.select_file(
             parent=self,
             cwd=self.main.state.cwd,
             title="Please pick a csvpath to add",
             file_type_filter=FileCollector.csvpaths_filter(self.main.csvpath_config),
+            callback=self._add_csvpath_complete,
+            args={"parent": parent},
         )
+
+    def _add_csvpath_complete(self, path: str, *, parent) -> None:
         self.model.beginResetModel()
         item = TreeItem(parent)
         item.key = parent.childCount()

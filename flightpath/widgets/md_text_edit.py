@@ -12,9 +12,9 @@ class MdTextEdit(QTextEdit):
     def __init__(self, *, main, parent, editable=EditStates.EDITABLE) -> None:
         super().__init__()
         self.main = main
-        self.parent = parent
+        self.my_parent = parent
         self.editable = editable
-        self.parent.saved = True
+        self.my_parent.saved = True
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.editable == EditStates.UNEDITABLE:
@@ -26,15 +26,15 @@ class MdTextEdit(QTextEdit):
     def desaved(self) -> bool:
         if self.editable == EditStates.UNEDITABLE:
             return False
-        if self.parent.saved is True:
-            path = self.parent.path
+        if self.my_parent.saved is True:
+            path = self.my_parent.path
             path = os.path.dirname(path)
             i = self.main.content.tab_widget.currentIndex()
             name = self.main.content.tab_widget.tabText(i)
             name = name.replace("+ ", "")
             self.main.content.tab_widget.setTabText(i, f"+ {name}")
             self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
-            self.parent.saved = False
+            self.my_parent.saved = False
         return True
 
     def contextMenuEvent(self, event):
@@ -66,12 +66,12 @@ class MdTextEdit(QTextEdit):
         #
         # separator and toggle raw edit
         #
-        path = self.parent.path
+        path = self.my_parent.path
         if path.endswith(".md"):
             menu.addSeparator()
             t = "Toggle view"
             t_action = QAction(t, self)
-            t_action.triggered.connect(self.parent.on_toggle)
+            t_action.triggered.connect(self.my_parent.on_toggle)
             t_action.setShortcut(QKeySequence("Ctrl+T"))
             t_action.setShortcutVisibleInContextMenu(True)
             menu.addAction(t_action)
@@ -82,13 +82,13 @@ class MdTextEdit(QTextEdit):
         save = "Save"
 
         save_action = QAction(save, self)
-        save_action.triggered.connect(self.parent.on_save)
+        save_action.triggered.connect(self.my_parent.on_save)
         save_action.setShortcut(QKeySequence("Ctrl+S"))
         save_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(save_action)
 
         save_as_action = QAction("Save as", self)
-        save_as_action.triggered.connect(self.parent.on_save_as)
+        save_as_action.triggered.connect(self.my_parent.on_save_as)
         save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
         save_as_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(save_as_action)

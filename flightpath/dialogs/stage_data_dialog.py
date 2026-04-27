@@ -29,12 +29,11 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
 
     SET_TO_FILES_NAME = "  ... Set file's name ..."
 
-    def __init__(self, *, path, parent):
+    def __init__(self, *, main, path, parent):
         super().__init__(None)
         self.sidebar = parent
         self.main = parent.main
-        self.setWindowTitle("Stage source data files")
-        # self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowTitle("Stage Incoming Data Files")
 
         self.path = path
         self.errors = None
@@ -237,7 +236,7 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
     @Slot(str)
     def _source_path_click(self, text: str) -> None:
         if self.template_ctl.text().endswith(":filename"):
-            meut.message(
+            meut.warning2(
                 parent=self,
                 msg="Filename must be the last component of the path",
                 title="Complete",

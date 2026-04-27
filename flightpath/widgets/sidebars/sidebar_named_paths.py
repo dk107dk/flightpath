@@ -9,18 +9,15 @@ from csvpath.util.nos import Nos
 from csvpath.util.config import Config
 from csvpath.util.path_util import PathUtility as pathu
 
-
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
 
 from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.dialogs.paths_template_dialog import PathsTemplateDialog
-from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.dialogs.webhooks_dialog import WebhooksDialog
 
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.util.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
 
 
@@ -43,7 +40,7 @@ class SidebarNamedPaths(SidebarRightBase):
         if self.check_sftp(self.config.get(section="inputs", name="csvpaths")) is True:
             self.setup()
         else:
-            meut.warning(
+            meut.warning2(
                 parent=self, title="Check SFTP", msg="SFTP is used but not configured"
             )
 
@@ -126,40 +123,14 @@ class SidebarNamedPaths(SidebarRightBase):
             #
             # moved from main
             #
-            self.view.clicked.connect(self.on_named_paths_tree_click)
+            self.view.clicked.connect(self.main.reactor.on_named_paths_tree_click)
             self.setLayout(layout)
         except Exception as e:
-            meut.warning(
+            meut.warning2(
                 parent=self,
                 title=f"{type(e)} error loading named-paths",
                 msg=f"Named-paths error: {e}",
             )
-
-    #
-    # moved from main
-    #
-    def on_named_paths_tree_click(self, index):
-        self.main.selected_file_path = self.model.filePath(index)
-        nos = Nos(self.main.selected_file_path)
-        if not nos.isfile():
-            ...
-            # self._show_welcome_but_do_not_deselect()
-        else:
-            ed = (
-                EditStates.EDITABLE
-                if self.main.selected_file_path.endswith(".md")
-                else EditStates.UNEDITABLE
-            )
-            self.main.read_validate_and_display_file(editable=ed)
-            self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
-
-    def refresh(self) -> None:
-        if self.view:
-            layout = self.layout()  # Get the existing layout
-            if layout:
-                layout.removeWidget(self.view)
-            self.view.deleteLater()  # Delete the old widget
-            self.setup()
 
     def _setup_view_context_menu(self):
         self.context_menu = QMenu(self)
@@ -182,7 +153,7 @@ class SidebarNamedPaths(SidebarRightBase):
 
         self.delete_action = QAction()
         self.delete_action.setText("Permanent delete")
-        self.delete_action.triggered.connect(self._delete_file_navigator_item)
+        self.delete_action.triggered.connect(self._delete_paths_view_item)
 
         self.find_data_action = QAction()
         self.find_data_action.setText("Find data")
@@ -209,7 +180,9 @@ class SidebarNamedPaths(SidebarRightBase):
         else:
             # shouldn't happen but what if it did?
             ...
-        self.new_run_dialog = NewRunDialog(parent=self, named_paths=named_paths)
+        self.new_run_dialog = NewRunDialog(
+            main=self.main, parent=self, named_paths=named_paths
+        )
         #
         # check if there is a description.json. if there is, check if
         # there is a template for the group. if so, add to dialog.
@@ -286,40 +259,3 @@ class SidebarNamedPaths(SidebarRightBase):
             name = pathu.parts(path)[0]
             dialog = PathsTemplateDialog(main=self.main, name=name, parent=self)
             dialog.show_dialog()
-
-    def _find_data(self) -> None:
-        find = FindFileByReferenceDialog(main=self.main)
-        self.main.show_now_or_later(find)
-
-    def _delete_file_navigator_item(self) -> None:
-        index = self.view.currentIndex()
-        if index.isValid():
-            path = self.model.filePath(index)
-            nos = Nos(path)
-            confirm = meut.yes_no(
-                parent=self, title="Delete", msg=f"Permanently delete {path}?"
-            )
-            if confirm is True:
-                try:
-                    nos.remove()
-                except OSError as e:
-                    meut.warning(parent=self, title="Error", msg=str(e))
-                else:
-                    #
-                    # TODO: this will have to change because we don't want to dismiss
-                    # content that is being worked on from the working dir side
-                    #
-                    # if is_selected:
-                    #    self.window().show_welcome_screen()
-                    self.window().statusBar().showMessage(f"{path} deleted")
-                    #
-                    # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
-                    # but for now it should work. refreshing named_files is probably fair, but that's
-                    # also tricky because we'd want to recreate the opened/closed state of the folders
-                    # and if we did that the refresh might slow down potentially a lot. so long-term,
-                    # seems like we should capture what is registered and manually add it. no fun. :/
-                    #
-                    # self.main._setup_central_widget()
-                    self.main.renew_sidebar_named_paths()
-                    self.main.welcome.update_run_button()
-                    self.main.welcome.update_find_data_button()

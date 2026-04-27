@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QApplication,
     QInputDialog,
+    QMessageBox,
 )
 from PySide6.QtGui import QKeySequence, QAction, QKeyEvent
 
@@ -35,7 +36,12 @@ class DataViewer(QWidget):
     QUOTECHARS = {"single-quotes": "'", "double-quotes": '"'}
 
     def __init__(
-        self, parent, *, editable: EditStates = EditStates.UNEDITABLE, path: str = None
+        self,
+        *,
+        parent,
+        main,
+        editable: EditStates = EditStates.UNEDITABLE,
+        path: str = None,
     ):
         super().__init__()
         #
@@ -45,8 +51,8 @@ class DataViewer(QWidget):
         #
         #
         #
-        self.parent = parent
-        self.main = parent.main
+        self.my_parent = parent
+        self.main = main
         self.path = self.main.selected_file_path if path is None else path
         self.main_layout = QStackedLayout()
         self.setLayout(self.main_layout)
@@ -99,7 +105,7 @@ class DataViewer(QWidget):
         generate_action = QAction("Generate csvpath", self)
         generate_action.setShortcut("Shift+Ctrl+g")
         generate_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-        generate_action.triggered.connect(self.main.on_ai_gen_csvpath)
+        generate_action.triggered.connect(self.main.reactor.on_ai_gen_csvpath)
         self.addAction(generate_action)
 
         #
@@ -108,10 +114,34 @@ class DataViewer(QWidget):
         if self.is_editable:
             self.setContextMenuPolicy(Qt.CustomContextMenu)
             self.customContextMenuRequested.connect(self._show_context_menu)
+        else:
+            self.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.customContextMenuRequested.connect(self._show_uneditable_context_menu)
 
     @property
     def is_editable(self) -> bool:
         return self.editable == EditStates.EDITABLE
+
+    def _show_uneditable_context_menu(self, position: QPoint):
+        viewport_position = self.table_view.viewport().mapFrom(
+            self.table_view, position
+        )
+        index = self.table_view.indexAt(viewport_position)
+        row = self.table_view.rowAt(viewport_position.y())
+        column = index.column()
+        index_row = index.row()
+        print(f"_shw_ctx_mnu: row: {row}, column: {column}, index_row: {index_row}")
+        global_position = self.table_view.mapToGlobal(position)
+        if index.isValid():
+            row = index.row()
+            context_menu = QMenu(self)
+            save_as_action = QAction()
+            save_as_action.setText("Save As")
+            save_as_action.triggered.connect(self._copy_back_question)
+            save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
+            save_as_action.setShortcutVisibleInContextMenu(True)
+            context_menu.addAction(save_as_action)
+            context_menu.exec(global_position)
 
     def _show_context_menu(self, position: QPoint):
         # `position` is in the QTableView's coordinates.
@@ -221,7 +251,7 @@ class DataViewer(QWidget):
 
             generate_action = QAction()
             generate_action.setText("Generate csvpath")
-            generate_action.triggered.connect(self.main.on_ai_gen_csvpath)
+            generate_action.triggered.connect(self.main.reactor.on_ai_gen_csvpath)
             generate_action.setShortcut(QKeySequence("Shift+Ctrl+G"))
             generate_action.setShortcutVisibleInContextMenu(True)
             context_menu.addAction(generate_action)
@@ -229,6 +259,9 @@ class DataViewer(QWidget):
             context_menu.exec(global_position)
         else:
             print(f"index not valid: {index}: {index.row()}, {column}; row: {row}")
+
+    def model(self) -> TableModel:
+        return self.table_view.model()
 
     def _relative_path_to_parent_dir(self) -> str:
         path = os.path.dirname(self.path)
@@ -253,19 +286,18 @@ class DataViewer(QWidget):
                         new_name = os.path.join(self.main.state.cwd, new_name)
                     self._write_new_from_selected(new_name)
                 except PermissionError:
-                    meut.warning(
+                    meut.warning2(
                         parent=self, title="Error", msg="Operation not permitted."
                     )
                 except OSError:
-                    meut.warning(
+                    meut.warning2(
                         parent=self,
                         title="Error",
                         msg="File with this name already exists.",
                     )
             else:
                 self.window().statusBar().showMessage(self.tr("Bad file name"))
-                meut.warning(parent=self, msg=msg, title="Cannot create file")
-                return
+                meut.warning2(parent=self, msg=msg, title="Cannot create file")
 
     def _from_coord(self, row: int, column: int) -> Any:
         selection_model = self.table_view.selectionModel()
@@ -473,7 +505,7 @@ class DataViewer(QWidget):
         clipboard = QApplication.clipboard()
         pasted_text = clipboard.text()
         if not pasted_text:
-            meut.message(
+            meut.message2(
                 parent=self, msg="There is nothing to paste", title="Clipboard Error"
             )
             return
@@ -481,7 +513,7 @@ class DataViewer(QWidget):
         pcells = json.loads(pasted_text)
         start_index = self.table_view.selectionModel().currentIndex()
         if not start_index.isValid():
-            meut.message(
+            meut.message2(
                 parent=self, msg="Select a cell to paste into", title="Clipboard Error"
             )
             return
@@ -588,8 +620,8 @@ class DataViewer(QWidget):
         # seems like it would be reasonable. we own the file, it just isn't
         # writable, so why not make a copy?
         #
-        if self.editable == EditStates.UNEDITABLE:
-            return
+        # if self.editable == EditStates.UNEDITABLE:
+        #    return
         #
         # NOTE: vvvv seems to be preempted by ^^^^
         #
@@ -597,7 +629,7 @@ class DataViewer(QWidget):
         # send the copy to the left-hand side file tree.
         #
         # for that switch local must be True to let us know not to
-        # use self.parent.path
+        # use self.my_parent.path
         #
         # since we catch rt-clicks direct, we have to recheck
         # if switch_local should be true.
@@ -678,19 +710,19 @@ class DataViewer(QWidget):
         quotechar: str = None,
         exts: list[str],
     ) -> None:
-        found = False
-        for _ in exts:
-            if path.endswith(_):
-                found = True
-        if found is False:
-            meut.warning(
+        if not fiut.is_a(path, exts):
+            meut.warning2(
                 parent=self,
                 title="Bad Filename",
-                msg="Saving as a text delimited file with the .csv extension",
+                msg=f"Saving as {path}.csv",
+                callback=self._save_csv,
+                args={
+                    "path": f"{path}.csv",
+                    "delimiter": delimiter,
+                    "quotechar": quotechar,
+                },
             )
-            path = f"{path}.csv"
-            # self.on_save_as()
-            # return
+            return
         self._save_csv(path=path, delimiter=delimiter, quotechar=quotechar)
 
     def _save_csv(
@@ -781,14 +813,18 @@ class DataViewer(QWidget):
         return cstr
 
     def _copy_back_question(self, action="edit") -> None:
-        yes = meut.yesNo(
+        meut.yesNo2(
             parent=self,
             msg=f"You can't {action} here. Copy back to project?",
             title="Copy file to project?",
+            callback=self._copy_back_answer,
         )
-        if yes is True:
+
+    @Slot(int)
+    def _copy_back_answer(self, answer: int) -> None:
+        if answer == QMessageBox.Yes:
             try:
-                name = self.parent.objectName()
+                name = self.objectName()
                 to_path = fiut.copy_results_back_to_cwd(main=self.main, from_path=name)
                 self.main.read_validate_and_display_file_for_path(to_path)
                 self.main.content.tab_widget.close_tab(name)
@@ -837,12 +873,12 @@ class DataViewer(QWidget):
         # there are uses where we're not using main in a "normal" way. ideally
         # this gets standard, but atm it is a distraction more than a problem.
         #
-        if hasattr(self.parent, "toolbar"):
-            self.main.show_now_or_later(self.parent.toolbar)
+        if hasattr(self.my_parent, "toolbar"):
+            self.main.show_now_or_later(self.my_parent.toolbar)
         self.layout().setCurrentIndex(0)
 
     def clear(self, model):
         self.table_view.setModel(model)
         self.table_view.hide()
-        self.parent.toolbar.hide()
+        self.my_parent.toolbar.hide()
         self.layout().setCurrentIndex(0)

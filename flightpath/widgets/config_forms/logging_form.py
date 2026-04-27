@@ -76,17 +76,17 @@ class LoggingForm(BlankForm):
         path = os.path.dirname(path)
         nos = Nos(path)
         if not nos.exists():
-            meut.message(
+            nos.makedirs()
+            meut.message2(
                 parent=self,
                 msg=f"{path} doesn't exist. Creating it.",
                 title="Not Found",
             )
-            nos.makedirs()
         elif nos.isfile():
             #
             # TODO: this could, rarely, happen. we should alert the user of the misconfig.
             #
-            meut.message(parent=self, msg=f"{path} is a file", title="Cannot Open")
+            meut.message2(parent=self, msg=f"{path} is a file", title="Cannot Open")
         else:
             o = osut.file_system_open_cmd()
             os.system(f'{o} "{path}"')
@@ -102,12 +102,12 @@ class LoggingForm(BlankForm):
         config.add_to_config("logging", "csvpaths", self.csvpaths_level.currentText())
 
     def _setup(self) -> None:
-        self.path.textChanged.connect(self.main.on_config_changed)
-        self.log_files_to_keep.textChanged.connect(self.main.on_config_changed)
-        self.log_file_size.textChanged.connect(self.main.on_config_changed)
-        self.handler.activated.connect(self.main.on_config_changed)
-        self.csvpath_level.activated.connect(self.main.on_config_changed)
-        self.csvpaths_level.activated.connect(self.main.on_config_changed)
+        self.path.textChanged.connect(self.main.reactor.on_config_changed)
+        self.log_files_to_keep.textChanged.connect(self.main.reactor.on_config_changed)
+        self.log_file_size.textChanged.connect(self.main.reactor.on_config_changed)
+        self.handler.activated.connect(self.main.reactor.on_config_changed)
+        self.csvpath_level.activated.connect(self.main.reactor.on_config_changed)
+        self.csvpaths_level.activated.connect(self.main.reactor.on_config_changed)
 
     def populate(self):
         config = self.config

@@ -14,8 +14,10 @@ class SqlTab(QWidget):
         self.connection_string = QLineEdit()
         layout.addRow("Connection string: ", self.connection_string)
 
-        self.dialect.textChanged.connect(self.form.main.on_config_changed)
-        self.connection_string.textChanged.connect(self.form.main.on_config_changed)
+        self.dialect.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.connection_string.textChanged.connect(
+            self.form.main.reactor.on_config_changed
+        )
 
     @property
     def section(self) -> str:

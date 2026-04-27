@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (  # pylint: disable=E0611
     QDialog,
     QLineEdit,
     QFormLayout,
+    QLabel,
 )
 from PySide6.QtCore import Qt  # pylint: disable=E0611
 from flightpath.util.message_utility import MessageUtility as meut
@@ -15,10 +16,9 @@ from flightpath.util.message_utility import MessageUtility as meut
 
 class NewKeyDialog(QDialog):
     def __init__(self, parent):
-        super().__init__(None)
-        self.parent = parent
+        super().__init__(parent)
 
-        self.setWindowTitle("Create a new API key")
+        self.setWindowTitle("Create a New API Key")
         self.setWindowModality(Qt.ApplicationModal)
 
         self.setFixedHeight(150)
@@ -27,15 +27,15 @@ class NewKeyDialog(QDialog):
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
 
-        form_layout = QFormLayout()
-        main_layout.addLayout(form_layout)
+        self.form_layout = QFormLayout()
+        main_layout.addLayout(self.form_layout)
 
         self.key_name = QLineEdit()
         self.key_owner = QLineEdit()
         self.key_owner_contact = QLineEdit()
-        form_layout.addRow("Key name: ", self.key_name)
-        form_layout.addRow("Key owner: ", self.key_owner)
-        form_layout.addRow("Key owner contact: ", self.key_owner_contact)
+        self.form_layout.addRow("Key name: ", self.key_name)
+        self.form_layout.addRow("Key owner: ", self.key_owner)
+        self.form_layout.addRow("Key owner contact: ", self.key_owner_contact)
 
         self.cancel_button = QPushButton()
         self.cancel_button.setText("Cancel")
@@ -65,7 +65,7 @@ class NewKeyDialog(QDialog):
             self.key_name.text().strip(),
         ]
         if None in _ or "" in _:
-            meut.warning(
+            meut.warning2(
                 parent=self,
                 msg="You must provide a key name and an owner name and contact",
                 title="Required fields",
@@ -80,7 +80,7 @@ class NewKeyDialog(QDialog):
         with httpx.Client() as client:
             msg = None
             response = None
-            url = f"{self.parent.host.text()}/admin/new_key"
+            url = f"{self.my_parent.host.text()}/admin/new_key"
             #
             # create a server-safeish config str here. this isn't a full cleaning. the
             # server needs to also work on the paths and check the sensitive settings
@@ -89,30 +89,43 @@ class NewKeyDialog(QDialog):
             #
             key = None
             try:
-                response = client.post(url, json=key_data, headers=self.parent._headers)
+                response = client.post(
+                    url, json=key_data, headers=self.my_parent._headers
+                )
                 if response.status_code == 200:
                     key = response.json().get("api_key")
                 else:
                     msg = response.json().get("detail")
                     msg = f"Cannot create a key. Server response: {response.status_code}: {msg}"
-                    meut.warning(
-                        parent=self, title="Cannot create new API key", msg=msg
+                    meut.warning2(
+                        parent=self,
+                        title="Cannot create new API key",
+                        msg=msg,
+                        callback=self.reject,
                     )
-                    self.reject()
                     return
             except Exception as ex:
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 print(msg)
-                meut.warning(parent=self, title="Cannot create new API key", msg=msg)
-                self.reject()
+                meut.warning2(
+                    parent=self,
+                    title="Cannot create new API key",
+                    msg=msg,
+                    callback=self.reject,
+                )
+                return
         #
-        # use meut to show the key 1 and only 1 time
+        # remove form fields and display the key. this is the only chance to see
+        # the key.
         #
-        meut.input(
-            parent=self,
-            msg="Copy this key. It will not be shown again",
-            title="API key created",
-            text=key,
-        )
-        self.accept()
+        # TODO: probably we should let the user know that, but let's wait and see
+        # the experience.
+        #
+        while self.form_layout.rowCount() > 0:
+            self.form_layout.removeRow(0)
+        key_label = QLabel()
+        key_label.setText(key)
+        self.form_layout.addRow("New key: ", key_label)
+        self.create_button.setEnabled(False)
+        self.create_button.setText("Close")

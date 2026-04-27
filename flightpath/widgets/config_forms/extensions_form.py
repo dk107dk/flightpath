@@ -80,8 +80,8 @@ class ExtensionsForm(BlankForm):
         #
 
     def _setup(self) -> None:
-        self.csvs.textChanged.connect(self.main.on_config_changed)
-        self.csvpaths.textChanged.connect(self.main.on_config_changed)
+        self.csvs.textChanged.connect(self.main.reactor.on_config_changed)
+        self.csvpaths.textChanged.connect(self.main.reactor.on_config_changed)
 
     def populate(self):
         config = self.config

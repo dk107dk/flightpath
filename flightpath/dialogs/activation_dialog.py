@@ -34,7 +34,7 @@ class ActivationDialog(QDialog):
         self.main = main
         self.csvpaths = main.csvpaths
         self.sidebar = parent
-        self.setWindowTitle(f"Run when new {named_file} data arrives")
+        self.setWindowTitle(f"Run When New {named_file} Data Arrives")
 
         self.method = None
         self.named_file_name = named_file
@@ -159,7 +159,7 @@ class ActivationDialog(QDialog):
             #
             #
             #
-            meut.message(
+            meut.message2(
                 parent=self,
                 title="No CsvPath statement groups",
                 msg="You must load a named-paths group before you set an arrival activation",

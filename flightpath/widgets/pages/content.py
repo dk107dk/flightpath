@@ -1,7 +1,10 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar
+from typing import Callable
+
+from PySide6.QtWidgets import QVBoxLayout, QToolBar
 
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
+from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.tab_overlay import TabWidgetOverlayButton
@@ -9,7 +12,6 @@ from flightpath.widgets.tabs_closing import ClosingTabs
 from flightpath.widgets.tabs_closing_holder import ClosingTabsHolder
 from flightpath.widgets.toolbars.data_toolbar import DataToolbar
 from flightpath.util.editable import EditStates
-from flightpath.util.message_utility import MessageUtility as meut
 
 
 class Content(ClosingTabsHolder):
@@ -21,7 +23,7 @@ class Content(ClosingTabsHolder):
         # we reset the margins below. is there a reason to do it here too?
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self.tab_widget = ClosingTabs(main, parent=self)
+        self.tab_widget = ClosingTabs(main=main, parent=self)
         TabWidgetOverlayButton(self.tab_widget, self, main)
         layout.addWidget(self.tab_widget)
         layout.setContentsMargins(1, 3, 1, 2)
@@ -47,7 +49,7 @@ class Content(ClosingTabsHolder):
     def json_files_are_saved(self) -> bool:
         for i in range(self.tab_widget.count()):
             widget = self.tab_widget.widget(i)
-            if isinstance(widget, JsonViewer2) and widget.modified:
+            if isinstance(widget, (JsonViewer2, JsonViewer)) and widget.modified:
                 return False
         return True
 
@@ -66,66 +68,25 @@ class Content(ClosingTabsHolder):
         return True
 
     def all_files_are_saved(self) -> bool:
-        return (
-            self.csvpath_files_are_saved()
-            and self.json_files_are_saved()
-            and self.data_files_are_saved()
-        )
-
-    def do_i_close(self, i: int) -> bool:
-        if self._do_i_close_reentry_block is True:
-            return
-        self._do_i_close_reentry_block = True
-        try:
-            widget = self.tab_widget.widget(i)
-            cmod = isinstance(widget, CsvpathViewer) and not widget.saved
-            jmod = isinstance(widget, JsonViewer2) and widget.modified
-            mmod = isinstance(widget, MdViewer) and not widget.saved
-            dmod = isinstance(widget, DataViewer) and not widget.saved
-            mod = cmod or jmod or mmod or dmod
-            if mod:
-                #
-                # bring tab into view
-                #
-                self.tab_widget.setTabVisible(i, True)
-                self.tab_widget.setCurrentIndex(i)
-                self.main.main_layout.setCurrentIndex(1)
-                #
-                # confirm
-                #
-                path = widget.objectName()
-                if path.startswith(self.main.state.cwd):
-                    path = path[len(self.main.state.cwd) + 1 :]
-                return meut.yesNo(
-                    parent=self, title="Close file", msg=f"Close {path} without saving?"
-                )
-            return True
-        finally:
-            self._do_i_close_reentry_block = False
-
-    def close_all_tabs(self):
-        #
-        # if we're in a csvpath file that has changes we need to confirm we're discarding the changes
-        #
-        ret = True
-        close = []
         for i in range(self.tab_widget.count()):
             widget = self.tab_widget.widget(i)
-            if self.do_i_close(i):
-                name = widget.objectName()
-                close.append(name)
-            else:
-                ret = False
-        for widget in self.tab_widget.findChildren(QWidget):
-            name = widget.objectName()
-            if name in close:
-                i = self.tab_widget.indexOf(widget)
-                self.tab_widget.close_tab_at(i)
-                close.remove(name)
-                widget.deleteLater()
-        if ret:
-            #
-            # set to welcome
-            #
-            self.main.main_layout.setCurrentIndex(0)
-        return ret
+            m = self.modified(widget)
+            if m is True:
+                return False
+        return True
+
+    def modified(self, widget) -> bool:
+        cmod = isinstance(widget, CsvpathViewer) and not widget.saved
+        jmod2 = isinstance(widget, JsonViewer2) and widget.modified
+        jmod = isinstance(widget, JsonViewer) and widget.modified
+        mmod = isinstance(widget, MdViewer) and not widget.saved
+        dmod = isinstance(widget, DataViewer) and not widget.saved
+        mod = cmod or jmod or jmod2 or mmod or dmod
+        return mod
+
+    def close_all_tabs(self, *, callback: Callable = None, args: dict = None):
+        close = []
+        for i in range(self.tab_widget.count()):
+            close.append(self.tab_widget.widget(i))
+        for widget in close:
+            self.tab_widget.close_tab(widget.objectName(), callback=callback, args=args)

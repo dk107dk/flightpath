@@ -8,7 +8,7 @@ class TreeItem:
     def __init__(self, data: Nos, parent: "TreeItem" = None, *, model):
         self.item_data = data
         self.model = model
-        self.parent_item = parent
+        self.my_parent_item = parent
         self._child_items = None
         self._isfile = None
 
@@ -51,8 +51,8 @@ class TreeItem:
         return len(self.child_items)
 
     def child_number(self) -> int:
-        if self.parent_item:
-            return self.parent_item.child_items.index(self)
+        if self.my_parent_item:
+            return self.my_parent_item.child_items.index(self)
         return 0
 
     def column_count(self) -> int:
@@ -85,7 +85,7 @@ class TreeItem:
         return True
 
     def parent(self):
-        return self.parent_item
+        return self.my_parent_item
 
     def remove_children(self, position: int, count: int) -> bool:
         if position < 0 or position + count > len(self.child_items):

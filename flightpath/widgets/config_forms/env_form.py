@@ -109,7 +109,7 @@ class EnvForm(BlankForm):
         # trees. can't think of a way around. we don't know any env vars impact the
         # trees so we can't be more discriminating about what we reload.
         #
-        self.main.question_config_close()
+        self.main.question_save_config_if()
         Box().empty_my_stuff()
         self.main.load_state_and_cd()
 

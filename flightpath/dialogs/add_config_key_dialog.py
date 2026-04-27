@@ -18,9 +18,9 @@ class AddConfigKeyDialog(QDialog):
         super().__init__(main)
         self.main = main
         self.tree = tree
-        self.parent = parent_item
+        self.my_parent = parent_item
 
-        self.setWindowTitle("Add a config key-value pair")
+        self.setWindowTitle("Add a Config Key-value Pair")
         self.setWindowModality(Qt.ApplicationModal)
 
         self.setFixedHeight(150)
@@ -63,11 +63,11 @@ class AddConfigKeyDialog(QDialog):
 
     def _add(self):
         self.tree.beginResetModel()
-        item = TreeItem(self.parent)
+        item = TreeItem(self.my_parent)
         item.key = self.key_ctl.text()
         item.value = self.value_ctl.text()
         item.value_type = type("")
-        self.parent.appendChild(item)
+        self.my_parent.appendChild(item)
         self.tree.endResetModel()
         self.close()
 

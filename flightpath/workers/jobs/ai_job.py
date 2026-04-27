@@ -11,7 +11,7 @@ class AiJob(Job):
         super().__init__(main=main)
         if mdata is None:
             raise ValueError("Metadata cannot be None")
-        self.parent = parent
+        self.my_parent = parent
         self.mdata = mdata
         self.path = mdata.get("params", {}).get("document_path")
         self.instructions = mdata.get("params", {}).get("instructions", "")

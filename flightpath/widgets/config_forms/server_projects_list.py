@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QListWidget, QMenu
-from PySide6.QtCore import Qt, QPoint
+from PySide6.QtCore import Qt, QPoint, Slot
 from flightpath.util.message_utility import MessageUtility as meut
 
 
@@ -8,7 +8,7 @@ class ServerProjectsList(QListWidget):
         super().__init__(parent)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
-        self.parent = parent
+        self.my_parent = parent
 
     def show_context_menu(self, pos: QPoint):
         global_pos = self.mapToGlobal(pos)
@@ -61,7 +61,7 @@ class ServerProjectsList(QListWidget):
             self.refresh()
 
     def refresh(self) -> None:
-        self.parent.populate()
+        self.my_parent.populate()
 
     def select_item_by_name(self, name):
         found_items = self.findItems(name, Qt.MatchExactly)
@@ -73,9 +73,9 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            self.parent._upload_config(name)
+            self.my_parent._upload_config(name)
         else:
-            meut.message(
+            meut.message2(
                 parent=self, msg="Please select a project", title="Select project"
             )
 
@@ -83,9 +83,9 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            self.parent._sync_config(name)
+            self.my_parent._sync_config(name)
         else:
-            meut.message(
+            meut.message2(
                 parent=self, msg="Please select a project", title="Select project"
             )
 
@@ -93,9 +93,9 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            self.parent._upload_env(name)
+            self.my_parent._upload_env(name)
         else:
-            meut.message(
+            meut.message2(
                 parent=self, msg="Please select a project", title="Select project"
             )
 
@@ -103,9 +103,9 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            self.parent._download_log(name)
+            self.my_parent._download_log(name)
         else:
-            meut.message(
+            meut.message2(
                 parent=self, msg="Please select a project", title="Select project"
             )
 
@@ -113,9 +113,9 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            self.parent._download_config(name)
+            self.my_parent._download_config(name)
         else:
-            meut.message(
+            meut.message2(
                 parent=self, msg="Please select a project", title="Select project"
             )
 
@@ -123,9 +123,9 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            self.parent._download_env(name)
+            self.my_parent._download_env(name)
         else:
-            meut.message(
+            meut.message2(
                 parent=self, msg="Please select a project", title="Select project"
             )
 
@@ -133,17 +133,28 @@ class ServerProjectsList(QListWidget):
         proj = self.currentItem()
         if proj:
             name = proj.text()
-            self.parent._delete_project(name)
+            self.my_parent._delete_project(name)
         else:
-            meut.message(
+            meut.message2(
                 parent=self, msg="Please select a project", title="Select project"
             )
 
     def new_project(self) -> None:
-        proj, ok = meut.input(
+        proj, ok = meut.input2(
             parent=self,
             title="New server project",
             msg="Enter the new FlightPath Server project name",
+            callback=self._new_project_complete,
         )
-        if ok and proj and proj.strip() != "":
-            self.parent._create_project(proj)
+
+    @Slot(tuple)
+    def _new_project_complete(self, t: tuple[str, bool]) -> None:
+        proj, ok = t
+        if not ok:
+            return
+        if str(proj) in ["", "None"]:
+            meut.warning2(
+                parent=self, msg="You must provide a project name", title="Name Project"
+            )
+            return
+        self.my_parent._create_project(proj)

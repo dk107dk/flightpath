@@ -49,7 +49,7 @@ class ListenersForm(BlankForm):
             v.add_to_config(config)
 
     def _setup(self) -> None:
-        self.groups.textChanged.connect(self.main.on_config_changed)
+        self.groups.textChanged.connect(self.main.reactor.on_config_changed)
 
     def populate(self):
         config = self.config

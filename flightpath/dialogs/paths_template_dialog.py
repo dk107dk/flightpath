@@ -4,7 +4,7 @@ from .template_dialog import TemplateDialog
 class PathsTemplateDialog(TemplateDialog):
     def __init__(self, *, main, name, parent):
         super().__init__(parent=parent, main=main, name=name)
-        self.setWindowTitle(f"Add a run template to {name}")
+        self.setWindowTitle(f"Add a Run Template To {name}")
 
         mgr = self.csvpaths.paths_manager
         t = mgr.describer.get_template(self.name)

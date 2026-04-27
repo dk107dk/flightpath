@@ -22,7 +22,7 @@ class LoadPathsDialog(QDialog):
     # parent is a Sidebar
     # loader is a CsvpathLoader
     #
-    def __init__(self, *, path: str, parent, loader):
+    def __init__(self, *, main, path: str, parent, loader):
         super().__init__(None)
         self.sidebar = parent
         self.main = parent.main
@@ -31,7 +31,7 @@ class LoadPathsDialog(QDialog):
         self.mgr = self.csvpaths.paths_manager
         self.named_paths_names = self.mgr.named_paths_names
 
-        self.setWindowTitle("Load csvpath files")
+        self.setWindowTitle("Load Csvpath Statement Files")
         self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.NonModal)
 

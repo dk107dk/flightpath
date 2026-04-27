@@ -64,9 +64,9 @@ class ConfigForm(BlankForm):
         self._setup()
 
     def _setup(self) -> None:
-        self.config_dir_path.textChanged.connect(self.main.on_config_changed)
-        self.allow_var_sub.activated.connect(self.main.on_config_changed)
-        self.var_sub_source.textChanged.connect(self.main.on_config_changed)
+        self.config_dir_path.textChanged.connect(self.main.reactor.on_config_changed)
+        self.allow_var_sub.activated.connect(self.main.reactor.on_config_changed)
+        self.var_sub_source.textChanged.connect(self.main.reactor.on_config_changed)
 
     def add_to_config(self, config) -> None:
         path = self.config_dir_path.text()

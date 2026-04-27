@@ -33,6 +33,7 @@ class LineNumberArea(QWidget):
 class JsonEditor(QPlainTextEdit):
     def __init__(self, parent=None, *, editable=EditStates.EDITABLE):
         super().__init__(parent)
+        self.my_parent = parent
         self.highlighter = JsonHighlighter(self.document())
         self.line_error = 0
         self.editable = editable
@@ -55,17 +56,17 @@ class JsonEditor(QPlainTextEdit):
         if keut.has_control_key(event):
             super().keyPressEvent(event)
             return
-        if self.parentWidget().editable == EditStates.UNEDITABLE:
+        if self.editable == EditStates.UNEDITABLE:
             return
         else:
             if keut.is_edit_key(event):
-                self.parentWidget()._set_modified(True)
+                self.my_parent._set_modified(True)
         super().keyPressEvent(event)
         cursor: QTextCursor = self.textCursor()
         line = cursor.blockNumber()
         column = cursor.positionInBlock()
         msg = f"[{line + 1}, {column}]"
-        self.parentWidget().main.statusBar().showMessage(msg)
+        self.my_parent.main.statusBar().showMessage(msg)
 
     def line_number_area_paint_event(self, event):
         painter = QPainter(self.lineNumberArea)

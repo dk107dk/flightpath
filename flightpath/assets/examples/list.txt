@@ -6,7 +6,7 @@ counting/README.md
 counting/tally_and_subtotal.csvpaths
 counting/temps.txt
 counting/temps.csvpath
-counting/thresholds.csvpath
+counting/thresholds.csvpaths
 counting/summing.csvpath
 
 debugging/error.csvpath

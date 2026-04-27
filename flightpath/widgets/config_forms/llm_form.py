@@ -95,7 +95,7 @@ class LlmForm(BlankForm):
         if not nos.exists():
             nos.makedirs()
         elif nos.isfile():
-            meut.message(parent=self, msg=f"{path} is a file", title="Cannot Open")
+            meut.message2(parent=self, msg=f"{path} is a file", title="Cannot Open")
         else:
             o = osut.file_system_open_cmd()
             os.system(f'{o} "{path}"')
@@ -111,10 +111,10 @@ class LlmForm(BlankForm):
         osut.open_file(path)
 
     def _setup(self) -> None:
-        self.model.textChanged.connect(self.main.on_config_changed)
-        self.base.textChanged.connect(self.main.on_config_changed)
-        self.key.textChanged.connect(self.main.on_config_changed)
-        self.checkbox.stateChanged.connect(self.main.on_config_changed)
+        self.model.textChanged.connect(self.main.reactor.on_config_changed)
+        self.base.textChanged.connect(self.main.reactor.on_config_changed)
+        self.key.textChanged.connect(self.main.reactor.on_config_changed)
+        self.checkbox.stateChanged.connect(self.main.reactor.on_config_changed)
 
     def add_to_config(self, config) -> None:
         config.add_to_config("llm", "model", self.model.text().strip())

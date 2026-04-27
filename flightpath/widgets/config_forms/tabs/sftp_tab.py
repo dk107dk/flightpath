@@ -21,10 +21,10 @@ class SftpTab(QWidget):
         self.password = QLineEdit()
         layout.addRow("Password: ", self.password)
 
-        self.server.textChanged.connect(self.form.main.on_config_changed)
-        self.port.textChanged.connect(self.form.main.on_config_changed)
-        self.username.textChanged.connect(self.form.main.on_config_changed)
-        self.password.textChanged.connect(self.form.main.on_config_changed)
+        self.server.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.port.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.username.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.password.textChanged.connect(self.form.main.reactor.on_config_changed)
 
     @property
     def section(self) -> str:

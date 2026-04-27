@@ -58,8 +58,8 @@ class ResultsForm(BlankForm):
         config.add_to_config("results", "transfers", self.transfers.text())
 
     def _setup(self) -> None:
-        self.archive.textChanged.connect(self.main.on_config_changed)
-        self.transfers.textChanged.connect(self.main.on_config_changed)
+        self.archive.textChanged.connect(self.main.reactor.on_config_changed)
+        self.transfers.textChanged.connect(self.main.reactor.on_config_changed)
 
     def populate(self):
         config = self.config

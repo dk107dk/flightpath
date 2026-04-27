@@ -36,15 +36,23 @@ class SftpPlusTab(QWidget):
         self.port = QLineEdit()
         layout.addRow("Port: ", self.port)
 
-        self.admin_username.textChanged.connect(self.form.main.on_config_changed)
-        self.admin_password.textChanged.connect(self.form.main.on_config_changed)
-        self.api_url.textChanged.connect(self.form.main.on_config_changed)
-        self.scripts_dir.textChanged.connect(self.form.main.on_config_changed)
-        self.execute_timeout.textChanged.connect(self.form.main.on_config_changed)
-        self.mailbox_user.textChanged.connect(self.form.main.on_config_changed)
-        self.mailbox_password.textChanged.connect(self.form.main.on_config_changed)
-        self.server.textChanged.connect(self.form.main.on_config_changed)
-        self.port.textChanged.connect(self.form.main.on_config_changed)
+        self.admin_username.textChanged.connect(
+            self.form.main.reactor.on_config_changed
+        )
+        self.admin_password.textChanged.connect(
+            self.form.main.reactor.on_config_changed
+        )
+        self.api_url.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.scripts_dir.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.execute_timeout.textChanged.connect(
+            self.form.main.reactor.on_config_changed
+        )
+        self.mailbox_user.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.mailbox_password.textChanged.connect(
+            self.form.main.reactor.on_config_changed
+        )
+        self.server.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.port.textChanged.connect(self.form.main.reactor.on_config_changed)
 
     @property
     def section(self) -> str:

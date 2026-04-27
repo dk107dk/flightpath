@@ -35,7 +35,7 @@ class DataToolbar(QToolBar):
 
     def __init__(self, *, parent, main):
         super().__init__()
-        self.parent = parent
+        self.my_parent = parent
         self.main = main
         self.sampling = None
         self.rows = None
@@ -138,14 +138,14 @@ class DataToolbar(QToolBar):
         #
         self.hide()
 
-        self.sampling.activated.connect(self.main.on_reload_data)
-        self.rows.activated.connect(self.main.on_data_rows_changed)
-        self.save_sample.clicked.connect(self.main.on_save_sample)
-        self.delimiter.activated.connect(self.main.on_set_delimiter)
-        self.quotechar.activated.connect(self.main.on_set_quotechar)
-        self.raw_source.clicked.connect(self.main.on_raw_source)
-        self.ai_gen.clicked.connect(self.main.on_ai_gen)
-        self.file_info.clicked.connect(self.main.on_file_info)
+        self.sampling.activated.connect(self.main.reactor.on_reload_data)
+        self.rows.activated.connect(self.main.reactor.on_data_rows_changed)
+        self.save_sample.clicked.connect(self.main.reactor.on_save_sample)
+        self.delimiter.activated.connect(self.main.reactor.on_set_delimiter)
+        self.quotechar.activated.connect(self.main.reactor.on_set_quotechar)
+        self.raw_source.clicked.connect(self.main.reactor.on_raw_source)
+        self.ai_gen.clicked.connect(self.main.reactor.on_ai_gen)
+        self.file_info.clicked.connect(self.main.reactor.on_file_info)
 
     def _add_help(self, callback) -> None:
         self.help = ClickableLabel()

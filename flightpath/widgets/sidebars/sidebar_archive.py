@@ -2,7 +2,7 @@ import os
 import json
 import re
 
-from PySide6.QtWidgets import QMenu, QVBoxLayout, QApplication, QTabWidget
+from PySide6.QtWidgets import QMenu, QVBoxLayout, QTabWidget
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView
@@ -12,13 +12,11 @@ from csvpath.util.path_util import PathUtility as pathu
 from csvpath.util.config import Config
 from csvpath.util.file_readers import DataFileReader
 
-
 from flightpath.widgets.accordion.query_accordion import QueryAccordionWidget
 from flightpath.widgets.sidebars.sidebar_archive_listener import SidebarArchiveListener
 from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from .sidebar_archive_ref_maker import SidebarArchiveRefMaker
-from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.util.message_utility import MessageUtility as meut
 
 from flightpath.dialogs.reference_files.reference_file_handler import (
@@ -26,7 +24,6 @@ from flightpath.dialogs.reference_files.reference_file_handler import (
 )
 from flightpath.dialogs.run_info_dialog import RunInfoDialog
 
-from flightpath.util.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
 from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
 
@@ -50,12 +47,14 @@ class SidebarArchive(SidebarRightBase):
         #
         if self.check_sftp(self.config.get(section="results", name="archive")) is True:
             self.setup()
+            self.show_tabs()
         else:
-            meut.warning(
-                parent=self, title="Check SFTP", msg="SFTP is used but not configured"
+            meut.warning2(
+                parent=self,
+                title="Check SFTP",
+                msg="SFTP is used but not configured",
+                callback=self.show_tabs,
             )
-        if tabs is not None:
-            self.show_tabs(tabs)
 
     def run_ended(self, cid: str, error: bool) -> None:
         for _ in self.runs.items:
@@ -162,7 +161,7 @@ class SidebarArchive(SidebarRightBase):
         run_dir = metadata.get("run_dir")
         if run_dir is None:
             return
-        rfh = ReferenceFileHandler(parent=self)
+        rfh = ReferenceFileHandler(main=self.main, parent=self)
         rfh._show_run_dir_for_path(self, run_dir)
 
     def on_item_close_requested(self, metadata: dict):
@@ -177,7 +176,9 @@ class SidebarArchive(SidebarRightBase):
                 d.show_dialog()
                 break
 
-    def show_tabs(self, tabs: QTabWidget) -> None:
+    def show_tabs(self) -> None:
+        if self.tabs is None:
+            return
         layout = self.layout()
         layout.removeWidget(self.view)
         layout.addWidget(self.tabs)
@@ -308,7 +309,7 @@ class SidebarArchive(SidebarRightBase):
             #
             # moved from main
             #
-            self.view.clicked.connect(self.on_archive_tree_click)
+            self.view.clicked.connect(self.main.reactor.on_archive_tree_click)
             if do_layout is True:
                 layout = self.layout()
                 if layout is None:
@@ -318,24 +319,11 @@ class SidebarArchive(SidebarRightBase):
                 layout.addWidget(self.view)
                 self.setLayout(layout)
         except Exception as e:
-            meut.warning(
+            meut.warning2(
                 parent=self,
                 title=f"{type(e)} error loading named-paths",
                 msg=f"Archive error: {e}",
             )
-
-    #
-    # moved from main
-    #
-    def on_archive_tree_click(self, index):
-        self.main.selected_file_path = self.model.filePath(index)
-        nos = Nos(self.main.selected_file_path)
-        if not nos.isfile():
-            ...
-            # self._show_welcome_but_do_not_deselect()
-        else:
-            self.main.read_validate_and_display_file(editable=EditStates.UNEDITABLE)
-            self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
 
     def refresh(self) -> None:
         v = None
@@ -380,7 +368,7 @@ class SidebarArchive(SidebarRightBase):
 
         self.delete_action = QAction()
         self.delete_action.setText("Permanent delete")
-        self.delete_action.triggered.connect(self._delete_file_navigator_item)
+        self.delete_action.triggered.connect(self._delete_archive_view_item)
 
         self.context_menu.addAction(self.repeat_run_action)
         self.context_menu.addAction(self.new_run_action)
@@ -389,13 +377,6 @@ class SidebarArchive(SidebarRightBase):
         self.context_menu.addAction(self.copy_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
-
-    def _copy_path(self) -> None:
-        from_index = self.view.currentIndex()
-        if from_index.isValid():
-            path = self.model.filePath(from_index)
-            clipboard = QApplication.instance().clipboard()
-            clipboard.setText(path)
 
     def _results_mani_path_for_path(self, path: str) -> str:
         if path is None:
@@ -515,46 +496,6 @@ class SidebarArchive(SidebarRightBase):
             if global_pos:
                 self.context_menu.exec(global_pos)
 
-    def _find_data(self) -> None:
-        find = FindFileByReferenceDialog(main=self.main)
-        self.main.show_now_or_later(find)
-
-    """
-    def _copy_results_back_to_cwd(self) -> None:
-        #
-        # TODO: this has been generalized in Fiut. switch to that.
-        #
-        from_index = self.view.currentIndex()
-        if from_index.isValid():
-            from_path = self.model.filePath(from_index)
-            #from_nos = Nos(from_path)
-            to_index = self.main.sidebar.file_navigator.currentIndex()
-
-            to_path = None
-            if to_index.isValid():
-                to_path = self.main.sidebar.proxy_model.filePath(to_index)
-            else:
-                to_path = self.main.state.cwd
-            to_nos = Nos(to_path)
-            if to_nos.isfile():
-                to_nos.path = os.path.dirname(to_path)
-            to_path = fiut.deconflicted_path(to_path, f"{os.path.basename(from_path)}")
-            to_nos.path = to_path
-            if to_nos.exists():
-                #
-                # this won't realistically happen
-                #
-                print(f"ERROR: {to_nos} exists")
-            try:
-                with DataFileReader(from_path) as ffrom:
-                    with DataFileWriter(path=to_path) as tto:
-                        tto.write(ffrom.read())
-            except NotADirectoryError:
-                QMessageBox.warning(self, "Error", "Cannot copy item over another file")
-        else:
-            QMessageBox.warning(self, "Error", "Cannot copy item")
-    """
-
     def _new_run(self) -> None:
         maker = SidebarArchiveRefMaker(main=self.main, parent=self)
         maker._new_run()
@@ -562,42 +503,3 @@ class SidebarArchive(SidebarRightBase):
     def _repeat_run(self) -> None:
         maker = SidebarArchiveRefMaker(main=self.main, parent=self)
         maker._repeat_run()
-
-    def _delete_file_navigator_item(self):
-        index = self.view.currentIndex()
-        if index.isValid():
-            path = self.model.filePath(index)
-            nos = Nos(path)
-            confirm = meut.yes_no(
-                parent=self, title="Delete", msg=f"Permanently delete {path}?"
-            )
-            if confirm is True:
-                try:
-                    nos.remove()
-                except OSError as e:
-                    meut.warning(parent=self, title="Error", msg=str(e))
-                else:
-                    #
-                    # TODO: this will have to change because we don't want to dismiss
-                    # content that is being worked on from the working dir side
-                    #
-                    # if is_selected:
-                    #    self.window().show_welcome_screen()
-                    self.window().statusBar().showMessage("{path} deleted")
-                    #
-                    # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
-                    # but for now it should work. refreshing named_files is probably fair, but that's
-                    # also tricky because we'd want to recreate the opened/closed state of the folders
-                    # and if we did that the refresh might slow down potentially a lot. so long-term,
-                    # seems like we should capture what is registered and manually add it. no fun. :/
-                    #
-                    # self.main._setup_central_widget()
-                    self.main.renew_sidebar_archive()
-                    #
-                    # do we reset the connects for on click?
-                    #
-                    # _connects -> on_archive_tree_click -> read_validate_and_display_file
-                    #
-                    #   self.sidebar_rt_bottom.view.clicked.connect(self.on_archive_tree_click)
-                    #
-                    #

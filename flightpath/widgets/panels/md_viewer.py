@@ -1,7 +1,7 @@
 import os
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout
-from PySide6.QtCore import Qt, QFileInfo
+from PySide6.QtCore import Qt, QFileInfo, Slot
 from PySide6.QtGui import QKeySequence, QAction
 
 
@@ -188,14 +188,30 @@ class MdViewer(QWidget):
             return
         thepath = self.path
         thepath = os.path.dirname(thepath)
-        name = os.path.basename(self.path)
-
-        name, ok = meut.input(
-            parent=self, title="Save As", msg="Where should the new file live? "
+        # name = os.path.basename(self.path)
+        meut.input2(
+            parent=self,
+            title="Save As",
+            width=580,
+            text=thepath,
+            msg="Where should the new file live? ",
+            callback=self._on_save_as_complete,
+            args={"thepath": thepath},
         )
-        if ok and name:
-            path = fiut.deconflicted_path(thepath, name)
-            self._save(path=path)
+
+    @Slot(tuple)
+    def _on_save_as_complete(self, inputs: tuple[str, bool], *, thepath: str):
+        name, ok = inputs
+        if not ok:
+            return
+        if thepath is None:
+            raise ValueError("Name cannot be None")
+        if str(thepath) in ["", "None"]:
+            return
+        if str(name) in ["", "None"]:
+            return
+        path = fiut.deconflicted_path(thepath, name)
+        self._save(path=path)
 
     def _save(self, path: str) -> None:
         info = QFileInfo(self.path)

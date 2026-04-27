@@ -1,6 +1,7 @@
 import os
 import json
 import traceback
+from typing import Callable
 
 from PySide6.QtWidgets import (
     QTabWidget,
@@ -11,6 +12,8 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QTextEdit,
     QPlainTextEdit,
+    QMessageBox,
+    QWidget,
 )
 from PySide6.QtGui import QIcon, QAction, QPageLayout, QPageSize
 from PySide6.QtPrintSupport import QPrinter
@@ -23,17 +26,18 @@ from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.tabs_nonscrolling_tab_bar import NonScrollingTabBar
 from flightpath.util.tabs_utility import TabsUtility as taut
+from flightpath.util.message_utility import MessageUtility as meut
 
 
 class ClosingTabs(QTabWidget):
-    def __init__(self, main, *, parent=None):
+    def __init__(self, *, main, parent=None):
         super().__init__(main)
         self.main = main
         #
         # if we live in content we (may) need to know it.
         # if we're the info & feedback we don't.
         #
-        self.my_parent = parent  # was self.parent, but that overrides the qt parent
+        self.my_parent = parent
         self.currentChanged.connect(self.on_tab_change)
         self.setup_context_menu()
         #
@@ -51,9 +55,11 @@ class ClosingTabs(QTabWidget):
 
     def show_context_menu(self, pos):
         index = self.tabBar().tabAt(pos)
+        print(f"tabscs: show_context_menu: index: {index}")
         if index == -1:
             return  # Clicked outside of any tab
         t = self.widget(index)
+        print(f"tabscs: show_context_menu: t: {t}")
         #
         # this could allow for a ctx menu on the main tab bar if a file were named
         # "Matches". but that would be a weird name and a subtle impact. can probably just
@@ -61,18 +67,22 @@ class ClosingTabs(QTabWidget):
         #
         if t.objectName() in ["Code"]:
             return
+        save_sample = None
+        menu = QMenu(self)
         if t.objectName() in ["Why", "Help Content", "FileInfo"]:
-            menu = QMenu(self)
             save_sample = QAction("Save to PDF", self)
             menu.addAction(save_sample)
             save_sample.triggered.connect(lambda: self.on_save_pdf(index))
             menu.popup(self.mapToGlobal(pos))
-            return
-        menu = QMenu(self)
-        save_sample = QAction("Save", self)
-        menu.addAction(save_sample)
-        save_sample.triggered.connect(lambda: self.on_save_sample(index))
-        menu.popup(self.mapToGlobal(pos))
+        # elif hasattr(t, "editable") :  #and t.editable is True
+        else:
+            save_sample = QAction("Save as", self)
+            menu.addAction(save_sample)
+            save_sample.triggered.connect(lambda: self.on_save_sample(index))
+            menu.popup(self.mapToGlobal(pos))
+        # else:
+        #    ...
+        # save as needed?
 
     def on_save_pdf(self, index: int, landscape=False) -> None:
         t = self.widget(index)
@@ -184,7 +194,9 @@ class ClosingTabs(QTabWidget):
                 self.main.save_sample(path=path, name=ton, data=txt)
 
     @Slot(str)
-    def close_tab(self, name: str) -> bool:
+    def close_tab(
+        self, name: str, *, callback: Callable = None, args: dict = None
+    ) -> None:
         #
         # we find tabs by name because the indexes change
         # using our own tab close icon made the changing
@@ -192,32 +204,57 @@ class ClosingTabs(QTabWidget):
         # exact, anyway.
         #
         t = taut.find_tab(self, name)
-        #
-        # confirm if needed
-        #
         if t is None:
             raise ValueError(f"Tab named {name} cannot be None")
-        if self.my_parent and hasattr(self.my_parent, "do_i_close"):
-            if not self.my_parent.do_i_close(t[0]):
-                return False
-        elif not self.main.content.do_i_close(t[0]):
-            return False
-        #
-        # remove and delete
-        #
-        if t:
-            try:
-                self.removeTab(t[0])
-                t[1].setParent(None)
-                t[1].deleteLater()
-                #
-                # show and hides
-                #
-                self._configure_tabs()
-                return True
-            except Exception:
-                print(traceback.format_exc())
-        return False
+
+        i = taut.tab_index(self, t[1])
+        self.setTabVisible(i, True)
+        self.setCurrentIndex(i)
+        self.main.main_layout.setCurrentIndex(1)
+        if not self.my_parent.modified(t[1]):
+            self._close_tab_if(QMessageBox.Yes, t=t, callback=callback, args=args)
+            return
+
+        cn = (
+            name[len(self.main.state.cwd) + 1 :]
+            if name.startswith(self.main.state.cwd)
+            else name
+        )
+
+        meut.yesNo2(
+            parent=self,
+            title="Close Without Saving?",
+            msg=f"Close {cn} without saving?",
+            callback=self._close_tab_if,
+            args={"t": t, "callback": callback, "args": args},
+        )
+
+    @Slot(int)
+    def _close_tab_if(
+        self,
+        answer: int,
+        *,
+        t: tuple[str, QWidget],
+        callback: Callable = None,
+        args: dict = None,
+    ) -> None:
+        if answer == QMessageBox.No:
+            if callback:
+                args = {} if args is None else args
+                callback(**args)
+            return
+        if t is None:
+            raise ValueError("No tab selected")
+        try:
+            self.removeTab(t[0])
+            t[1].setParent(None)
+            t[1].deleteLater()
+            self._configure_tabs()
+            if callback:
+                args = {} if args is None else args
+                callback(**args)
+        except Exception:
+            print(traceback.format_exc())
 
     def close_tab_at(self, index: int) -> bool:
         #
@@ -240,9 +277,9 @@ class ClosingTabs(QTabWidget):
         #
         if self.my_parent.can_have_edit_tabs:
             if not self.has_data_tabs():
-                self.main._on_data_toolbar_hide()
+                self.main.reactor.on_data_toolbar_hide()
             if not self.has_csvpath_tabs():
-                self.main._rt_tabs_hide()
+                self.main.rt_tabs_hide()
         #
         # helper is responsable for the closing tabs it desplays help in
         # so we cannot use Helper directly. we could just assume any time

@@ -25,10 +25,10 @@ from flightpath.util.message_utility import MessageUtility as meut
 
 
 class CompileEnvDialog(QDialog):
-    def __init__(self, *, name, parent):
+    def __init__(self, *, main, name, parent):
         super().__init__(parent)
-        self.parent = parent
-        self.main = parent.main
+        self.my_parent = parent
+        self.main = main
         self.name = name
         self.context_menu = None
         #
@@ -40,7 +40,7 @@ class CompileEnvDialog(QDialog):
         self.setFixedHeight(760)
         self.setFixedWidth(600)
 
-        self.setWindowTitle(f"Collect env vars for the {self.name} project")
+        self.setWindowTitle(f"Collect Env Vars For the {self.name} Project")
         self.upload_button = None  # QPushButton()
         self.cancel_button = None  # QPushButton()
         self.setWindowModality(Qt.ApplicationModal)
@@ -229,7 +229,7 @@ class CompileEnvDialog(QDialog):
                 self.table_of_sending.setItem(i, 1, vi)
         except Exception:
             print(traceback.format_exc())
-            meut.warning(
+            meut.warning2(
                 parent=self,
                 msg=f"Cannot download the {self.name} env",
                 title="Download failed",

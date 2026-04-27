@@ -63,8 +63,8 @@ class CacheForm(BlankForm):
         return self._cache_dir_path
 
     def _setup(self) -> None:
-        self.use_cache.activated.connect(self.main.on_config_changed)
-        self.cache_dir_path.textChanged.connect(self.main.on_config_changed)
+        self.use_cache.activated.connect(self.main.reactor.on_config_changed)
+        self.cache_dir_path.textChanged.connect(self.main.reactor.on_config_changed)
 
     def add_to_config(self, config) -> None:
         path = self.cache_dir_path.text()

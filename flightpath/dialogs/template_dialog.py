@@ -23,7 +23,7 @@ class TemplateDialog(QDialog):
 
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
-        self.setWindowTitle(f"Add a template to {name}")
+        self.setWindowTitle(f"Add a Template To {name}")
 
         self.name = name
         self.set_button = QPushButton()

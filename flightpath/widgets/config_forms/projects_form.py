@@ -30,17 +30,17 @@ class ProjectsForm(BlankForm):
         path = os.path.join(self.main.state.home, self.main.state.projects_home)
         nos = Nos(path)
         if not nos.exists():
-            meut.message(
+            nos.makedirs()
+            meut.message2(
                 parent=self,
                 msg=f"{path} does not exist. Creating it.",
                 title="Not Found",
             )
-            nos.makedirs()
         elif nos.isfile():
             #
             # TODO: this could, rarely, happen. we should alert the user of the misconfig.
             #
-            meut.message(
+            meut.warning2(
                 parent=self,
                 msg=f"{path} is a file.",
                 title="Cannot Open",
@@ -50,7 +50,7 @@ class ProjectsForm(BlankForm):
             os.system(f'{o} "{path}"')
 
     def _setup(self) -> None:
-        self.project_dir.textChanged.connect(self.main.on_config_changed)
+        self.project_dir.textChanged.connect(self.main.reactor.on_config_changed)
 
     def add_to_config(self, config) -> None:
         home = self.project_dir.text()
@@ -68,7 +68,7 @@ class ProjectsForm(BlankForm):
                 self.project_dir.setText(self.original_projects_home)
 
     def alert(self) -> None:
-        meut.warning(
+        meut.warning2(
             parent=self,
             title="Not Writable",
             msg="Not a writable location. Your projects path has not been changed. Please pick another projects directory.",

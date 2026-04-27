@@ -8,7 +8,7 @@ class TabWidgetOverlayButton(QWidget):
         super().__init__()
         self.tabs = tabs
         self.main = main
-        self.parent = parent
+        self.my_parent = parent
 
         # Create close all button
         self.close_all_button = QPushButton()
@@ -27,7 +27,7 @@ class TabWidgetOverlayButton(QWidget):
         self.setLayout(layout)
 
         # Connect the button's clicked signal directly
-        self.close_all_button.clicked.connect(self.parent.close_all_tabs)
+        self.close_all_button.clicked.connect(self.my_parent.close_all_tabs)
 
         # Make the button a proper widget in the corner of the tab widget
         self.tabs.setCornerWidget(self, Qt.Corner.TopRightCorner)

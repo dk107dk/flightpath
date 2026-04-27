@@ -13,7 +13,7 @@ class RawViewer(QWidget):
     def __init__(self, *, main, parent, editable=None, path: str = None):
         super().__init__()
         self.main = main
-        self.parent = parent
+        self.my_parent = parent
         #
         # sets the font size
         #
@@ -46,15 +46,19 @@ class RawViewer(QWidget):
             self.text_edit.setReadOnly(True)
 
         layout.addWidget(self.label)
+        self.label.hide()  # we used this to communicate about errors in the past. not sure its ever used atm. delete?
         layout.addWidget(self.text_edit)
 
         self.loaded = False
 
+    def toPlainText(self) -> str:
+        return self.text_edit.toPlainText()
+
     def on_toggle(self) -> None:
-        self.parent.toggle_grid_raw()
+        self.my_parent.toggle_grid_raw()
 
     def on_save(self) -> None:
-        self.parent.on_save()
+        self.my_parent.on_save()
         #
         # we also need to refresh the grid so it is synched up when we toggle back.
         #
@@ -62,16 +66,17 @@ class RawViewer(QWidget):
     def on_save_as(self) -> None:
         ap = self.main.csvpath_config.archive_path
         ncp = self.main.csvpath_config.inputs_csvpaths_path
-        if self.parent.path.startswith(ap) or self.parent.path.startswith(ncp):
+        if self.my_parent.path.startswith(ap) or self.my_parent.path.startswith(ncp):
             self.on_save_as(switch_local=True)
         else:
-            self.parent.on_save_as()
+            self.my_parent.on_save_as()
         #
         # we also need to refresh the grid so it is synched up when we toggle back.
         #
 
     def on_text_changed(self) -> None:
-        self.parent.mark_unsaved()
+        if hasattr(self.my_parent, "mark_unsaved"):
+            self.my_parent.mark_unsaved()
 
     #
     # required by raw text edit. not used here, atm. see: on_text_changed
@@ -79,7 +84,12 @@ class RawViewer(QWidget):
     def desaved(self) -> bool:
         return True
 
-    def open_file(self, filepath, lines_to_take=None):
+    def open_string(self, text) -> None:
+        self.text_edit.setPlainText(text)
+        self.main.show_now_or_later(self.text_edit)
+        self.loaded = True
+
+    def open_file(self, filepath, lines_to_take=None) -> None:
         if not Nos(filepath).isfile():
             return
         content = ""

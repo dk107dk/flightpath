@@ -26,8 +26,8 @@ class OtlpTab(QWidget):
         msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
         layout.addRow("", msg)
 
-        self.headers.textChanged.connect(self.form.main.on_config_changed)
-        self.endpoint.textChanged.connect(self.form.main.on_config_changed)
+        self.headers.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.endpoint.textChanged.connect(self.form.main.reactor.on_config_changed)
 
     @property
     def section(self) -> str:

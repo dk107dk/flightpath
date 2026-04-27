@@ -20,9 +20,9 @@ class PickPathsDialog(QDialog):
         super().__init__(main)
         self.main = main
         self.tree = tree
-        self.parent = parent_item
+        self.my_parent = parent_item
 
-        self.setWindowTitle("Pick or add a named-path")
+        self.setWindowTitle("Pick Or Add a Statements Group")
 
         self.setFixedHeight(200)
         self.setFixedWidth(430)
@@ -82,10 +82,10 @@ class PickPathsDialog(QDialog):
             else existing
         )
         self.tree.beginResetModel()
-        item = TreeItem(self.parent)
+        item = TreeItem(self.my_parent)
         item.key = named_paths_name
         item.value_type = type([])
-        self.parent.appendChild(item)
+        self.my_parent.appendChild(item)
         self.tree.endResetModel()
         self.close()
 

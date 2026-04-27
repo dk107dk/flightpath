@@ -24,11 +24,11 @@ class MarquezTab(QWidget):
         self.verify = QLineEdit()
         layout.addRow("Verify: ", self.verify)
 
-        self.base_url.textChanged.connect(self.form.main.on_config_changed)
-        self.endpoint.textChanged.connect(self.form.main.on_config_changed)
-        self.api_key.textChanged.connect(self.form.main.on_config_changed)
-        self.timeout.textChanged.connect(self.form.main.on_config_changed)
-        self.verify.textChanged.connect(self.form.main.on_config_changed)
+        self.base_url.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.endpoint.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.api_key.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.timeout.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.verify.textChanged.connect(self.form.main.reactor.on_config_changed)
 
     @property
     def section(self) -> str:

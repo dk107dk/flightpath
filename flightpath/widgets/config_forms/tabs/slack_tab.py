@@ -11,7 +11,7 @@ class SlackTab(QWidget):
         self.webhook_url = QLineEdit()
         layout.addRow("Webhook URL: ", self.webhook_url)
 
-        self.webhook_url.textChanged.connect(self.form.main.on_config_changed)
+        self.webhook_url.textChanged.connect(self.form.main.reactor.on_config_changed)
 
     @property
     def section(self) -> str:

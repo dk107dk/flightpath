@@ -1,20 +1,130 @@
-from PySide6.QtWidgets import QMessageBox, QWidget, QInputDialog
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtCore import QTimer
+from typing import Callable
+
+from PySide6.QtWidgets import QMessageBox, QWidget, QInputDialog, QDialog
+from PySide6.QtCore import QSize
 
 from flightpath.dialogs.error_dialog import ErrorDialog
 
 
 class MessageUtility:
     @classmethod
-    def _z(cls, box) -> None:
-        box.setWindowModality(Qt.ApplicationModal)
-        box.setWindowFlags(
-            box.windowFlags() | Qt.WindowTitleHint | Qt.WindowSystemMenuHint
-            # Remove WindowStaysOnTopHint — let ApplicationModal handle exclusivity
+    def message2(
+        cls,
+        *,
+        parent: QWidget,
+        msg: str,
+        title: str = "",
+        icon: str = None,
+        callback: Callable = None,
+        args: dict = None,
+    ) -> None:
+        if icon is None:
+            icon = QMessageBox.Critical
+        if title is None:
+            title = "Attention"
+        box = QMessageBox(parent=parent)
+        box.setIcon(icon)
+        box.setWindowTitle(title)
+        box.setText(msg)
+        box.setStandardButtons(QMessageBox.Ok)
+        args = {} if args is None else args
+
+        def finished():
+            callback(**args)
+
+        if callback is not None:
+            box.finished.connect(finished)
+            box.deleteLater()
+        box.show()
+
+    @classmethod
+    def warning2(
+        cls,
+        *,
+        parent: QWidget,
+        msg: str,
+        title: str = "",
+        icon: str = None,
+        callback: Callable = None,
+        args: dict = None,
+    ) -> None:
+        cls.message2(
+            parent=parent, msg=msg, title=title, icon=icon, callback=callback, args=args
         )
-        QTimer.singleShot(0, box.raise_)
-        QTimer.singleShot(0, box.activateWindow)
+
+    @classmethod
+    def errors2(
+        cls,
+        *,
+        parent: QWidget,
+        msg: str,
+        title: str = "",
+        errors: dict | list = None,
+        callback: Callable = None,
+    ) -> None:
+        box = ErrorDialog(parent=parent, msg=msg, title=title, errors=errors)
+        if callback is not None:
+            box.finished.connect(callback)
+            box.deleteLater()
+        box.show()
+
+    @classmethod
+    def input2(
+        cls,
+        *,
+        parent: QWidget,
+        msg: str,
+        title: str = "",
+        width: int = 420,
+        height: int = 125,
+        text: str = None,
+        callback: Callable,
+        args: dict = None,
+    ) -> None:
+        args = {} if args is None else args
+        box = QInputDialog(parent)
+        box.setFixedSize(QSize(width, height))
+        box.setLabelText(msg)
+        box.setWindowTitle(title)
+        if text is not None:
+            box.setTextValue(text)
+
+        def finished(result: int) -> tuple[str, bool]:
+            ok = result == QDialog.Accepted
+            value = box.textValue()
+            callback((value, ok), **args)
+            box.deleteLater()
+
+        box.finished.connect(finished)
+        box.open()
+
+    @classmethod
+    def yesNo2(
+        cls,
+        *,
+        parent: QWidget,
+        callback: Callable,
+        msg: str,
+        title: str = "",
+        args=None,
+    ) -> int:
+        box = QMessageBox(parent)
+        box.setText(title)
+        box.setInformativeText(msg)
+        box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        box.setDefaultButton(QMessageBox.No)
+        args = {} if args is None else args
+
+        def finished(r: int):
+            callback(r, **args)
+            box.deleteLater()
+
+        box.finished.connect(finished)
+        box.open()
+
+    # ============================================================
+    # old exec ways
+    #
 
     @classmethod
     def message(
@@ -29,40 +139,38 @@ class MessageUtility:
         box.setWindowTitle(title)
         box.setText(msg)
         box.setStandardButtons(QMessageBox.Ok)
-        cls._z(box)
-        box.exec()
+        box.show()
 
     @classmethod
     def warning(cls, *, parent: QWidget, msg: str, title: str = "") -> None:
-        if title is None:
-            title = "Warning"
-        QMessageBox.warning(parent, title, msg)
+        #
+        # for now, during cleanup, nothing different
+        #
+        cls.message(parent=parent, msg=msg, title=title)
 
     @classmethod
     def error(
         cls, *, parent: QWidget, msg: str, title: str = "", errors_json=None
     ) -> None:
-        box = ErrorDialog(parent=parent, message=msg, title=title, errors=errors_json)
-        cls._z(box)
-        box.exec()
+        #
+        # for now, during cleanup, nothing different
+        #
+        cls.message(parent=parent, msg=msg, title=title)
 
-    @classmethod
-    def yes_no(cls, *, parent: QWidget, msg: str, title: str = "") -> bool:
-        return cls.yesNo(parent=parent, msg=msg, title=title)
+    # ===================================
 
+    """
     @classmethod
-    def yesNo(cls, *, parent: QWidget, msg: str, title: str = "") -> bool:
-        box = QMessageBox()  # parent=parent
+    def yesNo(cls, *, parent: QWidget, callback:Callable, msg: str, title: str = "") -> bool:
+        box = QMessageBox(parent)
         box.setText(title)
         box.setInformativeText(msg)
         box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         box.setDefaultButton(QMessageBox.No)
         # cls._z(box)
-        ret = box.exec()
-        ret = ret == QMessageBox.Yes
-        return ret
-
-    # return cls.yesNoButtons(parent=parent, msg=msg, title=title, std_buttons=std_buttons)
+        box.finished.connect(callback)
+        ret = box.open()
+    """
 
     @classmethod
     def yesNoButtons(

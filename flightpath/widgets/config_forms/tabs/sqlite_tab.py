@@ -11,7 +11,7 @@ class SqliteTab(QWidget):
         self.db = QLineEdit()
         layout.addRow("Database file: ", self.db)
 
-        self.db.textChanged.connect(self.form.main.on_config_changed)
+        self.db.textChanged.connect(self.form.main.reactor.on_config_changed)
 
     @property
     def section(self) -> str:

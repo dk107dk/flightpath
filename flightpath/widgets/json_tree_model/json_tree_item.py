@@ -18,7 +18,7 @@ class TreeItem:
   value: {self.value},
   value_type: {self.value_type},
   children: {len(self.children)},
-  parent{self.parent}"""
+  parent{self.my_parent}"""
 
     def appendChild(self, item: "TreeItem"):
         self._children.append(item)

@@ -1,9 +1,9 @@
 import traceback
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QMessageBox
 
-# from csvpath import CsvPaths
+from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
 from flightpath.dialogs.load_paths_dialog import LoadPathsDialog
@@ -18,7 +18,7 @@ class CsvpathLoader:
 
     def load_paths(self, path) -> None:
         self.load_dialog = LoadPathsDialog(
-            path=path, parent=self.main.sidebar, loader=self
+            main=self.main, path=path, parent=self.main.sidebar, loader=self
         )
         # When the dialog finishes, drop the reference
         self.load_dialog.finished.connect(lambda _: setattr(self, "load_dialog", None))
@@ -51,13 +51,11 @@ class CsvpathLoader:
             template = None
         elif not template.endswith(":run_dir"):
             self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
-            meut.message(
+            meut.message2(
                 parent=self.load_dialog,
                 title="Incorrect Template",
                 msg="A named-path group template must end in :run_dir",
             )
-            self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, True)
-            self.load_dialog.show()
             return
         named_paths_name = None
         if self.load_dialog.named_paths_name_ctl:
@@ -65,13 +63,49 @@ class CsvpathLoader:
         if named_paths_name and named_paths_name.strip() == "":
             named_paths_name = None
         paths = self.main.csvpaths
+
+        if paths.paths_manager.has_named_paths(named_paths_name):
+            meut.yesNo2(
+                parent=self,
+                title="Continue?",
+                msg=(
+                    "Are you sure you want to overwrite an existing named-paths group?"
+                    if overwrite
+                    else "Are you sure you want to append to an existing named-paths group?"
+                ),
+                callback=self._do_load_file,
+                args={
+                    "overwrite": overwrite,
+                    "named_paths_name": named_paths_name,
+                    "paths": self.main.csvpaths,
+                    "template": template,
+                },
+            )
+            return
+        self._do_load_file(
+            QMessageBox.Yes,
+            overwrite=overwrite,
+            named_paths_name=named_paths_name,
+            paths=paths,
+            template=template,
+        )
+
+    @Slot(int)
+    def _do_load_file(
+        self,
+        answer: int,
+        *,
+        named_paths_name: str,
+        paths: CsvPaths,
+        overwrite: bool = True,
+        template: str = None,
+    ) -> None:
+        if answer == QMessageBox.No:
+            return
         #
         # if the named-paths name exists, warn the user that they are adding a named-path to the group
         #
         try:
-            if paths.paths_manager.has_named_paths(named_paths_name):
-                if not self._check_ok_to_proceed(overwrite):
-                    return
             name = self.load_dialog.path
             name = "" if not name else name.strip()
             if Nos(name).isfile():
@@ -99,18 +133,19 @@ class CsvpathLoader:
                         append=(not overwrite),
                     )
                     if ref is None or str(ref).strip() == "":
-                        meut.message(
+                        meut.warning2(
                             parent=self.load_dialog,
-                            msg="Cannot load file.",
+                            msg="Cannot load file",
                             title="Cannot Load",
                         )
+                        return
                 else:
                     raise ValueError(f"Unknown file type: {name}")
             self.main.sidebar._renew_sidebars()
             self._delete_load_dialog()
         except Exception as e:
             print(traceback.format_exc())
-            meut.message(
+            meut.warning2(
                 parent=self.load_dialog,
                 title="Error",
                 msg=f"Cannot load named-paths group: {e}",
@@ -139,11 +174,13 @@ class CsvpathLoader:
         try:
             lst = paths.paths_manager.add_named_paths_from_json(file_path=name)
             if lst is None or len(lst) == 0:
-                meut.message(
+                meut.warning2(
                     parent=self.load_dialog,
-                    msg="Cannot load file.",
+                    msg="Cannot load file",
                     title="Cannot Load",
+                    callback=self._delete_load_dialog,
                 )
+                return
         except Exception as e:
             msg = traceback.format_exc()
             ex = e
@@ -160,8 +197,14 @@ class CsvpathLoader:
                 msg = f"There was {len(paths.errors)} error"
             else:
                 msg = f"There were {len(paths.errors)} errors"
-
-            meut.error(parent=self.load_dialog, msg=msg, title="Error", errors_json=ja)
+            meut.errors2(
+                parent=self.load_dialog,
+                msg=msg,
+                title="Error",
+                errors_json=ja,
+                callback=self._delete_load_dialog,
+            )
+            return
 
         else:
             self.main.sidebar._renew_sidebars()
@@ -184,22 +227,59 @@ class CsvpathLoader:
         # if the named-paths name exists, warn the user that they are adding a named-path to the group
         #
         if paths.paths_manager.has_named_paths(named_paths_name):
-            if not self._check_ok_to_proceed(overwrite):
-                return
+            msg = (
+                "Are you sure you want to overwrite an existing named-paths group?"
+                if overwrite
+                else "Are you sure you want to append to an existing named-paths group?"
+            )
+            meut.yesNo2(
+                parent=self.load_dialog,
+                title="Load Paths",
+                msg=msg,
+                callback=self._do_load_dir_answer,
+                args={
+                    "template": template,
+                    "paths": paths,
+                    "named_paths_name": named_paths_name,
+                    "name": name,
+                },
+            )
+            return
+        self._do_load_dir_answer(
+            QMessageBox.Yes,
+            paths=paths,
+            named_paths_name=named_paths_name,
+            template=template,
+            name=name,
+        )
+
+    @Slot(int)
+    def _do_load_dir_answer(
+        self,
+        answer,
+        *,
+        paths: CsvPaths,
+        named_paths_name: str,
+        name: str,
+        template: str = None,
+    ) -> None:
         #
         # atm, paths_manager gacks on "". this has been fixed in csvpath as of 507
         #
-        if str(template).strip() == "":
+        if str(template).strip() in ["", "None"]:
             template = None
         lst = paths.paths_manager.add_named_paths_from_dir(
             name=named_paths_name, directory=name, template=template
         )
         if lst is None or len(lst) == 0:
-            meut.message(
+            meut.warning2(
                 parent=self.load_dialog,
                 msg="Cannot load directory.",
                 title="Cannot Load",
+                callback=self._do_load_dir_finish,
             )
+        else:
+            self._do_load_dir_finish()
         #
         # have to check if the named-paths group has a definition file. if not
         # we need to create one.
@@ -207,22 +287,10 @@ class CsvpathLoader:
         #
         # def store_json_for_paths(self, name: NamedPathsName, definition: str) -> None:
         #
+
+    def _do_load_dir_finish(self) -> None:
         self.main.sidebar._renew_sidebars()
         self._delete_load_dialog()
-
-    def _check_ok_to_proceed(self, overwrite: bool) -> bool:
-        self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
-        self.load_dialog.show()
-        msg = (
-            "Are you sure you want to overwrite an existing named-paths group?"
-            if overwrite
-            else "Are you sure you want to append to an existing named-paths group?"
-        )
-        confirm = meut.yesNo(parent=self.load_dialog, title="Load Paths", msg=msg)
-        # confirm = meut.yesNo(parent=self, title="Load Paths", msg=msg)
-        # self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, True)
-        # self.load_dialog.show()
-        return confirm
 
     def _delete_load_dialog(self):
         try:

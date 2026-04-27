@@ -57,7 +57,7 @@ class FunctionsForm(BlankForm):
         FunctionFactory.clear_to_reload(path)
 
     def _setup(self) -> None:
-        self.imports_dir_path.textChanged.connect(self.main.on_config_changed)
+        self.imports_dir_path.textChanged.connect(self.main.reactor.on_config_changed)
 
     def add_to_config(self, config) -> None:
         path = self.imports_dir_path.text()

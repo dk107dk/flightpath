@@ -21,12 +21,6 @@ class Helper(ClosingTabsHolder):
             self.help_and_feedback = None
         self.help_and_feedback = ClosingTabs(main=self.main, parent=self)
 
-    def do_i_close(self, t) -> bool:
-        #
-        # we don't allow save-as help/ad-hoc runs
-        #
-        return True
-
     @property
     def help(self) -> QTextEdit:
         return self._help
@@ -81,7 +75,7 @@ class Helper(ClosingTabsHolder):
         return ss[1] > 0
 
     """
-        why are these three event handlers here. where are others. consolidate?
+        move to reactor?
     """
 
     def on_click_named_files_help(self) -> None:

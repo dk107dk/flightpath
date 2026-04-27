@@ -14,8 +14,8 @@ class ScriptsTab(QWidget):
         self.shell = QLineEdit()
         layout.addRow("Shell: ", self.shell)
 
-        self.run_scripts.textChanged.connect(self.form.main.on_config_changed)
-        self.shell.textChanged.connect(self.form.main.on_config_changed)
+        self.run_scripts.textChanged.connect(self.form.main.reactor.on_config_changed)
+        self.shell.textChanged.connect(self.form.main.reactor.on_config_changed)
 
     @property
     def section(self) -> str:

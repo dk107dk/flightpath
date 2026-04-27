@@ -23,7 +23,7 @@ class WebhooksDialog(QDialog):
         self.csvpaths = main.csvpaths
         self.sidebar = parent
 
-        self.setWindowTitle(f"Configure webhooks for {name}")
+        self.setWindowTitle(f"Configure Webhooks For {name}")
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.NonModal)

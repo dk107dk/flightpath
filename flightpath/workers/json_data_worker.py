@@ -21,7 +21,6 @@ class JsonDataWorker(QRunnable):
         self.editable = editable
         self.signals = DataWorkerSignals()
 
-    # @Slot()
     def run(self):
         self.signals.messages.emit("Reading file...")
         try:
