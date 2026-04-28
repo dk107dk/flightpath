@@ -10,7 +10,7 @@ from csvpath.util.nos import Nos
 from csvpath.managers.paths.paths_manager import PathsManager
 
 
-from flightpath.util.csvpath_loader import CsvpathLoader
+from flightpath.actions.csvpath_loader import CsvpathLoader
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
 from flightpath.util.editable import EditStates
 from flightpath.util.message_utility import MessageUtility as meut
@@ -338,7 +338,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         self.main.on_ai_explain()
 
     def on_load(self) -> None:
-        loader = CsvpathLoader(self.main)
+        loader = CsvpathLoader(main=self.main, parent=self)
         loader.load_paths(self.my_parent.path)
 
     def on_save_as(self, switch_local=False) -> None:

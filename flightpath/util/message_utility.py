@@ -62,7 +62,7 @@ class MessageUtility:
         errors: dict | list = None,
         callback: Callable = None,
     ) -> None:
-        box = ErrorDialog(parent=parent, msg=msg, title=title, errors=errors)
+        box = ErrorDialog(parent=parent, message=msg, title=title, errors=errors)
         if callback is not None:
             box.finished.connect(callback)
             box.deleteLater()

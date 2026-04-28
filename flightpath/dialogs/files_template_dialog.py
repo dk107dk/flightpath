@@ -27,6 +27,8 @@ class FilesTemplateDialog(TemplateDialog):
 
     def do_set(self) -> None:
         t = self.template_ctl.text()
+        if not t.endswith("/:filename"):
+            t = f"{t}/:filename"
         mgr = self.csvpaths.file_manager
         mgr.describer.store_template(self.name, t)
 

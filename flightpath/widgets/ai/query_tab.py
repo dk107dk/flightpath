@@ -211,7 +211,7 @@ class QueryTabWidget(QWidget):
         metadata["error"] = msg
         item.status_dot.setColor(QColor("#fa5252"))  # red
         item.subtitle.setText("Error")
-        QApplication.beep()
+        # QApplication.beep()
         # item.title.setText("Error")
         self._beep()
         #

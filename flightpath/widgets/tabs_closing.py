@@ -55,12 +55,10 @@ class ClosingTabs(QTabWidget):
 
     def show_context_menu(self, pos):
         index = self.tabBar().tabAt(pos)
-        print(f"tabscs: show_context_menu: index: {index}")
         if index == -1:
             return  # Clicked outside of any tab
         t = self.widget(index)
-        print(f"tabscs: show_context_menu: t: {t}")
-        #
+
         # this could allow for a ctx menu on the main tab bar if a file were named
         # "Matches". but that would be a weird name and a subtle impact. can probably just
         # ignore so we don't have to check what tab bar we are in.
@@ -74,15 +72,11 @@ class ClosingTabs(QTabWidget):
             menu.addAction(save_sample)
             save_sample.triggered.connect(lambda: self.on_save_pdf(index))
             menu.popup(self.mapToGlobal(pos))
-        # elif hasattr(t, "editable") :  #and t.editable is True
         else:
             save_sample = QAction("Save as", self)
             menu.addAction(save_sample)
             save_sample.triggered.connect(lambda: self.on_save_sample(index))
             menu.popup(self.mapToGlobal(pos))
-        # else:
-        #    ...
-        # save as needed?
 
     def on_save_pdf(self, index: int, landscape=False) -> None:
         t = self.widget(index)
@@ -130,7 +124,6 @@ class ClosingTabs(QTabWidget):
         if nos.isfile():
             path = os.path.dirname(path)
         t = self.widget(index)
-        print(f"onsavesample: t: {t}")
         ton = t.objectName()
         if ton in ["Code", "Why", "Help Content"]:
             return
@@ -153,7 +146,6 @@ class ClosingTabs(QTabWidget):
             #
             j = w.model.to_json()
             txt = json.dumps(j)
-            # txt = w.toPlainText()
             self.main.save_sample(path=path, name=f"{ton}.json", data=txt)
         elif ton == "Matches":
             layout = t.layout()
@@ -184,7 +176,6 @@ class ClosingTabs(QTabWidget):
             )
         else:
             layout = t.layout()
-            print(f"tabsclsing: t: {t}, lasyout: {layout}")
             w = layout.itemAt(0).widget()
             if isinstance(w, KeyableTreeView):
                 j = w.parent().model.to_json()
@@ -210,7 +201,12 @@ class ClosingTabs(QTabWidget):
         i = taut.tab_index(self, t[1])
         self.setTabVisible(i, True)
         self.setCurrentIndex(i)
-        self.main.main_layout.setCurrentIndex(1)
+        #
+        # we don't want to flip from config or welcome to content when a help tab is closed
+        # so do we want this? not sure why it was here. or how it didn't screw things up
+        # before.
+        #
+        # self.main.main_layout.setCurrentIndex(1)
         if not self.my_parent.modified(t[1]):
             self._close_tab_if(QMessageBox.Yes, t=t, callback=callback, args=args)
             return

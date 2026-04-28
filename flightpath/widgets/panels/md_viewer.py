@@ -29,10 +29,11 @@ class MdViewer(QWidget):
         super().__init__()
         self.main = main
         #
-        # exp
+        # exp. why did we try this and leave it? it makes printouts.txt editable
+        # and seems to have no advantage.
         #
-        self.editable = EditStates.EDITABLE
-        # self.editable = editable
+        # self.editable = EditStates.EDITABLE
+        self.editable = editable
         #
         # set the font size
         #

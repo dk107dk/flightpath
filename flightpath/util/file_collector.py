@@ -38,6 +38,7 @@ class FileCollector:
         cwd: str = None,
         title: str,
         file_type_filter: str,
+        do_not_copy_if_in: bool = False,
         callback: Callable = None,
         args: dict = None,
     ) -> None:
@@ -77,6 +78,35 @@ class FileCollector:
         if _:
             paths = d.selectedFiles()
             the_path = paths[0]
+            name = os.path.basename(the_path)
+
+            if the_path.startswith(cwd) and do_not_copy_if_in is True:
+                cls._select_file_complete(
+                    (the_path, True),
+                    the_path=the_path,
+                    do_not_copy_in=True,
+                    callback=callback,
+                    args=args,
+                    cwd=cwd,
+                )
+                return
+            else:
+                meut.input2(
+                    parent=parent,
+                    title="Copy into {cwd}",
+                    msg="Enter a name for the copy:",
+                    text=name,
+                    callback=cls._select_file_complete,
+                    args={
+                        "cwd": cwd,
+                        "the_path": the_path,
+                        "callback": callback,
+                        "args": args,
+                    },
+                )
+                return
+
+            """
             _ = the_path.startswith(cwd)
             if not _:
                 name = os.path.basename(the_path)
@@ -101,6 +131,7 @@ class FileCollector:
                     msg=f"{the_path} is already in the project",
                 )
                 return
+            """
         #
         # calls back with the new path or None. you can choose to not
         # provide a callback if you're just picking and copying
@@ -118,16 +149,19 @@ class FileCollector:
         *,
         cwd: str,
         the_path: str,
+        do_not_copy_in: bool = False,
         callback: Callable,
         args: dict = None,
     ) -> str:
         new_name, ok = t
         new_path = None
-        if ok and new_name:
+        if ok and new_name and do_not_copy_in is False:
             new_path = fiut.deconflicted_path(cwd, new_name)
             with DataFileReader(the_path, mode="rb") as the_file:
                 with DataFileWriter(path=new_path, mode="wb") as new_file:
                     new_file.write(the_file.read())
+        else:
+            new_path = new_name
         if callback is None:
             return
         args = {} if args is None else args

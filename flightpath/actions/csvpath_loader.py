@@ -11,9 +11,10 @@ from flightpath.util.message_utility import MessageUtility as meut
 
 
 class CsvpathLoader:
-    def __init__(self, main):
+    def __init__(self, *, main, parent):
         super().__init__()
         self.main = main
+        self.my_parent = parent
         self.load_dialog = None
 
     def load_paths(self, path) -> None:
@@ -152,14 +153,17 @@ class CsvpathLoader:
             )
 
     def do_load_json(self) -> None:
+        print("oad groupdef")
         paths = self.main.csvpaths
+        #
+        # not sure this hint is necessary or helpful. tbd.
+        #
+        self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+        self.load_dialog.show()
         #
         # warn the user that they are overwriting any existing named-path to the group.
         # this warning prompt must pop over the dialog, not under, or we get into problems.
         #
-        self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
-        self.load_dialog.show()
-
         msg = "Ok to overwrite any existing named-paths groups referenced in your JSON?"
         confirm = QMessageBox.question(
             self.main, "Load Paths", msg, QMessageBox.Yes | QMessageBox.No
@@ -172,7 +176,17 @@ class CsvpathLoader:
         ex = None
         msg = None
         try:
-            lst = paths.paths_manager.add_named_paths_from_json(file_path=name)
+            lst = paths.paths_manager.add_named_paths_from_json(file_path=name)  #
+            if paths.errors and len(paths.errors) > 0:
+                es = [error.to_json() for error in paths.errors]
+                meut.errors2(
+                    parent=self.my_parent,
+                    msg="Errors during load",
+                    title="Errors",
+                    errors=es,
+                )
+                return
+
             if lst is None or len(lst) == 0:
                 meut.warning2(
                     parent=self.load_dialog,
@@ -183,6 +197,7 @@ class CsvpathLoader:
                 return
         except Exception as e:
             msg = traceback.format_exc()
+            print(msg)
             ex = e
         if ex is not None or paths.has_errors():
             ja = None
@@ -201,7 +216,7 @@ class CsvpathLoader:
                 parent=self.load_dialog,
                 msg=msg,
                 title="Error",
-                errors_json=ja,
+                errors=ja,
                 callback=self._delete_load_dialog,
             )
             return

@@ -61,6 +61,28 @@ class KeyableTreeView(QTreeView):
 
 
 class JsonViewer(QWidget):
+    @classmethod
+    def temp_file_viewer(cls, *, main, parent, js: dict | list):
+        with tempfile.NamedTemporaryFile(mode="w", delete=True, suffix=".json") as file:
+            #
+            # for the moment, loading js confirms that it is good json. probably not necessary.
+            #
+            if isinstance(js, str):
+                _data = json.loads(js)
+            else:
+                _data = js
+            _data = json.dumps(_data, indent=2)
+            file.write(_data)
+            file.flush()
+            view = JsonViewer(
+                parent=parent,
+                main=main,
+                editable=EditStates.UNEDITABLE,
+            )
+            view.open_file(path=file.name, data=_data)
+            view.setObjectName(file.name)
+        return view
+
     def __init__(self, *, main, editable=EditStates.EDITABLE, path: str = None, parent):
         super().__init__(parent)
         #

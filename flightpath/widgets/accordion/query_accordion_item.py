@@ -40,8 +40,8 @@ class QueryAccordionItem(QWidget):
     #                    running process
     #
     clicked = Signal(object)
-    closeRequested = Signal(object)
-    infoRequested = Signal(object)
+    closeRequested = Signal(dict)
+    infoRequested = Signal(dict)
 
     def __init__(
         self,
@@ -61,7 +61,8 @@ class QueryAccordionItem(QWidget):
         #        /csvpath/managers/registrar.py", line 37, in add_internal_listener
         #            if not lst.config:
         #
-        self.config = None
+        self.config = None  # keep for listening to csvpath registrars
+        self.csvpaths = None  # here for listening to csvpath registrars
         #
         #
         #
@@ -147,6 +148,7 @@ class QueryAccordionItem(QWidget):
         self._listeners.append(lst)
 
     def metadata_update(self, mdata: Metadata) -> None:
+        print("item: metadataupdate: received mdata")
         for _ in self._listeners:
             _.metadata_update(mdata)
 
@@ -185,4 +187,5 @@ class QueryAccordionItem(QWidget):
         self.closeRequested.emit(self._metadata)
 
     def _on_status_clicked(self):
+        print("query-acc-item: _on_status_clicked")
         self.infoRequested.emit(self._metadata)

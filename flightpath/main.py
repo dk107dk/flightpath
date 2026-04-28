@@ -1049,7 +1049,8 @@ class MainWindow(QMainWindow):
             "cid": str(id(csvpaths)),
             "csvpaths": csvpaths,
         }
-        self.sidebar_rt_bottom.on_query_submitted(params)
+        item = self.sidebar_rt_bottom.on_query_submitted(params)
+        runner.item = item
         #
         # clear any existing logs to .bak. we have to shutdown to be sure that the
         # file is released. that's not a problem because it is CsvPath logging, not
@@ -1066,17 +1067,22 @@ class MainWindow(QMainWindow):
         self.threadpool.start(runner)
 
     @Slot(tuple)
-    def _display_error(self, t: tuple[str]) -> None:
+    def _display_error(self, t: tuple[str, CsvPaths]) -> None:
         #
-        # need a more specific way to handle errors
+        # need a more specific way to handle errors. this slot isn't going to
+        # want to use meut to display an error because it's on a separate worker
+        # thread. or at least that's my current take.
         #
-        meut.message2(
-            parent=self,
-            msg=t[0],
-            title="Error in run",
-            callback=self._display_log,
-            args={"t": t, "error": True},
-        )
+        try:
+            meut.message2(
+                parent=self,
+                msg=t[0],
+                title="Error in run",
+                callback=self._display_log,
+                args={"t": t, "error": True},
+            )
+        except Exception:
+            print(traceback.format_exc())
 
     @Slot(tuple)
     def _display_log(self, t: tuple[str], *, error=False) -> None:

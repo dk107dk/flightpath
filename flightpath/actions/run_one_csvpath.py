@@ -35,9 +35,10 @@ from flightpath.util.editable import EditStates
 
 
 class RunOneCsvpath:
-    def __init__(self, *, main):
+    def __init__(self, *, main, parent):
         super().__init__()
         self.main = main
+        self.my_parent = parent
         #
         # this class is long-lived. that means this worker reference
         # may be reused. we don't really care about that since we only need it
@@ -81,10 +82,11 @@ class RunOneCsvpath:
             return
         if filepath is None:
             filepath = FileCollector.select_file(
-                parent=self,
+                parent=self.my_parent,
                 cwd=self.main.state.cwd,
                 title="Select Data File",
                 file_type_filter=FileCollector.csvs_filter(self.main.csvpath_config),
+                do_not_copy_if_in=True,
                 callback=self.run_one_csvpath_2,
                 args={"csvpath": csvpath, "position": position},
             )
@@ -103,7 +105,7 @@ class RunOneCsvpath:
         cstr, comment = csut.statement_and_comment(csvpath)
         #
         if "test-data:" not in comment:
-            self.text_edit.add_to_external_comment_of_csvpath_at_position(
+            self.my_parent.text_edit.add_to_external_comment_of_csvpath_at_position(
                 position=position, addto=f"test-data:{filepath}\n"
             )
         #
@@ -131,7 +133,7 @@ class RunOneCsvpath:
             size = os.path.getsize(filepath)
             if size >= 1000000:
                 meut.yesNo2(
-                    parent=self.main,
+                    parent=self.my_parent,
                     msg="Development goes faster with smaller samples. Stop to create a sample?",
                     title="Large file",
                     callback=self._do_run_one_csvpath,
@@ -399,21 +401,20 @@ class RunOneCsvpath:
 
             print_layout = QVBoxLayout()
             default.setLayout(print_layout)
-            print_view = QPlainTextEdit()
-            #
-            # exp! fixed width font fixes the output from the table functions.
-            #
-            fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
-            print_view.setFont(fixed_font)
+            # print_view = QPlainTextEdit()
             #
             #
             #
             printout = printer.to_string(name)
-
             print_view = RawViewer(
                 main=self.main, parent=default, editable=EditStates.UNEDITABLE
             )
             print_view.open_string(printout)
+            #
+            # fixed width font fixes the output from the table functions.
+            #
+            fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+            print_view.text_edit.setFont(fixed_font)
 
             print_layout.addWidget(print_view)
             print_layout.setContentsMargins(0, 0, 0, 0)

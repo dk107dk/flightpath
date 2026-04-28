@@ -142,9 +142,12 @@ class Reactor:
             self.on_save_config_changes
         )
         self.main.sidebar.file_navigator.empty_area_click.connect(
-            self.on_show_welcome_screen
+            self.on_click_project_top
         )
         self.main.sidebar.icon_label.clicked.connect(self.on_show_welcome_screen)
+
+    def on_click_project_top(self) -> None:
+        self.main.sidebar.file_navigator.selectionModel().clear()
 
     def on_data_toolbar_show(self) -> None:
         self.main.show_now_or_later(self.main.content.toolbar)
@@ -274,6 +277,25 @@ class Reactor:
                 self.main.rt_col_helpers.addWidget(self.main.sidebar_docs)
 
     # ==========================
+
+    def on_selected_number_of_lines_changed(self) -> None:
+        """
+        #
+        # this is the obvious place for enabling/disabling the sample
+        # method based on the number of rows; however, both
+        # on_data_rows_changed and datatoolbar.enable() and disable()
+        # are/may be called after this fires. rather than recall this
+        # from those, we know the toolbar fires last (partly because
+        # file is loaded at the end of on_data_rows_changed) so do this
+        # there.
+        #
+        t = self.main.content.toolbar.rows.currentText()
+        e = t == self.main.content.toolbar.ALL_LINES
+        if e:
+            self.main.content.toolbar.sampling.setEnabled(False)
+        else:
+            self.main.content.toolbar.sampling.setEnabled(True)
+        """
 
     def on_data_rows_changed(self) -> None:
         t = self.main.content.toolbar.rows.currentText()

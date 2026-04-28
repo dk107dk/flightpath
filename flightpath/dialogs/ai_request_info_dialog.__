@@ -12,13 +12,13 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 
 
-class RunInfoDialog(QDialog):
+class AiRequestInfoDialog(QDialog):
     def __init__(self, *, main, parent, item):
         super().__init__(parent)
         self.sidebar = parent
         self.main = main
         self.item = item
-        self.setWindowTitle(f"Run Information: {item.title.text()}")
+        self.setWindowTitle(f"Request Information: {item.title.text()}")
 
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.NonModal)
@@ -29,7 +29,7 @@ class RunInfoDialog(QDialog):
         self._total_lines: QLabel = None
 
         self.stop_button = QPushButton()
-        self.stop_button.setText("Stop current csvpath")
+        self.stop_button.setText("Stop request")
         self.stop_button.clicked.connect(self.stop)
         self.refresh_button = QPushButton()
         self.refresh_button.setText("Refresh")
@@ -99,9 +99,9 @@ class RunInfoDialog(QDialog):
     def total_statements_str(self) -> str:
         s = ""
         try:
-            n = self.csvpaths.named_paths_name
-            c = self.csvpaths.paths_manager.number_of_named_paths(n)
-            s = f"{c}"
+            csvpaths = self.csvpaths
+            if csvpaths and csvpaths.csvpath_instances():
+                s = str(len(csvpaths.csvpath_instances()))
         except Exception:
             print(traceback.format_exc())
         return s

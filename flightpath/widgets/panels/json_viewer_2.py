@@ -363,9 +363,12 @@ class JsonViewer2(QWidget):
         line, line_char = self._error_location(t, error)
         if line is not None and line_char is not None:
             if line_number > 0:
-                msg = f"Error in JSON at {line_number + 1 + line}, char {line_char + 1}. \n\nThe error was reported as: {error}"
+                _ = line_number + 1 + line
+                __ = line_char + 1
+                msg = f"Error in JSON at {_}, char {__}. \n\nThe error was reported as: {error}"
             else:
-                msg = f"Error in JSON format at line {line + 1}, char {line_char + 1}\n\nOriginal error: {error}"
+                _ = line + 1
+                msg = f"Error in JSON format at line {_}, char {line_char + 1}\n\nOriginal error: {error}"
         else:
             msg = f"Error in format.\n\nOriginal error messsage: {error}"
         meut.warning2(parent=self, msg=msg, title="Malformed JSON")

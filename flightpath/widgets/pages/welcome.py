@@ -142,10 +142,6 @@ class Welcome(QWidget):
             self.main.helper.on_click_help()
 
     def on_click_find_data(self) -> None:
-        """
-        find = FindFileByReferenceDialog(main=self.main)
-        find.show_dialog()
-        """
         find = FindFileByReferenceDialog(main=self.main)
         self.main.show_now_or_later(find)
 

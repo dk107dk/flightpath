@@ -14,6 +14,8 @@ class PathsTemplateDialog(TemplateDialog):
     def do_set(self) -> None:
         mgr = self.csvpaths.paths_manager
         t = self.template_ctl.text()
+        if not t.endswith("/:run_dir"):
+            t = f"{t}/:run_dir"
         mgr.describer.store_template(self.name, t)
         #
         # if we updated the file we need to make sure it's closed before we click on it

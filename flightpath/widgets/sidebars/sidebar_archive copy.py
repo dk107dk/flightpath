@@ -18,7 +18,6 @@ from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from .sidebar_archive_ref_maker import SidebarArchiveRefMaker
 from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.util.tabs_utility import TabsUtility as taut
 
 from flightpath.dialogs.reference_files.reference_file_handler import (
     ReferenceFileHandler,
@@ -33,6 +32,7 @@ from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
 class SidebarArchive(SidebarRightBase):
     def __init__(self, *, role=1, main, config: Config, tabs=None):
         super().__init__(parent=main)
+        print("!!!!!! new sidebar archive!")
         self.role = role
         self.main = main
         self.config = main.config if config is None else config
@@ -41,32 +41,14 @@ class SidebarArchive(SidebarRightBase):
         self.context_menu = None
         self.view = None
         self.model = None
+        self.tabs = tabs
         self.runs = None
-        if tabs is None:
-            self.tabs = QTabWidget(parent=self)
-            self.runs = QueryAccordionWidget(self)
-            self.runs.itemClicked.connect(self.on_item_clicked)
-            self.runs.itemCloseRequested.connect(self.on_item_close_requested)
-            self.runs.itemInfoRequested.connect(self.on_item_info_requested)
-            self.runs.setObjectName("runs")
-            #
-            # show tabs method(s) will setup for viewing. here we're just creating
-            # it offstage.
-            #
-            self.tabs.addTab(self.runs, "Runs")
-            self.tabs.hide()
-        else:
-            self.tabs = tabs
-            t = taut.find_tab(self.tabs, "runs")
-            self.runs = t[1]
-            self.runs.itemClicked.connect(self.on_item_clicked)
-            self.runs.itemCloseRequested.connect(self.on_item_close_requested)
-            self.runs.itemInfoRequested.connect(self.on_item_info_requested)
         self.setup()
         #
         # this sets up the run tabs, but we don't show them immediately
         #
         self.show_tabs()
+
         #
         # sftp is easy to screw up because it requires a server path + the integration fields.
         # it is also easy to check, so we do if we're looking at sftp. True means Ok or N/A.
@@ -76,6 +58,7 @@ class SidebarArchive(SidebarRightBase):
                 parent=self,
                 title="Check SFTP",
                 msg="SFTP is used for archive but not configured",
+                callback=self.show_tabs,
             )
 
     def run_ended(self, cid: str, error: bool) -> None:
@@ -91,10 +74,13 @@ class SidebarArchive(SidebarRightBase):
         self.runs.beep()
 
     def on_query_submitted(self, params):
+        print(">>>> sidebar_archive: on_query_submitted")
+        self.show_tabs_if()
         #
         # get the id(csvpaths) in order to wire together items and run workers
         #
         cid = params.get("cid")
+        # worker = params.get("worker")
         csvpaths = params.get("csvpaths")
         if csvpaths is None:
             raise ValueError("CsvPaths instance cannot be None")
@@ -132,19 +118,32 @@ class SidebarArchive(SidebarRightBase):
         # list directly. avoiding this, and also the csvpath coming from the worker itself, which can
         # be destroyed before the csvpaths is used
         #
+        # from csvpath.util.code import Code
+        # s = Code.get_source_path(csvpaths.error_manager.__class__)
+        # print(s)
+        #
         # sadly error_manager isn't working. since we have a good alternative for errors
         # i'm not digging into it.
         #
         # csvpaths.error_manager.add_internal_listener(item)
         #
         csvpaths.results_manager.dynamic_results_listeners.append(item)
+
         lst = SidebarArchiveListener(item=item)
         item.add_listener(lst)
         #
         # flip to the runs
         #
         self.tabs.setCurrentIndex(1)
-        self.show_tabs()
+
+        """
+        # don't use these!
+        self.runs.itemClicked.connect(self.on_item_clicked)
+        self.runs.itemCloseRequested.connect(self.on_item_close_requested)
+        self.runs.itemInfoRequested.connect(self.on_item_info_requested)
+        """
+
+        # print(f"sidebar: connected")
         return item
 
     def on_run_started(self, metadata: dict):
@@ -178,41 +177,31 @@ class SidebarArchive(SidebarRightBase):
                 _.status = "running"
 
     def on_item_clicked(self, metadata: dict):
-        run_dir = metadata.get("run_dir")
-        status = metadata.get("status")
-        #
-        # nothing if an error
-        #
-        if status == "error" and run_dir is None:
-            #
-            # show error?
-            #
-            self.on_item_info_requested(metadata)
-            return
-        #
-        # if we don't have a run_dir nothing happened. same behavior regardless if known
-        # to be an error. we shouldn't get here.
-        #
-        if run_dir is None:
-            return
         #
         # flip to results
         #
         self.tabs.setCurrentIndex(0)
         #
-        # get the status
+        # open tree to run_dir, if we have run_dir
         #
+        run_dir = metadata.get("run_dir")
+        print(f"saidbar: run_dir: {run_dir}: state: {metadata.get('state')}")
+        if run_dir is None:
+            return
         rfh = ReferenceFileHandler(main=self.main, parent=self)
         rfh._show_run_dir_for_path(self, run_dir)
 
     def on_item_close_requested(self, metadata: dict):
+        print("sidebara: on_item_close_requested")
         self.runs.remove_item(metadata)
 
     @Slot(dict)
     def on_item_info_requested(self, metadata: dict):
         cid = metadata.get("cid")
+        print(f"on_item_info_requested: cid: {cid}, run items: {len(self.runs.items)}")
         for _ in self.runs.items:
             mycid = _.metadata.get("cid")
+            print(f"on_item_info_requested: cid: {cid} ~= mycid: {mycid}")
             if mycid == cid:
                 if _.metadata.get("run_dir") is None:
                     d = RunFailedDialog(main=self.main, parent=self, item=_, cid=cid)
@@ -222,31 +211,67 @@ class SidebarArchive(SidebarRightBase):
                 break
 
     def show_tabs(self) -> None:
-        if self.runs.count == 0:
+        print(">>>> sidebar_archive: show_tabs")
+        if self.tabs is None:
             return
-        #
-        # make sure we're looking at tabs, they start hidden
-        #
-        self.tabs.show()
-        #
-        # clear the layout and (re)add tabs
-        #
         layout = self.layout()
-        if layout.indexOf(self.view) > -1:
-            layout.removeWidget(self.view)
-        if layout.indexOf(self.tabs) > -1:
-            layout.removeWidget(self.tabs)
+        layout.removeWidget(self.view)
         layout.addWidget(self.tabs)
         #
         # results is the regular tree. we have a tree already because we were passed
         # in from a past archive sidebar, but we need to replace it with our latest
         #
-        for i in range(0, self.tabs.count()):
-            self.tabs.removeTab(0)
+        self.tabs.removeTab(0)
         self.view.setObjectName("results")
-        self.tabs.addTab(self.view, "Results")
-        self.tabs.addTab(self.runs, "Runs")
-        self.tabs.setCurrentIndex(1)
+        self.tabs.insertTab(0, self.view, "Results")
+        #
+        # runs should be in the tabs already
+        #
+        self.runs = self.tabs.widget(1)
+        #
+        # rewire for clicks
+        #
+        # without these the good runs don't click. at least for a while. seems
+        # like they may click after some time or certain action unknown. :/
+        #
+        print("\n >>>> setting up click connects\n")
+        self.runs.itemClicked.connect(self.on_item_clicked)
+        self.runs.itemCloseRequested.connect(self.on_item_close_requested)
+        self.runs.itemInfoRequested.connect(self.on_item_info_requested)
+
+    def show_tabs_if(self) -> None:
+        print(">>>> sidebar_archive: show_tabs_if")
+        #
+        # if we have tabs they are directly in the layout
+        # we're good. otherwise, we create the tabs and move
+        # the view into them.
+        #
+        i = -1 if self.tabs is None else self.layout().indexOf(self.tabs)
+        if self.tabs is not None and i > -1:
+            return
+        layout = self.layout()
+        if self.tabs is None:
+            self.tabs = QTabWidget(parent=self)
+            layout.removeWidget(self.view)
+        if i == -1:
+            layout.addWidget(self.tabs)
+        #
+        # results is the regular tree
+        #
+        if self.tabs.indexOf(self.view) == -1:
+            self.view.setObjectName("results")
+            self.tabs.addTab(self.view, "Results")
+        #
+        # runs is the set of all runs in the session, unless the user removes run(s)
+        # if we have runs it should be in the tabs already, but i'm paranoid
+        #
+        if self.runs is None or self.tabs.indexOf(self.runs) == -1:
+            self.runs = QueryAccordionWidget(self)
+            # self.runs.itemClicked.connect(self.on_item_clicked)
+            # self.runs.itemCloseRequested.connect(self.on_item_close_requested)
+            # self.runs.itemInfoRequested.connect(self.on_item_info_requested)
+            self.runs.setObjectName("runs")
+            self.tabs.addTab(self.runs, "Runs")
 
     def my_root(self) -> str:
         return self.main.csvpath_config.get(section="results", name="archive")

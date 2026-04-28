@@ -29,7 +29,7 @@ from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.file_tree_model.directory_filter_proxy_model import (
     DirectoryFilterProxyModel,
 )
-from flightpath.util.csvpath_loader import CsvpathLoader
+from flightpath.actions.csvpath_loader import CsvpathLoader
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.editable import EditStates
 from flightpath.util.os_utility import OsUtility as osut
@@ -732,7 +732,7 @@ class Sidebar(QWidget):
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
-            loader = CsvpathLoader(main=self.main)
+            loader = CsvpathLoader(main=self.main, parent=self)
             loader.load_paths(path)
 
     def _run_paths(self) -> None: ...
@@ -1060,7 +1060,10 @@ $[*][ print("hello world") ]"""
         ):
             return False, "File must be in or below the working directory"
         if name.find(".", 1) == -1:
-            return False, "File name must have an extension recognized by CsvPath"
+            return (
+                False,
+                "File extension not recognized. See Config > Extensions settings.",
+            )
         ext = name[name.rfind(".") + 1 :]
         if ext == "json":
             return True, "Ok"

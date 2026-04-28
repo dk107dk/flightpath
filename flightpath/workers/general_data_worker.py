@@ -159,7 +159,6 @@ class GeneralDataWorker(QRunnable):
         #
         self.lines_to_take = []
         if self.sample_size >= needed - 1:
-            self.main.content.toolbar.rows.setCurrentIndex(4)
             self.sample_size = -1
             return
         to = min(needed - 1, self.sample_size)

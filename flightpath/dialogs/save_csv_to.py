@@ -113,6 +113,8 @@ class SaveCsvToDialog(QDialog):
         elif delimiter == "Tab":
             exts.append("tsv")
         quotechar = self.get_quotechar()
+        if not fiut.is_a(t, exts):
+            t = f"{t}.csv"
         d = os.path.dirname(t)
         b = os.path.basename(t)
         t = fiut.deconflicted_path(d, b)

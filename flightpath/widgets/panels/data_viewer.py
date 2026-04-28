@@ -90,7 +90,7 @@ class DataViewer(QWidget):
         save_action.triggered.connect(self.on_save)
         self.addAction(save_action)
 
-        save_as_action = QAction("Save As", self)
+        save_as_action = QAction("Save as", self)
         save_as_action.setShortcut(QKeySequence.SaveAs)
         save_as_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         save_as_action.triggered.connect(self.on_save_as)
@@ -185,7 +185,7 @@ class DataViewer(QWidget):
                 context_menu.addAction(save_action)
 
             save_as_action = QAction()
-            save_as_action.setText("Save As")
+            save_as_action.setText("Save as")
             save_as_action.triggered.connect(self.on_save_as)
             save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
             save_as_action.setShortcutVisibleInContextMenu(True)

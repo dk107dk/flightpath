@@ -49,7 +49,7 @@ class CsvpathViewer(QWidget):
         layout.addWidget(self.text_edit)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self.run_one = RunOneCsvpath(main=self.main)
+        self.run_one = RunOneCsvpath(main=self.main, parent=self)
 
     def reset_saved(self) -> None:
         self.saved = True
