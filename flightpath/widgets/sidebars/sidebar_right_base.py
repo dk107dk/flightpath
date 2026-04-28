@@ -1,5 +1,6 @@
 import os
 import traceback
+from typing import Callable
 
 from PySide6.QtWidgets import QWidget, QMessageBox, QApplication
 
@@ -23,7 +24,7 @@ class SidebarRightBase(QWidget):
             self.view.deleteLater()
             self.setup()
 
-    def _delete_item(self) -> None:
+    def _delete_item(self, *, callback: Callable = None) -> None:
         index = self.view.currentIndex()
         if index.isValid():
             path = self.model.filePath(index)
@@ -32,36 +33,33 @@ class SidebarRightBase(QWidget):
                 title="Delete",
                 msg=f"Permanently delete {path}?",
                 callback=self._do_delete_item,
-                args={"path": path},
+                args={"path": path, "callback": callback},
             )
 
-    def _do_delete_item(self, answer: int, *, path: str) -> None:
+    def _do_delete_item(
+        self, answer: int, *, path: str, callback: Callable = None
+    ) -> None:
         if answer == QMessageBox.Yes:
             nos = Nos(path)
             try:
                 nos.remove()
+                if callback:
+                    callback()
             except OSError as e:
                 meut.warning2(parent=self, title="Error", msg=str(e))
             else:
-                self.window().statusBar().showMessage(f"{path} deleted")
-                self.main.renew_sidebar_named_paths()
+                self.main.window().statusBar().showMessage(f"{path} deleted")
                 self.main.welcome.update_run_button()
                 self.main.welcome.update_find_data_button()
 
     def _delete_file_view_item(self) -> None:
-        confirm = self._delete_item()
-        if confirm is True:
-            self.main.renew_sidebar_named_files()
+        self._delete_item(callback=self.main.renew_sidebar_named_files)
 
     def _delete_paths_view_item(self) -> None:
-        confirm = self._delete_item()
-        if confirm is True:
-            self.main.renew_sidebar_named_paths()
+        self._delete_item(callback=self.main.renew_sidebar_named_paths)
 
     def _delete_archive_view_item(self) -> None:
-        confirm = self._delete_item()
-        if confirm is True:
-            self.main.renew_sidebar_archive()
+        self._delete_item(callback=self.main.renew_sidebar_archive)
 
     def _copy_path(self) -> None:
         from_index = self.view.currentIndex()

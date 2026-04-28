@@ -3,10 +3,14 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLabel,
     QVBoxLayout,
+    QPushButton,
     QWidget,
     QSizePolicy,
 )
 from PySide6.QtCore import Qt
+
+from csvpath.util.box import Box
+
 from .blank_form import BlankForm
 
 
@@ -35,6 +39,10 @@ class ResultsForm(BlankForm):
         msg.setWordWrap(True)
         layout.addRow("", msg)
 
+        button = QPushButton("Reload file trees")
+        layout.addRow("", button)
+        button.clicked.connect(self._on_click_reload_helpers)
+
         #
         # =====================
         #
@@ -52,6 +60,11 @@ class ResultsForm(BlankForm):
         overall.setAlignment(self.table, Qt.AlignBottom)
         self.setLayout(overall)
         self._setup()
+
+    def _on_click_reload_helpers(self) -> None:
+        self.main.question_save_config_if()
+        Box().empty_my_stuff()
+        self.main.load_state_and_cd()
 
     def add_to_config(self, config) -> None:
         config.add_to_config("results", "archive", self.archive.text())
