@@ -125,13 +125,13 @@ tag with version (e.g. v1.0.3) in all three repos. push tags with: git push --ta
  git push origin v1.1.88a
 
 April 29 2026
- Version: 1.1.88a
+ Version: 1.1.88c
     - CsvPath 0.0.606
     - FlightPath Server: 0.1.43
     - FlightPath Generator: 0.1.48
     - FlightPath Data: 0.1.30
  git tag -a v1.1.88a -m "jan release candidate; build number sync"
- git push origin v1.1.88a
+ git push origin v1.1.88c
 
 
 
