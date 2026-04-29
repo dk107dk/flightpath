@@ -130,7 +130,7 @@ April 29 2026
     - FlightPath Server: 0.1.43
     - FlightPath Generator: 0.1.48
     - FlightPath Data: 0.1.30
- git tag -a v1.1.88a -m "jan release candidate; build number sync"
+ git tag -a v1.1.88c -m "jan release candidate; build number sync"
  git push origin v1.1.88c
 
 

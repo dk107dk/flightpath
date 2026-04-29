@@ -812,8 +812,19 @@ class Sidebar(QWidget):
                     named_file_name, "" if template is None else template
                 )
         except Exception as e:
+            #
+            # changed the meut to have self as parent, not the dialog. if
+            # that doesn't work on windows try closing and noneifing the
+            # dialog first.
+            #
+            # test with templates like:
+            #    :0/test/:1test:filename
+            #    o\:1/test\c:\\
+            #
+            # self.stage_dialog.close()
+            # self.stage_dialog = None
             print(traceback.format_exc())
-            meut.warning2(parent=self.stage_dialog, title="Stage error", msg=f"{e}")
+            meut.warning2(parent=self, title="Stage error", msg=f"{e}")
             return
         #
         # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
