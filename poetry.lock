@@ -1289,13 +1289,13 @@ files = [
 
 [[package]]
 name = "flightpath-generator"
-version = "0.1.44"
+version = "0.1.46"
 description = "The AI component of FlightPath Data"
 optional = false
 python-versions = ">3.10,<4.0"
 groups = ["main"]
 files = [
-    {file = "flightpath_generator-0.1.44.tar.gz", hash = "sha256:79978fedb8a327fbe48e3b5d93fc80f4034fbdb263c1d7e9c0ad06db0d00e543"},
+    {file = "flightpath_generator-0.1.46.tar.gz", hash = "sha256:9500eb315794e8a3710b4a840b032a76b70268b97c11f7878ba753c7c3b609c4"},
 ]
 
 [package.dependencies]
@@ -1307,7 +1307,7 @@ pydantic = "2.12.5"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_generator-0.1.44.tar.gz"
+url = "assets/flightpath_generator-0.1.46.tar.gz"
 
 [[package]]
 name = "flightpath-server"
@@ -6093,4 +6093,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.15"
-content-hash = "7029ac79fff316d5880ac8aaa55029e698f4f97fb9658b26d042ef9ff918aa6b"
+content-hash = "a104064b5699ffbeed46c0ac0f4e14299186f022981f0a867981235ee6ece6a1"

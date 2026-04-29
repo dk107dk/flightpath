@@ -84,15 +84,12 @@ class QueryAccordionWidget(QWidget):
         )
         self.vbox.insertWidget(self.vbox.count() - 1, item)
         self._items.append(item)
-
         #
         #
         #
-        print("connecting fromx item  ->accordian")
         item.clicked.connect(self.itemClicked)
         item.closeRequested.connect(self.itemCloseRequested)
         item.infoRequested.connect(self.itemInfoRequested)
-
         return item
 
     def remove_item(self, metadata: dict):

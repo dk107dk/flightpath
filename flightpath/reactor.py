@@ -183,11 +183,7 @@ class Reactor:
         self.on_ai_gen("explain")
 
     def on_ai_gen(self, activity="validation") -> None:
-        index = self.main.content.tab_widget.currentIndex()
-        t = self.main.content.tab_widget.widget(index)
         self.main.rt_tab_widget.setCurrentIndex(1)
-        t = self.main.rt_tab_widget.widget(1)
-        t.form.activity_selector.set_activity(activity)
 
     # ==========================
 
@@ -210,15 +206,15 @@ class Reactor:
             #
             # only alert on missing config if AI tab selected. we
             # don't check api_base because LiteLLM doesn't always
-            # require base. tho, others do.
+            # require base.
             #
             m = self.main.csvpath_config.get(section="llm", name="model")
-            k = self.main.csvpath_config.get(section="llm", name="api_key")
-            if str(m).strip() in ["None", ""] or str(k).strip() in ["None", ""]:
+            # k = self.main.csvpath_config.get(section="llm", name="api_key")
+            if str(m).strip() in ["None", ""]:
                 meut.yesNo2(
                     parent=self.main,
-                    title="No AI Config",
-                    msg="Config is not complete. Open AI configuration?",
+                    title="Incomplete AI Config",
+                    msg="AI config requires at least a model name. Open AI configuration?",
                     callback=self._open_ai_config,
                 )
 

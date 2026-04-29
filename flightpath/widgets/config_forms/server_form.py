@@ -71,6 +71,20 @@ class ServerForm(BlankForm):
 
         layout.addRow("Key directory: ", self.projects_path_area)
 
+        self.docs = QLabel()
+        self.docs.setTextInteractionFlags(Qt.LinksAccessibleByMouse)
+        self.docs.setOpenExternalLinks(True)
+
+        self.docs_link_area = QScrollArea()
+        self.docs_link_area.setWidgetResizable(True)
+        self.docs_link_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.docs_link_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.docs_link_area.setFixedHeight(33)
+        self.docs_link_area.setWidgetResizable(True)
+        self.docs_link_area.setWidget(self.docs)
+
+        layout.addRow("Server API docs: ", self.docs_link_area)
+
         self.setLayout(layout)
         self._setup()
 
@@ -193,6 +207,12 @@ class ServerForm(BlankForm):
         self._enable_server_if()
         if en:
             self.main.config.reset_config_toolbar()
+
+        link = self.host.text()
+        if str(link).strip() not in ["None", ""]:
+            self.docs.setText(f'<a href="{link}/docs">{link}/docs</a>')
+        else:
+            self.docs.setText("")
 
     @property
     def _headers(self) -> str:
@@ -368,9 +388,13 @@ class ServerForm(BlankForm):
                 title="Overwrite project config?",
                 msg=f"Permanently overwrite the {name} project's config?",
                 callback=self._upload_config_answer,
-                args={},
+                args={"name": name, "config_str": config_str},
             )
             return
+        else:
+            self._upload_config_answer(
+                QMessageBox.Yes, name=name, config_str=config_str
+            )
 
     def _upload_config_answer(
         self, answer: int, *, name: str, config_str: str = None
@@ -406,8 +430,15 @@ class ServerForm(BlankForm):
                 meut.warning2(parent=self, title="Request Error", msg=msg)
 
     def _create_key(self) -> None:
-        new_key_dialog = NewKeyDialog(self)
+        new_key_dialog = NewKeyDialog(
+            parent=self, failed_callback=self._create_key_failed
+        )
         new_key_dialog.show()
+
+    def _create_key_failed(self, msg, code) -> None:
+        if code is None or code <= 100:
+            code = 500
+        meut.warning2(parent=self, title=f"{code}: Cannot create new API key", msg=msg)
 
     def _do_shutdown(self) -> None:
         if not self._server_is_enabled():
@@ -416,8 +447,15 @@ class ServerForm(BlankForm):
                 msg="Cannot shutdown because the server is off or there is insufficient information to make the request",
             )
             return
-        yn = meut.yesNo(parent=self, msg="Shutdown server?", title="Shutdown server?")
-        if yn is False:
+        meut.yesNo2(
+            parent=self,
+            msg="Shutdown server?",
+            title="Shutdown server?",
+            callback=self._do_shutdown_answer,
+        )
+
+    def _do_shutdown_answer(self, answer: int) -> None:
+        if answer is QMessageBox.No:
             return False
         with httpx.Client() as client:
             msg = None
@@ -434,7 +472,7 @@ class ServerForm(BlankForm):
                 self.response_msg.setText(msg)
                 meut.warning2(parent=self, title="Request Error", msg=msg)
 
-    def _download_log(self, name: str) -> bool:
+    def _download_log(self, name: str) -> None:
         if not self._server_is_enabled():
             meut.warning2(
                 parent=self,
@@ -460,9 +498,9 @@ class ServerForm(BlankForm):
                         title="Open file?",
                         msg=f"Open {local_path}?",
                         callback=self._open_if,
-                        args={"path", local_path},
+                        args={"path": local_path},
                     )
-                    return True
+                    return
                 else:
                     msg = json["detail"]
                     msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
@@ -471,9 +509,9 @@ class ServerForm(BlankForm):
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 meut.warning2(parent=self, title="Request Error", msg=msg)
-                return False
+                return
 
-    def _download_config(self, name: str) -> bool:
+    def _download_config(self, name: str) -> None:
         if not self._server_is_enabled():
             meut.warning2(
                 parent=self,
@@ -496,9 +534,9 @@ class ServerForm(BlankForm):
                         title="Open file?",
                         msg=f"Open {local_path}?",
                         callback=self._open_if,
-                        args={"path", local_path},
+                        args={"path": local_path},
                     )
-                    return True
+                    return
                 else:
                     msg = content["detail"]
                     msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
@@ -507,9 +545,9 @@ class ServerForm(BlankForm):
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 meut.warning2(parent=self, title="Request Error", msg=msg)
-                return False
+                return
 
-    def _download_env(self, name: str) -> bool:
+    def _download_env(self, name: str) -> None:
         if not self._server_is_enabled():
             meut.warning2(
                 parent=self,
@@ -532,9 +570,9 @@ class ServerForm(BlankForm):
                         title="Open file?",
                         msg=f"Open {local_path}?",
                         callback=self._open_if,
-                        args={"path", local_path},
+                        args={"path": local_path},
                     )
-                    return True
+                    return
                 else:
                     msg = content["detail"]
                     msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
@@ -543,7 +581,7 @@ class ServerForm(BlankForm):
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
                 meut.warning2(parent=self, title="Request Error", msg=msg)
-                return False
+                return
 
     def _is_on_top(self) -> bool:
         if self.main.config:
@@ -588,11 +626,17 @@ class ServerForm(BlankForm):
                 parent=self,
                 msg="Cannot delete project because the server is off or there is insufficient information to make the request",
             )
-            return False
-        yn = meut.yesNo(
-            parent=self, msg=f"Permanently delete project {name}?", title=""
+            return
+        meut.yesNo2(
+            parent=self,
+            msg=f"Permanently delete project {name}?",
+            title="Delete Project",
+            callback=self._delete_project_answer,
+            args={"name": name},
         )
-        if yn is False:
+
+    def _delete_project_answer(self, answer: int, *, name: str) -> None:
+        if answer is not QMessageBox.Yes:
             return False
         with httpx.Client() as client:
             response = None
@@ -613,7 +657,7 @@ class ServerForm(BlankForm):
                         msg=f"Could not delete project {name}. Return code: {response.status_code}",
                         title="Could not delete project",
                     )
-                    return False
+                    return
             except Exception as ex:
                 print(traceback.format_exc())
                 msg = "Error sending request"
@@ -622,7 +666,7 @@ class ServerForm(BlankForm):
                 else:
                     msg = f"{msg}: {ex}"
                 meut.warning2(parent=self, title="Request Error", msg=msg)
-                return False
+                return
 
     def _create_project(self, name: str) -> bool:
         if not self._server_is_enabled():

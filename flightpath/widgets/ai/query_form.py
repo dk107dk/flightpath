@@ -20,6 +20,7 @@ from flightpath.util.help_finder import HelpFinder
 from flightpath.util.tdata_utility import TDataUtility as tdut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.generator_utility import GeneratorUtility as geut
+from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 
 
 class QueryFormWidget(QWidget):
@@ -175,6 +176,8 @@ class QueryFormWidget(QWidget):
             self.doc_path.show()
             #
             # find the test data, if any
+            # TODO: prefer to use the name of the currently viewable tab, rather
+            # than selected file path. shouldn't make much difference in practice.
             #
             path = tdut.get_test_data_path(self.main.selected_file_path)
             if path is not None:
@@ -182,18 +185,40 @@ class QueryFormWidget(QWidget):
         else:
             self.doc_path.hide()
 
+    #
+    # better to use tdut.get_test_data_path
+    #
+    def _get_test_data_path_if(self) -> str:
+        t = self.main.current_doc_tab
+        if t is not None:
+            _ = t.objectName()
+            return tdut.get_test_data_path(_)
+            """
+            exts = self.main.csvpath_config.get(section="extensions", name="csvpath_files")
+            if fiut.is_a(_, exts) and isinstance(t, CsvpathViewer):
+                text = t.text_edit.toPlainText()
+                s,c = csut.statement_and_comment(text)
+                docpath = csut.get_filepath(c)
+                return docpath
+            """
+        return None
+
     def _on_submit(self):
+        #
+        # the activity is always w/re: the open document. in the case of question or explaination,
+        # it may be useful to look for a test-data: pointer to find a data context. "validation"
+        # "testdata" activities don't use this optional capability. it has to be optional because
+        # we would be shipping data to the AI API.
+        #
         docpath = None
-        use_doc_path = (
+        use_doc_path = self._current_activity in ["question", "explain"] and (
             self.use_doc_checkbox.isChecked()
             and str(self.doc_path_text.text()).strip() != ""
         )
+        tdata = None
         if use_doc_path is True:
-            docpath = self.doc_path_text.text()
-        else:
-            t = self.main.current_doc_tab
-            if t is not None:
-                docpath = t.objectName()
+            docpath = self._get_test_data_path_if()
+            tdata = self.get_data_context_from_path_if(docpath)
         #
         #
         #
@@ -213,34 +238,28 @@ class QueryFormWidget(QWidget):
             "activity": self._current_activity,
             "title": title,
             #
-            # instructions == the narrative box for Q&A or instructions for how to generate data, schema, or explain
+            # instructions == the narrative box for Q&A or instructions for how to generate
+            # data, schema, or explain
             #
             "instructions": self.instructions.toPlainText(),
             #
-            # example == the main document we're giving to the AI to explain, Q&A, generate schema for, or generate data for
-            # example is the Prompt.example.
+            # example == the main document we're giving to the AI to explain, Q&A, generate
+            # schema for, or generate data for example is the Prompt.example.
             #
             "example": self.get_example_content(),
+            "example_path": self.get_example_path(),
             #
-            # the next three are all about the optional data sample that we would pull
-            # from the first test-data: metadata token we find, if any. if found, it
-            # would be added to the prompt as an extra piece of content in some way appended.
+            # test_data == file contents at docpath, where docpath is a test-data:
+            # directive. at this time, we aren't passing the actual data to the AI, only the
+            # path. however, capturing an actual sample is potentially useful for future ref.
             #
-            # we'll take use_document though it's more for us here than something that
-            # would be used down stream. regardless of the checkbox, which may or may
-            # not be shown, we do not always even optionally use the doc
+            "test_data": tdata,
             #
-            "use_document": use_doc_path,
+            # data example is a sample that we would pull from the first test-data: metadata
+            # token we find, if any. if found, it would be added to the prompt as an extra
+            # piece of content in some way appended.
             #
-            # data_example == file contents at document_path
-            #
-            "data_example": self.get_data_context_from_path_if(docpath)
-            if use_doc_path is True
-            else "",
-            #
-            # document_path == the optional use-context control's path
-            #
-            "document_path": docpath,
+            "test_data_path": docpath,
             #
             # not all activities use these input/output limits, but we need them in some
             # cases and always providing them doesn't hurt.
@@ -251,12 +270,7 @@ class QueryFormWidget(QWidget):
             # we need to tell the AI how many turns it has so it can wrap up and answer
             # in a timely way
             #
-            "turns_limit": turns_limit,
-            #
-            # number of lines is used in data generation. not used otherwise, atm, but doesn't
-            # hurt to include it.
-            #
-            "number_of_lines": self.lines_count.currentText(),
+            "turns_limit": int(turns_limit),
         }
         self.querySubmitted.emit(params)
 
@@ -264,23 +278,28 @@ class QueryFormWidget(QWidget):
         #
         # when an item is clicked, load up the params, form, etc. to get the as-was state for the query
         #
-        self.activity_selector.set_activity(params.get("activity", "create"))
+        self.activity_selector.set_activity(params.get("activity", "validation"))
         self.prompt_title.setText(params.get("title", ""))
         self.instructions.setPlainText(params.get("instructions", ""))
-        self.use_doc_checkbox.setChecked(bool(params.get("document_path")))
-        self.set_document_context(params.get("document_path"))
+        self.use_doc_checkbox.setChecked(bool(params.get("test_data_path")))
+        self.set_document_context(params.get("test_data_path"))
         #
         # we want to display any feedback we collected in the help & feedback tabs
         # but we'll do that from the query tab where we caught the event.
         #
 
+    def get_example_path(self) -> str:
+        t = self.main.current_doc_tab
+        path = t.objectName()
+        return path
+
     def get_example_content(self) -> str:
-        path = self.main.selected_file_path
-        if path is None:
-            raise ValueError("No selected file available")
-        with DataFileReader(path) as file:
+        if self._current_activity == "validation":
             ret = None
-            if self._current_activity == "validate":
+            path = self.get_example_path()
+            if path is None:
+                raise ValueError("No selected file available")
+            with DataFileReader(path) as file:
                 #
                 # we only give a sample of the data for the AI to consider. atm,
                 # hardcoded to 25 lines, but will become more dynamic asap.
@@ -291,18 +310,19 @@ class QueryFormWidget(QWidget):
                     if i > self.max_data_input_lines:
                         break
                 ret = "\n".join(lst)
-            else:
-                #
-                # for all the activities where the primary material is a csvpath
-                # we want to provide the complete file. in the future maybe we'da
-                # want to be able to just offer a subset of the csvpaths in one
-                # file, but atm that's not worth doing.
-                #
-                ret = file.source.read()
-            #
-            #
-            #
             return ret
+        t = self.main.current_doc_tab
+        if isinstance(t, CsvpathViewer):
+            #
+            # for all the activities where the primary material is a csvpath
+            # we want to provide the complete file. in the future maybe we'da
+            # want to be able to just offer a subset of the csvpaths in one
+            # file, but atm that's not worth doing.
+            #
+            return t.text_edit.toPlainText()
+        raise ValueError(
+            f"Activity must be validate ({self._current_activity}) or document {t} must be csvpaths"
+        )
 
     def get_data_context_from_path_if(self, path: str) -> str:
         if path is None:

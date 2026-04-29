@@ -140,7 +140,7 @@ class ServerProjectsList(QListWidget):
             )
 
     def new_project(self) -> None:
-        proj, ok = meut.input2(
+        meut.input2(
             parent=self,
             title="New server project",
             msg="Enter the new FlightPath Server project name",

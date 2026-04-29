@@ -26,6 +26,13 @@ class QueryAccordionItem(QWidget):
         "testdata": "▒",
         "run": "⚙️",
     }
+    ACTIVITY_NAMES = {
+        "validation": "Create a validation based on example data",
+        "question": "Answer a CsvPath question",
+        "explain": "Describe how a validation script works",
+        "testdata": "Generate test CSV data based on a validation script",
+        "run": "Run a group of csvpath statements",
+    }
 
     #
     # the label and close button work like:
@@ -94,7 +101,7 @@ class QueryAccordionItem(QWidget):
             self.icon_label.setStyleSheet(
                 "QLabel { border: 0px;background-color:none }"
             )
-
+            self.icon_label.setToolTip(QueryAccordionItem.ACTIVITY_NAMES.get(activity))
         #
         # title and subtitle, if any
         #

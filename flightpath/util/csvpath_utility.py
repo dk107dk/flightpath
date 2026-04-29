@@ -44,6 +44,9 @@ class CsvpathUtility:
 
     @classmethod
     def get_filepath(cls, comment: str) -> str:
+        #
+        # gets the test-data: field value if present
+        #
         comment = "" if comment is None else comment.strip()
         mdata = {}
         if len(comment) > 0:

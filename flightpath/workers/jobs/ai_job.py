@@ -1,5 +1,6 @@
 import jsonpickle
 import traceback
+import copy
 
 from flightpath_generator.generator import Generator
 from flightpath.util.generator_utility import GeneratorUtility as geut
@@ -13,13 +14,23 @@ class AiJob(Job):
             raise ValueError("Metadata cannot be None")
         self.my_parent = parent
         self.mdata = mdata
-        self.path = mdata.get("params", {}).get("document_path")
+        #
+        # test_data_path is a path found in a test-data: directive, if any. if
+        # present AIs can use the data for their testing.
+        #
+        self._example = None
+        self.path = mdata.get("params", {}).get("test_data_path")
         self.instructions = mdata.get("params", {}).get("instructions", "")
         self.on_turn_update = None
         self.on_complete = None
         self.on_error = None
         self._generator = None
-        self._values = mdata.get("params", {})
+        self._values = copy.deepcopy(mdata.get("params"))
+        # self._values = mdata.get("params", {})
+
+    @property
+    def example(self) -> str:
+        self._values.get("example")
 
     @property
     def values(self) -> dict[str, str]:
@@ -62,7 +73,20 @@ class AiJob(Job):
             # prompt before the prompt is applied to the context
             #
             prompt.rules_values = self.values
+            if prompt.rules_values is None:
+                prompt.rules_values = {}
+                prompt.rules_values["instructions"] = self.values.get("instructions")
+
             prompt.example_values = self.values
+            if prompt.example_values is None:
+                prompt.example_values = {}
+                prompt.example_values["example"] = self.values.get("example")
+                prompt.example_values["example_path"] = self.values.get("example_path")
+                prompt.example_values["test_data"] = self.values.get("test_data")
+                prompt.example_values["test_data_path"] = self.values.get(
+                    "test_data_path"
+                )
+
             #
             # context may have its own replacements. for now we just keep one batch
             # of replacement vars coming from the form properties.

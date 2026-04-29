@@ -18,6 +18,10 @@ class ActivitySelector(QWidget):
         ("testdata", "▒", "Data"),
     ]
 
+    #
+    # there are also tool tips in the query accordian item. the three
+    # sets of descriptions could be reorged
+    #
     SUBTITLES_INITIAL = {
         "validation": "Creating csvpath",
         "question": "Answering question",
