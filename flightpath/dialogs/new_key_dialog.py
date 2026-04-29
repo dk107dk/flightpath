@@ -1,5 +1,7 @@
 import httpx
 import traceback
+from typing import Callable
+
 from PySide6.QtWidgets import (  # pylint: disable=E0611
     QWidget,
     QVBoxLayout,
@@ -8,34 +10,39 @@ from PySide6.QtWidgets import (  # pylint: disable=E0611
     QDialog,
     QLineEdit,
     QFormLayout,
+    QScrollArea,
+    QLabel,
 )
 from PySide6.QtCore import Qt  # pylint: disable=E0611
 from flightpath.util.message_utility import MessageUtility as meut
 
 
 class NewKeyDialog(QDialog):
-    def __init__(self, parent):
-        super().__init__(None)
-        self.parent = parent
+    def __init__(self, *, parent, failed_callback: Callable = None):
+        super().__init__(parent)
+        self.my_parent = parent
+        self.failed_callback = failed_callback
 
-        self.setWindowTitle("Create a new API key")
+        self.setWindowTitle("Create a New API Key")
         self.setWindowModality(Qt.ApplicationModal)
 
         self.setFixedHeight(150)
         self.setFixedWidth(540)
 
-        main_layout = QVBoxLayout()
-        self.setLayout(main_layout)
+        self.main_layout = QVBoxLayout()
+        self.setLayout(self.main_layout)
 
-        form_layout = QFormLayout()
-        main_layout.addLayout(form_layout)
+        self.key_area = None
+
+        self.form_layout = QFormLayout()
+        self.main_layout.addLayout(self.form_layout)
 
         self.key_name = QLineEdit()
         self.key_owner = QLineEdit()
         self.key_owner_contact = QLineEdit()
-        form_layout.addRow("Key name: ", self.key_name)
-        form_layout.addRow("Key owner: ", self.key_owner)
-        form_layout.addRow("Key owner contact: ", self.key_owner_contact)
+        self.form_layout.addRow("Key name: ", self.key_name)
+        self.form_layout.addRow("Key owner: ", self.key_owner)
+        self.form_layout.addRow("Key owner contact: ", self.key_owner_contact)
 
         self.cancel_button = QPushButton()
         self.cancel_button.setText("Cancel")
@@ -51,7 +58,7 @@ class NewKeyDialog(QDialog):
         buttons_layout.addWidget(self.cancel_button)
         buttons_layout.addWidget(self.create_button)
         buttons.setLayout(buttons_layout)
-        main_layout.addWidget(buttons)
+        self.main_layout.addWidget(buttons)
         self.exec()
 
     def do_key_create(self) -> None:
@@ -65,7 +72,7 @@ class NewKeyDialog(QDialog):
             self.key_name.text().strip(),
         ]
         if None in _ or "" in _:
-            meut.warning(
+            meut.warning2(
                 parent=self,
                 msg="You must provide a key name and an owner name and contact",
                 title="Required fields",
@@ -80,7 +87,7 @@ class NewKeyDialog(QDialog):
         with httpx.Client() as client:
             msg = None
             response = None
-            url = f"{self.parent.host.text()}/admin/new_key"
+            url = f"{self.my_parent.host.text()}/admin/new_key"
             #
             # create a server-safeish config str here. this isn't a full cleaning. the
             # server needs to also work on the paths and check the sensitive settings
@@ -89,30 +96,57 @@ class NewKeyDialog(QDialog):
             #
             key = None
             try:
-                response = client.post(url, json=key_data, headers=self.parent._headers)
+                response = client.post(
+                    url, json=key_data, headers=self.my_parent._headers
+                )
                 if response.status_code == 200:
                     key = response.json().get("api_key")
                 else:
                     msg = response.json().get("detail")
                     msg = f"Cannot create a key. Server response: {response.status_code}: {msg}"
-                    meut.warning(
-                        parent=self, title="Cannot create new API key", msg=msg
-                    )
-                    self.reject()
+                    if self.failed_callback:
+                        self.reject()
+                        self.failed_callback(msg=msg, code=response.status_code)
                     return
             except Exception as ex:
                 print(traceback.format_exc())
                 msg = f"Error sending request ({response.status_code}): {ex}"
-                print(msg)
-                meut.warning(parent=self, title="Cannot create new API key", msg=msg)
-                self.reject()
+                if self.failed_callback:
+                    self.reject()
+                    self.failed_callback(msg=msg, code=500)
+                return
         #
-        # use meut to show the key 1 and only 1 time
+        # remove form fields and display the key. this is the only chance to see
+        # the key.
         #
-        meut.input(
-            parent=self,
-            msg="Copy this key. It will not be shown again",
-            title="API key created",
-            text=key,
+        # TODO: probably we should let the user know that, but let's wait and see
+        # the experience.
+        #
+        while self.form_layout.rowCount() > 0:
+            self.form_layout.removeRow(0)
+        key_label = QLabel()
+        key_label.setText(key)
+        key_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        key_label.setStyleSheet("background-color: transparent;")
+        self.key_area = QScrollArea()
+        self.key_area.setStyleSheet(
+            "QScrollArea { padding:1px 0 0 7px; background-color:#f7f7f7}"
         )
-        self.accept()
+        self.key_area.setWidgetResizable(True)
+        self.key_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.key_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.key_area.setFixedHeight(33)
+        self.key_area.setWidgetResizable(True)
+        self.key_area.setWidget(key_label)
+
+        self.form_layout.addRow("New key: ", self.key_area)
+
+        msg = QLabel("Copy this key. It will not be shown again.")
+        msg.setStyleSheet(
+            "QLabel { font-size: 12pt; font-style:italic;color:#222222; padding:0 0 20px 0; }"
+        )
+        self.form_layout.addRow("", msg)
+
+        self.cancel_button.setEnabled(True)
+        self.cancel_button.setText("Close")
+        self.create_button.hide()

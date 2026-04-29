@@ -43,11 +43,16 @@ class SplashDialog(QDialog):
 
     def __init__(
         self,
+        *,
         main=None,
         image_path: str = "",
         license_url: str = "https://www.gnu.org/licenses/lgpl-3.0.html",
         copyright_text: str = "© 2024 Atesta Analytics. All rights reserved.",
     ):
+        #
+        # passing up main as parent doesn't seem helpful since main is not yet visible
+        # and this dialog is working fine as-is.
+        #
         super().__init__()
         self.main = main
         self._license_url = license_url

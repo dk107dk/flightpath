@@ -33,12 +33,12 @@ class NewRunDialog(QDialog):
 
     METHOD_NAMES = [COLLECT_SERIAL, FF_SERIAL, COLLECT_BY_LINE, FF_BY_LINE]
 
-    def __init__(self, *, named_paths=None, named_file=None, parent):
+    def __init__(self, *, main, named_paths=None, named_file=None, parent):
         super().__init__(parent)
 
         self.sidebar = parent
-        self.main = parent.main
-        self.setWindowTitle("Run data through a named-paths group")
+        self.main = main
+        self.setWindowTitle("Run Data Through a Statements Group")
 
         self.template = None
         self.method = None
@@ -239,20 +239,22 @@ class NewRunDialog(QDialog):
             #
             #
             #
-            meut.message(
+            meut.message2(
                 parent=self,
                 title="No staged data",
                 msg="You must stage data before you can start a run",
             )
+            return
         if self.csvpaths.paths_manager.total_named_paths() == 0:
             #
             #
             #
-            meut.message(
+            meut.message2(
                 parent=self,
                 title="No CsvPath Language files",
                 msg="You must load csvpaths into a named-paths group before you can start a run",
             )
+            return
         #
         # show the dialog
         #
@@ -286,7 +288,7 @@ class NewRunDialog(QDialog):
             # pop an error prompt
             # then leave ourselves open so they can cancel or try again
             #
-            meut.warning(
+            meut.warning2(
                 parent=self,
                 title="Unknown data",
                 msg=f"Unknown data name: {self.named_file_name}",
@@ -304,7 +306,7 @@ class NewRunDialog(QDialog):
             # pop an error prompt
             # then leave ourselves open so they can cancel or try again
             #
-            meut.warning(
+            meut.warning2(
                 parent=self,
                 title="Unknown name",
                 msg=f"Unknown csvpaths name: {self.named_paths_name}",

@@ -22,7 +22,6 @@ class OneOffRunWorker(QRunnable):
         self.signals.messages.emit("Doing test run")
         path = self.csvpath
         lines = None
-
         try:
             lines = path.collect()
             self.signals.messages.emit(
@@ -38,5 +37,5 @@ class OneOffRunWorker(QRunnable):
         # the best way to do it.
         #
         self.signals.finished.emit(
-            (self.csvpath, self.csvpath_str, lines, self.printer)
+            (self.csvpath, self.csvpath_str, lines, self.printer, self)
         )

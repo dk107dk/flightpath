@@ -1,9 +1,10 @@
+from typing import Callable
 from pathlib import Path
 import sys
 import os
 import csv
 import traceback
-
+import json
 import darkdetect
 
 from PySide6.QtWidgets import (  # pylint: disable=E0611
@@ -13,7 +14,6 @@ from PySide6.QtWidgets import (  # pylint: disable=E0611
     QVBoxLayout,
     QStackedLayout,
     QInputDialog,
-    QFileDialog,
     QSplitter,
     QTabWidget,
     QSizePolicy,
@@ -31,21 +31,20 @@ from PySide6.QtCore import (  # pylint: disable=E0611
     Slot,
     QSize,
     QRunnable,
-    QModelIndex,
     QCoreApplication,
     QTimer,
 )
 
+from csvpath import CsvPaths
 from csvpath.util.config import Config as CsvPathConfig
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 from csvpath.util.path_util import PathUtility as pathu
-from csvpath import CsvPaths
+
+from flightpath_server.main import Main as ServerMain
 
 from flightpath.hidden import Hidden
-
-
-from flightpath.util.help_finder import HelpFinder
+from flightpath.reactor import Reactor
 
 from flightpath.workers.md_worker import MdWorker
 from flightpath.workers.csvpath_file_worker import CsvpathFileWorker
@@ -59,34 +58,27 @@ from flightpath.widgets.panels.md_viewer import MdViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
 from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
 from flightpath.widgets.panels.json_viewer import JsonViewer
-from flightpath.widgets.panels.table_model import TableModel
+from flightpath.widgets.table_model import TableModel
 from flightpath.widgets.sidebars.sidebar import Sidebar
 from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.sidebars.sidebar_named_paths import SidebarNamedPaths
 from flightpath.widgets.sidebars.sidebar_archive import SidebarArchive
-from flightpath.widgets.sidebars.sidebar_functions import SidebarFunctions
-from flightpath.widgets.sidebars.sidebar_docs import SidebarDocs
 from flightpath.widgets.pages.welcome import Welcome
 from flightpath.widgets.pages.content import Content
 from flightpath.widgets.pages.config import Config
 from flightpath.widgets.help.helper import Helper
-
 from flightpath.widgets.ai.query_tab import QueryTabWidget
 
+from flightpath.util.help_finder import HelpFinder
 from flightpath.util.gate_guard import GateGuard
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.json_utility import JsonUtility as jsut
-from flightpath.util.html_generator import HtmlGenerator
 from flightpath.util.state import State
-
-from flightpath.inspect.inspector import Inspector
-from flightpath.editable import EditStates
-from flightpath_server.main import Main as ServerMain
+from flightpath.util.editable import EditStates
 
 
 def run():
@@ -134,15 +126,16 @@ For more information about FlightPath Server see https://www.flightpathdata.com.
     sys.exit(app.exec())
 
 
-class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
-    """Main GUI component. Does much of the MVC controller lifting."""
-
+class MainWindow(QMainWindow):
     TITLE = "FlightPath • Data Preboarding Development and Operations"
 
     def __init__(self):
         super().__init__()
+        self.reactor = Reactor(self)
+        #
+        #
+        #
         self.setup_ai_flag = False
-
         noai = State().data.get("llm", {}).get("model", "").strip() == ""
         #
         # if the current project has llm but the env.json doesn't we will still show the
@@ -202,7 +195,8 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         self.logger = None
         #
-        # if we fail to / chose not to set a cwd we will close the app
+        # if we fail to / chose not to set a cwd we will close the app. we
+        # also use this to make sure we're good to close depending on tabs.
         #
         self.please_close = False
         #
@@ -244,7 +238,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         # react to light/dark changes
         #
         QCoreApplication.instance().styleHints().colorSchemeChanged.connect(
-            self.on_color_scheme_changed
+            self.reactor.on_color_scheme_changed
         )
         if darkdetect.isDark():
             self.on_color_scheme_changed()
@@ -257,6 +251,10 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         # kickoff a precache worker to collect some info about files
         #
         QTimer.singleShot(1000, self._run_precacher)
+        #
+        # prevent double meut asks
+        #
+        self._asking_save_config = False
 
     def open_ai_config(self) -> None:
         self.open_config()
@@ -304,64 +302,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         else:
             self.launch_shows.append(showable)
 
-    def on_color_scheme_changed(self) -> None:
-        QCoreApplication.instance().setStyle("Fusion")
-        #
-        # splitters apparently need special handling.
-        #
-        if darkdetect.isDark():
-            s = "QSplitter::handle { background-color: #535353;  margin:1px; }"
-            self.centralWidget().setStyleSheet(s)
-            if self.rt_col_helpers:
-                self.rt_col_helpers.setStyleSheet(s)
-            if self.rt_col:
-                self.rt_col.setStyleSheet(s)
-            self.main.setStyleSheet(s)
-        if darkdetect.isLight():
-            s = "QSplitter::handle { background-color: #f3f3f3;  margin:1px; }"
-            self.centralWidget().setStyleSheet(s)
-            if self.rt_col_helpers:
-                self.rt_col_helpers.setStyleSheet(s)
-            if self.rt_col:
-                self.rt_col.setStyleSheet(s)
-            self.main.setStyleSheet(s)
-        #
-        # update config
-        #
-        if self.config and self.config.config_panel and self.config.config_panel.forms:
-            for form in self.config.config_panel.forms:
-                form.update_dark()
-
-        #
-        # update the AI tab
-        #
-        self.ai_query_tab.update_style()
-
-        #
-        # schedule an update for the splitters
-        #
-        if self.rt_col_helpers:
-            self.rt_col_helpers.update()
-        if self.rt_col:
-            self.rt_col.update()
-        self.main.update()
-        self.centralWidget().update()
-        #
-        # handle the file trees specially. there is probably a better way.
-        #
-        if self.sidebar_rt_top:
-            self.sidebar_rt_top.update_style()
-        if self.sidebar_rt_mid:
-            self.sidebar_rt_mid.update_style()
-        if self.sidebar_rt_bottom:
-            self.sidebar_rt_bottom.update_style()
-        #
-        # walk through the open files
-        #
-        if self.content and self.content.tab_widget:
-            for t in taut.tabs(self.content.tab_widget):
-                stut.set_editable_background(t)
-
     def state_check(self) -> bool:
         self.state = State()
         if self.state.has_cwd():
@@ -373,7 +313,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             else:
                 QCoreApplication.instance().exit()
                 #
-                # I'm not 100% clear why exit() isn't enough, but it needs a little help.
+                # not 100% clear why exit() isn't enough, but it needs a little help.
                 # this flag works fine and seems good.
                 #
                 self.please_close = True
@@ -497,8 +437,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         self.welcome = Welcome(main=self)
         self.content = Content(main=self)
         self.config = Config(main=self)
-        #
-        #
         self.main_layout.addWidget(self.welcome)
         self.main_layout.addWidget(self.content)
         self.main_layout.addWidget(self.config)
@@ -613,20 +551,9 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         #
         #
         #
-        self._connects()
+        self.reactor.do_connects()
 
     def renew_sidebar_archive(self) -> None:
-        #
-        # we can just reset, rather than recreating. doesn't solve for
-        # adding the new items w/o changing the layout, but at least it
-        # is lighter weight and more pointer/thread friendly.
-        #
-        # exp!! view.reset()
-        #
-        # self.sidebar_rt_bottom.view.reset()
-        #
-        #
-        #
         d = self.sidebar_rt_bottom
         self.sidebar_rt_bottom = SidebarArchive(
             main=self, config=self.csvpath_config, role=3, tabs=d.tabs
@@ -635,17 +562,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         d.deleteLater()
 
     def renew_sidebar_named_files(self) -> None:
-        #
-        # we can just reset, rather than recreating. doesn't solve for
-        # adding the new items w/o changing the layout, but at least it
-        # is lighter weight and more pointer/thread friendly.
-        #
-        # exp!! view.reset()
-        #
-        # self.sidebar_rt_top.view.reset()
-        #
-        #
-        #
         d = self.sidebar_rt_top
         self.sidebar_rt_top = SidebarNamedFiles(
             main=self, config=self.csvpath_config, role=3
@@ -654,17 +570,6 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         d.deleteLater()
 
     def renew_sidebar_named_paths(self) -> None:
-        #
-        # we can just reset, rather than recreating. doesn't solve for
-        # adding the new items w/o changing the layout, but at least it
-        # is lighter weight and more pointer/thread friendly.
-        #
-        # exp!! view.reset()
-        #
-        # self.sidebar_rt_mid.view.reset()
-        #
-        #
-        #
         d = self.sidebar_rt_mid
         self.sidebar_rt_mid = SidebarNamedPaths(
             main=self, config=self.csvpath_config, role=3
@@ -683,66 +588,26 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             self._helper = Helper(main=self)
         return self._helper
 
-    def _on_data_toolbar_show(self) -> None:
-        self.show_now_or_later(self.content.toolbar)
-
-    def _on_data_toolbar_hide(self) -> None:
-        self.content.toolbar.hide()
-
-    def on_content_tab_changed(self) -> None:
-        self._on_rt_tab_changed()
-
-    def _connects(self) -> None:
-        #
-        # TODO / CAUTION!
-        # be aware that this setup method is called at every project change
-        # that means we are accumulating connects. atm, not a big problem. but
-        # near-term need to refactor.
-        #
-        self.rt_tab_widget.currentChanged.connect(self._on_rt_tab_changed)
-        self.main_layout.currentChanged.connect(self._on_stack_change)
-        self.content.tab_widget.currentChanged.connect(self.on_content_tab_changed)
-        #
-        # this toggles help. if no help is showing welcome.md should be shown.
-        #
-        self.welcome.clicked.connect(self.welcome.on_click)
-        self.sidebar.file_navigator.clicked.connect(self.on_tree_click)
-        self.config.toolbar.button_close.clicked.connect(self.close_config)
-        self.config.toolbar.button_cancel_changes.clicked.connect(
-            self.cancel_config_changes
-        )
-        self.config.toolbar._button_save.clicked.connect(self.save_config_changes)
-        self.sidebar.file_navigator.empty_area_click.connect(self.show_welcome_screen)
-        self.sidebar.icon_label.clicked.connect(self.show_welcome_screen)
-
     def setup_named_files(self) -> None:
-        """adds named-files tree"""
         self.sidebar_rt_top = SidebarNamedFiles(
             main=self, config=self.csvpath_config, role=1
         )
         self.grid_layout.addWidget(self.sidebar_rt_top, 0, 2, 1, 1)
 
     def setup_named_paths(self) -> None:
-        """adds named-paths tree"""
         self.sidebar_rt_mid = SidebarNamedPaths(
             main=self, config=self.csvpath_config, role=2
         )
         self.grid_layout.addWidget(self.sidebar_rt_mid, 1, 2, 1, 1)
 
     def setup_archive(self) -> None:
-        """adds archive tree"""
         self.sidebar_rt_bottom = SidebarArchive(
             main=self, config=self.csvpath_config, role=3
         )
         self.grid_layout.addWidget(self.sidebar_rt_bottom, 2, 2, 1, 1)
 
-    @Slot()
     def show_welcome_screen(self):
-        """shows the main area welcome image + buttons"""
         self.sidebar.file_navigator.selectionModel().clear()
-        self._show_welcome_but_do_not_deselect()
-
-    def _show_welcome_but_do_not_deselect(self) -> None:
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(0)
         self.statusBar().showMessage(self.state.cwd)
@@ -754,123 +619,28 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             return self.content.tab_widget.widget(di)
         return None
 
-    def _on_rt_tab_changed(self) -> None:
-        #
-        # find if we're looking at the AI tab. if we are, find the currently visible doc's path.
-        # if the doc is .csv/data set the buttons accordingly. if csvpath, likewise. if neither,
-        # disable the buttons
-        #
-        i = self.rt_tab_widget.currentIndex()
-        w = self.rt_tab_widget.widget(i)
-        if isinstance(w, QueryTabWidget):
-            query_tab = w
-            doc = self.current_doc_tab
-            if doc is not None:
-                e = Path(doc.objectName()).suffix
-                e = e.lstrip(".")
-                query_tab.enable_for_extension(e)
-            query_tab.form.assure_state()
-            #
-            # only alert on missing config if AI tab selected. we
-            # don't check api_base because LiteLLM doesn't always
-            # require base. tho, others do.
-            #
-            m = self.csvpath_config.get(section="llm", name="model")
-            k = self.csvpath_config.get(section="llm", name="api_key")
-            if str(m).strip() in ["None", ""] or str(k).strip() in ["None", ""]:
-                o = meut.yesNoButtons(
-                    parent=self,
-                    title="No AI Config",
-                    msg="Config is not complete. Open AI configuration?",
-                    std_buttons=QMessageBox.Open | QMessageBox.Cancel,
-                    truth_button=QMessageBox.Open,
-                    def_button=QMessageBox.Cancel,
-                )
-                if o is True:
-                    self.open_ai_config()
-
-    def _rt_tabs_hide(self) -> None:
+    def rt_tabs_hide(self) -> None:
         self.rt_tab_widget.tabBar().setCurrentIndex(0)
         self.rt_tab_widget.tabBar().hide()
 
-    def _rt_tabs_show(self) -> None:
+    def rt_tabs_show(self) -> None:
         self.show_now_or_later(self.rt_tab_widget.tabBar())
         self.ai_query_tab.form.use_doc_checkbox.setChecked(False)
         self.ai_query_tab.form.on_use_doc(Qt.CheckState.Unchecked)
-
-    def question_config_close(self) -> None:
-        if (
-            self.config
-            and self.config.ready is True
-            and self.config.toolbar._button_save.isEnabled()
-        ):
-            save = meut.yesNo(
-                parent=self, title="Config changed", msg="Save config changes?"
-            )
-            if save is True:
-                self.save_config_changes()
-            self.reset_config_toolbar()
-
-    def _on_stack_change(self) -> None:
-        i = self.main_layout.currentIndex()
-
-        if i == 2:
-            #
-            # if config and config hasn't been setup yet we need get on that.
-            #
-            if self.main_layout.widget(2).ready is False:
-                self.main_layout.widget(2).config_panel.setup_forms()
-            #
-            # make sure we show the right info from the new csvpath_config. sidebar
-            # will have made/triggered the update to csvpath_config of the current proj
-            #
-            self.config.config_panel.ready = False
-            self.config.config_panel.populate_all_forms()
-        #
-        # if i == 2 (Config) we have to check if the config has changed. if it has
-        # and we switch away work could be lost. we need to confirm w/user that is
-        # ok.
-        #
-        if i != 2:
-            self.question_config_close()
-        if i in [0, 2]:
-            self._rt_tabs_hide()
-        else:
-            #
-            # we're switching to data or a csvpath file. that means we show the helper tab
-            # and make both visible in the tabbar. if we haven't shown the tabbar before we
-            # don't have a populated helper tree, so we need to get on that.
-            #
-            if self.launch_shows is not None:
-                self.launch_shows.append(self._rt_tabs_show)
-            else:
-                self._rt_tabs_show()
-            if self.rt_col_helpers.count() == 0:
-                #
-                # functs is the tree of functions and other help text
-                #
-                self.sidebar_functs = SidebarFunctions(main=self)
-                self.rt_col_helpers.addWidget(self.sidebar_functs)
-                #
-                # add docs below functions. this panel displays content selected in the tree above it
-                #
-                self.sidebar_docs = SidebarDocs(
-                    main=self, functions=self.sidebar_functs.functions
-                )
-                self.rt_col_helpers.addWidget(self.sidebar_docs)
 
     @Slot(tuple)
     def update_json_views(self, worker_data):
         try:
             filepath, data, editable = worker_data  # pylint: disable=W0612
             if isinstance(data, Exception):
-                meut.message(
+                meut.message2(
                     parent=self,
                     icon=QMessageBox.Critical,
                     title="File opening error",
                     msg=f"Error: {data}",
+                    callback=self._clear_is_opening,
+                    args={"path": filepath},
                 )
-                self._clear_is_opening(filepath)
                 return
             self.last_main = self.main_layout.currentIndex()
             #
@@ -887,9 +657,9 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                     filepath.endswith("manifest.json")
                     and EditStates.UNEDITABLE == editable
                 ):
-                    json_view = JsonViewer(main=self, editable=editable)
-                    import json
-
+                    json_view = JsonViewer(
+                        main=self, parent=self.content.tab_widget, editable=editable
+                    )
                     data = json.dumps(data, indent=2)
                     json_view.open_file(path=filepath, data=data)
                     json_view.setObjectName(filepath)
@@ -906,21 +676,24 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             else:
                 json_view = json_view[1]
             taut.select_tab(self.content.tab_widget, json_view)
-            self._rt_tabs_show()
+            self.rt_tabs_show()
         except Exception:
             print(traceback.format_exc())
         finally:
-            self._clear_is_opening(filepath)
+            self._clear_is_opening(path=filepath)
 
     @Slot(tuple)
     def update_md_views(self, worker_data):
         filepath, data, editable = worker_data  # pylint: disable=W0612
         try:
             if isinstance(data, Exception):
-                meut.warning(
-                    parent=self, title="File opening error", msg=f"Error: {data}"
+                meut.warning2(
+                    parent=self,
+                    title="File opening error",
+                    msg=f"Error: {data}",
+                    callback=self._clear_is_opening,
+                    args={"path": filepath},
                 )
-                self._clear_is_opening(filepath)
                 return
             self.last_main = self.main_layout.currentIndex()
             #
@@ -972,16 +745,21 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             # feels odd in practice we can be more careful in
             # when/if we do it.
             #
-            self._rt_tabs_show()
+            self.rt_tabs_show()
         finally:
-            self._clear_is_opening(filepath)
+            self._clear_is_opening(path=filepath)
 
     @Slot(tuple)
     def update_csvpath_views(self, worker_data):
         filepath, data, editable = worker_data  # pylint: disable=W0612
         if isinstance(data, Exception):
-            meut.warning(parent=self, title="File opening error", msg=f"Error: {data}")
-            self._clear_is_opening(filepath)
+            meut.warning2(
+                parent=self,
+                title="File opening error",
+                msg=f"Error: {data}",
+                callback=self._clear_is_opening,
+                args={"path": filepath},
+            )
             return
         try:
             self.last_main = self.main_layout.currentIndex()
@@ -1018,24 +796,38 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             #
             # we show the right tabs in order to show the functions and docs
             #
-            self._rt_tabs_show()
+            self.rt_tabs_show()
         finally:
-            self._clear_is_opening(filepath)
+            self._clear_is_opening(path=filepath)
 
     @Slot(tuple)
-    def update_views(self, worker_data):
+    def update_data_views(self, worker_data):
         msg, lines, filepath, data, lines_to_take, editable, largefile = worker_data  # pylint: disable=W0612
         if isinstance(lines, Exception):
-            meut.warning(parent=self, title="File opening error", msg=f"Error: {lines}")
-            self._clear_is_opening(filepath)
+            meut.warning2(
+                parent=self,
+                title="File opening error",
+                msg=f"Error: {lines}",
+                callback=self._clear_is_opening,
+                args={"path": filepath},
+            )
             return
+        #
+        #
+        #
         if largefile is True:
-            meut.warning(
+            meut.warning2(
                 parent=self,
                 title="Large file warning",
                 msg="FlightPath is optimized for samples, not large files. Only 66,000 lines loaded.",
+                callback=self._do_update_data_views,
+                args={"worker_data": worker_data},
             )
+            return
+        self._do_update_data_views(worker_data=worker_data)
 
+    def _do_update_data_views(self, *, worker_data) -> None:
+        msg, lines, filepath, data, lines_to_take, editable, largefile = worker_data  # pylint: disable=W0612
         table_model = TableModel(data=data, editable=(editable == EditStates.EDITABLE))
         self.last_main = self.main_layout.currentIndex()
         self.main_layout.setCurrentIndex(1)
@@ -1050,7 +842,12 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         # hang to the tuple for a min. in case we have a json viewer
         #
         if data_view is None:
-            dv = DataViewer(parent=self.content, editable=editable)
+            #
+            # content is not actually the parent. the tabs are the parent.
+            #
+            dv = DataViewer(
+                main=self, parent=self.content.tab_widget, editable=editable
+            )
             dv.setObjectName(obj_name)
             #
             # make sure we have the lines so the raw_viewer can take the same
@@ -1060,7 +857,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             self.content.tab_widget.addTab(dv, name)
         else:
             #
-            # if we have a dataviewer2 it is because we opened using right-click edit as json.
+            # if we have a jsonviewer2 it is because we opened using right-click edit as json.
             # then we clicked the file name in a regular way. ideally the jsonviewer2 should be
             # replaced by a dataviewer.
             #
@@ -1076,7 +873,9 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                 #
                 # create the new view
                 #
-                dv = DataViewer(parent=self.content, editable=editable)
+                dv = DataViewer(
+                    main=self, parent=self.content.tab_widget, editable=editable
+                )
                 dv.setObjectName(obj_name)
             else:
                 #
@@ -1105,54 +904,18 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                 self.content.toolbar.enable()
             self.show_now_or_later(self.content.toolbar)
             taut.select_tab(self.content.tab_widget, dv)
-            self._rt_tabs_show()
+            self.rt_tabs_show()
         except Exception:
             print(traceback.format_exc())
         finally:
-            self._clear_is_opening(filepath)
+            self._clear_is_opening(path=filepath)
 
-    def _clear_is_opening(self, path: str) -> None:
+    def _clear_is_opening(self, *, path: str) -> None:
         if path in self._is_opening:
             self._is_opening.remove(path)
 
-    def on_data_rows_changed(self) -> None:
-        t = self.content.toolbar.rows.currentText()
-        if t == "All lines":
-            #
-            # set the sampling options to first-n and remove or disable others
-            #
-            self.content.toolbar.sampling.setCurrentIndex(0)
-            self.content.toolbar.sampling.model().item(0).setEnabled(False)
-            self.content.toolbar.sampling.model().item(1).setEnabled(False)
-            self.content.toolbar.sampling.model().item(2).setEnabled(False)
-            #
-            # select first-n
-            #
-        else:
-            self.content.toolbar.sampling.model().item(0).setEnabled(True)
-            self.content.toolbar.sampling.model().item(1).setEnabled(True)
-            self.content.toolbar.sampling.model().item(2).setEnabled(True)
-            #
-            # add/enable all sampling options
-            #
-        #
-        # tell data to reload. the worker will known what to do about
-        # sampling and number of lines
-        #
-        self.read_validate_and_display_file()
-
     def is_doc_editable(self, path) -> str:
-        #
-        # rough & ready check. it's possible a false positive based on location
-        # could happen, but unlikely. it may be that in the future we want to consider
-        # file type as well, but not needed today.
-        #
-        a = self.csvpath_config.get(section="results", name="archive")
-        f = self.csvpath_config.get(section="inputs", name="files")
-        p = self.csvpath_config.get(section="inputs", name="csvpaths")
-        if a in path or f in path or p in path:
-            return False
-        return True
+        return fiut.is_doc_editable(self, path)
 
     def read_validate_and_display_file(
         self, editable=EditStates.EDITABLE, *, finished_callback=None
@@ -1189,7 +952,7 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                 quotechar=self.content.toolbar.quotechar_char(),
                 editable=editable,
             )
-            worker.signals.finished.connect(self.update_views)
+            worker.signals.finished.connect(self.update_data_views)
             if finished_callback is not None:
                 worker.signals.finished.connect(finished_callback)
             worker.signals.messages.connect(self.statusBar().showMessage)
@@ -1212,16 +975,19 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
                 path=path, editable=editable, finished_callback=finished_callback
             )
         elif not info.isFile():
-            meut.message(
+            meut.message2(
                 parent=self, title="File opening error", msg=f"Cannot open {path}"
             )
+            return
         else:
-            meut.warning(
+            meut.warning2(
                 parent=self,
                 msg=f"Unknown file type {info.suffix()}",
                 title="Cannot Open",
+                callback=self.clear_views,
+                args={"filepath": path},
             )
-            self.clear_views()
+            return
         return worker
 
     def spin_up_md_worker(self, *, path, editable, finished_callback=None) -> QRunnable:
@@ -1268,7 +1034,8 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             "cid": str(id(csvpaths)),
             "csvpaths": csvpaths,
         }
-        self.sidebar_rt_bottom.on_query_submitted(params)
+        item = self.sidebar_rt_bottom.on_query_submitted(params)
+        runner.item = item
         #
         # clear any existing logs to .bak. we have to shutdown to be sure that the
         # file is released. that's not a problem because it is CsvPath logging, not
@@ -1285,15 +1052,25 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         self.threadpool.start(runner)
 
     @Slot(tuple)
-    def _display_error(self, t: tuple[str]) -> None:
+    def _display_error(self, t: tuple[str, CsvPaths]) -> None:
         #
-        # need a more specific way to handle errors
+        # need a more specific way to handle errors. this slot isn't going to
+        # want to use meut to display an error because it's on a separate worker
+        # thread. or at least that's my current take.
         #
-        meut.message(parent=self, msg=t[0], title="Error in run")
-        self._display_log(t, error=True)
+        try:
+            meut.message2(
+                parent=self,
+                msg=t[0],
+                title="Error in run",
+                callback=self._display_log,
+                args={"t": t, "error": True},
+            )
+        except Exception:
+            print(traceback.format_exc())
 
     @Slot(tuple)
-    def _display_log(self, t: tuple[str], error=False) -> None:
+    def _display_log(self, t: tuple[str], *, error=False) -> None:
         #
         # first let the archive know if the item is green or red
         #
@@ -1340,215 +1117,11 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         # self.sidebar_rt_bottom.update_run_item_status(cid, "error" if error is True else "done")
         self.renew_sidebar_archive()
 
-    @Slot(QModelIndex)
-    def on_tree_click(self, index):
-        if not index.isValid():
-            return
-        source_index = self.sidebar.proxy_model.mapToSource(index)
-        if not source_index.isValid():
-            return
-        file_info = self.sidebar.file_model.fileInfo(source_index)
-        #
-        # file_info.filePath sometimes allows a // to prefix the path on Mac. not
-        # sure why that should be, keeping in mind we don't populate the paths in the
-        # file view by hand. regardless for now, just switching to canonical and
-        # moving on.
-        #
-        self.selected_file_path = file_info.canonicalFilePath()
-        nos = Nos(self.selected_file_path)
-        if not nos.isfile():
-            return
-        info = QFileInfo(self.selected_file_path)
-        editable = info.suffix() in self.csvpath_config.get(
-            section="extensions", name="csvpath_files"
-        )
-        editable = editable or info.suffix() in self.csvpath_config.get(
-            section="extensions", name="csv_files"
-        )
-        editable = editable or info.suffix() in ["json", "md", "txt", "log"]
-        if editable is True:
-            editable = EditStates.EDITABLE
-        else:
-            editable = EditStates.UNEDITABLE
-        #
-        # if we are swapping one open view for another based on a tree click (e.g.
-        # jsonl open as json with a click on the same file to open in grid) do we
-        # need to check here and close the original first, before continuing? if
-        # we don't, it would seem that we have a problem where there could be multiple
-        # tabs for the same path.
-        #
-        # are we checking for an open tab, or just reloading?
-        #
-        t = taut.find_tab(self.content.tab_widget, nos.path)
-        if t is not None:
-            #
-            #
-            #
-            if isinstance(t[1], JsonViewer2):
-                #
-                # close so we can reopen
-                #
-                self.content.tab_widget.close_tab(nos.path)
-            else:
-                taut.select_tab(self.content.tab_widget, t[0])
-                self.main_layout.setCurrentIndex(1)
-                return
-        #
-        #
-        #
-        self.read_validate_and_display_file(editable=editable)
-        self.statusBar().showMessage(f"  {self.selected_file_path}")
-        #
-        # store the index for use in the case the user clicks off the current file
-        # but then responds no to a confirm box.
-        #
-        self.sidebar.last_file_index = index
-
     def clear_views(self):
         self.content.close_all_tabs()
 
-    def on_help_click(self) -> None:
-        ss = self.main.sizes()
-        if ss[1] > 0:
-            self.main.setSizes([1, 0])
-        else:
-            self.main.setSizes([4, 1])
-
     def is_writable(self, path) -> bool:
         return fiut.is_writable_dir(path)
-
-    def on_set_cwd_click(self):
-        caption = "FlightPath requires a project directory. Please pick one."
-        home = str(Path.home())
-        path = QFileDialog.getExistingDirectory(
-            self, caption, options=QFileDialog.Option.ShowDirsOnly, dir=home
-        )
-        if path:
-            if self.is_writable(path):
-                self.state.cwd = path
-            else:
-                meut.warning(
-                    parent=self,
-                    title="Not writable",
-                    msg=f"{path} is not a writable location. Please pick another.",
-                )
-                self.on_set_cwd_click()
-
-    def on_reload_data(self) -> None:
-        self.read_validate_and_display_file()
-
-    def on_set_delimiter(self) -> None:
-        self.read_validate_and_display_file()
-
-    def on_set_quotechar(self) -> None:
-        self.read_validate_and_display_file()
-
-    def on_raw_source(self) -> None:
-        index = self.content.tab_widget.currentIndex()
-        t = self.content.tab_widget.widget(index)
-        path = t.objectName()
-        filepath = Path(path)
-        ext = filepath.suffix
-        if ext in [".jsonl", ".jsonlines", ".ndjson"]:
-            self.sidebar._do_edit_as_json(path)
-        else:
-            t.toggle_grid_raw()
-
-    def on_ai_gen_csvpath(self) -> None:
-        self.on_ai_gen("validation")
-
-    def on_ai_gen_data(self) -> None:
-        self.on_ai_gen("testdata")
-
-    def on_ai_ask_question(self) -> None:
-        self.on_ai_gen("question")
-
-    def on_ai_explain(self) -> None:
-        self.on_ai_gen("explain")
-
-    def on_ai_gen(self, activity="validation") -> None:
-        index = self.content.tab_widget.currentIndex()
-        t = self.content.tab_widget.widget(index)
-        self.rt_tab_widget.setCurrentIndex(1)
-        #
-        # pick the right activity
-        #
-        t = self.rt_tab_widget.widget(1)
-        t.form.activity_selector.set_activity(activity)
-
-    def on_file_info(self) -> None:
-        index = self.content.tab_widget.currentIndex()
-        t = self.content.tab_widget.widget(index)
-        path = t.objectName()
-
-        inspector = Inspector(main=self, filepath=path)
-        inspector.sample_size = 50
-        inspector.from_line = 1
-
-        t = fiut.make_app_path(
-            f"assets{os.sep}help{os.sep}templates{os.sep}file_details.html"
-        )
-        html = HtmlGenerator.load_and_transform(t, inspector.info)
-
-        info = taut.find_tab(self.helper.help_and_feedback, "File Info")
-        if info is None:
-            info = QWidget()
-            info.setObjectName("FileInfo")
-            self.helper.help_and_feedback.addTab(info, "File Info")
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        info.setLayout(layout)
-        te = QTextEdit()
-        layout.addWidget(te)
-        te.setText(html)
-        taut.select_tab_widget(self.helper.help_and_feedback, info)
-        self.config.show_help()
-
-    def on_save_sample(self) -> None:
-        index = self.content.tab_widget.currentIndex()
-        t = self.content.tab_widget.widget(index)
-        path = t.objectName()
-        source = path
-        name = None
-        nos = Nos(path)
-        if path.endswith("xlsx") or path.endswith("xls"):
-            path = path[0 : path.rfind(".")]
-            path = f"{path}.csv"
-        if nos.isfile():
-            name = os.path.basename(path)
-            path = os.path.dirname(path)
-        else:
-            name = "sample.csv"
-        #
-        # get current tab data
-        #
-        layout = t.layout()
-        w = layout.itemAt(0).widget()
-        m = w.model()
-        data = m.get_data()
-        #
-        #
-        #
-        path = self.save_sample(path=path, name=name, data=data)
-        #
-        # reload views with new file
-        # set the file tree to highlight the new file
-        #
-        if path is not None:
-            self.read_validate_and_display_file_for_path(path=path)
-            #
-            # i have a path str
-            # i need the proxy model index at that path
-            #   1. get file_model index at path
-            #   2. get proxy model index mapped to source model index
-            # give proxy model index to tree_view to select
-            #
-            index = self.sidebar.file_model.index(path)
-            pindex = self.sidebar.proxy_model.mapFromSource(index)
-            if index.isValid():
-                self.sidebar.file_navigator.setCurrentIndex(pindex)
-
-        self.content.tab_widget.close_tab(source)
 
     def save_sample(self, *, path: str, name: str, data: str) -> str:
         parts = pathu.parts(name)
@@ -1623,6 +1196,49 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
         else:
             return None
 
+    # ================== config stuff ====================
+
+    def _has_config_changes(self) -> bool:
+        ret = (
+            self.config
+            and self.config.ready is True
+            and self.config.toolbar._button_save.isEnabled()
+        )
+        # print(f"_has_config_changes: ret: {ret}")
+        # from csvpath.util.log_utility import LogUtility as lout
+        # lout.log_brief_trace()
+        return ret
+
+    def question_save_config_if(self, *, callback: Callable = None) -> None:
+        if self._asking_save_config is True:
+            return
+        if self._has_config_changes():
+            # print(f"question_save_config_if: doing meut")
+            self._asking_save_config = True
+            meut.yesNo2(
+                parent=self,
+                callback=self._answer_save_config,
+                title="Config changed",
+                msg="Save config changes?",
+                args={"callback": callback},
+            )
+        elif callback:
+            # print(f"question_save_config_if: no changes, calling back {callback}")
+            callback()
+        else:
+            ...
+
+    @Slot(int)
+    def _answer_save_config(self, answer, *, callback: Callable = None) -> None:
+        # print(f"_answer_save_config: answer: {answer}")
+        if answer == QMessageBox.Yes:
+            self.save_config_changes()
+        self.reset_config_toolbar()
+        self._asking_save_config = False
+        if callback:
+            # print(f"_answer_save_config: calling back {callback}")
+            callback()
+
     def open_config(self):
         if self.main_layout.currentIndex() != 2:
             self.last_main = self.main_layout.currentIndex()
@@ -1660,29 +1276,69 @@ class MainWindow(QMainWindow):  # pylint: disable=R0902, R0904
             self.config.config_panel.populate_all_forms()
             self.reset_config_toolbar()
         except Exception as e:
-            meut.message(
+            meut.message2(
                 parent=self,
                 title="Error saving config",
                 msg=f"Error saving config: {e}",
             )
 
-    def on_config_changed(self):
-        if hasattr(self, "config") and self.config:
-            self.config.toolbar.button_close.setEnabled(False)
-            self.config.toolbar.button_cancel_changes.setEnabled(True)
-            self.config.toolbar.enable_save()
+    # ================== app closing stuff ====================
 
     def closeEvent(self, event):
+        if self.please_close is True:
+            # print(f"closeEvent: pls close: accepting")
+            event.accept()
+            return
         if (
             not hasattr(self, "sidebar")
             and not hasattr(self, "main_layout")
             and not hasattr(self, "content")
+            and not self._has_config_changes()
         ):
+            # print(f"xx: nothing setup: accepting")
             event.accept()
             return
-        elif self.sidebar.last_file_index or not self.content.all_files_are_saved():
-            if not self.content.close_all_tabs():
-                event.ignore()
+        #
+        # it is important to check config first. if we clear tabs first while looking at
+        # config we get a change view event that checks config but without having the
+        # finish_closing_if callback
+        #
+        # also note that we are triggering both config change check and tabs close check
+        # in one pass. before we were using two independent passes, but that doesn't
+        # improve anything. in principle the last config check in finish_closing_if should
+        # not be needed because of this change, but it doesn't hurt to check again.
+        #
+        accept = True
+        if self._has_config_changes():
+            # print(f"xx: ignoring because has config changes: {self._has_config_changes()}")
+            self.question_save_config_if(callback=self.finish_closing_if)
+            event.ignore()
+            accept = False
+        unsaved = not self.content.all_files_are_saved()
+        if unsaved is True:
+            # print(f"closeEvent: ignoring because unsaved: {unsaved}")
+            self.content.close_all_tabs(callback=self.finish_closing_if)
+            event.ignore()
+            accept = False
+        if accept is True:
+            # print(f"closeEvent: accepting because no reason not to")
+            event.accept()
+
+    def finish_closing_if(self) -> None:
+        if (
+            self.content
+            and self.content.tab_widget
+            and self.content.tab_widget.count() > 0
+        ):
+            ...
+            # print("finish closing if: not ready to close because tabs")
+        elif self._has_config_changes():
+            # print("finish closing if: not ready to close because there are cofig changes")
+            self.question_save_config_if(callback=self.finish_closing_if)
+        else:
+            # print("finish closing if: ready to close. setting please_close = True")
+            self.please_close = True
+            QApplication.quit()
 
 
 if __name__ == "__main__":

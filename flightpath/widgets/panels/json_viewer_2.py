@@ -2,8 +2,8 @@ import os
 import json
 import traceback
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
-from PySide6.QtCore import Qt, QFileInfo
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QMessageBox
+from PySide6.QtCore import Qt, QFileInfo, Slot
 from PySide6.QtGui import QAction, QShortcut, QKeySequence
 
 from csvpath.util.file_writers import DataFileWriter
@@ -14,7 +14,7 @@ from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 from flightpath.widgets.json_editor.editor import JsonEditor
 from flightpath.util.string_utility import StringUtility as strut
@@ -61,6 +61,9 @@ class JsonViewer2(QWidget):
         save_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+s"), self)
         save_shortcut_ctrl.activated.connect(self._save)
 
+        save_as_shortcut_ctrl = QShortcut(QKeySequence("Shift+Ctrl+S"), self)
+        save_as_shortcut_ctrl.activated.connect(self._save_as)
+
         form_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+f"), self)
         form_shortcut_ctrl.activated.connect(self._check)
 
@@ -105,12 +108,16 @@ class JsonViewer2(QWidget):
         self.main.content.tab_widget.setTabText(tab[0], name)
 
     def _copy_back_question(self) -> None:
-        yes = meut.yesNo(
+        meut.yesNo2(
             parent=self,
             msg="You can't edit here. Copy back to project?",
             title="Copy file to project?",
+            callback=self._copy_back_answer,
         )
-        if yes is True:
+
+    @Slot(int)
+    def _copy_back_answer(self, answer: int) -> None:
+        if answer == QMessageBox.Yes:
             try:
                 name = self.objectName()
                 to_path = fiut.copy_results_back_to_cwd(main=self.main, from_path=name)
@@ -213,14 +220,23 @@ class JsonViewer2(QWidget):
 
     def _save_as(self) -> None:
         path = os.path.dirname(self.path)
-        path, ok = meut.input(
+        meut.input2(
             parent=self,
             title="Save As",
+            width=580,
             msg="Where should the new file live? ",
             text=path,
+            callback=self._save_as_continue,
         )
-        if ok and path:
-            self._do_save(path)
+
+    @Slot(tuple)
+    def _save_as_continue(self, t: tuple(str, bool)) -> None:
+        path, ok = t
+        if not ok:
+            return
+        if str(path) in ["", "None"]:
+            return
+        self._do_save(path)
 
     def _save(self) -> None:
         self._do_save(self.path)
@@ -306,7 +322,7 @@ class JsonViewer2(QWidget):
             self._set_modified(True)
             self._expanded = True
 
-    def _check_lines(self) -> str:
+    def _check_lines(self) -> None:
         info = QFileInfo(self.path)
         t = None
         if info.suffix() not in ["jsonl", "ndjson", "jsonlines"]:
@@ -315,21 +331,19 @@ class JsonViewer2(QWidget):
         for i, _ in enumerate(t.split("\n")):
             if not self._check_one(line_number=i, t=_):
                 return
-        meut.message(
+        meut.message2(
             parent=self, msg="This file is well-formed JSONL", title="Well-formed"
         )
-        return t
 
-    def _check(self, *, show_good_message=True) -> str:
+    def _check(self, *, show_good_message=True) -> None:
         t = self.view.toPlainText()
         if self._check_one(t=t):
             if show_good_message is True:
-                meut.message(
+                meut.message2(
                     parent=self,
                     msg="This file is well-formed JSON",
                     title="Well-formed",
                 )
-        return t
 
     def _check_one(self, *, t: str, line_number: int = 0) -> bool:
         t1 = strut.sanitize_json(t)
@@ -349,12 +363,15 @@ class JsonViewer2(QWidget):
         line, line_char = self._error_location(t, error)
         if line is not None and line_char is not None:
             if line_number > 0:
-                msg = f"Error in JSON at {line_number + 1 + line}, char {line_char + 1}. \n\nThe error was reported as: {error}"
+                _ = line_number + 1 + line
+                __ = line_char + 1
+                msg = f"Error in JSON at {_}, char {__}. \n\nThe error was reported as: {error}"
             else:
-                msg = f"Error in JSON format at line {line + 1}, char {line_char + 1}\n\nOriginal error: {error}"
+                _ = line + 1
+                msg = f"Error in JSON format at line {_}, char {line_char + 1}\n\nOriginal error: {error}"
         else:
             msg = f"Error in format.\n\nOriginal error messsage: {error}"
-        meut.warning(parent=self, msg=msg, title="Malformed JSON")
+        meut.warning2(parent=self, msg=msg, title="Malformed JSON")
 
     def _error_location(self, t: str, e) -> tuple[int, int]:
         try:
@@ -400,7 +417,9 @@ class JsonViewer2(QWidget):
             #
             # need an alert here
             #
-            meut.warning(parent=self, msg="Unknown file type", title="Cannot open file")
+            meut.warning2(
+                parent=self, msg="Unknown file type", title="Cannot open file"
+            )
             return
         t = data
         if t is None or not isinstance(t, str):

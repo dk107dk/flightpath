@@ -4,16 +4,16 @@ from PySide6.QtGui import QAction, QKeyEvent, QKeySequence
 
 from flightpath.util.key_utility import KeyUtility as keut
 
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 
 class RawTextEdit(QPlainTextEdit):
     def __init__(self, *, main, parent, editable=EditStates.EDITABLE) -> None:
         super().__init__()
         self.main = main
-        self.parent = parent
+        self.my_parent = parent
         self.editable = editable
-        self.parent.saved = True
+        self.my_parent.saved = True
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.editable == EditStates.UNEDITABLE:
@@ -23,7 +23,7 @@ class RawTextEdit(QPlainTextEdit):
             self.desaved()
 
     def desaved(self) -> bool:
-        return self.parent.desaved()
+        return self.my_parent.desaved()
 
     def contextMenuEvent(self, event):
         if self.editable == EditStates.UNEDITABLE:
@@ -57,7 +57,7 @@ class RawTextEdit(QPlainTextEdit):
         menu.addSeparator()
         t = "Toggle view"
         t_action = QAction(t, self)
-        t_action.triggered.connect(self.parent.on_toggle)
+        t_action.triggered.connect(self.my_parent.on_toggle)
         t_action.setShortcut(QKeySequence("Ctrl+T"))
         t_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(t_action)
@@ -68,13 +68,13 @@ class RawTextEdit(QPlainTextEdit):
         menu.addSeparator()
         save = "Save"
         save_action = QAction(save, self)
-        save_action.triggered.connect(self.parent.on_save)
+        save_action.triggered.connect(self.my_parent.on_save)
         save_action.setShortcut(QKeySequence("Ctrl+S"))
         save_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(save_action)
 
         save_as_action = QAction("Save as", self)
-        save_as_action.triggered.connect(self.parent.on_save_as)
+        save_as_action.triggered.connect(self.my_parent.on_save_as)
         save_as_action.setShortcut(QKeySequence("Shift+Ctrl+S"))
         save_as_action.setShortcutVisibleInContextMenu(True)
         menu.addAction(save_as_action)

@@ -9,15 +9,15 @@ from csvpath.util.path_util import PathUtility as pathu
 from csvpath.util.nos import Nos
 
 from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 
 
 class ReferenceFileHandler:
     # ===== INIT ================
 
-    def __init__(self, *, parent):
+    def __init__(self, *, main, parent):
         self.dialog = parent
-        self.main = self.dialog.main
+        self.main = main
         self.paths = self.main.csvpaths
 
     # ===== UTIL METHODS ================
@@ -156,7 +156,7 @@ class ReferenceFileHandler:
         path = f"{path}{sep[0]}manifest.json"
         nos = Nos(path)
         if not nos.exists():
-            meut.message(
+            meut.message2(
                 parent=self.dialog,
                 title="Manifest Not Found",
                 msg=f"The named-results manifest was not found at {t}",
@@ -172,7 +172,7 @@ class ReferenceFileHandler:
         path = self._named_file_manifest_path(t)
         nos = Nos(path)
         if not nos.exists():
-            meut.message(
+            meut.message2(
                 parent=self.dialog,
                 title="Manifest Not Found",
                 msg=f"The named-file manifest was not found at {path}",

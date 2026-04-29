@@ -1,6 +1,6 @@
 import json
-import tempfile
 import traceback
+import copy
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -8,21 +8,20 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QApplication,
     QSplitter,
-    QTextEdit,
     QMessageBox,
 )
 from PySide6.QtGui import QColor
-from PySide6.QtCore import QThreadPool, Qt
+from PySide6.QtCore import QThreadPool, Qt, Slot
 
 import darkdetect
 
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 from flightpath.widgets.ai.query_form import QueryFormWidget
 from flightpath.widgets.accordion.query_accordion import QueryAccordionWidget
 from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.workers.dispatcher import JobDispatcher
 from flightpath.util.feedback_utility import FeedbackUtility as feut
-from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.util.tabs_utility import TabsUtility as taut
 
 
 class QueryTabWidget(QWidget):
@@ -47,6 +46,7 @@ class QueryTabWidget(QWidget):
         self.form.querySubmitted.connect(self.on_query_submitted)
         self.accordion.itemClicked.connect(self.on_item_clicked)
         self.accordion.itemCloseRequested.connect(self.on_item_close_requested)
+        self.accordion.itemInfoRequested.connect(self.on_item_info_requested)
 
     def update_style(self) -> None:
         if darkdetect.isDark():
@@ -84,12 +84,14 @@ class QueryTabWidget(QWidget):
             self.form.submit_btn.setEnabled(False)
 
     def on_query_submitted(self, params):
+        if params is None:
+            raise ValueError("Params cannot be None")
         metadata = {
             "id": id(params),
             "params": params,
             "activity": params["activity"],
             "status": "running",
-            "document_path": params.get("document_path"),
+            "example_path": params.get("example_path"),
             "results": None,
             "turns_limit": params.get("turns_limit"),
         }
@@ -107,17 +109,7 @@ class QueryTabWidget(QWidget):
             metadata=metadata,
             subtitle=subtitle,
         )
-
-        instructions = metadata.get("params").get("instructions")
-        if self.form._current_activity == "question" and str(instructions).strip() in [
-            "None",
-            "",
-        ]:
-            self.on_worker_error(
-                item,
-                metadata,
-                "You must provide a question or constrant for the AI to help with.",
-            )
+        if not self._valid_instructions(item, metadata):
             return
         worker = JobDispatcher.get_worker(main=self.main, me=self, mdata=metadata)
         worker.signals.finished.connect(
@@ -127,14 +119,35 @@ class QueryTabWidget(QWidget):
         worker.signals.error.connect(
             lambda msg: self.on_worker_error(item, metadata, msg)
         )
+        self._dump_job_params(metadata)
         item.worker = worker
         self.threadpool.start(worker)
+
+    def _valid_instructions(self, item, metadata: dict) -> bool:
+        params = metadata.get("params")
+        instructions = params.get("instructions")
+        if self.form._current_activity == "question" and str(instructions).strip() in [
+            "None",
+            "",
+        ]:
+            self.on_worker_error(
+                item,
+                params,
+                "You must provide a question or constrant for the AI to help with.",
+            )
+            return False
+        return True
+
+    def _dump_job_params(self, metadata) -> None:
+        _ = json.dumps(metadata, indent=2)
+        print(f"\nquery_tab: dump_job_params: \n{_}\n")
 
     def on_turn_update(self, item, js):
         if item:
             item.status_dot.setColor(QColor("#ffd43b"))  # yellow
         if js:
             item.metadata["params"]["log"] = js
+            self._display_tracking(item.metadata)
             #
             # do we want to clear? we don't want to do it here because the user may have been
             # working on something.
@@ -172,8 +185,15 @@ class QueryTabWidget(QWidget):
             self.on_worker_error(item, metadata, errors)
             return
         metadata["results"] = generation
-        metadata["status"] = "complete"
-        item.status_dot.setColor(QColor("#40c057"))  # green
+        _ = metadata.get("status")
+        _ = str(_).strip()
+        if _ != "error":
+            metadata["status"] = "complete"
+            item.status_dot.setColor(QColor("#40c057"))  # green
+        else:
+            print(
+                "qtab: onworkerfinished: item is in error so not setting it to complete/green"
+            )
         self._beep()
         item.worker = None
 
@@ -194,7 +214,6 @@ class QueryTabWidget(QWidget):
     #  'number_of_lines': '25',
     #  'title': 'health',
     #  'turns_limit': '15',
-    #  'use_document': False
     # },
     # 'activity': 'validation',
     # 'status': 'running',
@@ -206,13 +225,21 @@ class QueryTabWidget(QWidget):
     # msg: litellm.RateLimitError: RateLimitError: OpenAIException - Request too large for gpt-4o-mini in organization org-IMB8R5BT37cEOcGYZ04vJaxY on tokens per min (TPM): Limit 200000, Requested 523138. The input or output tokens must be reduced in order to run successfully. Visit https://platform.openai.com/account/rate-limits to learn more.
     #
     def on_worker_error(self, item, metadata, msg):
-        print(f"query acc item: metadata: {metadata}, item: {item}, msg: {msg}")
+        print(f"query acc item: metadata: {len(metadata)}")
+        print(f"                item: {item}")
+        print(f"                msg: {msg}")
+        for k, v in metadata.items():
+            if k == "params":
+                print(f"               ...{k}:")
+                for i, j in v.items():
+                    print(f"                   ....{i} = {j}")
+            else:
+                print(f"               ...{k} = {v}")
+
         metadata["status"] = "error"
         metadata["error"] = msg
         item.status_dot.setColor(QColor("#fa5252"))  # red
         item.subtitle.setText("Error")
-        QApplication.beep()
-        # item.title.setText("Error")
         self._beep()
         #
         # put the error in the Tracking tab
@@ -223,10 +250,74 @@ class QueryTabWidget(QWidget):
         error = f"{metadata['id']}.error"
         feut.add_feedback_tab(main=self.main, tab_id=error, name="Error", tab=view)
         #
+        # update/show the tracking
+        #
+        self._display_tracking(item.metadata)
+        #
         # display feedback
         #
         feut.switch_to_feedback(self.main, error)
-        feut.open_feedback(self.main)
+        feut.open_feedback_if(self.main)
+
+    @Slot(int)
+    def _open_ai_config(self, doit: int) -> None:
+        if doit == QMessageBox.Yes:
+            self.main.open_ai_config()
+            return
+
+    def on_item_info_requested(self, metadata: dict) -> None: ...
+
+    def _display_tracking(self, metadata: dict) -> None:
+        tracking = f"{metadata['id']}.tracking"
+        t = taut.find_tab(self.main.helper.help_and_feedback, tracking)
+        if t is None:
+            ...
+        else:
+            self.main.helper.help_and_feedback.removeTab(t[0])
+        view = None
+        if "log" in metadata["params"]:
+            js = metadata["params"]["log"]
+            js = json.loads(js)
+            view = JsonViewer.temp_file_viewer(
+                main=self.main, parent=self, js=js, can_always_save=True
+            )
+            view.path = tracking
+        else:
+            js = "No tracking available"
+            view = QPlainTextEdit()
+            view.setPlainText(js)
+            view.setReadOnly(True)
+        view.setObjectName(tracking)
+        feut.add_feedback_tab(
+            main=self.main, tab_id=tracking, name="Tracking", tab=view
+        )
+
+    def _display_job_params(self, metadata: dict) -> None:
+        results = metadata.get("results")
+        if results:
+            del metadata["results"]
+        try:
+            mdata = copy.deepcopy(metadata)
+            params = mdata.get("params")
+            if "log" in params:
+                del params["log"]
+
+            name = f"{mdata['id']}.params"
+            t = taut.find_tab(self.main.helper.help_and_feedback, name)
+            if t is None:
+                ...
+            else:
+                self.main.helper.help_and_feedback.removeTab(t[0])
+            view = JsonViewer.temp_file_viewer(
+                main=self.main, parent=self, js=mdata, can_always_save=True
+            )
+            view.setObjectName(name)
+            feut.add_feedback_tab(
+                main=self.main, tab_id=name, name="Request Info", tab=view
+            )
+        finally:
+            if results:
+                metadata["results"] = results
 
     #
     # do we want the user to have to click a link within the item, or is it
@@ -235,108 +326,75 @@ class QueryTabWidget(QWidget):
     # probably be better to open the docs so that all the information (form +
     # document context) is presented together. we'll see tho.
     #
+    @Slot(dict)
     def on_item_clicked(self, metadata: dict):
-        print(f"quertab: on_item_clicked: metadata: {metadata}")
         self.form.load_params(metadata["params"])
         feut.clear_feedback(self.main)
         #
-        # show result text
+        #
         #
         response = f"{metadata['id']}.response"
-        generation = metadata.get("results")
         tracking = f"{metadata['id']}.tracking"
+        instructions = f"{metadata['id']}.instructions"
+        error = f"{metadata['id']}.error"
         #
+        # show result, if available
+        #
+        generation = metadata.get("results")
         if generation:
-            view = QTextEdit()
-            view.setMarkdown(generation.response_text)
+            view = QPlainTextEdit()
+            view.setPlainText(generation.response_text)
             view.setReadOnly(True)
             feut.add_feedback_tab(
                 main=self.main, tab_id=response, name="Results", tab=view
             )
         else:
-            if self.main and self.main.csvpath_config:
-                if self.main.csvpath_config.get(section="llm", name="model") is None:
-                    o = meut.yesNoButtons(
-                        parent=self,
-                        title="Assistance Failed",
-                        msg="Request did not complete. Open AI configuration?",
-                        std_buttons=QMessageBox.Open | QMessageBox.Cancel,
-                        truth_button=QMessageBox.Open,
-                        def_button=QMessageBox.Cancel,
-                    )
-                    if o is True:
-                        self.main.open_ai_config()
-                        return
-                else:
-                    meut.warning(
-                        parent=self,
-                        title="Assistance Failed",
-                        msg="Request did not complete.",
-                    )
-            else:
-                meut.warning(
-                    parent=self,
-                    title="Config Failed",
-                    msg="Configuration is unavailable.",
-                )
+            print("qtab: _on_item_clicked: no generation available")
         #
-        # show log info
+        # show tracking log
         #
-        if "log" in metadata["params"]:
-            js = metadata["params"]["log"]
-
-            print(f"\n\nquerytwsb: js: {js}")
-
-            with tempfile.NamedTemporaryFile(
-                mode="w", delete=True, suffix=".json"
-            ) as file:
-                #
-                # for the moment, loading js confirms that it is good json. probably not necessary.
-                #
-                _data = json.loads(js)
-                _data = json.dumps(_data, indent=2)
-                file.write(_data)
-                file.flush()
-                view = JsonViewer(
-                    parent=self.main.rt_tab_widget,
-                    main=self.main,
-                    editable=EditStates.UNEDITABLE,
-                )
-                view.open_file(path=file.name, data=_data)
-                view.setObjectName(file.name)
-        else:
-            js = "No tracking available"
-            view = QPlainTextEdit()
-            view.setPlainText(js)
-            view.setReadOnly(True)
-
+        self._display_tracking(metadata)
+        #
+        #
+        #
+        self._display_job_params(metadata)
+        #
+        # show instructions
+        #
+        inst = metadata.get("params").get("instructions")
+        if str(inst).strip() in ["None", ""]:
+            inst = "There were no instructions for the AI"
+        view = QPlainTextEdit()
+        view.setPlainText(inst)
+        view.setReadOnly(True)
+        view.setObjectName(instructions)
         feut.add_feedback_tab(
-            main=self.main, tab_id=tracking, name="Tracking", tab=view
+            main=self.main, tab_id=instructions, name="Instructions", tab=view
         )
-
         #
         # show any error
         #
-        error = metadata.get("error")
-        if error is not None:
+        error_text = metadata.get("error")
+        if error_text is None:
+            print("qtab: on_item_clicked: no error")
+        else:
             view = QPlainTextEdit()
-            view.setPlainText(error)
+            view.setPlainText(error_text)
             view.setReadOnly(True)
-            error = f"{metadata['id']}.error"
             feut.add_feedback_tab(main=self.main, tab_id=error, name="Error", tab=view)
         #
-        # display feedback
+        # display feedback tabs
         #
         feut.switch_to_feedback(self.main, response if generation else tracking)
-        feut.open_feedback(self.main)
+        feut.open_feedback_if(self.main)
         #
         # open or switch to the original doc. it is possible the doc could be gone so we'll
         # take a bit more care to not crash. if the doc is not there we don't really care.
         #
         try:
-            path = metadata.get("document_path")
-            editable = self.main.is_doc_editable(path)
+            path = metadata.get("example_path")
             if path is not None:
+                editable = self.main.is_doc_editable(path)
                 self.main.read_validate_and_display_file_for_path(
                     path,
                     EditStates.EDITABLE if editable is True else EditStates.UNEDITABLE,
@@ -344,6 +402,7 @@ class QueryTabWidget(QWidget):
         except Exception:
             print(traceback.format_exc())
 
+    @Slot(dict)
     def on_item_close_requested(self, metadata: dict):
         self.accordion.remove_item(metadata)
         #

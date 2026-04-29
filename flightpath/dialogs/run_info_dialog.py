@@ -29,7 +29,7 @@ class RunInfoDialog(QDialog):
         self._total_lines: QLabel = None
 
         self.stop_button = QPushButton()
-        self.stop_button.setText("Stop run")
+        self.stop_button.setText("Stop current csvpath")
         self.stop_button.clicked.connect(self.stop)
         self.refresh_button = QPushButton()
         self.refresh_button.setText("Refresh")
@@ -99,9 +99,9 @@ class RunInfoDialog(QDialog):
     def total_statements_str(self) -> str:
         s = ""
         try:
-            csvpaths = self.csvpaths
-            if csvpaths and csvpaths.csvpath_instances():
-                s = str(len(csvpaths.csvpath_instances()))
+            n = self.csvpaths.named_paths_name
+            c = self.csvpaths.paths_manager.number_of_named_paths(n)
+            s = f"{c}"
         except Exception:
             print(traceback.format_exc())
         return s

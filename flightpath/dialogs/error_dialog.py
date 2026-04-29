@@ -46,7 +46,12 @@ class ErrorDialog(QDialog):
     _DETAILS_HEIGHT = 200  # px for the JSON text area when expanded
 
     def __init__(
-        self, parent=None, message: str = "", errors=None, title: str = "Error"
+        self,
+        *,
+        parent=None,
+        message: str = "",
+        errors: dict | list = None,
+        title: str = "Error",
     ):
         super().__init__(parent)
 

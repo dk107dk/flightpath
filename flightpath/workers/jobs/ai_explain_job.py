@@ -7,10 +7,18 @@ class AiExplainJob(AiJob):
 
     @property
     def example(self) -> None:
-        if self.path is None:
-            return ""
-        with open(self.path, "r") as file:
-            return file.read()
+        e = self._values.get("example")
+        t = self._values.get("test_data")
+        if e is None:
+            return t
+        if t is None:
+            return e
+        return f"""
+{e}
+
+An example of some data that goes with that is:
+{t}
+        """
 
     @property
     def version(self) -> str:

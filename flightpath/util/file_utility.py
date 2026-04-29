@@ -14,6 +14,20 @@ class FileUtility:
     APP_PATH = None
 
     @classmethod
+    def is_doc_editable(self, main, path: str) -> str:
+        #
+        # rough & ready check. it's possible a false positive based on location
+        # could happen, but unlikely. it may be that in the future we want to consider
+        # file type as well, but not needed today.
+        #
+        a = main.csvpath_config.get(section="results", name="archive")
+        f = main.csvpath_config.get(section="inputs", name="files")
+        p = main.csvpath_config.get(section="inputs", name="csvpaths")
+        if a in path or f in path or p in path:
+            return False
+        return True
+
+    @classmethod
     def is_a(cls, path: str, exts: list[str]) -> bool:
         p = Path(path)
         s = p.suffix

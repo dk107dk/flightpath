@@ -1,6 +1,6 @@
 import traceback
 
-from PySide6.QtWidgets import QMenu, QVBoxLayout, QSizePolicy, QApplication
+from PySide6.QtWidgets import QMenu, QVBoxLayout, QSizePolicy
 
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt
@@ -14,17 +14,14 @@ from flightpath.widgets.file_tree_model.treemodel import TreeModel
 from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
 
 from flightpath.dialogs.new_run_dialog import NewRunDialog
-from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.dialogs.activation_dialog import ActivationDialog
 from flightpath.dialogs.files_template_dialog import FilesTemplateDialog
-
 
 from .sidebar_file_ref_maker import SidebarFileRefMaker
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
 
-from flightpath.editable import EditStates
 from .sidebar_right_base import SidebarRightBase
 
 
@@ -45,7 +42,7 @@ class SidebarNamedFiles(SidebarRightBase):
         if self.check_sftp(self.config.get(section="inputs", name="files")) is True:
             self.setup()
         else:
-            meut.warning(
+            meut.warning2(
                 parent=self, title="Check SFTP", msg="SFTP is used but not configured"
             )
 
@@ -68,7 +65,7 @@ class SidebarNamedFiles(SidebarRightBase):
             except Exception as ex:
                 print(traceback.format_exc())
                 msg = f"Error during named-files inputs setup: {ex}"
-                meut.warning(parent=self, msg=msg, title="Error")
+                meut.warning2(parent=self, msg=msg, title="Error")
                 return
 
             self.view = LazyTreeView(self, main=self.main)
@@ -137,42 +134,16 @@ class SidebarNamedFiles(SidebarRightBase):
             #
             # moved from main
             #
-            self.view.clicked.connect(self.on_named_file_tree_click)
+            self.view.clicked.connect(self.main.reactor.on_named_file_tree_click)
             self.setLayout(layout)
 
         except Exception as e:
             print(traceback.format_exc())
-            meut.warning(
+            meut.warning2(
                 parent=self,
                 title=f"{type(e)} error loading named-files",
                 msg=f"Data files error: {e}",
             )
-
-    #
-    # moved from main
-    #
-    def on_named_file_tree_click(self, index):
-        self.main.selected_file_path = self.model.filePath(index)
-        nos = Nos(self.main.selected_file_path)
-        if not nos.isfile():
-            ...
-            # self._show_welcome_but_do_not_deselect()
-        else:
-            ed = (
-                EditStates.EDITABLE
-                if self.main.selected_file_path.endswith(".md")
-                else EditStates.UNEDITABLE
-            )
-            self.main.read_validate_and_display_file(editable=ed)
-            self.main.statusBar().showMessage(f"  {self.main.selected_file_path}")
-
-    def refresh(self) -> None:
-        if self.view:
-            layout = self.layout()  # Get the existing layout
-            if layout:
-                layout.removeWidget(self.view)
-            self.view.deleteLater()  # Delete the old widget
-            self.setup()
 
     def _setup_view_context_menu(self):
         self.context_menu = QMenu(self)
@@ -199,13 +170,12 @@ class SidebarNamedFiles(SidebarRightBase):
 
         self.delete_action = QAction()
         self.delete_action.setText("Permanent delete")
-        self.delete_action.triggered.connect(self._delete_view_item)
+        self.delete_action.triggered.connect(self._delete_file_view_item)
 
         self.copy_action = QAction()
         self.copy_action.setText(self.tr("Copy to working dir"))
         self.copy_action.triggered.connect(self._copy_back_to_cwd)
 
-        # add to menu
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.arrival_action)
         self.context_menu.addAction(self.template_action)
@@ -274,18 +244,11 @@ class SidebarNamedFiles(SidebarRightBase):
             )
             self._template_dialog.show_dialog()
 
-    def _copy_path(self) -> None:
-        from_index = self.view.currentIndex()
-        if from_index.isValid():
-            path = self.model.filePath(from_index)
-            clipboard = QApplication.instance().clipboard()
-            clipboard.setText(path)
-
     def _new_run(self):
         maker = SidebarFileRefMaker(parent=self, main=self.main)
         ref = maker.new_run_ref()
         self.new_run_dialog = NewRunDialog(
-            parent=self, named_paths=None, named_file=ref
+            main=self.main, parent=self, named_paths=None, named_file=ref
         )
         self.main.show_now_or_later(self.new_run_dialog)
 
@@ -296,40 +259,3 @@ class SidebarNamedFiles(SidebarRightBase):
             parent=self, main=self.main, named_file=name
         )
         self.main.show_now_or_later(self.activation_dialog)
-
-    def _find_data(self):
-        find = FindFileByReferenceDialog(main=self.main)
-        self.main.show_now_or_later(find)
-
-    def _delete_view_item(self):
-        index = self.view.currentIndex()
-        if index.isValid():
-            path = self.model.filePath(index)
-            nos = Nos(path)
-            confirm = meut.yes_no(
-                parent=self, title="Delete", msg=f"Permanently delete {path}?"
-            )
-            if confirm is True:
-                try:
-                    nos.remove()
-                except OSError as e:
-                    meut.warning(parent=self, title="Error", msg=str(e))
-                else:
-                    #
-                    # TODO: this will have to change because we don't want to dismiss
-                    # content that is being worked on from the working dir side
-                    #
-                    # if is_selected:
-                    #    self.window().show_welcome_screen()
-                    self.window().statusBar().showMessage("{path} deleted")
-                    #
-                    # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
-                    # but for now it should work. refreshing named_files is probably fair, but that's
-                    # also tricky because we'd want to recreate the opened/closed state of the folders
-                    # and if we did that the refresh might slow down potentially a lot. so long-term,
-                    # seems like we should capture what is registered and manually add it. no fun. :/
-                    #
-                    # self.main._setup_central_widget()
-                    self.main.renew_sidebar_named_files()
-                    self.main.welcome.update_run_button()
-                    self.main.welcome.update_find_data_button()

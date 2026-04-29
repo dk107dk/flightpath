@@ -1,27 +1,30 @@
 import os
-from PySide6.QtWidgets import QPlainTextEdit, QMenu
+import traceback
+
+from PySide6.QtWidgets import QPlainTextEdit, QMenu, QMessageBox
 from PySide6.QtGui import QAction, QKeyEvent, QKeySequence, QShortcut
+from PySide6.QtCore import Slot
 
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 from csvpath.managers.paths.paths_manager import PathsManager
 
-from flightpath.util.csvpath_loader import CsvpathLoader
+
+from flightpath.actions.csvpath_loader import CsvpathLoader
 from flightpath.util.syntax.csvpath_highlighter import CsvPathSyntaxHighlighter
-
-from flightpath.editable import EditStates
-
+from flightpath.util.editable import EditStates
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.syntax.span_utility import SpanUtility as sput
 from flightpath.util.key_utility import KeyUtility as keut
+from flightpath.util.csvpath_utility import CsvpathUtility as csut
 
 
 class CsvPathTextEdit(QPlainTextEdit):
     def __init__(self, *, main, parent=None, editable=EditStates.EDITABLE) -> None:
         super().__init__()
         self.main = main
-        self.parent = parent if parent else self
+        self.my_parent = parent if parent else self
         self.editable = editable
         self.icon = None
         #
@@ -29,11 +32,8 @@ class CsvPathTextEdit(QPlainTextEdit):
         # the context of being an editor panel we are our own parent. e.g. when
         # used in a Q&A or other AI dialog
         #
-        self.parent.saved = True
+        self.my_parent.saved = True
 
-        #
-        #
-        #
         save_shortcut_ctrl = QShortcut(QKeySequence("Ctrl+s"), self)
         save_shortcut_ctrl.activated.connect(self.on_save)
         save_shortcut_ctrl = QShortcut(QKeySequence("Shift+Ctrl+S"), self)
@@ -69,15 +69,15 @@ class CsvPathTextEdit(QPlainTextEdit):
 
     @property
     def saved(self) -> bool:
-        if self.parent and self.parent != self:
-            return self.parent.saved
+        if self.my_parent and self.my_parent != self:
+            return self.my_parent.saved
         else:
             return True
 
     @saved.setter
     def saved(self, s: bool) -> None:
-        if self.parent and self.parent != self:
-            self.parent.saved = s
+        if self.my_parent and self.my_parent != self:
+            self.my_parent.saved = s
         else:
             ...
 
@@ -91,8 +91,8 @@ class CsvPathTextEdit(QPlainTextEdit):
     def desaved(self) -> bool:
         if self.editable == EditStates.UNEDITABLE:
             return False
-        if self.parent.saved is True:
-            path = self.parent.path
+        if self.my_parent.saved is True:
+            path = self.my_parent.path
             path = os.path.dirname(path)
             i = self.main.content.tab_widget.currentIndex()
             name = self.main.content.tab_widget.tabText(i)
@@ -100,7 +100,7 @@ class CsvPathTextEdit(QPlainTextEdit):
             name = name.strip()
             self.main.content.tab_widget.setTabText(i, f"+ {name}")
             self.main.statusBar().showMessage(f"{path}{os.sep}{name}+")
-            self.parent.saved = False
+            self.my_parent.saved = False
         return True
 
     def background_changed(self) -> None:
@@ -338,8 +338,8 @@ class CsvPathTextEdit(QPlainTextEdit):
         self.main.on_ai_explain()
 
     def on_load(self) -> None:
-        loader = CsvpathLoader(self.main)
-        loader.load_paths(self.parent.path)
+        loader = CsvpathLoader(main=self.main, parent=self)
+        loader.load_paths(self.my_parent.path)
 
     def on_save_as(self, switch_local=False) -> None:
         #
@@ -354,13 +354,13 @@ class CsvPathTextEdit(QPlainTextEdit):
         # send the copy to the left-hand side file tree.
         #
         # for that switch local must be True to let us know not to
-        # use self.parent.path
+        # use self.my_parent.path
         #
         # since we catch rt-clicks direct, we have to recheck
         # if switch_local should be true.
         #
         if not switch_local:
-            apath = self.parent.path
+            apath = self.my_parent.path
             ap = self.main.csvpath_config.archive_path
             ncp = self.main.csvpath_config.inputs_csvpaths_path
             if apath.startswith(ap) or apath.startswith(ncp):
@@ -380,13 +380,25 @@ class CsvPathTextEdit(QPlainTextEdit):
                 if nos.isfile():
                     thepath = os.path.dirname(thepath)
         else:
-            thepath = self.parent.path
+            thepath = self.my_parent.path
             thepath = os.path.dirname(thepath)
-
-        name = os.path.basename(self.parent.path)
-        name, ok = meut.input(
-            parent=self, title="Save As", msg="Where should the new file live? "
+        #
+        #
+        #
+        meut.input2(
+            parent=self,
+            title="Save As",
+            text=thepath,
+            width=580,
+            msg="Where should the new file live? ",
+            args={"thepath": thepath},
+            callback=self._savex,
         )
+
+    def _savex(self, inputs, *, thepath: str) -> None:
+        if thepath is None:
+            raise ValueError("The path cannot be None")
+        name, ok = inputs
         if ok and name:
             text = self.toPlainText()
             path = fiut.deconflicted_path(thepath, name)
@@ -395,26 +407,28 @@ class CsvPathTextEdit(QPlainTextEdit):
             #
             # does this need to change if switch_local?
             #
-            self.parent.open_file(path=path, data=None)
-            self.parent.reset_saved()
+            self.my_parent.open_file(path=path, data=None)
+            self.my_parent.reset_saved()
 
     def _copy_back_question(self, action="edit") -> None:
-        if self.parent is None or self.parent == self:
+        if self.my_parent is None or self.my_parent == self:
             return
-        yes = meut.yesNo(
+        meut.yesNo2(
             parent=self,
             msg=f"You can't {action} here. Copy back to project?",
             title="Copy file to project?",
+            callback=self._do_copy_back,
         )
-        if yes is True:
+
+    @Slot(int)
+    def _do_copy_back(self, yn: int) -> None:
+        if yn == QMessageBox.Yes:
             try:
-                name = self.parent.objectName()
+                name = self.my_parent.objectName()
                 to_path = fiut.copy_results_back_to_cwd(main=self.main, from_path=name)
                 self.main.read_validate_and_display_file_for_path(to_path)
                 self.main.content.tab_widget.close_tab(name)
             except Exception:
-                import traceback
-
                 print(traceback.format_exc())
 
     def on_save(self) -> None:
@@ -427,30 +441,29 @@ class CsvPathTextEdit(QPlainTextEdit):
         if self.editable == EditStates.UNEDITABLE:
             self._copy_back_question()
             return
-        path = self.parent.path
+        path = self.my_parent.path
         ap = self.main.csvpath_config.archive_path
         ncp = self.main.csvpath_config.inputs_csvpaths_path
         if path.startswith(ap) or path.startswith(ncp):
             self.on_save_as(switch_local=True)
             return
-
-        with DataFileWriter(path=self.parent.path) as writer:
+        with DataFileWriter(path=self.my_parent.path) as writer:
             writer.write(self.toPlainText())
-        #
-        # set the status bar
-        #
-        self.main.statusBar().showMessage(f"  Saved to: {self.parent.path}")
-        self.parent.reset_saved()
+        self.main.statusBar().showMessage(f"  Saved to: {self.my_parent.path}")
+        self.my_parent.reset_saved()
 
     def on_run(self) -> None:
         if self.editable == EditStates.UNEDITABLE:
             self._copy_back_question("run")
             return
+        #
+        # continue
+        #
         cursor = self.textCursor()
         position = cursor.position()
         text = self.toPlainText()
         text = self.find_csvpath_at_position(position, text)
-        self.parent.run_one_csvpath(text, position=position)
+        self.my_parent.run_one.run_one_csvpath(csvpath=text, position=position)
 
     def on_append(self) -> None:
         if self.editable == EditStates.UNEDITABLE:
@@ -504,88 +517,7 @@ class CsvPathTextEdit(QPlainTextEdit):
         self, *, position: int, addto: str
     ) -> str:
         text = self.toPlainText()
-        text, d = self._add_to_external_comment_of_csvpath_at_position(
+        text, d = csut._add_to_external_comment_of_csvpath_at_position(
             text=text, position=position, addto=addto
         )
         self.setPlainText(text)
-
-    @classmethod
-    def _add_to_external_comment_of_csvpath_at_position(
-        self, *, text: str, position: int, addto: str
-    ) -> tuple[str, dict]:
-        #
-        # text: the whole file
-        # position: where the cursor is, indicating which csvpath
-        # addto: information we want to add to the external comment
-        #
-        # we return the new string and a dict of the parts of the original string + the
-        # additional metadata. the latter is only for debugging. it could go away, but
-        # it does no harm to leave it while the code is new and the unit tests small.
-        #
-        if position >= len(text):
-            raise ValueError(f"Index {position} out of string: {text}")
-        #
-        #                                                 V
-        # $[*][ yes()] ---- CSVPATH ---- ~ two fish ~ $[*][ yes()] ---- CSVPATH ---- ~ three bugs ~ $[*][ yes() ]
-        # |--------------------top-------------------------|----------bottom------------------------------------|
-        # |--------------over-----------|------head--------|-tail--|---------under------------------------------|
-        #                              |s|--comment-|-pre-|
-        #                                /\
-        #                               /m\
-        #
-        #
-        top = None
-        bottom = None
-        over = None
-        head = None
-        tail = None
-        under = None
-        s = None
-        comment = None
-        pre = None
-        #
-        # find major parts
-        #
-        top = text[0:position]
-        bottom = text[position:]
-        _ = top.rfind(PathsManager.MARKER)
-        if _ == -1:
-            over = ""
-            head = top
-        else:
-            over = top[0:_]
-            head = top[_:]
-        _ = bottom.find(PathsManager.MARKER)
-        if _ == -1:
-            tail = bottom
-            under = ""
-        else:
-            tail = bottom[0:_]
-            under = bottom[_:]
-        #
-        # parse head further
-        #
-        if head.find("~") > -1:
-            _ = head.find("~")
-            s = head[0 : _ + 1]
-            comment = head[_ + 1 : head.rfind("~") + 1]
-            pre = head[head.rfind("~") + 1 :]
-        else:
-            s = "~"
-            comment = "~"
-            pre = head
-        #
-        # build the new string and collect the dict for checking, if needed.
-        #
-        return (
-            f"{over}{s}{addto}{comment}{pre}{tail}{under}",
-            {
-                "over": over,
-                "s": s,
-                "addto": addto,
-                "comment": comment,
-                "pre": pre,
-                "tail": tail,
-                "under": under,
-            },
-        )

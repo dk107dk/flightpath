@@ -6,12 +6,5 @@ class AiGenerateDataJob(AiJob):
         super().__init__(parent=parent, main=main, mdata=mdata)
 
     @property
-    def example(self) -> None:
-        if self.path is None:
-            return ""
-        with open(self.path, "r") as file:
-            return file.read()
-
-    @property
     def version(self) -> str:
         return "testdata"

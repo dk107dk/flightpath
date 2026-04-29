@@ -27,7 +27,7 @@ from csvpath.util.references.results_reference_finder_2 import (
 )
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
-from flightpath.widgets.icon_packager import IconPackager
+from flightpath.util.icon_packager import IconPackager
 from flightpath.dialogs.find_file_name_one_context_menu import NameOneLineEdit
 from flightpath.dialogs.reference_files.reference_file_handler import (
     ReferenceFileHandler,
@@ -41,7 +41,7 @@ class FindFileByReferenceDialog(QDialog):
         self.main = main
         self.paths = main.csvpaths
 
-        self.setWindowTitle("Find files by reference")
+        self.setWindowTitle("Find Files By Reference")
 
         self.resize(700, 290)
         self.setSizeGripEnabled(True)
@@ -83,7 +83,7 @@ class FindFileByReferenceDialog(QDialog):
         #
         # this is ReferenceParser.name_one and ReferenceParser.name_one_tokens
         #
-        self.name_one = NameOneLineEdit(parent=self)
+        self.name_one = NameOneLineEdit(main=self.main, parent=self)
         self.name_one.textChanged.connect(self._on_pick_name)
         #
         #
@@ -174,7 +174,9 @@ class FindFileByReferenceDialog(QDialog):
             # the run_dir or an instance, we'll open the named-file that was the source
             # data. TBD if we'll deal with any source-mode preceding. probably not.
             #
-            self.reference_file_handler = ReferenceFileHandler(parent=self)
+            self.reference_file_handler = ReferenceFileHandler(
+                main=self.main, parent=self
+            )
             if self.datatype.currentText() == "results":
                 if self.name_one.text().endswith(
                     ":data"

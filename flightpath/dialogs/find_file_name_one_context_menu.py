@@ -3,10 +3,10 @@ from PySide6.QtGui import QAction
 
 
 class NameOneLineEdit(QLineEdit):
-    def __init__(self, parent=None):
+    def __init__(self, *, main, parent=None):
         super().__init__(parent)
-        self.main = parent.main
-        self.parent = parent
+        self.main = main
+        self.my_parent = parent
 
     def contextMenuEvent(self, event):
         menu = QMenu()
@@ -25,8 +25,8 @@ class NameOneLineEdit(QLineEdit):
 
     def _add_fingerprint_if(self, menu) -> bool:
         if (
-            self.parent.datatype.currentText() == "files"
-            and self.parent.name_one.text() == ""
+            self.my_parent.datatype.currentText() == "files"
+            and self.my_parent.name_one.text() == ""
         ):
             name = "Fingerprint"
             a = QAction(name, self)
@@ -36,8 +36,8 @@ class NameOneLineEdit(QLineEdit):
             menu.addAction(a)
 
     def _add_date_if(self, menu) -> bool:
-        # self.parent.ref.sequence
-        if self.parent.name_one.text() == "":
+        # self.my_parent.ref.sequence
+        if self.my_parent.name_one.text() == "":
             name = "yyyy-mm-dd_00-00-00"
             a = QAction(name, self)
             a.triggered.connect(
@@ -46,8 +46,8 @@ class NameOneLineEdit(QLineEdit):
             menu.addAction(a)
 
     def _add_path_if(self, menu) -> bool:
-        # s = self.parent.ref.sequence
-        if self.parent.name_one.text() == "":
+        # s = self.my_parent.ref.sequence
+        if self.my_parent.name_one.text() == "":
             name = "relative/path"
             a = QAction(name, self)
             a.triggered.connect(
@@ -57,8 +57,8 @@ class NameOneLineEdit(QLineEdit):
 
     def _add_instance_if(self, menu) -> bool:
         if (
-            self.parent.datatype.currentText() == "results"
-            and self.parent.name_one.text() == ""
+            self.my_parent.datatype.currentText() == "results"
+            and self.my_parent.name_one.text() == ""
         ):
             name = "Csvpath name or ID"
             a = QAction(name, self)
@@ -99,42 +99,42 @@ class NameOneLineEdit(QLineEdit):
     #
 
     def _add_before_if(self, menu) -> bool:
-        for _ in self.parent.ref.next:
+        for _ in self.my_parent.ref.next:
             if _.endswith("range"):
                 self._add_range(":before", menu)
 
     def _add_to_if(self, menu) -> bool:
-        for _ in self.parent.ref.next:
+        for _ in self.my_parent.ref.next:
             if _.endswith("range"):
                 self._add_range(":to", menu)
 
     def _add_after_if(self, menu) -> bool:
-        for _ in self.parent.ref.next:
+        for _ in self.my_parent.ref.next:
             if _.endswith("range"):
                 self._add_range(":after", menu)
 
     def _add_from_if(self, menu) -> bool:
-        for _ in self.parent.ref.next:
+        for _ in self.my_parent.ref.next:
             if _.endswith("range"):
                 self._add_range(":from", menu)
 
     def _add_yesterday_if(self, menu) -> bool:
-        for _ in self.parent.ref.next:
+        for _ in self.my_parent.ref.next:
             if _.endswith("range"):
                 self._add_range(":yesterday", menu)
 
     def _add_today_if(self, menu) -> bool:
-        for _ in self.parent.ref.next:
+        for _ in self.my_parent.ref.next:
             if _.endswith("range"):
                 self._add_range(":today", menu)
 
     def _add_all_if(self, menu) -> bool:
-        for _ in self.parent.ref.next:
+        for _ in self.my_parent.ref.next:
             if _.endswith("range"):
                 self._add_range(":all", menu)
 
     def _add_range(self, name, menu):
-        if self.parent.name_one.text().find(name) == -1:
+        if self.my_parent.name_one.text().find(name) == -1:
             a = QAction(name, self)
             a.triggered.connect(
                 lambda checked=False, name=name: self._on_add_to_ref(name)
@@ -146,7 +146,7 @@ class NameOneLineEdit(QLineEdit):
     #
 
     def _add_ordinal(self, name: str, menu) -> None:
-        if self.parent.name_one.text().find(name) == -1:
+        if self.my_parent.name_one.text().find(name) == -1:
             a = QAction(name, self)
             a.triggered.connect(
                 lambda checked=False, name=name: self._on_add_to_ref(name)
@@ -154,12 +154,12 @@ class NameOneLineEdit(QLineEdit):
             menu.addAction(a)
 
     def _add_first_if(self, menu) -> bool:
-        for _ in self.parent.ref.next:
+        for _ in self.my_parent.ref.next:
             if _.endswith("ordinal"):
                 self._add_ordinal(":first", menu)
 
     def _add_last_if(self, menu) -> bool:
-        for _ in self.parent.ref.next:
+        for _ in self.my_parent.ref.next:
             if _.endswith("ordinal"):
                 self._add_ordinal(":last", menu)
 
@@ -167,5 +167,5 @@ class NameOneLineEdit(QLineEdit):
         return
 
     def _on_add_to_ref(self, name: str) -> None:
-        t = self.parent.name_one.text()
-        self.parent.name_one.setText(f"{t}{name}")
+        t = self.my_parent.name_one.text()
+        self.my_parent.name_one.setText(f"{t}{name}")

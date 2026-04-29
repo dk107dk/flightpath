@@ -12,7 +12,6 @@ from PySide6.QtWidgets import (
     QSpacerItem,
 )
 
-from csvpath.util.file_readers import DataFileReader
 from csvpath.util.nos import Nos
 
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
@@ -21,7 +20,6 @@ from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.file_collector import FileCollector
 
 
@@ -127,7 +125,7 @@ class Welcome(QWidget):
         self._new_run()
 
     def _new_run(self) -> None:
-        self.new_run_dialog = NewRunDialog(parent=self)
+        self.new_run_dialog = NewRunDialog(main=self.main, parent=self)
         self.main.show_now_or_later(self.new_run_dialog)
 
     def on_click_config_ai(self) -> None:
@@ -143,64 +141,8 @@ class Welcome(QWidget):
             self.main.helper.on_click_help()
 
     def on_click_find_data(self) -> None:
-        """
-        find = FindFileByReferenceDialog(main=self.main)
-        find.show_dialog()
-        """
         find = FindFileByReferenceDialog(main=self.main)
         self.main.show_now_or_later(find)
-
-    def on_click_validate(self) -> None:
-        csvpath = FileCollector.select_file(
-            parent=self,
-            cwd=self.main.state.cwd,
-            title="Select CsvPath Language File",
-            file_type_filter=FileCollector.csvpaths_filter(self.main.csvpath_config),
-        )
-        if csvpath is None:
-            return
-        #
-        # how do we open and run a single csvpath from this file?
-        #
-        self.selected_file_path = csvpath
-        self._run_one_time = csvpath
-        self.main.read_validate_and_display_file_for_path(
-            path=csvpath,
-            editable=self.main.EDITABLE,
-            finished_callback=self._on_run_one_load,
-        )
-
-    def _on_run_one_load(self) -> None:
-        csvpath = self._run_one_time
-        #
-        # iterate content's tabs to find one with widget.objectName() == csvpath
-        #
-        w = taut.find_tab(self.main.content.tab_widget, csvpath)
-        #
-        # w should be a csvpath viewer
-        #
-        #
-        # this is probably still useful. not sure if best way.
-        #
-        with DataFileReader(csvpath) as file:
-            csvpath = file.read()
-        cs = csvpath.split("---- CSVPATH ----")
-        if len(cs) > 1:
-            confirm = meut.yesNo(
-                parent=self,
-                title="Multiple statements",
-                msg="The file has multiple cvspaths. Do you want to run the first one?",
-            )
-            if confirm is False:
-                return
-            #
-            # in some cases we see ---- CSVPATH ---- coming before every csvpath
-            # making the 0th csvpath empty
-            #
-            if cs[0].strip() == "":
-                cs[0] = cs[1]
-        # self.main.content.csvpath_source_view.run_one_csvpath(cs[0], None)
-        w[1].run_one_csvpath(cs[0], None)
 
     def on_click_copy_in_help(self) -> None:
         md = HelpFinder(main=self.main).help("welcome/copy_in.md")
@@ -216,12 +158,6 @@ class Welcome(QWidget):
 
     def on_click_config_ai_help(self) -> None:
         md = HelpFinder(main=self.main).help("config/llm.md")
-        self.main.helper.get_help_tab().setMarkdown(md)
-        if not self.main.helper.is_showing_help():
-            self.main.helper.on_click_help()
-
-    def on_click_validate_help(self) -> None:
-        md = HelpFinder(main=self.main).help("welcome/validate.md")
         self.main.helper.get_help_tab().setMarkdown(md)
         if not self.main.helper.is_showing_help():
             self.main.helper.on_click_help()
@@ -269,7 +205,7 @@ class Welcome(QWidget):
                 self.button_run.setEnabled(True)
         except Exception as ex:
             msg = f"Error during setup: {ex}"
-            meut.warning(parent=self, msg=msg, title="Error")
+            meut.warning2(parent=self, msg=msg, title="Error")
 
     def _find_data_button(self, *, on_click, on_help) -> QWidget:
         self.button_find_data = QPushButton()
@@ -294,7 +230,7 @@ class Welcome(QWidget):
                 self.button_find_data.setEnabled(True)
         except Exception as ex:
             msg = f"Error during setup: {ex}"
-            meut.warning(parent=self, msg=msg, title="Error")
+            meut.warning2(parent=self, msg=msg, title="Error")
 
     def _validate_button(self, *, on_click, on_help) -> QWidget:
         self.button_validate = QPushButton()

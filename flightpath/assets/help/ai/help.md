@@ -1,10 +1,10 @@
 ## AI Functions
 
-This tab offers four activity functions that rely on your AI API.
-* Generate CsvPath Language validation statements for a data sample
-* Answer questions about CsvPath Language
+This tab offers four activity functions enabled by AI.
+* Generate CsvPath Language validation for a data sample
+* Answer your questions about CsvPath Language
 * Give a plain English explanation of one or more csvpath statements
-* Create a test data sample matching one or more csvpath statements
+* Create test data matching one or more csvpath statements
 
 &nbsp;
 

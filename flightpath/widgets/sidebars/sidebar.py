@@ -1,4 +1,6 @@
 import os
+import traceback
+
 from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
@@ -27,9 +29,9 @@ from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.file_tree_model.directory_filter_proxy_model import (
     DirectoryFilterProxyModel,
 )
-from flightpath.util.csvpath_loader import CsvpathLoader
+from flightpath.actions.csvpath_loader import CsvpathLoader
 from flightpath.util.help_finder import HelpFinder
-from flightpath.editable import EditStates
+from flightpath.util.editable import EditStates
 from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
@@ -101,58 +103,69 @@ class Sidebar(QWidget):
         self.stage_dialog = None
         self.load_dialog = None
 
-    def _new_project_name(self) -> str:
-        while True:
-            proj, ok = meut.input(
-                parent=self, title=self.NEW_PROJECT, msg="Enter the new project's name"
-            )
-            if not ok:
-                return None
-            if not strut.good_name(proj):
-                meut.warning(
-                    parent=self,
-                    msg="Project names can only have alpha-numeric characters, spaces, dashes, and underscores",
-                    title="Bad name",
-                )
-            else:
-                proj = proj.strip()
-                ps = self._project_names()
-                if proj in ps:
-                    meut.warning(
-                        parent=self,
-                        msg=f"A {proj} project already exists",
-                        title="Bad name",
-                    )
-                else:
-                    return proj
-
     def on_project_changed(self) -> None:
         proj = self.projects.currentText()
         if proj == self.main.state.current_project:
-            #
-            # no change
-            #
+            return
+        if proj == self.NEW_PROJECT:
+            self.new_project_name(callback=self._make_new_project)
             return
         #
         # we need to clear the Config panel and reload it or let it lazy load
         #
-        if proj == self.NEW_PROJECT:
-            proj = self._new_project_name()
-            if proj is None:
-                #
-                # reset the combobox back to the current project
-                #
-                index = self.projects.findText(self.main.state.current_project)
-                if index >= 0:
-                    self.projects.setCurrentIndex(index)
-                return
-            else:
-                self.main.state.current_project = proj
-                self.main.load_state_and_cd()
-                self.main.cancel_config_changes()
         self.main.state.current_project = proj
         self.main.load_state_and_cd()
         self.main.cancel_config_changes()
+
+    def new_project_name(self, callback) -> None:
+        def ask():
+            meut.input2(
+                parent=self,
+                title=self.NEW_PROJECT,
+                msg="Enter the new project's name",
+                callback=handle_answer,
+            )
+
+        def handle_answer(t: tuple[str, bool]):
+            name, ok = t
+            if not ok:
+                callback(None)
+                return
+            if not strut.good_name(name):
+                meut.warning2(
+                    parent=self,
+                    title="Bad name",
+                    msg="Project names can only have alpha-numeric characters, spaces, dashes, and underscores",
+                    callback=ask,
+                )
+                return
+            name = name.strip()
+            if name in self._project_names():
+                meut.warning2(
+                    parent=self,
+                    title="Bad name",
+                    msg=f"A {name} project already exists",
+                    callback=ask,
+                )
+                return
+            callback(name)
+
+        ask()
+
+    def _make_new_project(self, proj: str) -> None:
+        if proj is None:
+            #
+            # reset the combobox back to the current project
+            #
+            index = self.projects.findText(self.main.state.current_project)
+            if index >= 0:
+                self.projects.setCurrentIndex(index)
+            return
+        else:
+            self.main.state.current_project = proj
+            self.main.load_state_and_cd()
+            self.main.cancel_config_changes()
+            return
 
     def _set_project_from_state(self) -> None:
         #
@@ -163,7 +176,7 @@ class Sidebar(QWidget):
         #
         # sometimes it gets confused about the l&f
         #
-        self.main.on_color_scheme_changed()
+        self.main.reactor.on_color_scheme_changed()
 
     def _build_combo(self) -> None:
         self.projects.clear()
@@ -303,7 +316,7 @@ class Sidebar(QWidget):
         #
         # reconnect the nav so we react to clicking on files
         #
-        self.file_navigator.clicked.connect(self.main.on_tree_click)
+        self.file_navigator.clicked.connect(self.main.reactor.on_tree_click)
 
         if replace and old:
             self.layout().replaceWidget(old, self.file_navigator)
@@ -435,7 +448,7 @@ class Sidebar(QWidget):
         #
         # make sure tabs are visible and ai tab selected
         #
-        self.main._rt_tabs_show()
+        self.main.rt_tabs_show()
         self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
         self.main.on_ai_explain()
 
@@ -639,7 +652,7 @@ class Sidebar(QWidget):
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
-            self.stage_dialog = StageDataDialog(path=path, parent=self)
+            self.stage_dialog = StageDataDialog(main=self.main, path=path, parent=self)
             self.stage_dialog.show_dialog()
         else:
             ...  # should never happen, but what if it did?
@@ -695,7 +708,7 @@ class Sidebar(QWidget):
         #
         # make sure tabs are visible and ai tab selected
         #
-        self.main._rt_tabs_show()
+        self.main.rt_tabs_show()
         self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
         self.main.on_ai_gen_csvpath()
 
@@ -711,7 +724,7 @@ class Sidebar(QWidget):
         #
         # make sure tabs are visible and ai tab selected
         #
-        self.main._rt_tabs_show()
+        self.main.rt_tabs_show()
         self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
         self.main.on_ai_gen_data()
 
@@ -719,7 +732,7 @@ class Sidebar(QWidget):
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
-            loader = CsvpathLoader(main=self.main)
+            loader = CsvpathLoader(main=self.main, parent=self)
             loader.load_paths(path)
 
     def _run_paths(self) -> None: ...
@@ -749,7 +762,7 @@ class Sidebar(QWidget):
         if template == "":
             template = None
         if template and not template.endswith(":filename"):
-            meut.message(
+            meut.warning2(
                 parent=self,
                 msg="The :filename token must be the last component of the template",
                 title="Incomplete",
@@ -782,7 +795,7 @@ class Sidebar(QWidget):
                     )
                 else:
                     if not named_file_name or named_file_name.strip() == "":
-                        meut.message(
+                        meut.warning2(
                             parent=self,
                             title="No name given",
                             msg="You must provide a named-file name",
@@ -799,7 +812,8 @@ class Sidebar(QWidget):
                     named_file_name, "" if template is None else template
                 )
         except Exception as e:
-            meut.warning(parent=self.stage_dialog, title="Stage error", msg=f"{e}")
+            print(traceback.format_exc())
+            meut.warning2(parent=self.stage_dialog, title="Stage error", msg=f"{e}")
             return
         #
         # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
@@ -849,14 +863,14 @@ class Sidebar(QWidget):
                             if not nos.exists():
                                 nos.makedirs()
                         except Exception:
-                            meut.warning(
+                            meut.warning2(
                                 parent=self,
                                 title="Path error",
                                 msg=f"Error: invalid path: {np}",
                             )
                             return
                     else:
-                        meut.warning(
+                        meut.warning2(
                             parent=self,
                             title="Path error",
                             msg=f"Error: invalid path: {np}",
@@ -888,11 +902,11 @@ class Sidebar(QWidget):
                     #
                     os.mkdir(new_name)
                 except PermissionError:
-                    meut.warning(
+                    meut.warning2(
                         parent=self, title="Error", msg="Operation not permitted."
                     )
                 except OSError:
-                    meut.warning(
+                    meut.warning2(
                         parent=self,
                         title="Error",
                         msg="File with this name already exists.",
@@ -995,7 +1009,7 @@ class Sidebar(QWidget):
 
 $[*][ print("hello world") ]"""
                 else:
-                    meut.warning(
+                    meut.warning2(
                         parent=self, title="Error", msg="Unknown file extension"
                     )
                     return
@@ -1012,11 +1026,11 @@ $[*][ print("hello world") ]"""
                 # create file
                 #
                 except PermissionError:
-                    meut.warning(
+                    meut.warning2(
                         parent=self, title="Error", msg="Operation not permitted."
                     )
                 except OSError:
-                    meut.warning(
+                    meut.warning2(
                         parent=self,
                         title="Error",
                         msg="File with this name already exists.",
@@ -1046,7 +1060,10 @@ $[*][ print("hello world") ]"""
         ):
             return False, "File must be in or below the working directory"
         if name.find(".", 1) == -1:
-            return False, "File name must have an extension recognized by CsvPath"
+            return (
+                False,
+                "File extension not recognized. See Config > Extensions settings.",
+            )
         ext = name[name.rfind(".") + 1 :]
         if ext == "json":
             return True, "Ok"
@@ -1138,22 +1155,26 @@ $[*][ print("hello world") ]"""
             path = self.proxy_model.filePath(index)
             path = str(path)
             is_selected = self.window().selected_file_path == path
-            confirm = meut.yesNo(
+            meut.yesNo2(
                 parent=self,
                 title="Delete",
                 msg=f"Are you sure you want to delete {path}?",
+                callback=self._do_delete_item,
+                args={"path": path, "is_selected": is_selected},
             )
-            if confirm is True:
-                try:
-                    Nos(path).remove()
-                except OSError as e:
-                    meut.warning(parent=self, title="Error", msg=str(e))
-                else:
-                    if is_selected:
-                        self.window().show_welcome_screen()
-                    self.window().statusBar().showMessage(
-                        f"{path} deleted successfuly."
-                    )
+
+    def _do_delete_item(self, answer: int, *, path: str, is_selected: bool) -> None:
+        if path is None:
+            raise ValueError("Path cannot be None")
+        if answer == QMessageBox.Yes:
+            try:
+                Nos(path).remove()
+            except OSError as e:
+                meut.warning2(parent=self, title="Error", msg=str(e))
+            else:
+                if is_selected:
+                    self.window().show_welcome_screen()
+                self.window().statusBar().showMessage(f"{path} deleted successfuly.")
 
     def _show_only_name_column_in_file_navigator(self, file_model, file_navigator):
         for column in range(file_model.columnCount()):

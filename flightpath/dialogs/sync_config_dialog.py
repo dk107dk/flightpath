@@ -21,9 +21,9 @@ from flightpath.util.server_utility import ServerUtility as seut
 
 
 class SyncConfigDialog(QDialog):
-    def __init__(self, *, name, parent):
+    def __init__(self, *, main, name, parent):
         super().__init__(parent)
-        self.parent = parent
+        self.my_parent = parent
         self.main = parent.main
         self.name = name
         self.evars = None

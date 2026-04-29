@@ -1,9 +1,6 @@
 from PySide6.QtWidgets import QWidget
 import darkdetect
-from flightpath.editable import EditStates
-# from flightpath.widgets.csvpath_text_edit import CsvPathTextEdit
-# from flightpath.widgets.raw_text_edit import RawTextEdit
-# from flightpath.widgets.md_text_edit import MdTextEdit
+from flightpath.util.editable import EditStates
 
 
 class StyleUtility:

@@ -9,8 +9,8 @@ from flightpath.widgets.accordion.query_accordion_item import QueryAccordionItem
 
 class QueryAccordionWidget(QWidget):
     itemClicked = Signal(object)
-    itemCloseRequested = Signal(object)
-    itemInfoRequested = Signal(object)
+    itemCloseRequested = Signal(dict)
+    itemInfoRequested = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -54,6 +54,10 @@ class QueryAccordionWidget(QWidget):
             _.update_style()
 
     @property
+    def count(self) -> int:
+        return len(self.items)
+
+    @property
     def items(self) -> list:
         if self._items is None:
             self._items = []
@@ -80,11 +84,12 @@ class QueryAccordionWidget(QWidget):
         )
         self.vbox.insertWidget(self.vbox.count() - 1, item)
         self._items.append(item)
-
+        #
+        #
+        #
         item.clicked.connect(self.itemClicked)
         item.closeRequested.connect(self.itemCloseRequested)
         item.infoRequested.connect(self.itemInfoRequested)
-
         return item
 
     def remove_item(self, metadata: dict):

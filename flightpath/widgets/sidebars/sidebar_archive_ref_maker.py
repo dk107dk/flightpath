@@ -16,17 +16,20 @@ class SidebarArchiveRefMaker:
     def __init__(self, *, main, parent):
         super().__init__()
         self.main = main
-        self.parent = parent
+        self.my_parent = parent
 
     def _new_run(self):
-        index = self.parent.view.currentIndex()
+        index = self.my_parent.view.currentIndex()
         named_paths = self._named_paths_for_index(index=index)
         named_file = self._named_file_for_index(archive=self._archive, index=index)
         #
         # let's try to get the file
         #
         self.new_run_dialog = NewRunDialog(
-            parent=self.parent, named_paths=named_paths, named_file=named_file
+            main=self.main,
+            parent=self.my_parent,
+            named_paths=named_paths,
+            named_file=named_file,
         )
         #
         # check for templates
@@ -42,10 +45,13 @@ class SidebarArchiveRefMaker:
         self.main.show_now_or_later(self.new_run_dialog)
 
     def _repeat_run(self):
-        index = self.parent.view.currentIndex()
+        index = self.my_parent.view.currentIndex()
         named_paths, named_file = self._get_rerun_references(index)
         self.new_run_dialog = NewRunDialog(
-            parent=self.parent, named_paths=named_paths, named_file=named_file
+            main=self.main,
+            parent=self.my_parent,
+            named_paths=named_paths,
+            named_file=named_file,
         )
         #
         # check for templates
@@ -69,7 +75,7 @@ class SidebarArchiveRefMaker:
 
     def _named_paths_for_index(self, index) -> str:
         named_paths = None
-        path = self.parent.model.filePath(index)
+        path = self.my_parent.model.filePath(index)
         if not path:
             return ""
         path = path[len(self._archive) + 1 :]
@@ -82,7 +88,7 @@ class SidebarArchiveRefMaker:
 
     def _named_file_for_index(self, *, archive: str, index) -> str:
         named_file = None
-        path = self.parent.model.filePath(index)
+        path = self.my_parent.model.filePath(index)
         m = re.search(r"^(.*\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(?:_\d)?)", path)
         d = None
         if m is not None:
@@ -158,7 +164,7 @@ class SidebarArchiveRefMaker:
         return f"${name}.csvpaths.{identity}:from"
 
     def _get_rerun_references(self, index) -> tuple[str, str]:
-        path = self.parent.model.filePath(index)
+        path = self.my_parent.model.filePath(index)
         named_paths = self._named_paths_reference_for_path(path)
         #
         # named_file
@@ -170,7 +176,9 @@ class SidebarArchiveRefMaker:
         return (named_paths, named_file)
 
     def _path_is_simple_named_file_name(self, path: str) -> str | None:
-        files = self.parent.main.csvpath_config.get(section="results", name="archive")
+        files = self.my_parent.main.csvpath_config.get(
+            section="results", name="archive"
+        )
         if not path.startswith(files):
             return None
         path = path[len(files) + 1 :]

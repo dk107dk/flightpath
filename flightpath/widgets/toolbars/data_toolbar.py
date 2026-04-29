@@ -35,7 +35,7 @@ class DataToolbar(QToolBar):
 
     def __init__(self, *, parent, main):
         super().__init__()
-        self.parent = parent
+        self.my_parent = parent
         self.main = main
         self.sampling = None
         self.rows = None
@@ -138,14 +138,22 @@ class DataToolbar(QToolBar):
         #
         self.hide()
 
-        self.sampling.activated.connect(self.main.on_reload_data)
-        self.rows.activated.connect(self.main.on_data_rows_changed)
-        self.save_sample.clicked.connect(self.main.on_save_sample)
-        self.delimiter.activated.connect(self.main.on_set_delimiter)
-        self.quotechar.activated.connect(self.main.on_set_quotechar)
-        self.raw_source.clicked.connect(self.main.on_raw_source)
-        self.ai_gen.clicked.connect(self.main.on_ai_gen)
-        self.file_info.clicked.connect(self.main.on_file_info)
+        self.sampling.activated.connect(self.main.reactor.on_reload_data)
+        #
+        # these next two rows.connects are essentially the same. we had them doing different work
+        # but then brought the work into one place. see note in reactor.
+        #
+        self.rows.activated.connect(self.main.reactor.on_data_rows_changed)
+        self.rows.currentIndexChanged.connect(
+            self.main.reactor.on_selected_number_of_lines_changed
+        )
+
+        self.save_sample.clicked.connect(self.main.reactor.on_save_sample)
+        self.delimiter.activated.connect(self.main.reactor.on_set_delimiter)
+        self.quotechar.activated.connect(self.main.reactor.on_set_quotechar)
+        self.raw_source.clicked.connect(self.main.reactor.on_raw_source)
+        self.ai_gen.clicked.connect(self.main.reactor.on_ai_gen)
+        self.file_info.clicked.connect(self.main.reactor.on_file_info)
 
     def _add_help(self, callback) -> None:
         self.help = ClickableLabel()
@@ -189,26 +197,10 @@ class DataToolbar(QToolBar):
     def on_help_sample_toolbar(self) -> None:
         md = HelpFinder(main=self.main).help("data_view/samples.md")
         self._on_data_toolbar_help(md)
-        """
-        if md is None:
-            self.main.helper.close_help()
-            return
-        self.main.helper.get_help_tab().setMarkdown(md)
-        if not self.main.helper.is_showing_help():
-            self.main.helper.on_click_help()
-        """
 
     def on_help_delimiter_toolbar(self) -> None:
         md = HelpFinder(main=self.main).help("data_view/delimiter.md")
         self._on_data_toolbar_help(md)
-        """
-        if md is None:
-            self.main.helper.close_help()
-            return
-        self.main.helper.get_help_tab().setMarkdown(md)
-        if not self.main.helper.is_showing_help():
-            self.main.helper.on_click_help()
-        """
 
     def on_file_info_toolbar(self) -> None:
         md = HelpFinder(main=self.main).help("data_view/file_info.md")
@@ -281,3 +273,16 @@ class DataToolbar(QToolBar):
             self.ai_gen.setEnabled(True)
         if self.file_info:
             self.file_info.setEnabled(True)
+
+        #
+        # if we're showing all lines we aren't sampling, so we disable
+        # the sampling selector.
+        #
+        t = self.rows.currentText()
+        e = t == self.ALL_LINES
+        if e:
+            self.sampling.setEnabled(False)
+            self.save_sample.setEnabled(False)
+        else:
+            self.sampling.setEnabled(True)
+            self.save_sample.setEnabled(True)
