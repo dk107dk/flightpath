@@ -84,7 +84,6 @@ class JsonViewer(QWidget):
             )
             view.open_file(path=file.name, data=_data)
             view.setObjectName(file.name)
-            print(f"JSON view is editable/saveable: {editable}")
         return view
 
     def __init__(self, *, main, editable=EditStates.EDITABLE, path: str = None, parent):
@@ -433,7 +432,6 @@ class JsonViewer(QWidget):
         if self.editable == EditStates.UNEDITABLE and not can_always_save:
             print(f"Cannot save uneditable data from {self.objectName()} to {path}")
             return
-        print(f"Saving editable JSON data to {path}")
         if path is None:
             meut.warning2(
                 parent=self,

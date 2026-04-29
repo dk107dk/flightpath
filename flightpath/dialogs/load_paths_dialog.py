@@ -146,11 +146,8 @@ class LoadPathsDialog(QDialog):
                 t = self.main.csvpaths.paths_manager.describer.get_template(n)
                 if t is not None:
                     self.template_ctl.setText(t)
-            # else:
-            #    self.template_ctl.setText("")
         except Exception as ex:
             print(f"{ex}")
-            # self.template_ctl.setText("")
 
     def _name_check(self) -> None:
         t = self.named_paths_name_ctl.text()

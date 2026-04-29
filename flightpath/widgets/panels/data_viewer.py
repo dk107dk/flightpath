@@ -127,13 +127,12 @@ class DataViewer(QWidget):
             self.table_view, position
         )
         index = self.table_view.indexAt(viewport_position)
-        row = self.table_view.rowAt(viewport_position.y())
-        column = index.column()
-        index_row = index.row()
-        print(f"_shw_ctx_mnu: row: {row}, column: {column}, index_row: {index_row}")
+        # self.table_view.rowAt(viewport_position.y())
+        # index.column()
+        # index.row()
         global_position = self.table_view.mapToGlobal(position)
         if index.isValid():
-            row = index.row()
+            # index.row()
             context_menu = QMenu(self)
             save_as_action = QAction()
             save_as_action.setText("Save As")
@@ -153,9 +152,8 @@ class DataViewer(QWidget):
         index = self.table_view.indexAt(viewport_position)
         row = self.table_view.rowAt(viewport_position.y())
         column = index.column()
-        index_row = index.row()
+        # index.row()
 
-        print(f"_shw_ctx_mnu: row: {row}, column: {column}, index_row: {index_row}")
         if row < 0:
             last_row_index = self.table_view.model().rowCount() - 1
             if last_row_index >= 0:

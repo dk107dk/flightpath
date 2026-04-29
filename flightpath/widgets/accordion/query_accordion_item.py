@@ -193,5 +193,4 @@ class QueryAccordionItem(QWidget):
         self.closeRequested.emit(self._metadata)
 
     def _on_status_clicked(self):
-        print("query-acc-item: _on_status_clicked")
         self.infoRequested.emit(self._metadata)

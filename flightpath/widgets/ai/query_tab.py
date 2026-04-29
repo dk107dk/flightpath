@@ -265,8 +265,7 @@ class QueryTabWidget(QWidget):
             self.main.open_ai_config()
             return
 
-    def on_item_info_requested(self, metadata: dict) -> None:
-        print("querytab: on_item_info_requested")
+    def on_item_info_requested(self, metadata: dict) -> None: ...
 
     def _display_tracking(self, metadata: dict) -> None:
         tracking = f"{metadata['id']}.tracking"
@@ -277,7 +276,6 @@ class QueryTabWidget(QWidget):
             self.main.helper.help_and_feedback.removeTab(t[0])
         view = None
         if "log" in metadata["params"]:
-            print("qtab: _display_tracking: creating tracking log")
             js = metadata["params"]["log"]
             js = json.loads(js)
             view = JsonViewer.temp_file_viewer(
@@ -285,7 +283,6 @@ class QueryTabWidget(QWidget):
             )
             view.path = tracking
         else:
-            print("qtab: _display_tracking: log not available")
             js = "No tracking available"
             view = QPlainTextEdit()
             view.setPlainText(js)
@@ -299,7 +296,6 @@ class QueryTabWidget(QWidget):
         results = metadata.get("results")
         if results:
             del metadata["results"]
-        print(f"qtab: _display_job_params: mdata: \n{metadata}\n")
         try:
             mdata = copy.deepcopy(metadata)
             params = mdata.get("params")
@@ -332,7 +328,6 @@ class QueryTabWidget(QWidget):
     #
     @Slot(dict)
     def on_item_clicked(self, metadata: dict):
-        print(f"qtab: on_item_clicked: metadata: {metadata}")
         self.form.load_params(metadata["params"])
         feut.clear_feedback(self.main)
         #
@@ -347,7 +342,6 @@ class QueryTabWidget(QWidget):
         #
         generation = metadata.get("results")
         if generation:
-            print("qtab: on_item_clicked: displaying generation")
             view = QPlainTextEdit()
             view.setPlainText(generation.response_text)
             view.setReadOnly(True)
@@ -356,7 +350,6 @@ class QueryTabWidget(QWidget):
             )
         else:
             print("qtab: _on_item_clicked: no generation available")
-        print("qtab: on_item_clicked")
         #
         # show tracking log
         #
@@ -375,7 +368,6 @@ class QueryTabWidget(QWidget):
         view.setPlainText(inst)
         view.setReadOnly(True)
         view.setObjectName(instructions)
-        print("qtab: on_item_clicked: displaying instructions tab")
         feut.add_feedback_tab(
             main=self.main, tab_id=instructions, name="Instructions", tab=view
         )
@@ -386,7 +378,6 @@ class QueryTabWidget(QWidget):
         if error_text is None:
             print("qtab: on_item_clicked: no error")
         else:
-            print(f"qtab: on_item_clicked: error: {error_text}")
             view = QPlainTextEdit()
             view.setPlainText(error_text)
             view.setReadOnly(True)
@@ -402,7 +393,6 @@ class QueryTabWidget(QWidget):
         #
         try:
             path = metadata.get("example_path")
-            print(f"qtab: on_item_clicked: opening original doc: {path}")
             if path is not None:
                 editable = self.main.is_doc_editable(path)
                 self.main.read_validate_and_display_file_for_path(
@@ -411,15 +401,6 @@ class QueryTabWidget(QWidget):
                 )
         except Exception:
             print(traceback.format_exc())
-        print("qtab: on_item_clicked: done")
-
-        from csvpath.util.code import Code
-        from flightpath_generator import Generator
-
-        _ = Code.get_source_path(Generator)
-        print(f"\n\n >>>>>>: {_}\n\n")
-
-        # /Users/davidkershaw/Library/Caches/pypoetry/virtualenvs/flightpath-xvAT0a8o-py3.14/lib/python3.14/site-packages/flightpath_generator/generator.py
 
     @Slot(dict)
     def on_item_close_requested(self, metadata: dict):

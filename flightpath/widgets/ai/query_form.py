@@ -128,7 +128,6 @@ class QueryFormWidget(QWidget):
         if doc is None:
             return
         path = doc.objectName()
-        print(f"queryform: assure_state: doc: {doc}, path: {path}")
         fs = fiut.split_filename(path)
         if fs[1] in self.main.csvpath_config.get(
             section="extensions", name="csv_files"

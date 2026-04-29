@@ -117,7 +117,6 @@ class Welcome(QWidget):
         #
         # pick and copy
         #
-        print("copyin avofcv filecoolllector")
         FileCollector.select_file(
             parent=self, cwd=cwd, title="Select File", file_type_filter=afilter
         )

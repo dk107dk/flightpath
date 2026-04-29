@@ -175,7 +175,6 @@ class ClosingTabs(QTabWidget):
                 path=path, name=f"{t.objectName()}.json", data=t.to_json_str()
             )
         else:
-            print("hitelse on saving")
             layout = t.layout()
             w = layout.itemAt(0).widget()
             if isinstance(w, KeyableTreeView):
