@@ -171,10 +171,11 @@ class ClosingTabs(QTabWidget):
             path = os.path.join(d, p)
             t._save(path=path)
         elif isinstance(t, JsonViewer):
-            print(
-                f"\n\n\n==============================================\nreceived a JSON viewer that i don'tknow what tod o with: {t}"
+            self.main.save_sample(
+                path=path, name=f"{t.objectName()}.json", data=t.to_json_str()
             )
         else:
+            print("hitelse on saving")
             layout = t.layout()
             w = layout.itemAt(0).widget()
             if isinstance(w, KeyableTreeView):

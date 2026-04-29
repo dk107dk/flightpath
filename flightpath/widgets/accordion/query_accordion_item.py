@@ -155,7 +155,6 @@ class QueryAccordionItem(QWidget):
         self._listeners.append(lst)
 
     def metadata_update(self, mdata: Metadata) -> None:
-        print("item: metadataupdate: received mdata")
         for _ in self._listeners:
             _.metadata_update(mdata)
 

@@ -62,7 +62,9 @@ class KeyableTreeView(QTreeView):
 
 class JsonViewer(QWidget):
     @classmethod
-    def temp_file_viewer(cls, *, main, parent, js: dict | list):
+    def temp_file_viewer(
+        cls, *, main, parent, js: dict | list, can_always_save: bool = False
+    ):
         with tempfile.NamedTemporaryFile(mode="w", delete=True, suffix=".json") as file:
             #
             # for the moment, loading js confirms that it is good json. probably not necessary.
@@ -74,13 +76,15 @@ class JsonViewer(QWidget):
             _data = json.dumps(_data, indent=2)
             file.write(_data)
             file.flush()
+            editable = EditStates.EDITABLE if can_always_save else EditStates.UNEDITABLE
             view = JsonViewer(
                 parent=parent,
                 main=main,
-                editable=EditStates.UNEDITABLE,
+                editable=editable,
             )
             view.open_file(path=file.name, data=_data)
             view.setObjectName(file.name)
+            print(f"JSON view is editable/saveable: {editable}")
         return view
 
     def __init__(self, *, main, editable=EditStates.EDITABLE, path: str = None, parent):
@@ -424,24 +428,32 @@ class JsonViewer(QWidget):
                 return True
         return False
 
-    def _save(self) -> None:
-        if self.editable == EditStates.UNEDITABLE:
+    def _save(self, path: str = None, *, can_always_save=False) -> None:
+        path = path if path is not None else self.path
+        if self.editable == EditStates.UNEDITABLE and not can_always_save:
+            print(f"Cannot save uneditable data from {self.objectName()} to {path}")
             return
-        if self.path is None:
+        print(f"Saving editable JSON data to {path}")
+        if path is None:
             meut.warning2(
                 parent=self,
                 title="Cannot Save",
-                msg="Error: cannot save json to file path None",
+                msg="Cannot save JSON to file path None",
             )
             return
         d = self.model.to_json()
         j = json.dumps(d, indent=2)
-        with DataFileWriter(path=self.path) as file:
+        with DataFileWriter(path=path) as file:
             file.write(j)
         #
         # reset the name w/o the +
         #
         self._set_modified(False)
+
+    def to_json_str(self) -> str:
+        d = self.model.to_json()
+        j = json.dumps(d, indent=2)
+        return j
 
     def _add_config(self) -> None:
         invalid = self.context_menu_invalid

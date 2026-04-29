@@ -280,7 +280,10 @@ class QueryTabWidget(QWidget):
             print("qtab: _display_tracking: creating tracking log")
             js = metadata["params"]["log"]
             js = json.loads(js)
-            view = JsonViewer.temp_file_viewer(main=self.main, parent=self, js=js)
+            view = JsonViewer.temp_file_viewer(
+                main=self.main, parent=self, js=js, can_always_save=True
+            )
+            view.path = tracking
         else:
             print("qtab: _display_tracking: log not available")
             js = "No tracking available"
@@ -309,7 +312,9 @@ class QueryTabWidget(QWidget):
                 ...
             else:
                 self.main.helper.help_and_feedback.removeTab(t[0])
-            view = JsonViewer.temp_file_viewer(main=self.main, parent=self, js=mdata)
+            view = JsonViewer.temp_file_viewer(
+                main=self.main, parent=self, js=mdata, can_always_save=True
+            )
             view.setObjectName(name)
             feut.add_feedback_tab(
                 main=self.main, tab_id=name, name="Request Info", tab=view
