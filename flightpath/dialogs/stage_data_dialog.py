@@ -133,6 +133,9 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
         main_layout.addWidget(buttons)
         self._csvpaths = None
 
+    def warning(self, msg, title) -> None:
+        meut.warning2(parent=self, title=title, msg=msg)                
+
     def _update_template(self) -> None:
         t = self.template_ctl.text()
         if str(t).strip() in [None, ""]:

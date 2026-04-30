@@ -815,16 +815,15 @@ class Sidebar(QWidget):
             #
             # changed the meut to have self as parent, not the dialog. if
             # that doesn't work on windows try closing and noneifing the
-            # dialog first.
+            # dialog first. <<< it didn't work. but having the dialog use 
+            # meut to open the dialog works great.
             #
             # test with templates like:
             #    :0/test/:1test:filename
             #    o\:1/test\c:\\
             #
-            # self.stage_dialog.close()
-            # self.stage_dialog = None
             print(traceback.format_exc())
-            meut.warning2(parent=self, title="Stage error", msg=f"{e}")
+            self.stage_dialog.warning(title="Stage error", msg=f"{e}")
             return
         #
         # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
@@ -850,6 +849,7 @@ class Sidebar(QWidget):
         self.main.welcome.update_run_button()
         self.main.welcome.update_find_data_button()
 
+    
     def _rename_file_navigator_item(self):
         index = self.file_navigator.currentIndex()
         if index.isValid():
