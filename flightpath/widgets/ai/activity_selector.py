@@ -132,4 +132,9 @@ class ActivitySelector(QWidget):
         return None
 
     def set_activity(self, key: str):
+        for k, _ in self.buttons.items():
+            if key == k:
+                self.buttons[key].setChecked(True)
+            else:
+                self.buttons[key].setChecked(False)
         self.form._on_activity_changed(key)

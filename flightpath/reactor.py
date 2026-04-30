@@ -184,6 +184,7 @@ class Reactor:
 
     def on_ai_gen(self, activity="validation") -> None:
         self.main.rt_tab_widget.setCurrentIndex(1)
+        self.main.rt_tab_widget.widget(1).form.activity_selector.set_activity(activity)
 
     # ==========================
 

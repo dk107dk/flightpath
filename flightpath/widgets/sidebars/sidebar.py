@@ -450,7 +450,7 @@ class Sidebar(QWidget):
         #
         self.main.rt_tabs_show()
         self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
-        self.main.on_ai_explain()
+        self.main.reactor.on_ai_explain()
 
     def _show_context_menu(self, position):
         index = self.file_navigator.indexAt(position)
@@ -710,7 +710,7 @@ class Sidebar(QWidget):
         #
         self.main.rt_tabs_show()
         self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
-        self.main.on_ai_gen_csvpath()
+        self.main.reactor.on_ai_gen_csvpath()
 
     def _generate_csv(self) -> None:
         index = self.file_navigator.currentIndex()
@@ -726,7 +726,7 @@ class Sidebar(QWidget):
         #
         self.main.rt_tabs_show()
         self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
-        self.main.on_ai_gen_data()
+        self.main.reactor.on_ai_gen_data()
 
     def _load_paths(self) -> None:
         index = self.file_navigator.currentIndex()
@@ -762,8 +762,14 @@ class Sidebar(QWidget):
         if template == "":
             template = None
         if template and not template.endswith(":filename"):
+            """
             meut.warning2(
                 parent=self,
+                msg="The :filename token must be the last component of the template",
+                title="Incomplete",
+            )
+            """
+            self.stage_dialog.warning(
                 msg="The :filename token must be the last component of the template",
                 title="Incomplete",
             )
@@ -795,8 +801,14 @@ class Sidebar(QWidget):
                     )
                 else:
                     if not named_file_name or named_file_name.strip() == "":
+                        """
                         meut.warning2(
                             parent=self,
+                            title="No name given",
+                            msg="You must provide a named-file name",
+                        )
+                        """
+                        self.stage_dialog.warning(
                             title="No name given",
                             msg="You must provide a named-file name",
                         )
@@ -815,7 +827,7 @@ class Sidebar(QWidget):
             #
             # changed the meut to have self as parent, not the dialog. if
             # that doesn't work on windows try closing and noneifing the
-            # dialog first. <<< it didn't work. but having the dialog use 
+            # dialog first. <<< it didn't work. but having the dialog use
             # meut to open the dialog works great.
             #
             # test with templates like:
@@ -849,7 +861,6 @@ class Sidebar(QWidget):
         self.main.welcome.update_run_button()
         self.main.welcome.update_find_data_button()
 
-    
     def _rename_file_navigator_item(self):
         index = self.file_navigator.currentIndex()
         if index.isValid():

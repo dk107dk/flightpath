@@ -1,3 +1,5 @@
+from typing import Callable
+
 from PySide6.QtWidgets import (  # pylint: disable=E0611
     QWidget,
     QVBoxLayout,
@@ -15,6 +17,7 @@ from csvpath.util.nos import Nos
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
+from flightpath.util.message_utility import MessageUtility as meut
 
 
 class LoadPathsDialog(QDialog):
@@ -134,6 +137,33 @@ class LoadPathsDialog(QDialog):
         buttons_layout.addWidget(self.load_button)
         buttons.setLayout(buttons_layout)
         main_layout.addWidget(buttons)
+
+    #
+    # warning() and overwrite_prompt() must be here so that they can be opened
+    # from within this dialog. the dialog must be the parent. but it must also
+    # be the opener -- parent is not enough to make certain the child dialogs
+    # don't pop-under on Windows.
+    #
+
+    def warning(self, msg, title) -> None:
+        meut.warning2(parent=self, title=title, msg=msg)
+
+    def yesNo(self, *, title: str, msg: str, callback: Callable, args: dict) -> None:
+        meut.yesNo2(
+            parent=self,
+            title=title,
+            msg=msg,
+            callback=callback,
+            args=args,
+        )
+
+    def load_errors(self, title: str, msg: str, errors: dict | list) -> None:
+        meut.errors2(
+            parent=self,
+            msg=msg,
+            title=title,
+            errors=errors,
+        )
 
     def _name_changed(self) -> None:
         self._check_for_template()
