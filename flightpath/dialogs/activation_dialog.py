@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt  # pylint: disable=E0611
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
 from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.util.listener_utility import ListenerUtility as liut
 
 
 class ActivationDialog(QDialog):
@@ -189,4 +190,12 @@ class ActivationDialog(QDialog):
         a[describer.RUN_METHOD] = method
         describer.store_on_arrival(self.named_file_name, a)
         # describer.store_json(self.named_file_name, j)
+        #
+        # we don't have activation on by default, yet. and anyway we need to know
+        # it is on even if defaulted, in case it was turned off.
+        #
+        # 2 things needed: add "activation" to groups and add "activation.file"
+        # with the listener import stmt.
+        #
+        liut.assure_activation(self.main)
         self.close()

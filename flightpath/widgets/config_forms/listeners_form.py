@@ -21,6 +21,8 @@ from .tabs.sftpplus_tab import SftpPlusTab
 from .tabs.slack_tab import SlackTab
 from .tabs.sqlite_tab import SqliteTab
 
+from flightpath.util.listener_utility import ListenerUtility as liut
+
 
 class ListenersForm(BlankForm):
     def __init__(self, *args, **kwargs):
@@ -84,6 +86,7 @@ class ListenersForm(BlankForm):
             groups["sql"] = SqlTab(form=self)
             groups["sqlite"] = SqliteTab(form=self)
             groups["webhook"] = None
+            groups["activation"] = None
             self._group_tabs = groups
         return self._group_tabs.keys()
 
@@ -169,6 +172,9 @@ class ListenersForm(BlankForm):
 
     @Slot(str)
     def _listener_name_click(self, text: str) -> None:
+        if text is None:
+            raise ValueError("Text cannot be None")
+        text = text.strip()
         t = self.groups.text()
         if t is None:
             t = text
@@ -180,6 +186,15 @@ class ListenersForm(BlankForm):
         c = ", " if t != "" else ""
         nt = f"{t}{c}{text}"
         self.groups.setText(nt)
+        #
+        # make sure 'activation' has a corrisponding 'activation.file'
+        # this will be there by default in the future but atm is not
+        #
+        if text == "activation":
+            liut.assure_activation(self.main)
+
+        if text == "webhook":
+            liut.assure_webhook(self.main)
 
     @property
     def fields(self) -> list[str]:

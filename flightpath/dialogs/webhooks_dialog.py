@@ -14,6 +14,7 @@ from csvpath.managers.paths.paths_describer import Webhook
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
+from flightpath.util.listener_utility import ListenerUtility as liut
 
 
 class WebhooksDialog(QDialog):
@@ -142,6 +143,8 @@ class WebhooksDialog(QDialog):
         )
 
         mgr.describer.store_webhooks(self.name, c)
+
+        liut.assure_webhooks(self.main)
         self.close()
 
     def _populate(self) -> None:

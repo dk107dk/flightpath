@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLabel,
     QComboBox,
+    QPushButton,
     QVBoxLayout,
     QWidget,
     QSizePolicy,
@@ -13,6 +14,7 @@ from PySide6.QtCore import Qt
 
 from csvpath.util.nos import Nos
 from .blank_form import BlankForm
+from flightpath.util.os_utility import OsUtility as osut
 
 
 class ConfigForm(BlankForm):
@@ -45,6 +47,10 @@ class ConfigForm(BlankForm):
         msg.setStyleSheet("QLabel { font-size: 12pt; font-style:italic;color:#222222;}")
         layout.addRow("", msg)
 
+        button = QPushButton("Open config file")
+        layout.addRow("", button)
+        button.clicked.connect(self.on_click_open_file)
+
         #
         # =====================
         #
@@ -62,6 +68,10 @@ class ConfigForm(BlankForm):
         overall.setAlignment(self.table, Qt.AlignBottom)
         self.setLayout(overall)
         self._setup()
+
+    def on_click_open_file(self) -> None:
+        path = self.config_dir_path.text()
+        osut.open_file(path)
 
     def _setup(self) -> None:
         self.config_dir_path.textChanged.connect(self.main.reactor.on_config_changed)

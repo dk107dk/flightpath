@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from csvpath.util.nos import Nos
+from csvpath.util.box import Box
 
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.widgets.help.plus_help import HelpIconPackager
@@ -44,6 +45,7 @@ class Welcome(QWidget):
         self.button_run = None
         self.button_ai = None
         self.button_copy_in = None
+        self.button_reload = None
         #
         # these boxes have a button + help icon
         #
@@ -59,6 +61,9 @@ class Welcome(QWidget):
         self.config_ai_box = self._ai_button(
             on_click=self.on_click_config_ai, on_help=self.on_click_config_ai_help
         )
+        self.reload_box = self._reload_button(
+            on_click=self.on_click_reload, on_help=self.on_click_reload_help
+        )
 
         top_layout = QVBoxLayout()
         top_layout.addWidget(image_label)
@@ -66,6 +71,7 @@ class Welcome(QWidget):
         top_layout.addWidget(self.run_box)
         top_layout.addWidget(self.find_data_box)
         top_layout.addWidget(self.config_ai_box)
+        top_layout.addWidget(self.reload_box)
         top_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         top_box = QWidget()
@@ -131,6 +137,10 @@ class Welcome(QWidget):
     def on_click_config_ai(self) -> None:
         self.main.open_ai_config()
 
+    def on_click_reload(self) -> None:
+        Box().empty_my_stuff()
+        self.main.load_state_and_cd()
+
     def on_click_find_data_help(self) -> None:
         md = HelpFinder(main=self.main).help("find_file_by_reference_dialog/help.md")
         if md is None:
@@ -158,6 +168,12 @@ class Welcome(QWidget):
 
     def on_click_config_ai_help(self) -> None:
         md = HelpFinder(main=self.main).help("config/llm.md")
+        self.main.helper.get_help_tab().setMarkdown(md)
+        if not self.main.helper.is_showing_help():
+            self.main.helper.on_click_help()
+
+    def on_click_reload_help(self) -> None:
+        md = HelpFinder(main=self.main).help("config/reload.md")
         self.main.helper.get_help_tab().setMarkdown(md)
         if not self.main.helper.is_showing_help():
             self.main.helper.on_click_help()
@@ -191,6 +207,16 @@ class Welcome(QWidget):
         )
         self.button_ai.setText("Configure AI")
         self.button_ai.clicked.connect(on_click)
+        return box
+
+    def _reload_button(self, *, on_click, on_help) -> QWidget:
+        self.button_reload = QPushButton()
+        self.button_reload.setStyleSheet("QPushButton { width:170px;}")
+        box = HelpIconPackager.add_help(
+            main=self.main, widget=self.button_reload, on_help=on_help
+        )
+        self.button_reload.setText("Reload Ops Files")
+        self.button_reload.clicked.connect(on_click)
         return box
 
     def update_run_button(self) -> None:
