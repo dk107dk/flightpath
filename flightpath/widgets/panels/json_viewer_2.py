@@ -230,7 +230,7 @@ class JsonViewer2(QWidget):
         )
 
     @Slot(tuple)
-    def _save_as_continue(self, t: tuple(str, bool)) -> None:
+    def _save_as_continue(self, t: tuple[str, bool]) -> None:
         path, ok = t
         if not ok:
             return
