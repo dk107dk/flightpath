@@ -60,6 +60,16 @@ class FileUtility:
         return ret
 
     @classmethod
+    def relative_path_to_parent_dir(self, *, main, filepath) -> str:
+        path = os.path.dirname(filepath)
+        if path == filepath:
+            return ""
+        i = path.rfind(main.state.current_project)
+        path = path[i + len(main.state.current_project) :]
+        path = path.lstrip(os.sep)
+        return path
+
+    @classmethod
     def copy_results_back_to_cwd(self, *, main, from_path: str, use_name=None) -> str:
         #
         # if use_name we attempt to use that as the new file name, with deconflicting.

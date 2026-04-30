@@ -19,7 +19,7 @@ class MessageUtility:
         args: dict = None,
     ) -> None:
         if icon is None:
-            icon = QMessageBox.Critical
+            icon = QMessageBox.Information
         if title is None:
             title = "Attention"
         box = QMessageBox(parent=parent)
@@ -49,7 +49,12 @@ class MessageUtility:
         args: dict = None,
     ) -> None:
         cls.message2(
-            parent=parent, msg=msg, title=title, icon=icon, callback=callback, args=args
+            parent=parent,
+            msg=msg,
+            title=title,
+            icon=QMessageBox.Critical,
+            callback=callback,
+            args=args,
         )
 
     @classmethod
@@ -131,7 +136,7 @@ class MessageUtility:
         cls, *, parent: QWidget, msg: str, title: str = "", icon: str = None
     ) -> None:
         if icon is None:
-            icon = QMessageBox.Critical
+            icon = QMessageBox.Information
         if title is None:
             title = "Attention"
         box = QMessageBox(parent=parent)

@@ -93,7 +93,7 @@ class FileCollector:
             else:
                 meut.input2(
                     parent=parent,
-                    title="Copy into {cwd}",
+                    title=f"Copy into {cwd}",
                     msg="Enter a name for the copy:",
                     text=name,
                     callback=cls._select_file_complete,

@@ -388,9 +388,9 @@ class CsvPathTextEdit(QPlainTextEdit):
         meut.input2(
             parent=self,
             title="Save As",
-            text=thepath,
-            width=580,
-            msg="Where should the new file live? ",
+            text="",
+            width=450,
+            msg="New file name? ",
             args={"thepath": thepath},
             callback=self._savex,
         )
@@ -401,7 +401,20 @@ class CsvPathTextEdit(QPlainTextEdit):
         name, ok = inputs
         if ok and name:
             text = self.toPlainText()
-            path = fiut.deconflicted_path(thepath, name)
+            exts = self.main.csvpath_config.get(
+                section="extensions", name="csvpath_files"
+            )
+            if not exts:
+                raise ValueError("No csvpaths statement file extension")
+            if not fiut.is_a(name, exts):
+                name = f"{name}.{exts[0]}"
+            d = os.path.join(
+                self.main.state.cwd,
+                fiut.relative_path_to_parent_dir(
+                    main=self.main, filepath=self.my_parent.path
+                ),
+            )
+            path = fiut.deconflicted_path(d, name)
             with DataFileWriter(path=path) as file:
                 file.write(text)
             #

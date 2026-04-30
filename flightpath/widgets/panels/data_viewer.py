@@ -271,12 +271,15 @@ class DataViewer(QWidget):
     def _copy_to_new(self) -> None:
         dialog = QInputDialog()
         dialog.setFixedSize(QSize(420, 125))
-        dialog.setLabelText("Enter the new CSV file's name (ending with .csv):")
-        dialog.setTextValue(self._relative_path_to_parent_dir())
+        dialog.setLabelText("Enter the new CSV file's name:")
+        dialog.setTextValue("")
         ok = dialog.exec()
         new_name = dialog.textValue()
         if ok and new_name:
-            new_name = os.path.join(self.main.state.cwd, new_name)
+            d = os.path.join(self.main.state.cwd, self._relative_path_to_parent_dir())
+            new_name = os.path.join(d, new_name)
+            if not new_name.endswith(".csv"):
+                new_name = f"{new_name}.csv"
             b, msg = self._valid_new_file(new_name)
             if b is True:
                 try:

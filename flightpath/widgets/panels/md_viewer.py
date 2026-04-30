@@ -189,13 +189,12 @@ class MdViewer(QWidget):
             return
         thepath = self.path
         thepath = os.path.dirname(thepath)
-        # name = os.path.basename(self.path)
         meut.input2(
             parent=self,
             title="Save As",
-            width=580,
-            text=thepath,
-            msg="Where should the new file live? ",
+            width=450,
+            text="",
+            msg="New file name? ",
             callback=self._on_save_as_complete,
             args={"thepath": thepath},
         )
@@ -206,11 +205,13 @@ class MdViewer(QWidget):
         if not ok:
             return
         if thepath is None:
-            raise ValueError("Name cannot be None")
+            raise ValueError("Path cannot be None")
         if str(thepath) in ["", "None"]:
             return
         if str(name) in ["", "None"]:
             return
+        if not fiut.is_a(name, ["md", "txt", "html"]):
+            name = f"{name}.md"
         path = fiut.deconflicted_path(thepath, name)
         self._save(path=path)
 
