@@ -7,7 +7,6 @@ from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
 from flightpath.dialogs.load_paths_dialog import LoadPathsDialog
-from flightpath.util.message_utility import MessageUtility as meut
 
 
 class CsvpathLoader:
@@ -52,8 +51,14 @@ class CsvpathLoader:
             template = None
         elif not template.endswith(":run_dir"):
             self.load_dialog.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+            """
             meut.message2(
                 parent=self.load_dialog,
+                title="Incorrect Template",
+                msg="A named-path group template must end in :run_dir",
+            )
+            """
+            self.load_dialog.warning(
                 title="Incorrect Template",
                 msg="A named-path group template must end in :run_dir",
             )
@@ -66,8 +71,25 @@ class CsvpathLoader:
         paths = self.main.csvpaths
 
         if paths.paths_manager.has_named_paths(named_paths_name):
+            """
             meut.yesNo2(
                 parent=self,
+                title="Continue?",
+                msg=(
+                    "Are you sure you want to overwrite an existing named-paths group?"
+                    if overwrite
+                    else "Are you sure you want to append to an existing named-paths group?"
+                ),
+                callback=self._do_load_file,
+                args={
+                    "overwrite": overwrite,
+                    "named_paths_name": named_paths_name,
+                    "paths": self.main.csvpaths,
+                    "template": template,
+                },
+            )
+            """
+            self.load_dialog.yesNo(
                 title="Continue?",
                 msg=(
                     "Are you sure you want to overwrite an existing named-paths group?"
@@ -134,10 +156,15 @@ class CsvpathLoader:
                         append=(not overwrite),
                     )
                     if ref is None or str(ref).strip() == "":
+                        """
                         meut.warning2(
                             parent=self.load_dialog,
                             msg="Cannot load file",
                             title="Cannot Load",
+                        )
+                        """
+                        self.load_dialog.warning(
+                            msg="Cannot load file", title="Cannot Load"
                         )
                         return
                 else:
@@ -146,10 +173,15 @@ class CsvpathLoader:
             self._delete_load_dialog()
         except Exception as e:
             print(traceback.format_exc())
+            """
             meut.warning2(
                 parent=self.load_dialog,
                 title="Error",
                 msg=f"Cannot load named-paths group: {e}",
+            )
+            """
+            self.load_dialog.warning(
+                msg=f"Cannot load named-paths group: {e}", title="Error"
             )
 
     def do_load_json(self) -> None:
@@ -179,21 +211,29 @@ class CsvpathLoader:
             lst = paths.paths_manager.add_named_paths_from_json(file_path=name)  #
             if paths.errors and len(paths.errors) > 0:
                 es = [error.to_json() for error in paths.errors]
+                """
                 meut.errors2(
                     parent=self.my_parent,
                     msg="Errors during load",
                     title="Errors",
                     errors=es,
                 )
+                """
+                self.load_dialog.load_errors(
+                    msg="Errors during load", title="Errors", errors=es
+                )
                 return
 
             if lst is None or len(lst) == 0:
+                """
                 meut.warning2(
                     parent=self.load_dialog,
                     msg="Cannot load file",
                     title="Cannot Load",
                     callback=self._delete_load_dialog,
                 )
+                """
+                self.load_dialog.warning(msg="Cannot load file", title="Cannot Load")
                 return
         except Exception as e:
             msg = traceback.format_exc()
@@ -206,12 +246,15 @@ class CsvpathLoader:
                     ja = []
                     for e in paths.errors:
                         ja.append(e.to_json())
+            title = "Errors"
             if paths.errors is None:
                 msg = f"There were errors: {ex}"
             elif len(paths.errors) == 1:
                 msg = f"There was {len(paths.errors)} error"
+                title = "Error"
             else:
                 msg = f"There were {len(paths.errors)} errors"
+            """
             meut.errors2(
                 parent=self.load_dialog,
                 msg=msg,
@@ -219,6 +262,8 @@ class CsvpathLoader:
                 errors=ja,
                 callback=self._delete_load_dialog,
             )
+            """
+            self.load_dialog.load_errors(msg=msg, title=title, errors=ja)
             return
 
         else:
@@ -247,8 +292,21 @@ class CsvpathLoader:
                 if overwrite
                 else "Are you sure you want to append to an existing named-paths group?"
             )
+            """
             meut.yesNo2(
                 parent=self.load_dialog,
+                title="Load Paths",
+                msg=msg,
+                callback=self._do_load_dir_answer,
+                args={
+                    "template": template,
+                    "paths": paths,
+                    "named_paths_name": named_paths_name,
+                    "name": name,
+                },
+            )
+            """
+            self.load_dialog.yesNo(
                 title="Load Paths",
                 msg=msg,
                 callback=self._do_load_dir_answer,
@@ -287,8 +345,15 @@ class CsvpathLoader:
             name=named_paths_name, directory=name, template=template
         )
         if lst is None or len(lst) == 0:
+            """
             meut.warning2(
                 parent=self.load_dialog,
+                msg="Cannot load directory.",
+                title="Cannot Load",
+                callback=self._do_load_dir_finish,
+            )
+            """
+            self.load_dialog.warning(
                 msg="Cannot load directory.",
                 title="Cannot Load",
                 callback=self._do_load_dir_finish,
