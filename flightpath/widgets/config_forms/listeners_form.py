@@ -194,7 +194,7 @@ class ListenersForm(BlankForm):
             liut.assure_activation(self.main)
 
         if text == "webhook":
-            liut.assure_webhook(self.main)
+            liut.assure_webhooks(self.main)
 
     @property
     def fields(self) -> list[str]:

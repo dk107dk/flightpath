@@ -11,7 +11,7 @@ class ListenerUtility:
                 value="from csvpath.managers.files.files_activation_listener import FileActivationListener",
             )
             main.csvpath_config.save_config()
-            cls.add_to_groups_if(main=main, name="activation")
+        cls.add_to_groups_if(main=main, name="activation")
 
     @classmethod
     def assure_webhooks(cls, main) -> None:
@@ -25,7 +25,7 @@ class ListenerUtility:
                 value="from csvpath.managers.integrations.webhook.webhook_results_listener import WebhookResultsListener",
             )
             main.csvpath_config.save_config()
-            cls.add_to_groups_if(main=main, name="webhook")
+        cls.add_to_groups_if(main=main, name="webhook")
 
     @classmethod
     def add_to_groups_if(self, *, main, name: str) -> None:
@@ -37,13 +37,16 @@ class ListenerUtility:
         t = main.csvpath_config.get(section="listeners", name="groups")
         if t is None:
             t = name
-        t = t.strip()
-        ts = [t.strip() for t in t.split(",")]
-
+        ts = None
+        if isinstance(t, str):
+            t = t.strip()
+            ts = [t.strip() for t in t.split(",")]
+        else:
+            ts = t
         if name in ts:
             return
         ts.append(name)
         nt = ",".join(ts)
 
-        main.csvpath_config.get(section="listeners", name="groups", value=nt)
+        main.csvpath_config.set(section="listeners", name="groups", value=nt)
         main.csvpath_config.save_config()

@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 from PySide6.QtWidgets import (
     QLineEdit,
     QFormLayout,
@@ -13,7 +15,6 @@ from csvpath.util.nos import Nos
 
 from .blank_form import BlankForm
 from flightpath.util.os_utility import OsUtility as osut
-from flightpath.util.message_utility import MessageUtility as meut
 
 
 class LoggingForm(BlankForm):
@@ -35,10 +36,6 @@ class LoggingForm(BlankForm):
         self.path = QLineEdit()
         layout.addRow("Log file path: ", self.path)
 
-        button = QPushButton("Open log dir")
-        layout.addRow("", button)
-        button.clicked.connect(self.on_click_open_dir)
-
         self.log_files_to_keep = QLineEdit()
         layout.addRow("Number of log files to keep: ", self.log_files_to_keep)
 
@@ -50,6 +47,14 @@ class LoggingForm(BlankForm):
 
         self.csvpaths_level = QComboBox()
         layout.addRow("CsvPaths log level: ", self.csvpaths_level)
+
+        button = QPushButton("Open log dir")
+        layout.addRow("", button)
+        button.clicked.connect(self.on_click_open_dir)
+
+        button = QPushButton("Open log file")
+        layout.addRow("", button)
+        button.clicked.connect(self.on_click_open_file)
 
         #
         # =====================
@@ -69,27 +74,33 @@ class LoggingForm(BlankForm):
         self.setLayout(overall)
         self._setup()
 
+    def on_click_open_file(self) -> None:
+        self.assure_log_file()
+        path = self.config.get(
+            section="logging", name="log_file", default="logs/csvpath.log"
+        )
+        osut.open_file(path)
+
+    def assure_log_file(self) -> None:
+        path = self.config.get(
+            section="logging", name="log_file", default="logs/csvpath.log"
+        )
+        dirname = os.path.dirname(path)
+        nos = Nos(dirname)
+        if not nos.exists():
+            nos.makedirs()
+        nos = Nos(path)
+        if not nos.exists():
+            Path(path).touch()
+
     def on_click_open_dir(self) -> None:
+        self.assure_log_file()
         path = self.config.get(
             section="logging", name="log_file", default="logs/csvpath.log"
         )
         path = os.path.dirname(path)
-        nos = Nos(path)
-        if not nos.exists():
-            nos.makedirs()
-            meut.message2(
-                parent=self,
-                msg=f"{path} doesn't exist. Creating it.",
-                title="Not Found",
-            )
-        elif nos.isfile():
-            #
-            # TODO: this could, rarely, happen. we should alert the user of the misconfig.
-            #
-            meut.message2(parent=self, msg=f"{path} is a file", title="Cannot Open")
-        else:
-            o = osut.file_system_open_cmd()
-            os.system(f'{o} "{path}"')
+        o = osut.file_system_open_cmd()
+        os.system(f'{o} "{path}"')
 
     def add_to_config(self, config) -> None:
         config.add_to_config("logging", "handler", self.handler.currentText())
