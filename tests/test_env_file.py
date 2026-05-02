@@ -1,6 +1,6 @@
 import os
 import unittest
-from flightpath.widgets.forms.config_form import ConfigForm
+from flightpath.widgets.config_forms.config_form import ConfigForm
 
 
 class TestConfigForm(unittest.TestCase):
