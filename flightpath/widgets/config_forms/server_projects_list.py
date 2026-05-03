@@ -61,7 +61,11 @@ class ServerProjectsList(QListWidget):
             self.refresh()
 
     def refresh(self) -> None:
-        self.my_parent.populate()
+        self.my_parent.server_unchanged = False
+        self.my_parent.really_populate()
+        self.my_parent.server_unchanged = (
+            True  # my_parent should do this, but since we're being pushy...
+        )
 
     def select_item_by_name(self, name):
         found_items = self.findItems(name, Qt.MatchExactly)

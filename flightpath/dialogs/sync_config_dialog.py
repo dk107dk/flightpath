@@ -213,7 +213,7 @@ class SyncConfigDialog(QDialog):
             section = section.strip("]")
             section = section.strip("[")
             v = value.text()
-            if v is None or v.strip() != "":
+            if v is None or v.strip() == "":
                 continue
             if not c.has_section(section):
                 continue
@@ -237,11 +237,10 @@ class SyncConfigDialog(QDialog):
 
     @Slot(QTableWidgetItem)
     def handle_item_changed(self, item) -> None:
-        row = item.row()
         #
-        # does this next line have a side-effect? otherwise, remove.
+        # this item is from table of sending with the new value. we don't
+        # need to do anything except enable the server sync.
         #
-        self.table_of_sending.item(row, 1)
         self.sync_button.setEnabled(True)
 
     @Slot(QTableWidgetItem)

@@ -201,6 +201,7 @@ class ServerForm(BlankForm):
         key = config.get(
             section="server", name="api_key", string_parse=False, swaps=False
         )
+
         if key and self.key.text() != key:
             self.key.setText(key)
             self.server_unchanged = False
@@ -213,6 +214,7 @@ class ServerForm(BlankForm):
             self.docs.setText(f'<a href="{link}/docs">{link}/docs</a>')
         else:
             self.docs.setText("")
+        self._update_project_list(name=None)
 
     @property
     def _headers(self) -> str:
@@ -263,16 +265,13 @@ class ServerForm(BlankForm):
             self.proj_list.clear()
             self.server_unchanged = False
             return
-
         #
         # repopulate only if we're visible. we'll repopulate each time we become visible.
         #
         if self.main.config.config_panel.forms_layout.currentWidget() != self:
             return
-
         if self.server_unchanged is True:
             return
-
         if not self._server_is_enabled():
             return
 
@@ -455,7 +454,7 @@ class ServerForm(BlankForm):
         )
 
     def _do_shutdown_answer(self, answer: int) -> None:
-        if answer is QMessageBox.No:
+        if answer == QMessageBox.No:
             return False
         with httpx.Client() as client:
             msg = None
@@ -636,7 +635,7 @@ class ServerForm(BlankForm):
         )
 
     def _delete_project_answer(self, answer: int, *, name: str) -> None:
-        if answer is not QMessageBox.Yes:
+        if answer != QMessageBox.Yes:
             return False
         with httpx.Client() as client:
             response = None
