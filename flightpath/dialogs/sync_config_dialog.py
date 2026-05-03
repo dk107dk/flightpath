@@ -131,8 +131,8 @@ class SyncConfigDialog(QDialog):
         row = 0
         for i, form in enumerate(forms):
             try:
-                if not config.has_section(form.section):
-                    config.add_section(form.section)
+                if not config.has_section(form.section) and len(form.fields) == 0:
+                    continue
                 for j, field in enumerate(form.server_fields):
                     if field in config[form.section]:
                         value = config[form.section][field]
@@ -186,9 +186,6 @@ class SyncConfigDialog(QDialog):
         self.populate_table(table=self.table_of_existing, config=cfg.config_parser)
 
     def do_sync(self) -> None:
-        #
-        #
-        #
         form = self.main.config.config_panel.get_form("ServerForm")
         config_str = self._table_of_sending_to_config(form)
         form._upload_config(self.name, config_str, prompt=False)
@@ -216,8 +213,11 @@ class SyncConfigDialog(QDialog):
             section = section.strip("]")
             section = section.strip("[")
             v = value.text()
+            if v is None or v.strip() != "":
+                continue
             if not c.has_section(section):
-                c.add_section(section)
+                continue
+                # c.add_section(section)
             c[section][name] = v
         #
         # serialize the ConfigParser to str

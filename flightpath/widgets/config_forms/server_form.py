@@ -714,3 +714,7 @@ class ServerForm(BlankForm):
                 return response.status_code
             except Exception:
                 return 500
+
+    @property
+    def section(self) -> str:
+        return "server"

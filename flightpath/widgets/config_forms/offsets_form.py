@@ -88,7 +88,11 @@ class OffsetsForm(BlankForm):
     # we only make a change from clicking the button on this form.
     # anything else is more likely to be disruptive.
     #
-    def populate(self): ...
+    def populate(self):
+        # from csvpath.util.code import Code
+        # s = Code.get_source_path(self.main.csvpath_config.__class__)
+        # print(f"pop code: {s}")
+        ...
 
     @property
     def fields(self) -> list[str]:
