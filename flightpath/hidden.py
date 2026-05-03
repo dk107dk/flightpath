@@ -71,6 +71,7 @@ from csvpath.managers.integrations.otlp.otlp_paths_listener import (
 from csvpath.managers.integrations.otlp.otlp_file_listener import (
     OpenTelemetryFileListener,
 )
+from csvpath.managers.files.files_activation_listener import FileActivationListener
 from csvpath.managers.integrations.sftp.sftp_sender import SftpSender
 from csvpath.managers.integrations.sftpplus.sftpplus_listener import SftpPlusListener
 from csvpath.managers.integrations.ckan.ckan_listener import CkanListener
