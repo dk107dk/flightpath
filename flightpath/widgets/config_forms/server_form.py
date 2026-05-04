@@ -196,6 +196,7 @@ class ServerForm(BlankForm):
             section="server", name="host", string_parse=False, swaps=False
         )
         if host and self.hostname != host:
+            host = host.rstrip("/")
             self.host.setText(host)
             self.server_unchanged = False
         key = config.get(
@@ -209,7 +210,7 @@ class ServerForm(BlankForm):
         if en:
             self.main.config.reset_config_toolbar()
 
-        link = self.host.text()
+        link = self.hostname
         if str(link).strip() not in ["None", ""]:
             self.docs.setText(f'<a href="{link}/docs">{link}/docs</a>')
         else:

@@ -1,5 +1,4 @@
 import io
-import traceback
 
 from configparser import ConfigParser
 from PySide6.QtWidgets import (
@@ -130,6 +129,7 @@ class SyncConfigDialog(QDialog):
         table.setRowCount(t)
         row = 0
         for i, form in enumerate(forms):
+            field = None
             try:
                 if not config.has_section(form.section) and len(form.fields) == 0:
                     continue
@@ -169,11 +169,23 @@ class SyncConfigDialog(QDialog):
                         row += 1
 
             except Exception:
-                print(traceback.format_exc())
+                print(f"Sync config dialog: error at: field: {field}, form: {form}")
+                #
+                # traceback is too loud here. this error probably indicates a network
+                # problem, so all the noise doesn't help.
+                #
+                # print(traceback.format_exc())
 
     def populate_sending(self) -> None:
         form = self.main.config.config_panel.get_form("ServerForm")
-        host = form.host.text()
+        #
+        # do not go direct against the form.host control. the form.hostname rstrips
+        # any trailing '/' char. if we don't strip it it relyably breaks the request.
+        # we check everywhere we use host or hostname in the server form. obviously
+        # here would be bad too.
+        #
+        # host = form.host.text()
+        host = form.hostname
         cfgstr = seut.download_config(
             host=host, project=self.name, headers=form._headers
         )
@@ -196,7 +208,7 @@ class SyncConfigDialog(QDialog):
         # get the whole current server config
         #
         cfgstr = seut.download_config(
-            host=form.host.text(), project=self.name, headers=form._headers
+            host=form.hostname, project=self.name, headers=form._headers
         )
         c = ConfigParser()
         c.read_string(cfgstr)

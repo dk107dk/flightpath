@@ -13,6 +13,9 @@ class ServerUtility:
             try:
                 url = f"{host}/projects/get_project_config"
                 request = {"name": project}
+                print(f"serverurtil: getprojcfg: url: {url}")
+                print(f"serverurtil: getprojcfg: request: {request}")
+                print(f"serverurtil: getprojcfg: headers: {headers}")
                 response = client.post(url, json=request, headers=headers)
                 content = response.json()
                 return content
