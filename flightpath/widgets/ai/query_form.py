@@ -148,10 +148,13 @@ class QueryFormWidget(QWidget):
         if mode == "question":
             self.instructions.setPlaceholderText("Ask your question…")
             self.prompt_title.setPlaceholderText("Name your how-to question…")
-        elif mode in ["validation", "explain"]:
+        elif mode in ["explain"]:
             self.instructions.setPlaceholderText(
                 "Enter anything you want the explanation to focus on…"
             )
+            self.prompt_title.setPlaceholderText("Name your request…")
+        elif mode in ["validation"]:
+            self.instructions.setPlaceholderText("Provide any validation rules…")
             self.prompt_title.setPlaceholderText("Name your request…")
         else:
             self.instructions.setPlaceholderText(

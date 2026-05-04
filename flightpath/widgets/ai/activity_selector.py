@@ -136,5 +136,5 @@ class ActivitySelector(QWidget):
             if key == k:
                 self.buttons[key].setChecked(True)
             else:
-                self.buttons[key].setChecked(False)
+                self.buttons[k].setChecked(False)
         self.form._on_activity_changed(key)

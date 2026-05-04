@@ -183,6 +183,14 @@ class Reactor:
         self.on_ai_gen("explain")
 
     def on_ai_gen(self, activity="validation") -> None:
+        if not isinstance(activity, str):
+            #
+            # saw a boolean one time and i'd like to know where it came from.
+            #
+            print(f"Unexpectedly not a string: {activity}")
+            from csvpath.util.log_utility import LogUtility as lout
+
+            lout.log_brief_trace()
         self.main.rt_tab_widget.setCurrentIndex(1)
         self.main.rt_tab_widget.widget(1).form.activity_selector.set_activity(activity)
 

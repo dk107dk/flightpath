@@ -492,7 +492,7 @@ class ServerForm(BlankForm):
                     log = base64.b64decode(log).decode("utf-8")
                     local_path = self._write_to("csvpath.log", log)
                     self.main.statusBar().showMessage(f"Saved to {local_path}")
-                    self._open_if(local_path)
+                    # self._open_if(local_path)
                     meut.yesNo2(
                         parent=self,
                         title="Open file?",
