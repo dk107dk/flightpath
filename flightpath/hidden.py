@@ -20,10 +20,15 @@ from csvpath.util.s3.s3_data_writer import S3DataWriter
 from csvpath.util.s3.s3_xlsx_data_reader import S3XlsxDataReader
 from csvpath.util.s3.s3_utils import S3Utils
 from csvpath.util.sftp.sftp_nos import SftpDo
+from csvpath.util.sftp.sftp_walk import SftpWalk
 from csvpath.util.sftp.sftp_data_reader import SftpDataReader
+from csvpath.util.sftp.sftp_json_data_reader import SftpJsonDataReader
 from csvpath.util.sftp.sftp_data_writer import SftpDataWriter
 from csvpath.util.sftp.sftp_xlsx_data_reader import SftpXlsxDataReader
 from csvpath.util.sftp.sftp_config import SftpConfig
+from csvpath.util.sftp.sftp_fingerprinter import (
+    SftpFingerprinter,
+)  # this class may not be necessary
 from csvpath.util.azure.azure_nos import AzureDo
 from csvpath.util.azure.azure_utils import AzureUtility
 from csvpath.util.azure.azure_data_reader import AzureDataReader
