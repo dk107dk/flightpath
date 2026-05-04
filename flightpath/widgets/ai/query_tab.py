@@ -225,9 +225,9 @@ class QueryTabWidget(QWidget):
     # msg: litellm.RateLimitError: RateLimitError: OpenAIException - Request too large for gpt-4o-mini in organization org-IMB8R5BT37cEOcGYZ04vJaxY on tokens per min (TPM): Limit 200000, Requested 523138. The input or output tokens must be reduced in order to run successfully. Visit https://platform.openai.com/account/rate-limits to learn more.
     #
     def on_worker_error(self, item, metadata, msg):
-        print(f"query acc item: metadata: {len(metadata)}")
-        print(f"                item: {item}")
-        print(f"                msg: {msg}")
+        # print(f"query acc item: metadata: {len(metadata)}")
+        # print(f"                item: {item}")
+        # print(f"                msg: {msg}")
         for k, v in metadata.items():
             if k == "params":
                 print(f"               ...{k}:")
@@ -237,7 +237,14 @@ class QueryTabWidget(QWidget):
                 print(f"               ...{k} = {v}")
 
         metadata["status"] = "error"
+        #
+        # this is likely not useful, we need the item's copy.
+        #
         metadata["error"] = msg
+        #
+        # unclear atm why we need to handle two metadatas here.
+        #
+        item.metadata["error"] = msg
         item.status_dot.setColor(QColor("#fa5252"))  # red
         item.subtitle.setText("Error")
         self._beep()
@@ -247,7 +254,12 @@ class QueryTabWidget(QWidget):
         view = QPlainTextEdit()
         view.setPlainText(msg)
         view.setReadOnly(True)
-        error = f"{metadata['id']}.error"
+        error = ""
+        if "id" in metadata:
+            error = f"{metadata['id']}.error"
+        else:
+            error = f"{id(item)}.error"
+
         feut.add_feedback_tab(main=self.main, tab_id=error, name="Error", tab=view)
         #
         # update/show the tracking
@@ -376,7 +388,7 @@ class QueryTabWidget(QWidget):
         #
         error_text = metadata.get("error")
         if error_text is None:
-            print("qtab: on_item_clicked: no error")
+            print("qtab: on_item_clicked: no error msg found in metadata")
         else:
             view = QPlainTextEdit()
             view.setPlainText(error_text)

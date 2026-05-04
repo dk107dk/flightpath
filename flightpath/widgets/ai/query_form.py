@@ -147,13 +147,15 @@ class QueryFormWidget(QWidget):
         self._current_activity = mode
         if mode == "question":
             self.instructions.setPlaceholderText("Ask your question…")
-            self.prompt_title.setPlaceholderText("Name your question…")
+            self.prompt_title.setPlaceholderText("Name your how-to question…")
         elif mode in ["validation", "explain"]:
-            self.instructions.setPlaceholderText("Enter any instructions…")
+            self.instructions.setPlaceholderText(
+                "Enter anything you want the explanation to focus on…"
+            )
             self.prompt_title.setPlaceholderText("Name your request…")
         else:
             self.instructions.setPlaceholderText(
-                "Any instructions for data generation…"
+                "Provide any instructions for data generation…"
             )
             self.prompt_title.setPlaceholderText("Name your request…")
         if mode in ["testdata", "validation"]:
