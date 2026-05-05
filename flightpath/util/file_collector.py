@@ -70,6 +70,9 @@ class FileCollector:
             the_path = paths[0]
             if not the_path.startswith(cwd):
                 name = os.path.basename(the_path)
+                new_name = os.path.basename(name)
+                print("skipping the possible renaming")
+                """
                 new_name, ok = meut.input(
                     parent=parent,
                     title="Copy into project",
@@ -77,6 +80,8 @@ class FileCollector:
                     text=name,
                 )
                 if ok and new_name:
+                """
+                if True:
                     new_path = fiut.deconflicted_path(cwd, new_name)
                     print(f"FileCollector: select_file: the_path: {the_path}")
                     print(f"FileCollector: select_file: new_path: {new_path}")
