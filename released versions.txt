@@ -133,6 +133,15 @@ April 29 2026
  git tag -a v1.1.88c -m "jan release candidate; build number sync"
  git push origin v1.1.88c
 
+May 5 2026
+ Version: 1.1.88d
+    - CsvPath 0.0.609
+    - FlightPath Server: 0.1.45
+    - FlightPath Generator: 0.1.51
+    - FlightPath Data: 0.1.30
+ git tag -a v1.1.88d -m "Windows RC accepted"
+ git push origin v1.1.88d
+
 
 
 
