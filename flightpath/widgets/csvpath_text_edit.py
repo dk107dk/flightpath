@@ -530,7 +530,16 @@ class CsvPathTextEdit(QPlainTextEdit):
         self, *, position: int, addto: str
     ) -> str:
         text = self.toPlainText()
-        text, d = csut._add_to_external_comment_of_csvpath_at_position(
+        text, d = self._add_to_external_comment_of_csvpath_at_position(
             text=text, position=position, addto=addto
         )
         self.setPlainText(text)
+
+    @classmethod
+    def _add_to_external_comment_of_csvpath_at_position(
+        cls, *, text: str, position: int, addto: str
+    ) -> str:
+        t = csut._add_to_external_comment_of_csvpath_at_position(
+            text=text, position=position, addto=addto
+        )
+        return t
