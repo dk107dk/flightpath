@@ -241,7 +241,7 @@ class MainWindow(QMainWindow):
             self.reactor.on_color_scheme_changed
         )
         if darkdetect.isDark():
-            self.on_color_scheme_changed()
+            self.reactor.on_color_scheme_changed()
         #
         # if the user clicked config AI in the splash
         #
