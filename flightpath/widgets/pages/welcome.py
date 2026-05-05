@@ -107,7 +107,7 @@ class Welcome(QWidget):
     def on_click_copy_in(self) -> None:
         csvps = FileCollector.csvpaths_filter(self.main.csvpath_config)
         csvs = FileCollector.csvs_filter(self.main.csvpath_config)
-        afilter = f"{csvps};;{csvs}"
+        afilter = f"{csvps};;{csvs};;Other content (*.md *.txt *.json *.log *.ini);;Scripts (*.bat *.sh *.py *.sql);;Other (*.*)"
         #
         # find dir to copy into
         #

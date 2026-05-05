@@ -195,7 +195,6 @@ class MessageUtility:
         box.setInformativeText(msg)
         box.setStandardButtons(std_buttons)
         box.setDefaultButton(def_button)
-        cls._z(box)
         ret = box.exec()
         ret = ret == truth_button
         return ret
@@ -217,7 +216,6 @@ class MessageUtility:
         box.setWindowTitle(title)
         if text is not None:
             box.setTextValue(text)
-        cls._z(box)
         ok = box.exec()
         text = box.textValue()
         return (text, ok)
