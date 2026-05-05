@@ -60,6 +60,7 @@ from csvpath.managers.integrations.sqlite.sqlite_result_listener import (
     SqliteResultListener,
 )
 from csvpath.managers.files.files_listener import FilesListener
+from csvpath.managers.files.files_activation_listener import FileActivationListener
 from csvpath.managers.paths.paths_listener import PathsListener
 from csvpath.managers.integrations.otlp.otlp_result_listener import (
     OpenTelemetryResultListener,
@@ -76,7 +77,6 @@ from csvpath.managers.integrations.otlp.otlp_paths_listener import (
 from csvpath.managers.integrations.otlp.otlp_file_listener import (
     OpenTelemetryFileListener,
 )
-from csvpath.managers.files.files_activation_listener import FileActivationListener
 from csvpath.managers.integrations.sftp.sftp_sender import SftpSender
 from csvpath.managers.integrations.sftpplus.sftpplus_listener import SftpPlusListener
 from csvpath.managers.integrations.ckan.ckan_listener import CkanListener
@@ -105,3 +105,23 @@ class Hidden:
     def __init__(self, skip=True) -> None:
         ...
         SSHClient()
+
+        """
+        import importlib, sys
+
+        modules_to_check = [
+            "smart_open",
+            "smart_open.ssh",
+            "smart_open.local_file",
+            "smart_open.s3",
+            "smart_open.http",
+            "paramiko",
+        ]
+
+        for mod in modules_to_check:
+            try:
+                m = importlib.import_module(mod)
+                print(f"  OK  {mod} — {m.__file__}")
+            except ImportError as e:
+                print(f"  MISSING  {mod}: {e}")
+        """
