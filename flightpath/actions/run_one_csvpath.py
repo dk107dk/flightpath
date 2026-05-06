@@ -84,7 +84,11 @@ class RunOneCsvpath:
             cwd = os.path.abspath(self.main.state.cwd)
             if not cwd.endswith("/"):
                 cwd = f"{cwd}/"
+            #
+            cwd = "/Users/davidkershaw/Library/Containers/com.flightpathdata.flightpath/Data/FlightPath/"
+            #
             print(f"runwonecsvpath: cwd: {cwd}")
+            print(f"runonescs: {repr(cwd)}")
             filepath = FileCollector.select_file(
                 parent=self.my_parent,
                 cwd=cwd,
