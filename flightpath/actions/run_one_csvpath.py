@@ -90,7 +90,7 @@ class RunOneCsvpath:
                 callback=self.run_one_csvpath_2,
                 args={"csvpath": csvpath, "position": position},
             )
-            return
+            # return
         self.run_one_csvpath_2(filepath, csvpath=csvpath, position=position)
 
     def run_one_csvpath_2(self, filepath, *, csvpath: str, position=None) -> None:

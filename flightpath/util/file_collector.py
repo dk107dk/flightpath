@@ -30,13 +30,25 @@ class FileCollector:
 
     @classmethod
     def select_file(
-        cls, *, parent: QWidget, cwd: str, title: str, file_type_filter: str
+        cls, *, parent: QWidget, cwd: str, title: str, file_type_filter: str, **kwargs
     ) -> str:
         #
-        # selects a single file. if the file is not in the project's folder tree it will be copied in.
+        # WARNING: this class has had trouble on MacOS picking files outside the sandbox
+        # and copying them into the sandbox. it worked in the first 3 releases but breaks
+        # (gracefully, in a does-nothing way) in the 4th release.
         #
-        # have to be careful about the use of the meut methods. apple's sandbox requires us to stay on
-        # one thread, so we have to exec() not show().
+        #
+        # selects a single file. if the file is not in the project's folder tree it will
+        # be copied in.
+        #
+        # have to be careful about the use of the meut methods. a̶p̶p̶l̶e̶'̶s̶ ̶s̶a̶n̶d̶b̶o̶x̶ ̶r̶e̶q̶u̶i̶r̶e̶s̶
+        # u̶s̶ ̶t̶o̶ ̶s̶t̶a̶y̶ ̶o̶n̶ ̶#̶ ̶o̶n̶e̶ ̶t̶h̶r̶e̶a̶d̶,̶ ̶s̶o̶ ̶w̶e̶ ̶h̶a̶v̶e̶ ̶t̶o̶ ̶e̶x̶e̶c̶(̶)̶ ̶n̶o̶t̶ ̶s̶h̶o̶w̶(̶)̶
+        #
+        # after many attempts, i'm at a loss as to how to get the mac sandbox to work again.
+        # that said it is probably not a threads issue; more likely the change in code-
+        # signing we did between release 3 and 4, even though i can't see what change could
+        # have that effect. regardless, we used it in exactly 2 places and one of those uses
+        # needed to be removed anyway, so we're just working around the sandbox for now.
         #
         print(f"file_col: select_file: cwd: {cwd}")
         #
@@ -67,12 +79,9 @@ class FileCollector:
         the_path = None
         if d.exec():
             paths = d.selectedFiles()
+            print(f"raw selected path: {repr(paths[0])}")
+            print(f"path type: {type(paths[0])}")
             the_path = paths[0]
-            with open(the_path, "r") as src:
-                with open(
-                    os.path.expanduser("~/Desktop/test_static_path.txt"), "w"
-                ) as snk:
-                    snk.write(src.read())
             if not the_path.startswith(cwd):
                 name = os.path.basename(the_path)
                 new_name = os.path.basename(name)

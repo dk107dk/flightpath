@@ -12,16 +12,16 @@ from PySide6.QtWidgets import (
     QSpacerItem,
 )
 
-from csvpath.util.nos import Nos
 from csvpath.util.box import Box
 
 from flightpath.dialogs.find_file_by_reference_dialog import FindFileByReferenceDialog
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.dialogs.new_run_dialog import NewRunDialog
-from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.help_finder import HelpFinder
+
+from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.file_collector import FileCollector
+from flightpath.util.os_utility import OsUtility as osut
 
 
 class Welcome(QWidget):
@@ -105,13 +105,14 @@ class Welcome(QWidget):
         self._run_one_time = None
 
     def on_click_copy_in(self) -> None:
-        csvps = FileCollector.csvpaths_filter(self.main.csvpath_config)
-        csvs = FileCollector.csvs_filter(self.main.csvpath_config)
-        afilter = f"{csvps};;{csvs};;Other content (*.md *.txt *.json *.log *.ini);;Scripts (*.bat *.sh *.py *.sql);;Other (*.*)"
+        # csvps = FileCollector.csvpaths_filter(self.main.csvpath_config)
+        # csvs = FileCollector.csvs_filter(self.main.csvpath_config)
+        # afilter = f"{csvps};;{csvs};;Other content (*.md *.txt *.json *.log *.ini);;Scripts (*.bat *.sh *.py *.sql);;Other (*.*)"
         #
         # find dir to copy into
         #
-        cwd = self.main.state.cwd
+        # cwd = self.main.state.cwd
+        """
         cpath = self.main.sidebar.current_path
         cpath = cpath if cpath is not None else ""
         cpath = cpath.rstrip(os.sep)
@@ -126,6 +127,10 @@ class Welcome(QWidget):
         FileCollector.select_file(
             parent=self, cwd=cwd, title="Select File", file_type_filter=afilter
         )
+        """
+        cwd = self.main.state.cwd
+        o = osut.file_system_open_cmd()
+        os.system(f'{o} "{cwd}"')
 
     def on_click_run(self) -> None:
         self._new_run()

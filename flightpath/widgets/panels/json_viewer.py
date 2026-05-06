@@ -27,7 +27,6 @@ from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.style_utils import StyleUtility as stut
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
-from flightpath.util.file_collector import FileCollector
 from flightpath.util.editable import EditStates
 
 
@@ -174,6 +173,10 @@ class JsonViewer(QWidget):
         return f"{self.function}.json"
 
     def on_double_click(self, index):
+        print(
+            "on_double_click: action disabled, we aren't adding paths to descriptors here anymore"
+        )
+        """
         if self.editable == EditStates.UNEDITABLE:
             return
         item = index.internalPointer()
@@ -209,6 +212,7 @@ class JsonViewer(QWidget):
                 ),
             )
             item.value = path
+        """
 
     def _set_modified(self, t: bool) -> None:
         if self.editable == EditStates.NO_SAVE_NO_CTX:
@@ -477,6 +481,10 @@ class JsonViewer(QWidget):
         self._set_modified(True)
 
     def _add_csvpath(self) -> None:
+        print(
+            "_add_csvpath: action disabled, we aren't adding paths to descriptors here anymore"
+        )
+        """
         index = self.view.currentIndex()
         parent = index.internalPointer()
         FileCollector.select_file(
@@ -487,6 +495,7 @@ class JsonViewer(QWidget):
             callback=self._add_csvpath_complete,
             args={"parent": parent},
         )
+        """
 
     def _add_csvpath_complete(self, path: str, *, parent) -> None:
         self.model.beginResetModel()
