@@ -1,6 +1,7 @@
 import json
 import os
 import traceback
+from pathlib import Path
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -121,9 +122,12 @@ class RunOneCsvpath:
                 title="No File",
                 msg=msg,
             )
-
             return
-        if not filepath.startswith(self.main.state.cwd):
+        filepath = str(Path(filepath).resolve())
+        cwd = str(Path(self.main.state.cwd).resolve())
+        #print(f"oneone: filepath: {filepath}")
+        #print(f"oneone: cwd: {cwd}")
+        if not filepath.startswith(cwd):
             meut.warning2(
                 parent=self.main,
                 title="Unavailable",
