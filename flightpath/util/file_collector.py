@@ -76,6 +76,8 @@ class FileCollector:
             QFileDialog.Option.DontResolveSymlinks
             | QFileDialog.Option.ReadOnly
             | QFileDialog.Option.DontUseCustomDirectoryIcons
+            # exp
+            # | QFileDialog.Option.DontUseNativeDialog
         )
         print(f"fcollector: setting directory: {cwd}")
         d.setDirectory(cwd)

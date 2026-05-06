@@ -31,6 +31,7 @@ from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.log_utility import LogUtility as lout
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.csvpath_utility import CsvpathUtility as csut
+from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.editable import EditStates
 
 
@@ -81,14 +82,20 @@ class RunOneCsvpath:
         if filepath is False:
             return
         if filepath is None:
+            #
+            # here we'll try to get the project root to open. on mac this is not going
+            # to work if the user has somehow pinned their most recent cwd elsewhere.
+            # unfortunately the mac user will not be able to see their own sandboxed
+            # desktop files, only the non-sandboxed ones and the mac dialog will resist
+            # being set to a specific directory. besides trying here, and possibly
+            # failing, the best we can do is give a reminder that the mac file dialog
+            # has a search field that will find sandboxed files.
+            #
             cwd = os.path.abspath(self.main.state.cwd)
             if not cwd.endswith("/"):
                 cwd = f"{cwd}/"
-            #
-            cwd = "/Users/davidkershaw/Library/Containers/com.flightpathdata.flightpath/Data/FlightPath/"
-            #
-            print(f"runwonecsvpath: cwd: {cwd}")
-            print(f"runonescs: {repr(cwd)}")
+            print(f"runone: cwd: {cwd}")
+            print(f"runone: repr: {repr(cwd)}")
             filepath = FileCollector.select_file(
                 parent=self.my_parent,
                 cwd=cwd,
@@ -103,11 +110,18 @@ class RunOneCsvpath:
         if csvpath is None:
             raise ValueError("Csvpath cannot be None")
         if filepath is None:
+            msg = "No file was selected."
+            if osut.is_mac():
+                msg = f"{msg} If you do not see expected files try using search."
+            else:
+                msg = f"{msg} Cannot continue."
+
             meut.warning2(
                 parent=self.main,
                 title="No File",
-                msg="No file was selected. Cannot continue.",
+                msg=msg,
             )
+
             return
         if not filepath.startswith(self.main.state.cwd):
             meut.warning2(
