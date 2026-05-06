@@ -58,8 +58,6 @@ class FileCollector:
         # have that effect. regardless, we used it in exactly 2 places and one of those uses
         # needed to be removed anyway, so we're just working around the sandbox for now.
         #
-        print(f"file_col: select_file: cwd: {cwd}")
-        #
         # check if base copy-to is a file. if it is, user must select a dir in the
         # left-hand navigator.
         #
@@ -79,7 +77,9 @@ class FileCollector:
             # exp -- this is terrible. avoid if possible!
             # | QFileDialog.Option.DontUseNativeDialog
         )
-        print(f"fcollector: setting directory: {cwd}")
+        print(f"FileCollector: setting directory: {cwd}")
+        if not cwd.endswith("/"):
+            cwd = f"{cwd}/"
         d.setDirectory(cwd)
         d.setFileMode(QFileDialog.FileMode.ExistingFile)
         d.setViewMode(QFileDialog.ViewMode.List)
