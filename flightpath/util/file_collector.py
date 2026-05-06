@@ -76,7 +76,7 @@ class FileCollector:
             QFileDialog.Option.DontResolveSymlinks
             | QFileDialog.Option.ReadOnly
             | QFileDialog.Option.DontUseCustomDirectoryIcons
-            # exp
+            # exp -- this is terrible. avoid if possible!
             # | QFileDialog.Option.DontUseNativeDialog
         )
         print(f"fcollector: setting directory: {cwd}")
@@ -91,8 +91,6 @@ class FileCollector:
         the_path = None
         if d.exec():
             paths = d.selectedFiles()
-            print(f"raw selected path: {repr(paths[0])}")
-            print(f"path type: {type(paths[0])}")
             the_path = paths[0]
             if check_cwd is True and not the_path.startswith(cwd):
                 meut.warning2(
