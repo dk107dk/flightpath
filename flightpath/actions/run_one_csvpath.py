@@ -87,15 +87,25 @@ class RunOneCsvpath:
                 title="Select Data File",
                 file_type_filter=FileCollector.csvs_filter(self.main.csvpath_config),
                 do_not_copy_if_in=True,
+                check_cwd=False,
             )
         self.run_one_csvpath_2(filepath, csvpath=csvpath, position=position)
 
     def run_one_csvpath_2(self, filepath, *, csvpath: str, position=None) -> None:
+        if csvpath is None:
+            raise ValueError("Csvpath cannot be None")
         if filepath is None:
-            meut.message2(
+            meut.warning2(
                 parent=self.main,
                 title="No File",
                 msg="No file was selected. Cannot continue.",
+            )
+            return
+        if not filepath.startswith(self.main.state.cwd):
+            meut.warning2(
+                parent=self.main,
+                title="Unavailable",
+                msg="You must pick a file within the project",
             )
             return
         #

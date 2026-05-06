@@ -37,6 +37,7 @@ class FileCollector:
         title: str,
         file_type_filter: str,
         do_not_copy_if_in=True,
+        check_cwd: bool = True,
         **kwargs,
     ) -> str:
         #
@@ -76,6 +77,7 @@ class FileCollector:
             | QFileDialog.Option.ReadOnly
             | QFileDialog.Option.DontUseCustomDirectoryIcons
         )
+        print(f"fcollector: setting directory: {cwd}")
         d.setDirectory(cwd)
         d.setFileMode(QFileDialog.FileMode.ExistingFile)
         d.setViewMode(QFileDialog.ViewMode.List)
@@ -90,7 +92,7 @@ class FileCollector:
             print(f"raw selected path: {repr(paths[0])}")
             print(f"path type: {type(paths[0])}")
             the_path = paths[0]
-            if not the_path.startswith(cwd):
+            if check_cwd is True and not the_path.startswith(cwd):
                 meut.warning2(
                     parent=parent,
                     title="Unavailable",
