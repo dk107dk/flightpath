@@ -87,10 +87,7 @@ class RunOneCsvpath:
                 title="Select Data File",
                 file_type_filter=FileCollector.csvs_filter(self.main.csvpath_config),
                 do_not_copy_if_in=True,
-                callback=self.run_one_csvpath_2,
-                args={"csvpath": csvpath, "position": position},
             )
-            # return
         self.run_one_csvpath_2(filepath, csvpath=csvpath, position=position)
 
     def run_one_csvpath_2(self, filepath, *, csvpath: str, position=None) -> None:

@@ -30,7 +30,14 @@ class FileCollector:
 
     @classmethod
     def select_file(
-        cls, *, parent: QWidget, cwd: str, title: str, file_type_filter: str, **kwargs
+        cls,
+        *,
+        parent: QWidget,
+        cwd: str,
+        title: str,
+        file_type_filter: str,
+        do_not_copy_if_in=True,
+        **kwargs,
     ) -> str:
         #
         # WARNING: this class has had trouble on MacOS picking files outside the sandbox
@@ -69,6 +76,7 @@ class FileCollector:
             | QFileDialog.Option.ReadOnly
             | QFileDialog.Option.DontUseCustomDirectoryIcons
         )
+        d.setDirectory(cwd)
         d.setFileMode(QFileDialog.FileMode.ExistingFile)
         d.setViewMode(QFileDialog.ViewMode.List)
         d.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
@@ -83,14 +91,22 @@ class FileCollector:
             print(f"path type: {type(paths[0])}")
             the_path = paths[0]
             if not the_path.startswith(cwd):
-                name = os.path.basename(the_path)
-                new_name = os.path.basename(name)
-                if True:
-                    new_path = fiut.deconflicted_path(cwd, new_name)
-                    print(f"FileCollector: select_file: the_path: {the_path}")
-                    print(f"FileCollector: select_file: new_path: {new_path}")
-                    with DataFileReader(the_path, mode="rb") as the_file:
-                        with DataFileWriter(path=new_path, mode="wb") as new_file:
-                            new_file.write(the_file.read())
-                    the_path = new_path
+                meut.warning2(
+                    parent=parent,
+                    title="Unavailable",
+                    msg="You must pick a file within the project",
+                )
+                return
+            if do_not_copy_if_in is True:
+                return the_path
+            name = os.path.basename(the_path)
+            new_name = os.path.basename(name)
+            if True:
+                new_path = fiut.deconflicted_path(cwd, new_name)
+                print(f"FileCollector: select_file: the_path: {the_path}")
+                print(f"FileCollector: select_file: new_path: {new_path}")
+                with DataFileReader(the_path, mode="rb") as the_file:
+                    with DataFileWriter(path=new_path, mode="wb") as new_file:
+                        new_file.write(the_file.read())
+                the_path = new_path
         return the_path
