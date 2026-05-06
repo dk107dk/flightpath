@@ -81,9 +81,13 @@ class RunOneCsvpath:
         if filepath is False:
             return
         if filepath is None:
+            cwd = os.path.abspath(self.main.state.cwd)
+            if not cwd.endswith("/"):
+                cwd = f"{cwd}/"
+            print(f"runwonecsvpath: cwd: {cwd}")
             filepath = FileCollector.select_file(
                 parent=self.my_parent,
-                cwd=self.main.state.cwd,
+                cwd=cwd,
                 title="Select Data File",
                 file_type_filter=FileCollector.csvs_filter(self.main.csvpath_config),
                 do_not_copy_if_in=True,
