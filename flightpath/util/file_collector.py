@@ -68,19 +68,14 @@ class FileCollector:
         if d.exec():
             paths = d.selectedFiles()
             the_path = paths[0]
+            with open(the_path, "r") as src:
+                with open(
+                    os.path.expanduser("~/Desktop/test_static_path.txt"), "w"
+                ) as snk:
+                    snk.write(src.read())
             if not the_path.startswith(cwd):
                 name = os.path.basename(the_path)
                 new_name = os.path.basename(name)
-                print("skipping the possible renaming")
-                """
-                new_name, ok = meut.input(
-                    parent=parent,
-                    title="Copy into project",
-                    msg="Enter a name for the copy:",
-                    text=name,
-                )
-                if ok and new_name:
-                """
                 if True:
                     new_path = fiut.deconflicted_path(cwd, new_name)
                     print(f"FileCollector: select_file: the_path: {the_path}")
