@@ -171,10 +171,10 @@ class DataViewer(QWidget):
         if index.isValid() or row > -1:
             row = index.row()
             context_menu = QMenu(self)
-            xslt = self.path and (
+            xlsx = self.path and (
                 self.path.endswith("xlsx") or self.path.endswith("xls")
             )
-            if not xslt:
+            if not xlsx:
                 save_action = QAction()
                 save_action.setText("Save")
                 save_action.triggered.connect(self.on_save)
@@ -239,7 +239,7 @@ class DataViewer(QWidget):
                 to_new_action.triggered.connect(self._copy_to_new)
                 context_menu.addAction(to_new_action)
 
-            if not xslt:
+            if not xlsx:
                 toggle_action = QAction()
                 toggle_action.setText("Toggle view")
                 toggle_action.triggered.connect(self.toggle_grid_raw)
@@ -681,6 +681,10 @@ class DataViewer(QWidget):
             return
         ap = self.main.csvpath_config.archive_path
         ncp = self.main.csvpath_config.inputs_csvpaths_path
+        if self.path.endswith("xlsx") or self.path.endswith("xls"):
+            msg = "Saving an Xslx file converts the data to CSV."
+            self.on_save_as(info=msg)
+            return
         if (
             self.path.endswith(".jsonl")
             or self.path.endswith(".ndjson")

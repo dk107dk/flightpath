@@ -345,7 +345,7 @@ Detailed Run Configuration
                 {{data.match_validation_errors}}
         </td>
         <td class='right '>
-            You can choose to match lines with errors, rather than matching lines without errors, the default. This means that calling <i>collect()</i> or <i>next()</i> will return only the bad lines. Match on error is a mode called <i>match-mode</i>. You can learn more about the modes in the top right-hand documentation window.
+                You can choose to match lines with errors, rather than matching lines without errors, the default. This means that calling <i>collect()</i> or <i>next()</i> will return only the bad lines. Match on error is set with a mode called <i>return-mode</i>. <i>return-mode</i> can be set to <i>matches</i> or <i>no-matches</i>. You can learn more about the modes in the top right-hand documentation window.
         </td>
             <p>If this value is <i>None</i>, the value set in config.ini (see above) determines the behavior.
             </p>
@@ -378,7 +378,10 @@ Detailed Run Configuration
                 {{data.explain}}
         </td>
         <td class='right '>
-            When you set Explain Mode CsvPath Framework writes out a line-by-line, match-component-by-match-component explanation for why a line matched or did not match. You can learn more about the modes in the documentation window at the top-right.
+            When you set Explain Mode CsvPath Framework writes out a line-by-line, match-component-by-match-component explanation for why a line matched or did not match.
+                <p>
+                You can learn more about the modes in the documentation window at the top-right.
+                </p>
         </td>
     </tr>
 
@@ -390,7 +393,10 @@ Detailed Run Configuration
                 {{data.collect_when_not_matched}}
         </td>
         <td class='right '>
-                This setting determines if <i>collect()</i> results in a set of unmatched lines. It is not used in one-off runs in FlightPath. When you run a named-paths group any csvpath that uses this mode results in an <i>unmatched.csv</i> file with the other run results files. You can learn more about the modes in the documentation window at the top-right.
+                This setting determines if <i>collect()</i> results in a set of matched lines or unmatched lines. This field is set using <i>return-mode</i>. To return unmatched lines, set <i>return-mode:no-matches</i>.
+                <p>
+                You can learn more about the modes in the documentation window at the top-right.
+                </p>
         </td>
     </tr>
 

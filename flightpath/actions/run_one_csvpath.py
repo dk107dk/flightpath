@@ -95,8 +95,6 @@ class RunOneCsvpath:
             cwd = os.path.abspath(self.main.state.cwd)
             if not cwd.endswith("/"):
                 cwd = f"{cwd}/"
-            print(f"runone: cwd: {cwd}")
-            print(f"runone: repr: {repr(cwd)}")
             filepath = FileCollector.select_file(
                 parent=self.my_parent,
                 cwd=cwd,
@@ -125,8 +123,8 @@ class RunOneCsvpath:
             return
         filepath = str(Path(filepath).resolve())
         cwd = str(Path(self.main.state.cwd).resolve())
-        #print(f"oneone: filepath: {filepath}")
-        #print(f"oneone: cwd: {cwd}")
+        # print(f"oneone: filepath: {filepath}")
+        # print(f"oneone: cwd: {cwd}")
         if not filepath.startswith(cwd):
             meut.warning2(
                 parent=self.main,

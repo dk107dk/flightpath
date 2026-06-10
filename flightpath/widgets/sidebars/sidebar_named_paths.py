@@ -15,6 +15,8 @@ from flightpath.widgets.file_tree_model.lazy_treeview import LazyTreeView
 from flightpath.dialogs.new_run_dialog import NewRunDialog
 from flightpath.dialogs.paths_template_dialog import PathsTemplateDialog
 from flightpath.dialogs.webhooks_dialog import WebhooksDialog
+from flightpath.dialogs.transfers_dialog import TransfersDialog
+from flightpath.dialogs.sftp_servers_dialog import SftpServersDialog
 
 from flightpath.widgets.help.plus_help import HelpHeaderView
 from flightpath.util.message_utility import MessageUtility as meut
@@ -151,6 +153,14 @@ class SidebarNamedPaths(SidebarRightBase):
         self.webhook_action.setText("Set webhooks")
         self.webhook_action.triggered.connect(self._webhooks)
 
+        self.transfers_action = QAction()
+        self.transfers_action.setText("Set transfers")
+        self.transfers_action.triggered.connect(self._transfers)
+
+        self.sftp_sources_action = QAction()
+        self.sftp_sources_action.setText("Set SFTP sources")
+        self.sftp_sources_action.triggered.connect(self._set_sftp_sources)
+
         self.delete_action = QAction()
         self.delete_action.setText("Permanent delete")
         self.delete_action.triggered.connect(self._delete_paths_view_item)
@@ -163,6 +173,8 @@ class SidebarNamedPaths(SidebarRightBase):
         self.context_menu.addAction(self.copy_action)
         self.context_menu.addAction(self.template_action)
         self.context_menu.addAction(self.webhook_action)
+        self.context_menu.addAction(self.transfers_action)
+        self.context_menu.addAction(self.sftp_sources_action)
         self.context_menu.addAction(self.find_data_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
@@ -210,11 +222,15 @@ class SidebarNamedPaths(SidebarRightBase):
                 self.webhook_action.setVisible(True)
                 self.copy_action.setVisible(True)
                 self.template_action.setVisible(True)
+                self.transfers_action.setVisible(True)
+                self.sftp_sources_action.setVisible(True)
                 self.find_data_action.setVisible(True)
             elif nos.isfile():
                 self.delete_action.setVisible(False)
                 self.new_run_action.setVisible(False)
                 self.webhook_action.setVisible(False)
+                self.transfers_action.setVisible(False)
+                self.sftp_sources_action.setVisible(False)
                 self.copy_action.setVisible(True)
                 self.template_action.setVisible(False)
                 self.find_data_action.setVisible(True)
@@ -222,6 +238,8 @@ class SidebarNamedPaths(SidebarRightBase):
                 self.delete_action.setVisible(True)
                 self.new_run_action.setVisible(True)
                 self.webhook_action.setVisible(True)
+                self.transfers_action.setVisible(True)
+                self.sftp_sources_action.setVisible(True)
                 self.copy_action.setVisible(False)
                 self.template_action.setVisible(True)
                 self.find_data_action.setVisible(True)
@@ -231,10 +249,24 @@ class SidebarNamedPaths(SidebarRightBase):
                 self.copy_action.setVisible(True)
                 self.find_data_action.setVisible(False)
                 self.webhook_action.setVisible(False)
+                self.transfers_action.setVisible(False)
+                self.sftp_sources_action.setVisible(False)
                 self.template_action.setVisible(False)
 
             if global_pos:
                 self.context_menu.exec(global_pos)
+
+    def _transfers(self) -> None:
+        index = self.view.currentIndex()
+        if index.isValid():
+            path = self.model.filePath(index)
+            r = self.main.csvpath_config.get(section="inputs", name="csvpaths")
+            if not path.startswith(r):
+                raise ValueError(f"Path to item {path} doesn't start with {r}")
+            path = path[len(r) + 1 :]
+            name = pathu.parts(path)[0]
+            dialog = TransfersDialog(main=self.main, name=name, parent=self)
+            dialog.show_dialog()
 
     def _webhooks(self) -> None:
         index = self.view.currentIndex()
@@ -259,3 +291,31 @@ class SidebarNamedPaths(SidebarRightBase):
             name = pathu.parts(path)[0]
             dialog = PathsTemplateDialog(main=self.main, name=name, parent=self)
             dialog.show_dialog()
+
+    def _current_named_paths_by_index(self) -> str:
+        index = self.view.currentIndex()
+        if index is not None:
+            path = self.model.filePath(index)
+            r = self.main.csvpath_config.get(section="inputs", name="csvpaths")
+            if not path.startswith(r):
+                raise ValueError(f"Path to item {path} doesn't start with {r}")
+            path = path[len(r) + 1 :]
+            name = pathu.parts(path)[0]
+            return name
+        return None
+
+    def _set_sftp_sources(self):
+        name = self._current_named_paths_by_index()
+        config = self.main.csvpaths.paths_manager.describer.get_config(name)
+        configs = config.destinations
+        self.sftp_sources_dialog = SftpServersDialog(
+            parent=self, main=self.main, name=name, configs=configs
+        )
+        self.main.show_now_or_later(self.sftp_sources_dialog)
+
+    def set_sftps(self, name, configs):
+        config = self.main.csvpaths.paths_manager.describer.get_config(name)
+        print(f"dialog doset: {name}, config: {config}, configs: {configs}")
+        config.destinations = configs
+        self.main.csvpaths.paths_manager.describer.store_config(name, config)
+        print("sidebar doset: done")

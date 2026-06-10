@@ -58,7 +58,7 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
         if file:
             self.setFixedHeight(226)
         else:
-            self.setFixedHeight(260)
+            self.setFixedHeight(300)
 
         # foods/:1/data/:0/:filename
         self.template_ctl = QLineEdit()
@@ -92,6 +92,17 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
             form_layout.addRow("File to register: ", self.area)
         else:
             form_layout.addRow("Register files within: ", self.area)
+            self.regex_ctl = QLineEdit()
+            #
+            # add a help icon for regex
+            #
+            box = HelpIconPackager.add_help(
+                main=self.sidebar.main,
+                widget=self.regex_ctl,
+                on_help=self.on_help_regex,
+            )
+            box.setFixedHeight(30)
+            form_layout.addRow("Regex:", box)
 
         #
         # add a help icon for templates
@@ -134,7 +145,7 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
         self._csvpaths = None
 
     def warning(self, msg, title) -> None:
-        meut.warning2(parent=self, title=title, msg=msg)                
+        meut.warning2(parent=self, title=title, msg=msg)
 
     def _update_template(self) -> None:
         t = self.template_ctl.text()
@@ -175,6 +186,15 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
 
     def on_help_named_file(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("stage_data/named_file.md")
+        if md is None:
+            self.sidebar.main.helper.close_help()
+            return
+        self.sidebar.main.helper.get_help_tab().setMarkdown(md)
+        if not self.sidebar.main.helper.is_showing_help():
+            self.sidebar.main.helper.on_click_help()
+
+    def on_help_regex(self) -> None:
+        md = HelpFinder(main=self.sidebar.main).help("stage_data/regex.md")
         if md is None:
             self.sidebar.main.helper.close_help()
             return

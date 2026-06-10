@@ -17,7 +17,8 @@ from .tabs.sql_tab import SqlTab
 from .tabs.marquez_tab import MarquezTab
 from .tabs.scripts_tab import ScriptsTab
 from .tabs.sftp_tab import SftpTab
-from .tabs.sftpplus_tab import SftpPlusTab
+
+# from .tabs.sftpplus_tab import SftpPlusTab
 from .tabs.slack_tab import SlackTab
 from .tabs.sqlite_tab import SqliteTab
 
@@ -81,7 +82,7 @@ class ListenersForm(BlankForm):
             groups["otlp"] = OtlpTab(form=self)
             groups["scripts"] = ScriptsTab(form=self)
             groups["sftp"] = SftpTab(form=self)
-            groups["sftpplus"] = SftpPlusTab(form=self)
+            # groups["sftpplus"] = SftpPlusTab(form=self)
             groups["slack"] = SlackTab(form=self)
             groups["sql"] = SqlTab(form=self)
             groups["sqlite"] = SqliteTab(form=self)

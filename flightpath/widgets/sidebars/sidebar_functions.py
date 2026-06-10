@@ -111,6 +111,7 @@ class SidebarFunctions(QWidget):
                 "onmatch",
                 "renew",
                 "strict",
+                "tmp",
             ],
             SidebarFunctions.MODES: [
                 "error-mode",

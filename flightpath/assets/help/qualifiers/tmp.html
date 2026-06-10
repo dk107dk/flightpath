@@ -2,21 +2,21 @@
     {% include "templates/styles.html" %}
     <body>
         <h2>
-            Qualifier: strict
+            Qualifier: tmp
         </h2>
         <p>
-        <i>strict</i> can be applied to decimals and integers to force
-        them to be interpreted in a way that matches their purpose, visually
-        as well as practically.
+        <i>tmp</i> can be set on variables to keep them from persisting in
+           the vars.json. This can be helpful for any variables that may grow
+           to a large size. Note that <i>renew</i> can also be part of a
+           strategy for handling potentially large variables.
         </p>
         <p>
-            Specifically, <i>strict</i>:
-            <ul>
-                <li> Requires that decimals have a decimal point, meaning a '.' character,
-                        in keeping with having a fractional value, despite that fractional value being zero.
-                <li> Disallows whole number integers that have a decimal point, despite
-                        having no fractional value, in keeping with functionally being a whole number.
-            </ul>
+           Currently, <i>tmp</i> cannot be applied to the variables that are
+           created by functions behind the scenes for their own purposes.
+           These variables can be cleared using <i>tmp</i> but only if done
+           more intentionally by declaring the variable yourself. Those behind
+           the scenes variables that are named by an random ID cannot be cleared
+           by <i>tmp</i> at this time.
         </p>
         <h3 style="margin-top:25px;">
             Availability
@@ -35,13 +35,13 @@
             </tr>
             <tr>
                 <td class='value border-bottom border-ltr centered' >
+                   No
+                </td>
+                <td class='value border-bottom border-ltr centered' >
+                   No
+                </td>
+                <td class='value border-bottom border-ltr centered' >
                    Yes
-                </td>
-                <td class='value border-bottom border-ltr centered' >
-                   No
-                </td>
-                <td class='value border-bottom border-ltr centered' >
-                   No
                 </td>
             </tr>
         </table>
@@ -52,18 +52,16 @@
             <tr>
                 <td width="300"  class="about border-ltr border-bottom code">
                         <p>
-                        This csvpath requires that the <i>age</i> header values track months
-                        as a partial value. For example, in April 32.4 would mean
-                        32 years old, born in January.
+                        This csvpath sets the <i>@soda</i> variable to <i>"Coke"</i>
+                        on odd lines and clears <i>@soda</i> at the end of the run
+                        so it won't be stored in vars.json.
                         </p>
                 </td>
                 <td class='value border-ltr border-bottom code'>
 <code>
-
 $[1*] [
-        decimal.age.notnone.strict(#1),
+    odd() -> @soda.tmp = "Coke"
 ]
-
 </code>
                 </td>
             </tr>

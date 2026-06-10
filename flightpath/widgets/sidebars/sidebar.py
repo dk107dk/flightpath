@@ -774,6 +774,10 @@ class Sidebar(QWidget):
                 title="Incomplete",
             )
             return
+
+        regex = None
+        if hasattr(self.stage_dialog, "regex"):
+            regex = self.stage_dialog.regex_ctl.text()
         named_file_name = self.stage_dialog.named_file_name_ctl.text()
         named_file_name = named_file_name.strip() if named_file_name else ""
 
@@ -797,7 +801,11 @@ class Sidebar(QWidget):
             else:
                 if self.stage_dialog.separate_ctl.isChecked():
                     paths.file_manager.add_named_files_from_dir(
-                        name=None, dirname=name, template=template, recurse=recurse
+                        name=None,
+                        dirname=name,
+                        template=template,
+                        recurse=recurse,
+                        regex=regex,
                     )
                 else:
                     if not named_file_name or named_file_name.strip() == "":
