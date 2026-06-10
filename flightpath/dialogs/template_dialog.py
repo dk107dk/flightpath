@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (  # pylint: disable=E0611
 )
 from PySide6.QtCore import Qt  # pylint: disable=E0611
 
+from csvpath.util.template_util import TemplateUtility as temu
+
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
@@ -74,16 +76,28 @@ class TemplateDialog(QDialog):
 
     def _do_set(self, end: str, mgr) -> None:
         t = self.template_ctl.text()
-        t, invalid = TemplateDialog.clean_or_reject(t=t, end=end)
-        self.template_ctl.setText(t)
+        try:
+            t, invalid = TemplateDialog.clean_or_reject(t=t, end=end)
+        except ValueError as e:
+            meut.warning2(
+                parent=self,
+                msg=str(e),
+                title="Invalid",
+            )
+            return
+        #
+        # we expect value errors, but if we didn't get one of those for some reason
+        # let's handle it here too.
+        #
         if invalid is True:
             self.template_ctl.setText("")
             meut.warning2(
                 parent=self,
-                msg="Invalid template. Setting empty string.",
+                msg="Invalid template",
                 title="Invalid",
             )
             return
+        self.template_ctl.setText(t)
         mgr.describer.store_template(self.name, t)
         #
         # if we updated the file we need to make sure it's closed before we click on it
@@ -102,6 +116,12 @@ class TemplateDialog(QDialog):
             raise ValueError("End must start with :")
         if t is None:
             return ("", True)
+        _, why = temu.validate(t, end == ":filename")
+        if _ is False:
+            print(f"raising exvr: {_}, {why}")
+            raise ValueError(why)
+        return (t, False)
+        """
         t = t.strip()
         t = t.replace("//", "/")
         t = t.replace("\\", "/")
@@ -129,6 +149,7 @@ class TemplateDialog(QDialog):
                 elif i > 0 and _[0] not in "0123456789":
                     return ("", True)
         return (t, False)
+        """
 
     def on_help_template(self) -> None:
         md = HelpFinder(main=self.sidebar.main).help("templates/template.md")

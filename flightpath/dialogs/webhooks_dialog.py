@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (  # pylint: disable=E0611
 )
 from PySide6.QtCore import Qt  # pylint: disable=E0611
 
-from csvpath.managers.paths.paths_describer import Webhook, Webhooks, Header
+from csvpath.managers.paths.paths_descriptor import Webhook, Webhooks, Header
 
 from flightpath.dialogs.webhooks.webhooks_panel import WebhooksPanel
 from flightpath.widgets.help.plus_help import HelpIconPackager

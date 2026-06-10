@@ -4,11 +4,27 @@ Templates use the location of arriving data to structure the archive of results.
 
 Templates are completely optional. If you don't need a template for a named-paths group, it is of course easier to not add one.
 
-### Usage and examples
+A template has the form of a path. Within the path you can use tokens to pull segments names from the arrival path. Tokens have a colon followed by a number or word. The tokens are:
+- colon-number (e.g. `:3`) are a pointer to a path segment from the incoming file's original location
+- datetime tokens
 
-A template has the form of a path. Within the path you can use colon-number tokens to pull segments names from the arrival path. The colon-number tokens are 0-based.
+The colon-number tokens are 0-based.
+
+The datetime tokens are the current datetime values:
+- `:year`
+- `:month`
+- `:month_name`
+- `:day`
+- `:hour`
+- `:hour_24`
+- `:minute`
+- `:second`
+
+The `:month_name` token gives the full English month name. The `:hour_24` token gives current hour in 00-23.
 
 You must include a `:run_dir` token. `:run_dir` is the placeholder for a run's time-stamped main directory. The `:run_dir` holds the directories of the individual csvpaths in the run and the run's `manifest.json` file. `:run_dir` is not optional.
+
+### Usage and examples
 
 For example, a template like:
 
