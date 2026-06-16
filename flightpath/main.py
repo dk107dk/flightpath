@@ -1,5 +1,4 @@
 from typing import Callable
-from pathlib import Path
 import sys
 import os
 import csv
@@ -350,6 +349,8 @@ class MainWindow(QMainWindow):
 
     @selected_file_path.setter
     def selected_file_path(self, path: str) -> None:
+        if path and not isinstance(path, str):
+            raise ValueError("Path cannot be a {type(path)}: {path}")
         self._selected_file_path = path
 
     def log(self, msg: str) -> None:
@@ -391,9 +392,9 @@ class MainWindow(QMainWindow):
         #
         self.threadpool = QThreadPool.globalInstance()
         #
-        # this should be Path() not None?
+        # was Path() not None? None seems righter. Also we expect a str, not Path.
         #
-        self.selected_file_path = Path()
+        self.selected_file_path = None
         central_widget = self.takeCentralWidget()
         if central_widget:
             central_widget.deleteLater()
@@ -929,6 +930,8 @@ class MainWindow(QMainWindow):
     def read_validate_and_display_file_for_path(
         self, path: str, editable=EditStates.EDITABLE, *, finished_callback=None
     ) -> QRunnable:
+        if path is None:
+            raise ValueError("Path cannot be None")
         if path in self._is_opening:
             return
         self._is_opening.append(path)
@@ -936,6 +939,11 @@ class MainWindow(QMainWindow):
         # callbacks passed into this method should be watched closely. the find data by ref dialog
         # had trouble getting them to behave correctly.
         #
+        sheet = None
+        r = path.rfind("#")
+        if r > -1:
+            sheet = path[r + 1 :]
+            path = path[0:r]
         info = QFileInfo(path)
         worker = None
         nos = Nos(path)
@@ -951,6 +959,7 @@ class MainWindow(QMainWindow):
                 delimiter=self.content.toolbar.delimiter_char(),
                 quotechar=self.content.toolbar.quotechar_char(),
                 editable=editable,
+                sheet=sheet,
             )
             worker.signals.finished.connect(self.update_data_views)
             if finished_callback is not None:
@@ -1204,7 +1213,6 @@ class MainWindow(QMainWindow):
             and self.config.ready is True
             and self.config.toolbar._button_save.isEnabled()
         )
-        # print(f"_has_config_changes: ret: {ret}")
         # from csvpath.util.log_utility import LogUtility as lout
         # lout.log_brief_trace()
         return ret
@@ -1213,7 +1221,6 @@ class MainWindow(QMainWindow):
         if self._asking_save_config is True:
             return
         if self._has_config_changes():
-            # print(f"question_save_config_if: doing meut")
             self._asking_save_config = True
             meut.yesNo2(
                 parent=self,
@@ -1223,20 +1230,17 @@ class MainWindow(QMainWindow):
                 args={"callback": callback},
             )
         elif callback:
-            # print(f"question_save_config_if: no changes, calling back {callback}")
             callback()
         else:
             ...
 
     @Slot(int)
     def _answer_save_config(self, answer, *, callback: Callable = None) -> None:
-        # print(f"_answer_save_config: answer: {answer}")
         if answer == QMessageBox.Yes:
             self.save_config_changes()
         self.reset_config_toolbar()
         self._asking_save_config = False
         if callback:
-            # print(f"_answer_save_config: calling back {callback}")
             callback()
 
     def open_config(self):
@@ -1286,7 +1290,6 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.please_close is True:
-            # print(f"closeEvent: pls close: accepting")
             event.accept()
             return
         if (
@@ -1295,7 +1298,6 @@ class MainWindow(QMainWindow):
             and not hasattr(self, "content")
             and not self._has_config_changes()
         ):
-            # print(f"xx: nothing setup: accepting")
             event.accept()
             return
         #
@@ -1310,18 +1312,15 @@ class MainWindow(QMainWindow):
         #
         accept = True
         if self._has_config_changes():
-            # print(f"xx: ignoring because has config changes: {self._has_config_changes()}")
             self.question_save_config_if(callback=self.finish_closing_if)
             event.ignore()
             accept = False
         unsaved = not self.content.all_files_are_saved()
         if unsaved is True:
-            # print(f"closeEvent: ignoring because unsaved: {unsaved}")
             self.content.close_all_tabs(callback=self.finish_closing_if)
             event.ignore()
             accept = False
         if accept is True:
-            # print(f"closeEvent: accepting because no reason not to")
             event.accept()
 
     def finish_closing_if(self) -> None:
@@ -1331,12 +1330,9 @@ class MainWindow(QMainWindow):
             and self.content.tab_widget.count() > 0
         ):
             ...
-            # print("finish closing if: not ready to close because tabs")
         elif self._has_config_changes():
-            # print("finish closing if: not ready to close because there are cofig changes")
             self.question_save_config_if(callback=self.finish_closing_if)
         else:
-            # print("finish closing if: ready to close. setting please_close = True")
             self.please_close = True
             QApplication.quit()
 

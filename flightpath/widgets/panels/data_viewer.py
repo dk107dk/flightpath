@@ -53,7 +53,10 @@ class DataViewer(QWidget):
         #
         self.my_parent = parent
         self.main = main
+
+        self._path = None
         self.path = self.main.selected_file_path if path is None else path
+
         self.main_layout = QStackedLayout()
         self.setLayout(self.main_layout)
         self.table_view = QTableView()
@@ -119,6 +122,16 @@ class DataViewer(QWidget):
             self.customContextMenuRequested.connect(self._show_uneditable_context_menu)
 
     @property
+    def path(self) -> str:
+        return self._path
+
+    @path.setter
+    def path(self, path: str) -> None:
+        if not isinstance(path, str):
+            raise ValueError(f"Path cannot be a {type(path)}: {path}")
+        self._path = path
+
+    @property
     def is_editable(self) -> bool:
         return self.editable == EditStates.EDITABLE
 
@@ -171,9 +184,7 @@ class DataViewer(QWidget):
         if index.isValid() or row > -1:
             row = index.row()
             context_menu = QMenu(self)
-            xlsx = self.path and (
-                self.path.endswith("xlsx") or self.path.endswith("xls")
-            )
+            xlsx = fiut.is_a(self.path, ["xlsx", "xls"])
             if not xlsx:
                 save_action = QAction()
                 save_action.setText("Save")

@@ -29,6 +29,8 @@ class FileUtility:
 
     @classmethod
     def is_a(cls, path: str, exts: list[str]) -> bool:
+        if path is None:
+            return False
         p = Path(path)
         s = p.suffix
         s = "" if s is None else s
