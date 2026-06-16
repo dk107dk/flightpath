@@ -5,22 +5,16 @@ from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
     QComboBox,
-    QMenu,
-    QMessageBox,
-    QInputDialog,
     QVBoxLayout,
     QSizePolicy,
 )
 
-from PySide6.QtGui import QPixmap, QAction, QGuiApplication
-from PySide6.QtCore import Qt, QSize, QModelIndex
+from PySide6.QtGui import QPixmap
+from PySide6.QtCore import Qt, QModelIndex
 from PySide6.QtWidgets import QFileSystemModel
 
-# from csvpath import CsvPaths
 from csvpath.util.nos import Nos
-from csvpath.util.path_util import PathUtility as pathu
 
-from flightpath.dialogs.stage_data_dialog import StageDataDialog
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.widgets.clickable_label import ClickableLabel
 from flightpath.widgets.custom_tree_view import CustomTreeView
@@ -29,13 +23,11 @@ from flightpath.widgets.sidebars.sidebar_named_files import SidebarNamedFiles
 from flightpath.widgets.file_tree_model.directory_filter_proxy_model import (
     DirectoryFilterProxyModel,
 )
-from flightpath.actions.csvpath_loader import CsvpathLoader
+from flightpath.widgets.sidebars.sidebar_actions import SidebarActions
+from flightpath.widgets.sidebars.sidebar_context_menu import SidebarContextMenuMaker
 from flightpath.util.help_finder import HelpFinder
-from flightpath.util.editable import EditStates
-from flightpath.util.os_utility import OsUtility as osut
 from flightpath.util.file_utility import FileUtility as fiut
 from flightpath.util.message_utility import MessageUtility as meut
-from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.util.string_utility import StringUtility as strut
 
 
@@ -51,6 +43,8 @@ class Sidebar(QWidget):
         #
         self.cutted = None
         self.copied = None
+        self.actions = SidebarActions(main=self.main, parent=self)
+
         #
         # we use the thread pool to run precache workers
         #
@@ -73,7 +67,7 @@ class Sidebar(QWidget):
         size = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.projects.setSizePolicy(size)
 
-        self.projects.activated.connect(self.on_project_changed)
+        self.projects.activated.connect(self.actions._on_project_changed)
         self.projects.setStyleSheet(
             "QComboBox { margin:1px; height:23px; padding-left:5px;}"
         )
@@ -102,20 +96,6 @@ class Sidebar(QWidget):
 
         self.stage_dialog = None
         self.load_dialog = None
-
-    def on_project_changed(self) -> None:
-        proj = self.projects.currentText()
-        if proj == self.main.state.current_project:
-            return
-        if proj == self.NEW_PROJECT:
-            self.new_project_name(callback=self._make_new_project)
-            return
-        #
-        # we need to clear the Config panel and reload it or let it lazy load
-        #
-        self.main.state.current_project = proj
-        self.main.load_state_and_cd()
-        self.main.cancel_config_changes()
 
     def new_project_name(self, callback) -> None:
         def ask():
@@ -152,21 +132,6 @@ class Sidebar(QWidget):
 
         ask()
 
-    def _make_new_project(self, proj: str) -> None:
-        if proj is None:
-            #
-            # reset the combobox back to the current project
-            #
-            index = self.projects.findText(self.main.state.current_project)
-            if index >= 0:
-                self.projects.setCurrentIndex(index)
-            return
-        else:
-            self.main.state.current_project = proj
-            self.main.load_state_and_cd()
-            self.main.cancel_config_changes()
-            return
-
     def _set_project_from_state(self) -> None:
         #
         # recreate all UI parts
@@ -180,23 +145,6 @@ class Sidebar(QWidget):
 
     def _build_combo(self) -> None:
         self.projects.clear()
-        """
-        proj = self.main.state.current_project
-        projs = os.path.join(self.main.state.home, self.main.state.projects_home)
-        nos = Nos(projs)
-        lst = nos.listdir(dirs_only=True)
-
-        #
-        # should not have to filter dirs because dirs_only=True, but stupidly the files
-        # version of Nos only filters for files. to-be-fixed soon!
-        #
-        # csvpath has a clear test: /Users/davidkershaw/dev/csvpath/tests/dirs/test_dirs_local.py
-        #
-        # ps = [p for p in lst if not Nos(os.path.join(projs, p)).isfile()]
-        #
-        ps = lst
-        ps.sort()
-        """
         proj = self.main.state.current_project
         ps = self._project_names()
         for p in ps:
@@ -310,9 +258,12 @@ class Sidebar(QWidget):
             self.file_model, self.file_navigator
         )
         self.file_navigator.setHeaderHidden(True)
+        #
+        #
+        #
+        self.context_menu_maker = SidebarContextMenuMaker(main=self.main, parent=self)
         self.file_navigator.setContextMenuPolicy(Qt.CustomContextMenu)
         self.file_navigator.customContextMenuRequested.connect(self._show_context_menu)
-        self._setup_file_navigator_context_menu()
         #
         # reconnect the nav so we react to clicking on files
         #
@@ -323,105 +274,6 @@ class Sidebar(QWidget):
         else:
             self.layout().addWidget(self.file_navigator)
 
-    def _setup_file_navigator_context_menu(self):
-        """Create the context menu for the file navigator."""
-        self.context_menu = QMenu(self)
-        self.rename_action = QAction()
-        self.open_location_action = QAction()
-        self.open_project_dir_action = QAction()
-        self.copy_path_action = QAction()
-        self.copy_full_path_action = QAction()
-        self.delete_action = QAction()
-        self.new_file_action = QAction()
-        self.save_file_action = QAction()
-        self.new_folder_action = QAction()
-        self.stage_data_action = QAction()
-        self.load_paths_action = QAction()
-        self.run_action = QAction()
-        self.generate_csvpath_action = QAction()
-        self.generate_csv_action = QAction()
-        self.explain_action = QAction()
-        #
-        #
-        #
-        self.line_number_action = QAction()
-        self.edit_jsonl_action = QAction()
-        #
-        # cut and paste
-        #
-        self.cut_action = QAction()
-        self.copy_action = QAction()
-        self.paste_action = QAction()
-
-        self.cut_action.setText("Cut")
-        self.copy_action.setText("Copy")
-        self.paste_action.setText("Paste")
-        self.rename_action.setText("Rename")
-        self.open_location_action.setText("Open directory")
-        self.copy_path_action.setText("Copy relative path")
-        self.copy_full_path_action.setText("Copy full path")
-        self.open_project_dir_action.setText("Open project directory")
-        self.delete_action.setText("Delete")
-        self.new_file_action.setText("New file")
-        self.save_file_action.setText("Save file")
-        self.new_folder_action.setText("New folder")
-        self.stage_data_action.setText("Stage data")
-        self.load_paths_action.setText("Load csvpaths")
-        self.edit_jsonl_action.setText("Edit as JSON")
-        self.generate_csvpath_action.setText("Generate csvpath")
-        self.generate_csv_action.setText("Generate CSV")
-        self.explain_action.setText("Explain this")
-        #
-        #
-        #
-        self.line_number_action.setText("line no")
-
-        self.rename_action.triggered.connect(self._rename_file_navigator_item)
-        self.open_location_action.triggered.connect(self._open_file_navigator_location)
-        self.copy_path_action.triggered.connect(self._copy_path)
-        self.copy_full_path_action.triggered.connect(self._copy_full_path)
-        self.open_project_dir_action.triggered.connect(self._open_project_dir)
-        self.delete_action.triggered.connect(self._delete_file_navigator_item)
-        self.new_file_action.triggered.connect(self._new_file_navigator_item)
-        self.save_file_action.triggered.connect(self._save_file_navigator_item)
-        self.new_folder_action.triggered.connect(self._new_folder_navigator_item)
-        self.stage_data_action.triggered.connect(self._stage_data)
-        self.load_paths_action.triggered.connect(self._load_paths)
-        self.cut_action.triggered.connect(self._cut)
-        self.copy_action.triggered.connect(self._copy)
-        self.paste_action.triggered.connect(self._paste)
-        self.edit_jsonl_action.triggered.connect(self._edit_as_json)
-        self.generate_csvpath_action.triggered.connect(self._generate_csvpath)
-        self.generate_csv_action.triggered.connect(self._generate_csv)
-        self.explain_action.triggered.connect(self._on_explain)
-
-        self.context_menu.addAction(self.edit_jsonl_action)
-        self.context_menu.addSeparator()
-
-        self.context_menu.addAction(self.save_file_action)
-        self.context_menu.addAction(self.rename_action)
-        self.context_menu.addAction(self.open_location_action)
-        self.context_menu.addAction(self.copy_path_action)
-        self.context_menu.addAction(self.copy_full_path_action)
-        self.context_menu.addAction(self.open_project_dir_action)
-        self.context_menu.addSeparator()
-        self.context_menu.addAction(self.cut_action)
-        self.context_menu.addAction(self.copy_action)
-        self.context_menu.addAction(self.paste_action)
-        self.context_menu.addSeparator()
-        self.context_menu.addAction(self.delete_action)
-        self.context_menu.addSeparator()
-        self.context_menu.addAction(self.new_file_action)
-        self.context_menu.addAction(self.new_folder_action)
-        self.context_menu.addSeparator()
-        self.context_menu.addAction(self.stage_data_action)
-        self.context_menu.addAction(self.load_paths_action)
-        self.context_menu.addAction(self.explain_action)
-        self.context_menu.addAction(self.generate_csvpath_action)
-        self.context_menu.addAction(self.generate_csv_action)
-        self.context_menu.addSeparator()
-        self.context_menu.addAction(self.line_number_action)
-
     def _has_llm(self) -> bool:
         m = self.main.csvpath_config.get(section="llm", name="model")
         if m is None:
@@ -431,209 +283,19 @@ class Sidebar(QWidget):
         m = self.main.csvpath_config.get(section="llm", name="api_base")
         return True
 
-    #
-    #
-    #
-    def _on_explain(self, activity: str = None) -> None:
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-        else:
-            path = self.main.state.cwd
-        #
-        # open file do this first because if any reason we blow up better
-        # to not have the ai tab showing without a file to act on.
-        #
-        self.main.read_validate_and_display_file_for_path(path)
-        #
-        # make sure tabs are visible and ai tab selected
-        #
-        self.main.rt_tabs_show()
-        self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
-        self.main.reactor.on_ai_explain()
-
     def _show_context_menu(self, position):
-        index = self.file_navigator.indexAt(position)
-        global_pos = self.file_navigator.viewport().mapToGlobal(position)
-        if index.isValid():
-            self.rename_action.setVisible(True)
-            self.open_location_action.setVisible(True)
-            self.copy_path_action.setVisible(True)
-            self.copy_full_path_action.setVisible(True)
-            self.open_project_dir_action.setVisible(False)
-            self.delete_action.setVisible(True)
-            #
-            # capture the location so we can create a new file or folder there
-            #
-            path = self.proxy_model.filePath(index)
-            self._last_path = path
-            nos = Nos(path)
-            if nos.isfile():
-                self.new_file_action.setVisible(False)
-                self.new_folder_action.setVisible(False)
-                ext = path[path.rfind(".") + 1 :]
-                #
-                # turn off load/stage/save operations. then (re)enable, if approprate.
-                #
-                self.save_file_action.setVisible(False)
-                self.load_paths_action.setVisible(False)
-                self.stage_data_action.setVisible(False)
-                if (
-                    ext
-                    in self.main.csvpath_config.get(
-                        section="extensions", name="csvpath_files"
-                    )
-                    or ext.lower() == "json"
-                ):
-                    self.load_paths_action.setVisible(True)
-                    self.explain_action.setVisible(True)
-                    self.explain_action.setEnabled(self._has_llm())
-                    self.generate_csvpath_action.setVisible(False)
-                    self.generate_csvpath_action.setEnabled(self._has_llm())
-                    self.generate_csv_action.setVisible(True)
-                    self.generate_csv_action.setEnabled(self._has_llm())
-                elif ext in self.main.csvpath_config.get(
-                    section="extensions", name="csv_files"
-                ):
-                    self.generate_csvpath_action.setVisible(True)
-                    self.generate_csvpath_action.setEnabled(self._has_llm())
-                    self.generate_csv_action.setVisible(False)
-                    self.generate_csv_action.setEnabled(self._has_llm())
-                    self.stage_data_action.setVisible(True)
-                    self.load_paths_action.setVisible(False)
-                    self.explain_action.setEnabled(False)
-                    self.explain_action.setVisible(False)
-                else:
-                    self.generate_csvpath_action.setVisible(False)
-                    self.generate_csv_action.setVisible(False)
-                    self.load_paths_action.setVisible(False)
-                    self.explain_action.setEnabled(False)
-                    self.explain_action.setVisible(False)
-                if (
-                    ext
-                    in self.main.csvpath_config.get(
-                        section="extensions", name="csvpath_files"
-                    )
-                    or ext
-                    in self.main.csvpath_config.get(
-                        section="extensions", name="csv_files"
-                    )
-                    or ext in ["md", "json", "txt"]
-                ):
-                    #
-                    # always visible. shouldn't have to reset visible here, but for now it
-                    # doesn't hurt to do it.
-                    #
-                    self.cut_action.setEnabled(True)
-                    self.cut_action.setVisible(True)
-                    self.copy_action.setEnabled(True)
-                    self.copy_action.setVisible(True)
-                    self.paste_action.setVisible(True)
-                    if self.cutted is None and self.copied is None:
-                        self.paste_action.setEnabled(False)
-                    else:
-                        #
-                        # cannot paste onto a file. for now let's be explicit about that
-                        #
-                        self.paste_action.setEnabled(False)
-                else:
-                    self.cut_action.setEnabled(False)
-                    self.copy_action.setEnabled(False)
-                    self.paste_action.setEnabled(False)
-                    self.explain_action.setVisible(False)
-                #
-                #
-                #
-                if path.endswith(".csv"):
-                    self.line_number_action.setVisible(True)
-                    self.line_number_action.setEnabled(False)
-                    #
-                    # WARNING: THIS CSVPATHS DOESN'T KNOW WHERE IT IS
-                    #
-                    csvpaths = self.main.csvpaths
-                    #
-                    # we aren't necessarily using cache -- tho in local projects, why not? so we
-                    # only set a path and use_cache temp. this whole operation is not super
-                    # efficient but it won't be noticable to the user and this settings shell game
-                    # doesn't add much. longer term a file info panel in rt-col or a floating label?
-                    #
-                    csvpaths.config.set(
-                        section="cache",
-                        name="path",
-                        value=f"{self.main.state.cwd}{os.sep}cache",
-                    )
-                    csvpaths.config.set(section="cache", name="use_cache", value="yes")
-                    c = csvpaths.file_manager.lines_and_headers_cacher.get_new_line_monitor(
-                        path
-                    ).physical_end_line_count
-                    self.line_number_action.setText(f"{c} lines")
-                else:
-                    self.line_number_action.setVisible(False)
-                if (
-                    path.endswith(".jsonl")
-                    or path.endswith(".ndjson")
-                    or path.endswith(".jsonlines")
-                ):
-                    self.edit_jsonl_action.setVisible(True)
-                else:
-                    self.edit_jsonl_action.setVisible(False)
-            else:
-                self.explain_action.setVisible(False)
-                self.line_number_action.setVisible(False)
-                self.edit_jsonl_action.setVisible(False)
-                #
-                # paste only if dir and cutted. cut only if file.
-                #
-                if self.cutted is not None or self.copied is not None:
-                    self.paste_action.setEnabled(True)
-                else:
-                    self.paste_action.setEnabled(False)
-                self.cut_action.setEnabled(False)
-                self.copy_action.setEnabled(False)
-                #
-                self.new_file_action.setVisible(True)
-                self.new_folder_action.setVisible(True)
-                self.load_paths_action.setVisible(True)
-                self.stage_data_action.setVisible(True)
-        else:
-            #
-            # was in the tree view, but not over an item. this is where the new option
-            # needs to happen.
-            #
-            self.save_file_action.setVisible(False)
+        self.context_menu_maker.show_context_menu(position)
 
-            self.rename_action.setVisible(False)
-            self.generate_csvpath_action.setVisible(False)
-            self.generate_csv_action.setVisible(False)
+    def _worksheets_for_path(self, path: str) -> list[str]:
+        if path is None:
+            raise ValueError("Path cannot be None")
+        import pylightxl as xl
 
-            self.paste_action.setVisible(True)
-            if self.cutted or self.copied:
-                self.paste_action.setEnabled(True)
-            else:
-                self.paste_action.setEnabled(False)
-
-            self.open_location_action.setVisible(False)
-            self.copy_path_action.setVisible(False)
-            self.copy_full_path_action.setVisible(False)
-            self.copy_full_path_action.setVisible(False)
-            self.open_project_dir_action.setVisible(True)
-
-            self.delete_action.setVisible(False)
-            self.new_file_action.setVisible(True)
-            self.new_folder_action.setVisible(True)
-            self.load_paths_action.setVisible(False)
-            self.stage_data_action.setVisible(False)
-            self.explain_action.setVisible(False)
-            #
-            #
-            #
-            self.line_number_action.setVisible(False)
-            self.edit_jsonl_action.setVisible(False)
-            #
-            # clear so we know to create new files or folders at the root
-            #
-            self._last_path = None
-        self.context_menu.exec(global_pos)
+        db = xl.readxl(fn=path)
+        names = db.ws_names
+        if names is None:
+            return []
+        return names
 
     @property
     def current_path(self) -> str:
@@ -648,98 +310,9 @@ class Sidebar(QWidget):
         nos = Nos(self.current_path)
         return nos.exists() and not nos.isfile()
 
-    def _stage_data(self) -> None:
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-            self.stage_dialog = StageDataDialog(main=self.main, path=path, parent=self)
-            self.stage_dialog.show_dialog()
-        else:
-            ...  # should never happen, but what if it did?
-
-    def _cut(self) -> None:
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-            self.cutted = path
-
-    def _copy(self) -> None:
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-            self.copied = path
-
-    def _paste(self) -> None:
-        if self.cutted is None and self.copied is None:
-            #
-            # can't happen
-            #
-            return
-        index = self.file_navigator.selectionModel().selectedIndexes()
-        index = index[0] if len(index) > 0 else None
-        path = None
-        if index and index.isValid():
-            path = self.proxy_model.filePath(index)
-        else:
-            path = self.main.state.cwd
-        if self.cutted:
-            name = os.path.basename(self.cutted)
-            path = os.path.join(path, name)
-            nos = Nos(self.cutted)
-            nos.rename(path)
-        elif self.copied:
-            name = os.path.basename(self.copied)
-            path = fiut.deconflicted_path(path, name)
-            nos = Nos(self.copied)
-            # disambiguate here
-            nos.copy(path)
-        self.cutted = None
-        self.copied = None
-
-    def _generate_csvpath(self) -> None:
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-        #
-        # open file do this first because if any reason we blow up better
-        # to not have the ai tab showing without a file to act on.
-        #
-        self.main.read_validate_and_display_file_for_path(path)
-        #
-        # make sure tabs are visible and ai tab selected
-        #
-        self.main.rt_tabs_show()
-        self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
-        self.main.reactor.on_ai_gen_csvpath()
-
-    def _generate_csv(self) -> None:
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-        #
-        # open file do this first because if any reason we blow up better
-        # to not have the ai tab showing without a file to act on.
-        #
-        self.main.read_validate_and_display_file_for_path(path)
-        #
-        # make sure tabs are visible and ai tab selected
-        #
-        self.main.rt_tabs_show()
-        self.main.rt_tab_widget.tabBar().setCurrentIndex(1)
-        self.main.reactor.on_ai_gen_data()
-
-    def _load_paths(self) -> None:
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-            loader = CsvpathLoader(main=self.main, parent=self)
-            loader.load_paths(path)
-
-    def _run_paths(self) -> None: ...
-
     def _renew_sidebars(self) -> None:
         #
-        # TODO: we recreate all the trees. very bad idea due to slow refresh from remote.
+        # TODO: we recreate all the trees. not great due to slow refresh from remote.
         # but for now it should work. refreshing named_files is probably fair, but that's
         # also tricky because we'd want to recreate the opened/closed state of the folders
         # and if we did that the refresh might slow down potentially a lot. so long-term,
@@ -869,218 +442,11 @@ class Sidebar(QWidget):
         self.main.welcome.update_run_button()
         self.main.welcome.update_find_data_button()
 
-    def _rename_file_navigator_item(self):
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-            dir_name = os.path.dirname(path)
-            name = os.path.basename(path)
-            dialog = QInputDialog()
-            dialog.setFixedSize(QSize(420, 125))
-            dialog.setLabelText("Enter new name:")
-            dialog.setTextValue(name)
-            ok = dialog.exec()
-            new_name = dialog.textValue()
-
-            if ok and new_name and new_name.strip() != "" and new_name != name:
-                if new_name.find(os.sep) > -1:
-                    new_dir = os.path.dirname(new_name)
-                    np = os.path.join(dir_name, new_dir)
-                    np = os.path.normpath(np)
-                    if np.startswith(self.main.state.cwd):
-                        try:
-                            nos = Nos(np)
-                            if not nos.exists():
-                                nos.makedirs()
-                        except Exception:
-                            meut.warning2(
-                                parent=self,
-                                title="Path error",
-                                msg=f"Error: invalid path: {np}",
-                            )
-                            return
-                    else:
-                        meut.warning2(
-                            parent=self,
-                            title="Path error",
-                            msg=f"Error: invalid path: {np}",
-                        )
-                        return
-                nos = Nos(path).rename(os.path.join(dir_name, new_name))
-
-    def _new_folder_navigator_item(self):
-        dialog = QInputDialog()
-        dialog.setFixedSize(QSize(420, 125))
-        dialog.setLabelText("Enter the new folder name: ")
-        ok = dialog.exec()
-        new_name = dialog.textValue()
-
-        if ok and new_name:
-            b, msg = self._valid_new_folder(new_name)
-            if b is True:
-                try:
-                    if not new_name.startswith(self.main.state.cwd):
-                        if self._last_path is None:
-                            new_name = os.path.join(self.main.state.cwd, new_name)
-                        else:
-                            n = os.path.join(self.main.state.cwd, self._last_path)
-                            new_name = os.path.join(n, new_name)
-                    #
-                    # would templates add any value? e.g. a blank file with ---- CSVPATH ----
-                    #
-                    # TODO: use Nos
-                    #
-                    os.mkdir(new_name)
-                except PermissionError:
-                    meut.warning2(
-                        parent=self, title="Error", msg="Operation not permitted."
-                    )
-                except OSError:
-                    meut.warning2(
-                        parent=self,
-                        title="Error",
-                        msg="File with this name already exists.",
-                    )
-            else:
-                #
-                # show a simple error msg dialog. may look significantly different from the modal, but
-                # that is fine for now.
-                #
-                self.window().statusBar().showMessage(self.tr("Bad folder name"))
-                button = QMessageBox.critical(
-                    self,
-                    "Cannot create folder",
-                    msg,
-                    buttons=QMessageBox.Cancel | QMessageBox.Retry,
-                    defaultButton=QMessageBox.Cancel,
-                )
-                if button == QMessageBox.Retry:
-                    self._new_folder_navigator_item()
-                return
-
     def _valid_new_folder(self, name: str) -> tuple[bool, str]:
         b = name.find(".") == -1
         if b:
             return b, "Ok"
         return b, "Failed"
-
-    def _save_file_navigator_item(self):
-        self.main.content.csvpath_source_view.text_edit.on_save()
-
-    def _edit_as_json(self) -> None:
-        index = self.file_navigator.selectionModel().selectedIndexes()
-        if len(index) < 1:
-            return
-        index = index[0]
-        path = None
-        if not index.isValid():
-            return
-        path = self.proxy_model.filePath(index)
-        self._do_edit_as_json(path)
-
-    def _do_edit_as_json(self, path: str) -> None:
-        if path is None:
-            raise ValueError("Path cannot be none")
-        nos = Nos(path)
-        if not nos.isfile():
-            return
-        #
-        # do we have one already?
-        # if we have the file already open we need to close it
-        #
-        data_view = taut.find_tab(self.main.content.tab_widget, path)
-        if data_view is not None:
-            self.main.content.tab_widget.close_tab(path)
-        self.main.spin_up_json_worker(path=path, editable=EditStates.EDITABLE)
-
-    def _new_file_navigator_item(self):
-        dialog = QInputDialog()
-        dialog.setFixedSize(QSize(420, 125))
-        dialog.setLabelText("Enter the new file's name:")
-        ok = dialog.exec()
-        new_name = dialog.textValue()
-        if ok and new_name:
-            b, msg = self._valid_new_file(new_name)
-            if b is True:
-                ns = fiut.split_filename(new_name)
-                #
-                # if we're creating a JSON file we need to populate with a {} or []
-                #
-                content = ""
-                if ns[1] in ["json", "jsonl", "ndjson", "jsonlines"]:
-                    items = ["{}", "[]"]
-                    item, ok = QInputDialog.getItem(
-                        self, "Data structure", "Start with", items, 0, False
-                    )
-                    if ok and item:
-                        content = item
-                elif ns[1] == "md":
-                    content = """# Title
-*(hit control-t to toggle to raw markdown editing)*
-                    """
-                elif ns[1] == "txt":
-                    content = ""
-                elif ns[1] in self.main.csvpath_config.get(
-                    section="extensions", name="csv_files"
-                ):
-                    content = ","
-                elif ns[1] in self.main.csvpath_config.get(
-                    section="extensions", name="csvpath_files"
-                ):
-                    testdata = ""
-                    _ = os.path.join(self.main.state.cwd, "examples/test.csv")
-                    if Nos(_).exists():
-                        testdata = "examples/test.csv"
-
-                    content = f"""~
-   id: hello world
-   test-data: {testdata}
-~
-
-$[*][ print("hello world") ]"""
-                else:
-                    meut.warning2(
-                        parent=self, title="Error", msg="Unknown file extension"
-                    )
-                    return
-                try:
-                    if not new_name.startswith(self.main.state.cwd):
-                        if self._last_path is None:
-                            new_name = os.path.join(self.main.state.cwd, new_name)
-                        else:
-                            n = os.path.join(self.main.state.cwd, self._last_path)
-                            new_name = os.path.join(n, new_name)
-                    with open(new_name, "w", encoding="utf-8") as file:
-                        file.write(content)
-                #
-                # create file
-                #
-                except PermissionError:
-                    meut.warning2(
-                        parent=self, title="Error", msg="Operation not permitted."
-                    )
-                except OSError:
-                    meut.warning2(
-                        parent=self,
-                        title="Error",
-                        msg="File with this name already exists.",
-                    )
-            else:
-                #
-                # show a simple error msg dialog. may look significantly different from the modal, but
-                # that is fine for now.
-                #
-                self.window().statusBar().showMessage(self.tr("Bad file name"))
-                button = QMessageBox.critical(
-                    self,
-                    "Cannot create file",
-                    msg,
-                    buttons=QMessageBox.Cancel | QMessageBox.Retry,
-                    defaultButton=QMessageBox.Cancel,
-                )
-                if button == QMessageBox.Retry:
-                    self._new_file_navigator_item()
-                return
 
     def _valid_new_file(self, name: str) -> tuple[bool, str]:
         if name is None or name.strip() == "":
@@ -1119,92 +485,12 @@ $[*][ print("hello world") ]"""
 
         return True, "Ok"
 
-    def _open_file_navigator_location(self):
-        index = self.file_navigator.currentIndex()
-        #
-        # if not valid we clicked on below-tree whitespace and get the
-        # current working directory. however, this doesn't seem to happen at least on windows.
-        # today we're getting the current selection which is always something, so no longer
-        # the expected behavior.
-        #
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-        else:
-            path = self.main.state.cwd
-        path = pathu.resep(path)
-        nos = Nos(path)
-        if nos.isfile():
-            path = os.path.dirname(path)
-        o = osut.file_system_open_cmd()
-        o = f'{o} "{path}"'
-        os.system(o)
-
-    def _copy_path(self):
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-        else:
-            raise RuntimeError("An item must be clicked to copy a relative path")
-        path = pathu.resep(path)
-        if path.startswith(self.main.state.cwd):
-            path = path[len(self.main.state.cwd) + 1 :]
-        else:
-            raise ValueError(
-                f"Path must start with {self.main.state.cwd}. {path} does not."
-            )
-        clipboard = QGuiApplication.clipboard()
-        clipboard.setText(path)
-
-    def _copy_full_path(self):
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-        else:
-            path = self.main.state.cwd
-        path = pathu.resep(path)
-        clipboard = QGuiApplication.clipboard()
-        clipboard.setText(path)
-
-    def _open_project_dir(self):
-        path = self.main.state.cwd
-        path = pathu.resep(path)
-        o = osut.file_system_open_cmd()
-        o = f'{o} "{path}"'
-        os.system(o)
-
     def selected_file_path(self) -> str:
         index = self.file_navigator.currentIndex()
         if index.isValid():
             path = self.proxy_model.filePath(index)
             return path
         return None
-
-    def _delete_file_navigator_item(self):
-        index = self.file_navigator.currentIndex()
-        if index.isValid():
-            path = self.proxy_model.filePath(index)
-            path = str(path)
-            is_selected = self.window().selected_file_path == path
-            meut.yesNo2(
-                parent=self,
-                title="Delete",
-                msg=f"Are you sure you want to delete {path}?",
-                callback=self._do_delete_item,
-                args={"path": path, "is_selected": is_selected},
-            )
-
-    def _do_delete_item(self, answer: int, *, path: str, is_selected: bool) -> None:
-        if path is None:
-            raise ValueError("Path cannot be None")
-        if answer == QMessageBox.Yes:
-            try:
-                Nos(path).remove()
-            except OSError as e:
-                meut.warning2(parent=self, title="Error", msg=str(e))
-            else:
-                if is_selected:
-                    self.window().show_welcome_screen()
-                self.window().statusBar().showMessage(f"{path} deleted successfuly.")
 
     def _show_only_name_column_in_file_navigator(self, file_model, file_navigator):
         for column in range(file_model.columnCount()):

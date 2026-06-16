@@ -26,6 +26,7 @@ class GeneralDataWorker(QRunnable):
         delimiter: str = None,
         quotechar: str = None,
         editable: bool = False,
+        sheet: str = None,
     ):
         super().__init__()
         self.main = main
@@ -38,6 +39,7 @@ class GeneralDataWorker(QRunnable):
         self.delimiter = delimiter
         self.quotechar = quotechar
         self.editable = editable
+        self.sheet = sheet
 
     def _rows(self, s) -> int:
         if s == "All lines":
@@ -109,6 +111,12 @@ class GeneralDataWorker(QRunnable):
             self.main = None
             return
         self.signals.messages.emit(f"  Opened {path}")
+        #
+        # now that we have the bytes we need the worksheet qualified path so
+        # that we know how to handle the tabs right.
+        #
+        if self.sheet is not None:
+            path = f"{path}#{self.sheet}"
         results = (
             f"Took {len(data)} lines out of {totallines} seen",
             lines,
@@ -129,6 +137,8 @@ class GeneralDataWorker(QRunnable):
         #
         # jsonl may have all kinds of headers magic
         #
+        if self.sheet is not None:
+            path = f"{path}#{self.sheet}"
         with DataFileReader(
             path, delimiter=self.delimiter, quotechar=self.quotechar, encoding=encoding
         ) as file:
@@ -144,7 +154,9 @@ class GeneralDataWorker(QRunnable):
                 elif b is None:
                     i = 0 if i <= 0 else i - 1
                     break
-        return (data, lines, i, self.NOT_LARGE_FILE)
+        ret = (data, lines, i, self.NOT_LARGE_FILE)
+        print(f"gendatwor: ret: {ret}")
+        return ret
 
     def prep_sampling(self) -> None:
         needed = 0
