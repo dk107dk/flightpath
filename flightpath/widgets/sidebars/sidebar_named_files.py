@@ -178,8 +178,12 @@ class SidebarNamedFiles(SidebarRightBase):
         self.delete_action.triggered.connect(self._delete_file_view_item)
 
         self.copy_action = QAction()
-        self.copy_action.setText(self.tr("Copy to working dir"))
+        self.copy_action.setText("Copy to working dir")
         self.copy_action.triggered.connect(self._copy_back_to_cwd)
+
+        self.refresh_action = QAction()
+        self.refresh_action.setText("Refresh")
+        self.refresh_action.triggered.connect(self.refresh)
 
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.arrival_action)
@@ -188,6 +192,8 @@ class SidebarNamedFiles(SidebarRightBase):
         self.context_menu.addAction(self.find_data_action)
         self.context_menu.addAction(self.copy_path_action)
         self.context_menu.addAction(self.copy_action)
+        self.context_menu.addSeparator()
+        self.context_menu.addAction(self.refresh_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
 
@@ -202,6 +208,7 @@ class SidebarNamedFiles(SidebarRightBase):
             #
             # individual files may not be deleted, but we can allow dir deletes for cleanup
             #
+            self.refresh_action.setVisible(False)
             if (
                 fiut.is_a(path, ["db", "md", "txt"])
                 or path.endswith("manifest.json")
@@ -213,6 +220,7 @@ class SidebarNamedFiles(SidebarRightBase):
                 self.sftp_sources_action.setVisible(False)
                 self.find_data_action.setVisible(False)
                 self.delete_action.setVisible(False)
+                self.template_action.setVisible(False)
                 self.new_run_action.setVisible(False)
             elif nos.isfile():
                 self.copy_path_action.setVisible(True)
@@ -223,7 +231,17 @@ class SidebarNamedFiles(SidebarRightBase):
                 self.sftp_sources_action.setVisible(False)
                 self.find_data_action.setVisible(True)
                 self.delete_action.setVisible(False)
+            elif not self._is_named_file_by_index():
+                self.copy_action.setVisible(False)
+                self.template_action.setVisible(False)
+                self.copy_path_action.setVisible(False)
+                self.arrival_action.setVisible(False)
+                self.sftp_sources_action.setVisible(False)
+                self.find_data_action.setVisible(False)
+                self.delete_action.setVisible(False)
+                self.new_run_action.setVisible(False)
             else:
+                self.refresh_action.setVisible(True)
                 self.copy_path_action.setVisible(True)
                 self.template_action.setVisible(True)
                 self.sftp_sources_action.setVisible(True)
@@ -234,6 +252,17 @@ class SidebarNamedFiles(SidebarRightBase):
                 self.copy_action.setVisible(False)
             if global_pos:
                 self.context_menu.exec(global_pos)
+
+    def _is_named_file_by_index(self) -> bool:
+        index = self.view.currentIndex()
+        if index.isValid():
+            path = self.model.filePath(index)
+            r = self.main.csvpath_config.get(section="inputs", name="files")
+            if not path.startswith(r):
+                raise ValueError(f"Path to item {path} doesn't start with {r}")
+            path = path[len(r) + 1 :]
+            return len(pathu.parts(path)) == 1
+        return False
 
     def _current_named_file_by_index(self) -> str:
         index = self.view.currentIndex()

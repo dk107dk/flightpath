@@ -84,6 +84,7 @@ class QueryFormWidget(QWidget):
         lines_form = QFormLayout()
         lines_form.setContentsMargins(0, 0, 0, 0)
         lines_form.addRow("Lines", self.lines_count)
+        self.lines_count.currentIndexChanged.connect(self.on_output_lines_count_changed)
         self.lines.setLayout(lines_form)
         layout.addWidget(self.lines)
         self.lines.setVisible(False)
@@ -123,19 +124,13 @@ class QueryFormWidget(QWidget):
             else:
                 self.submit_btn.setText("Name your request to continue")
 
-    def assure_state(self) -> None:
-        doc = self.main.current_doc_tab
-        if doc is None:
-            return
-        path = doc.objectName()
-        fs = fiut.split_filename(path)
-        if fs[1] in self.main.csvpath_config.get(
-            section="extensions", name="csv_files"
-        ):
-            self.activity_selector.set_activity("validation")
-        else:
-            self._on_activity_changed(self.activity_selector.activity)
-        self.on_prompt_title_changed()
+    def on_output_lines_count_changed(self) -> None:
+        text = self.lines_count.currentText()
+        try:
+            self.max_data_output_lines = int(text)
+        except Exception:
+            self.max_data_output_lines = 25
+        print(f"queryform: on_output_lines_count_changed: {self.max_data_output_lines}")
 
     def on_ai_help(self) -> None:
         md = HelpFinder(main=self.main).help("ai/help.md")
@@ -188,24 +183,6 @@ class QueryFormWidget(QWidget):
                 self.doc_path_text.setText(path)
         else:
             self.doc_path.hide()
-
-    #
-    # better to use tdut.get_test_data_path
-    #
-    def _get_test_data_path_if(self) -> str:
-        t = self.main.current_doc_tab
-        if t is not None:
-            _ = t.objectName()
-            return tdut.get_test_data_path(_)
-            """
-            exts = self.main.csvpath_config.get(section="extensions", name="csvpath_files")
-            if fiut.is_a(_, exts) and isinstance(t, CsvpathViewer):
-                text = t.text_edit.toPlainText()
-                s,c = csut.statement_and_comment(text)
-                docpath = csut.get_filepath(c)
-                return docpath
-            """
-        return None
 
     def _on_submit(self):
         #
@@ -278,6 +255,20 @@ class QueryFormWidget(QWidget):
         }
         self.querySubmitted.emit(params)
 
+    def assure_state(self) -> None:
+        doc = self.main.current_doc_tab
+        if doc is None:
+            return
+        path = doc.objectName()
+        fs = fiut.split_filename(path)
+        if fs[1] in self.main.csvpath_config.get(
+            section="extensions", name="csv_files"
+        ):
+            self.activity_selector.set_activity("validation")
+        else:
+            self._on_activity_changed(self.activity_selector.activity)
+        self.on_prompt_title_changed()
+
     def load_params(self, params: dict):
         #
         # when an item is clicked, load up the params, form, etc. to get the as-was state for the query
@@ -296,6 +287,24 @@ class QueryFormWidget(QWidget):
         t = self.main.current_doc_tab
         path = t.objectName()
         return path
+
+    #
+    # better to use tdut.get_test_data_path
+    #
+    def _get_test_data_path_if(self) -> str:
+        t = self.main.current_doc_tab
+        if t is not None:
+            _ = t.objectName()
+            return tdut.get_test_data_path(_)
+            """
+            exts = self.main.csvpath_config.get(section="extensions", name="csvpath_files")
+            if fiut.is_a(_, exts) and isinstance(t, CsvpathViewer):
+                text = t.text_edit.toPlainText()
+                s,c = csut.statement_and_comment(text)
+                docpath = csut.get_filepath(c)
+                return docpath
+            """
+        return None
 
     def get_example_content(self) -> str:
         if self._current_activity == "validation":

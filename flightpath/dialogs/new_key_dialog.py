@@ -1,6 +1,5 @@
-import httpx
-import traceback
 from typing import Callable
+import darkdetect
 
 from PySide6.QtWidgets import (  # pylint: disable=E0611
     QWidget,
@@ -78,43 +77,22 @@ class NewKeyDialog(QDialog):
                 title="Required fields",
             )
             return
+        key = None
+        result = self.my_parent.api.create_key(
+            key_name=self.key_name.text(),
+            owner=self.key_owner.text(),
+            owner_contact=self.key_owner_contact.text(),
+        )
+        if result.success:
+            key = result.data.get("api_key")
+        else:
+            msg = "" if result.error_message is None else result.error_message
+            msg = f"Cannot create a key. {msg} ({result.status_code})"
+            if self.failed_callback:
+                self.reject()
+                self.failed_callback(msg=msg, code=result.status_code)
+            return
 
-        key_data = {
-            "key_name": self.key_name.text(),
-            "key_owner_name": self.key_owner.text(),
-            "key_owner_contact": self.key_owner_contact.text(),
-        }
-        with httpx.Client() as client:
-            msg = None
-            response = None
-            url = f"{self.my_parent.host.text()}/admin/new_key"
-            #
-            # create a server-safeish config str here. this isn't a full cleaning. the
-            # server needs to also work on the paths and check the sensitive settings
-            # but we don't want to send something we know is completely unconsidered to
-            # the server environment.
-            #
-            key = None
-            try:
-                response = client.post(
-                    url, json=key_data, headers=self.my_parent._headers
-                )
-                if response.status_code == 200:
-                    key = response.json().get("api_key")
-                else:
-                    msg = response.json().get("detail")
-                    msg = f"Cannot create a key. Server response: {response.status_code}: {msg}"
-                    if self.failed_callback:
-                        self.reject()
-                        self.failed_callback(msg=msg, code=response.status_code)
-                    return
-            except Exception as ex:
-                print(traceback.format_exc())
-                msg = f"Error sending request ({response.status_code}): {ex}"
-                if self.failed_callback:
-                    self.reject()
-                    self.failed_callback(msg=msg, code=500)
-                return
         #
         # remove form fields and display the key. this is the only chance to see
         # the key.
@@ -127,11 +105,19 @@ class NewKeyDialog(QDialog):
         key_label = QLabel()
         key_label.setText(key)
         key_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+
         key_label.setStyleSheet("background-color: transparent;")
         self.key_area = QScrollArea()
-        self.key_area.setStyleSheet(
-            "QScrollArea { padding:1px 0 0 7px; background-color:#f7f7f7}"
-        )
+
+        if darkdetect.isDark():
+            self.key_area.setStyleSheet(
+                "QScrollArea { padding:1px 0 0 7px; background-color:#aaa}"
+            )
+        else:
+            self.key_area.setStyleSheet(
+                "QScrollArea { padding:1px 0 0 7px; background-color:#f7f7f7}"
+            )
+
         self.key_area.setWidgetResizable(True)
         self.key_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.key_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -142,9 +128,11 @@ class NewKeyDialog(QDialog):
         self.form_layout.addRow("New key: ", self.key_area)
 
         msg = QLabel("Copy this key. It will not be shown again.")
+        c = "eee" if darkdetect.isDark() else "222"
         msg.setStyleSheet(
-            "QLabel { font-size: 12pt; font-style:italic;color:#222222; padding:0 0 20px 0; }"
+            f"font-size: 12pt; font-style:italic;color:#{c}; padding:0 0 20px 0;"
         )
+
         self.form_layout.addRow("", msg)
 
         self.cancel_button.setEnabled(True)

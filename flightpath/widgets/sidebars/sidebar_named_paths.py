@@ -164,10 +164,19 @@ class SidebarNamedPaths(SidebarRightBase):
         self.delete_action = QAction()
         self.delete_action.setText("Permanent delete")
         self.delete_action.triggered.connect(self._delete_paths_view_item)
+        #
+        # we don't really do find data from named-paths -- that would be
+        # find results. since the connection isn't right, we shouldn't
+        # confuse things by offering find here. leaving for now in case
+        # that's a reason i'm not seeing, but feel free to delete.
+        #
+        # self.find_data_action = QAction()
+        # self.find_data_action.setText("Find data")
+        # self.find_data_action.triggered.connect(self._find_data)
 
-        self.find_data_action = QAction()
-        self.find_data_action.setText("Find data")
-        self.find_data_action.triggered.connect(self._find_data)
+        self.refresh_action = QAction()
+        self.refresh_action.setText("Refresh")
+        self.refresh_action.triggered.connect(self.refresh)
 
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.copy_action)
@@ -175,9 +184,55 @@ class SidebarNamedPaths(SidebarRightBase):
         self.context_menu.addAction(self.webhook_action)
         self.context_menu.addAction(self.transfers_action)
         self.context_menu.addAction(self.sftp_sources_action)
-        self.context_menu.addAction(self.find_data_action)
+        # self.context_menu.addAction(self.find_data_action)
+        self.context_menu.addSeparator()
+        self.context_menu.addAction(self.refresh_action)
         self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
+
+    def _show_context_menu(self, position) -> None:
+        index = self.view.indexAt(position)
+        path = None
+        if index.isValid():
+            global_pos = self.view.viewport().mapToGlobal(position)
+            path = self.model.filePath(index)
+            self._last_path = path
+            nos = Nos(path)
+            #
+            # individual files may not be deleted, but we can allow dir deletes for cleanup
+            #
+            self.refresh_action.setVisible(False)
+            if nos.isfile():
+                self.delete_action.setVisible(False)
+                self.new_run_action.setVisible(False)
+                self.webhook_action.setVisible(False)
+                self.transfers_action.setVisible(False)
+                self.sftp_sources_action.setVisible(False)
+                self.copy_action.setVisible(True)
+                self.template_action.setVisible(False)
+                # self.find_data_action.setVisible(True)
+            else:
+                self.delete_action.setVisible(True)
+                self.new_run_action.setVisible(True)
+                self.webhook_action.setVisible(True)
+                self.transfers_action.setVisible(True)
+                self.sftp_sources_action.setVisible(True)
+                self.copy_action.setVisible(False)
+                self.template_action.setVisible(True)
+                # self.find_data_action.setVisible(True)
+                self.refresh_action.setVisible(True)
+            if path and (path.endswith("manifest.json") or path.endswith(".db")):
+                self.delete_action.setVisible(False)
+                self.new_run_action.setVisible(False)
+                self.copy_action.setVisible(True)
+                # self.find_data_action.setVisible(False)
+                self.webhook_action.setVisible(False)
+                self.transfers_action.setVisible(False)
+                self.sftp_sources_action.setVisible(False)
+                self.template_action.setVisible(False)
+
+            if global_pos:
+                self.context_menu.exec(global_pos)
 
     @property
     def _paths_root(self) -> str:
@@ -204,57 +259,6 @@ class SidebarNamedPaths(SidebarRightBase):
             self.new_run_dialog.template = t
             self.new_run_dialog.template_ctl.setText(t)
         self.main.show_now_or_later(self.new_run_dialog)
-
-    def _show_context_menu(self, position) -> None:
-        index = self.view.indexAt(position)
-        path = None
-        if index.isValid():
-            global_pos = self.view.viewport().mapToGlobal(position)
-            path = self.model.filePath(index)
-            self._last_path = path
-            nos = Nos(path)
-            #
-            # individual files may not be deleted, but we can allow dir deletes for cleanup
-            #
-            if nos.isfile() and path.endswith("definition.json"):
-                self.delete_action.setVisible(False)
-                self.new_run_action.setVisible(True)
-                self.webhook_action.setVisible(True)
-                self.copy_action.setVisible(True)
-                self.template_action.setVisible(True)
-                self.transfers_action.setVisible(True)
-                self.sftp_sources_action.setVisible(True)
-                self.find_data_action.setVisible(True)
-            elif nos.isfile():
-                self.delete_action.setVisible(False)
-                self.new_run_action.setVisible(False)
-                self.webhook_action.setVisible(False)
-                self.transfers_action.setVisible(False)
-                self.sftp_sources_action.setVisible(False)
-                self.copy_action.setVisible(True)
-                self.template_action.setVisible(False)
-                self.find_data_action.setVisible(True)
-            else:
-                self.delete_action.setVisible(True)
-                self.new_run_action.setVisible(True)
-                self.webhook_action.setVisible(True)
-                self.transfers_action.setVisible(True)
-                self.sftp_sources_action.setVisible(True)
-                self.copy_action.setVisible(False)
-                self.template_action.setVisible(True)
-                self.find_data_action.setVisible(True)
-            if path and (path.endswith("manifest.json") or path.endswith(".db")):
-                self.delete_action.setVisible(False)
-                self.new_run_action.setVisible(False)
-                self.copy_action.setVisible(True)
-                self.find_data_action.setVisible(False)
-                self.webhook_action.setVisible(False)
-                self.transfers_action.setVisible(False)
-                self.sftp_sources_action.setVisible(False)
-                self.template_action.setVisible(False)
-
-            if global_pos:
-                self.context_menu.exec(global_pos)
 
     def _transfers(self) -> None:
         index = self.view.currentIndex()

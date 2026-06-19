@@ -847,7 +847,10 @@ class MainWindow(QMainWindow):
             # content is not actually the parent. the tabs are the parent.
             #
             dv = DataViewer(
-                main=self, parent=self.content.tab_widget, editable=editable
+                main=self,
+                parent=self.content.tab_widget,
+                editable=editable,
+                path=filepath,
             )
             dv.setObjectName(obj_name)
             #
@@ -926,6 +929,9 @@ class MainWindow(QMainWindow):
             editable=editable,
             finished_callback=finished_callback,
         )
+
+    def is_opening(self, path: str) -> bool:
+        return self._is_opening is not None and path in self._is_opening
 
     def read_validate_and_display_file_for_path(
         self, path: str, editable=EditStates.EDITABLE, *, finished_callback=None
@@ -1170,6 +1176,8 @@ class MainWindow(QMainWindow):
                 "jsonl",
                 "jsonlines",
                 "ndjson",
+                "csvpaths",
+                "csvpath",
                 "xlsx",
                 "xls",
                 "parquet",

@@ -1,9 +1,6 @@
 import os
 import io
-import base64
-import httpx
 import hashlib
-import traceback
 
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (
@@ -17,6 +14,8 @@ from PySide6.QtWidgets import (
 
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
+
+from flightpath.util.api.server_api import FlightPathServerApi
 
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.file_utility import FileUtility as fiut
@@ -34,7 +33,16 @@ class ServerForm(BlankForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         #
-        # we want to only update the projects list when there is a change that hasn't caused an update AND we're in view
+        # _api is the concrete implementation of the api version in use. it is alwas
+        # the most recent version the server publishes that the client has available.
+        # at this time it is not possible to set a FlightPath Data to support a
+        # lower version of the api than the highest version it has an implementation
+        # for.
+        #
+        self._api = None
+        #
+        # we want to only update the projects list when there is a change that hasn't
+        # caused an update AND we're in view
         #
         layout = QFormLayout()
 
@@ -50,10 +58,6 @@ class ServerForm(BlankForm):
         self.shut_down_server = QPushButton("Shutdown FlightPath Server")
         layout.addRow("Shutdown server: ", self.shut_down_server)
         self._enable_server_if()
-
-        self.response_msg = QLabel("")
-        self.response_msg.setStyleSheet("QLabel { font-size: 14pt;color:#222222;}")
-        layout.addRow("", self.response_msg)
 
         self.proj_list = ServerProjectsList(self)
         layout.addRow("Projects for key: ", self.proj_list)
@@ -105,6 +109,16 @@ class ServerForm(BlankForm):
         host = host.strip()
         host = host.rstrip("/")
         return host
+
+    def _is_on_top(self) -> bool:
+        if self.main.config:
+            i = self.main.config.config_panel.forms_layout.currentIndex()
+            return i == 11
+        return False
+
+    @property
+    def section(self) -> str:
+        return "server"
 
     def on_widget_changed(self) -> None:
         #
@@ -320,6 +334,17 @@ class ServerForm(BlankForm):
     # api calls
     # ====================
 
+    @property
+    def api(self):
+        if self._api is None:
+            key = self.key.text()
+            if str(key).strip() not in ["", "None"]:
+                self._api = FlightPathServerApi(self.hostname)
+                self._api.key = key
+            else:
+                raise ValueError("No API key available")
+        return self._api
+
     def _upload_env(self, name: str) -> bool:
         if not self._server_is_enabled():
             meut.warning2(
@@ -338,31 +363,12 @@ class ServerForm(BlankForm):
         #
         #
         #
-        with httpx.Client() as client:
-            msg = None
-            response = None
-            url = f"{self.hostname}/projects/set_env_file"
-            #
-            # create a server-safeish config str here. this isn't a full cleaning. the
-            # server needs to also work on the paths and check the sensitive settings
-            # but we don't want to send something we know is completely unconsidered to
-            # the server environment.
-            #
-            request = {"name": name, "env_str": env_str}
-            try:
-                response = client.post(url, json=request, headers=self._headers)
-                if response.status_code == 200:
-                    return True
-                else:
-                    msg = response.json()
-                    msg = ["detail"]
-                    msg = f"Cannot upload env. Server response: {response.status_code}: {msg}"
-                    meut.warning2(parent=self, title="Cannot upload env JSON", msg=msg)
-            except Exception as ex:
-                print(traceback.format_exc())
-                msg = f"Error sending request ({response.status_code}): {ex}"
-                meut.warning2(parent=self, title="Request Error", msg=msg)
-                return False
+        result = self.api.upload_env(name, env_str)
+        if result.success is True:
+            return True
+        msg = f"Cannot upload env. Server response: {result.error}"
+        meut.warning2(parent=self, title="Cannot upload env JSON", msg=msg)
+        return False
 
     def _sync_config(self, name: str) -> None:
         d = SyncConfigDialog(main=self.main, name=name, parent=self)
@@ -370,7 +376,7 @@ class ServerForm(BlankForm):
 
     def _upload_config(
         self, name: str, config_str: str = None, *, prompt: bool = True
-    ) -> bool:
+    ) -> None:
         if not self._server_is_enabled():
             meut.warning2(
                 parent=self,
@@ -401,34 +407,22 @@ class ServerForm(BlankForm):
     ) -> None:
         if answer == QMessageBox.No:
             return
-        with httpx.Client() as client:
-            msg = None
-            response = None
-            url = f"{self.hostname}/projects/set_project_config"
-            if config_str is None:
-                config_str = self._create_config_str(name)
 
-            cs = deut.make_deployable(config_str)
-            config_str = cs
-            #
-            # create a server-safeish config str here. this isn't a full cleaning. the
-            # server needs to also work on the paths and check the sensitive settings
-            # but we don't want to send something we know is completely unconsidered to
-            # the server environment.
-            #
-            request = {"name": name, "config_str": config_str}
-            try:
-                response = client.post(url, json=request, headers=self._headers)
-                if response.status_code == 200:
-                    return True
-                else:
-                    msg = response.json()["detail"]
-                    msg = f"Cannot upload config. Server response: {response.status_code}: {msg}"
-                    meut.warning2(parent=self, title="Cannot upload config", msg=msg)
-            except Exception as ex:
-                msg = f"Error sending request ({response.status_code}): {ex}"
-                meut.warning2(parent=self, title="Request Error", msg=msg)
+        if config_str is None:
+            config_str = self._create_config_str(name)
+        config_str = deut.make_deployable(config_str)
 
+        result = self.api.upload_config(name, config_str)
+        if result.success:
+            return
+        else:
+            msg = "" if result.error_message is None else result.error_message
+            msg = f"Cannot upload config. {msg} ({result.status_code})"
+            meut.warning2(parent=self, title="Cannot upload config", msg=msg)
+
+    #
+    # api is used in create key dialog
+    #
     def _create_key(self) -> None:
         new_key_dialog = NewKeyDialog(
             parent=self, failed_callback=self._create_key_failed
@@ -457,20 +451,18 @@ class ServerForm(BlankForm):
     def _do_shutdown_answer(self, answer: int) -> None:
         if answer == QMessageBox.No:
             return False
-        with httpx.Client() as client:
-            msg = None
-            try:
-                url = f"{self.hostname}/admin/shutdown"
-                response = client.get(url, headers=self._headers)
-                json = response.json()
-                msg = json["message"] if "message" in json else json["detail"]
-                msg = f"Response: {response.status_code}: {msg}"
-                self.response_msg.setText(msg)
-                self._enable_server_if()
-            except Exception as ex:
-                msg = f"Error sending request: {ex}"
-                self.response_msg.setText(msg)
-                meut.warning2(parent=self, title="Request Error", msg=msg)
+        result = self.api.shutdown()
+        if result.success:
+            msg = (
+                result.data["message"]
+                if "message" in result.data
+                else result.data["detail"]
+            )
+            self._disable_shutdown_server()
+            self.proj_list.clear()
+        else:
+            msg = f"Error sending request: {result.error_message}"
+            meut.warning2(parent=self, title="Request Error", msg=msg)
 
     def _download_log(self, name: str) -> None:
         if not self._server_is_enabled():
@@ -479,37 +471,22 @@ class ServerForm(BlankForm):
                 msg="Cannot download log because the server is off or there is insufficient information to make the request",
             )
             return False
-        with httpx.Client() as client:
-            msg = None
-            response = None
-            try:
-                url = f"{self.hostname}/projects/get_file"
-                request = {"name": name, "file_path": "logs/csvpath.log"}
-                response = client.post(url, json=request, headers=self._headers)
-                json = response.json()
-                if response.status_code == 200:
-                    log = json.get("file_content")
-                    log = base64.b64decode(log).decode("utf-8")
-                    local_path = self._write_to("csvpath.log", log)
-                    self.main.statusBar().showMessage(f"Saved to {local_path}")
-                    # self._open_if(local_path)
-                    meut.yesNo2(
-                        parent=self,
-                        title="Open file?",
-                        msg=f"Open {local_path}?",
-                        callback=self._open_if,
-                        args={"path": local_path},
-                    )
-                    return
-                else:
-                    msg = json["detail"]
-                    msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
-                    meut.warning2(parent=self, title="Cannot download log", msg=msg)
-            except Exception as ex:
-                print(traceback.format_exc())
-                msg = f"Error sending request ({response.status_code}): {ex}"
-                meut.warning2(parent=self, title="Request Error", msg=msg)
-                return
+        result = self.api.download_log(name)
+        if result.success:
+            local_path = self._write_to("csvpath.log", result.data)
+            self.main.statusBar().showMessage(f"Saved to {local_path}")
+            meut.yesNo2(
+                parent=self,
+                title="Open file?",
+                msg=f"Open {local_path}?",
+                callback=self._open_if,
+                args={"path": local_path},
+            )
+        else:
+            msg = result.error_message
+            msg = "" if msg is None else msg
+            msg = f"Cannot download log. {msg} ({result.status_code})"
+            meut.warning2(parent=self, title="Cannot download log", msg=msg)
 
     def _download_config(self, name: str) -> None:
         if not self._server_is_enabled():
@@ -518,34 +495,23 @@ class ServerForm(BlankForm):
                 msg="Cannot download config because the server is off or there is insufficient information to make the request",
             )
             return
-        with httpx.Client() as client:
-            msg = None
-            response = None
-            try:
-                url = f"{self.hostname}/projects/get_project_config"
-                request = {"name": name}
-                response = client.post(url, json=request, headers=self._headers)
-                content = response.json()
-                if response.status_code == 200:
-                    local_path = self._write_to("config.ini", content)
-                    self.main.statusBar().showMessage(f"Saved to {local_path}")
-                    meut.yesNo2(
-                        parent=self,
-                        title="Open file?",
-                        msg=f"Open {local_path}?",
-                        callback=self._open_if,
-                        args={"path": local_path},
-                    )
-                    return
-                else:
-                    msg = content["detail"]
-                    msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
-                    meut.warning2(parent=self, title="Cannot download log", msg=msg)
-            except Exception as ex:
-                print(traceback.format_exc())
-                msg = f"Error sending request ({response.status_code}): {ex}"
-                meut.warning2(parent=self, title="Request Error", msg=msg)
-                return
+        result = self.api.download_config(name)
+        if result.success:
+            local_path = self._write_to("config.ini", result.data)
+            self.main.statusBar().showMessage(f"Saved to {local_path}")
+            meut.yesNo2(
+                parent=self,
+                title="Open file?",
+                msg=f"Open {local_path}?",
+                callback=self._open_if,
+                args={"path": local_path},
+            )
+            return
+        else:
+            msg = result.error_message
+            msg = "" if msg is None else msg
+            msg = f"Cannot download log. {msg} ({result.status_code})"
+            meut.warning2(parent=self, title="Cannot download log", msg=msg)
 
     def _download_env(self, name: str) -> None:
         if not self._server_is_enabled():
@@ -554,40 +520,23 @@ class ServerForm(BlankForm):
                 msg="Cannot download env file because the server is off or there is insufficient information to make the request",
             )
             return
-        with httpx.Client() as client:
-            msg = None
-            response = None
-            try:
-                url = f"{self.hostname}/projects/get_env_file"
-                request = {"name": name}
-                response = client.post(url, json=request, headers=self._headers)
-                content = response.json()
-                if response.status_code == 200:
-                    local_path = self._write_to("env.json", content)
-                    self.main.statusBar().showMessage(f"Saved to {local_path}")
-                    meut.yesNo2(
-                        parent=self,
-                        title="Open file?",
-                        msg=f"Open {local_path}?",
-                        callback=self._open_if,
-                        args={"path": local_path},
-                    )
-                    return
-                else:
-                    msg = content["detail"]
-                    msg = f"Cannot download log. Server response: {response.status_code}: {msg}"
-                    meut.warning2(parent=self, title="Cannot download env", msg=msg)
-            except Exception as ex:
-                print(traceback.format_exc())
-                msg = f"Error sending request ({response.status_code}): {ex}"
-                meut.warning2(parent=self, title="Request Error", msg=msg)
-                return
-
-    def _is_on_top(self) -> bool:
-        if self.main.config:
-            i = self.main.config.config_panel.forms_layout.currentIndex()
-            return i == 11
-        return False
+        result = self.api.download_env(name)
+        if result.success:
+            local_path = self._write_to("env.json", result.data)
+            self.main.statusBar().showMessage(f"Saved to {local_path}")
+            meut.yesNo2(
+                parent=self,
+                title="Open file?",
+                msg=f"Open {local_path}?",
+                callback=self._open_if,
+                args={"path": local_path},
+            )
+            return
+        else:
+            msg = result.error_message
+            msg = "" if msg is None else msg
+            msg = f"Cannot download log. {msg}. ({result.status_code})"
+            meut.warning2(parent=self, title="Cannot download env", msg=msg)
 
     def _get_project_names(self) -> list[str]:
         if not self._server_is_enabled():
@@ -597,27 +546,13 @@ class ServerForm(BlankForm):
                     msg="Cannot get project names because the server is off or the request is incomplete",
                 )
             return []
-        with httpx.Client() as client:
-            msg = None
-            response = None
-            try:
-                url = f"{self.hostname}/projects/get_project_names"
-                response = client.post(url, headers=self._headers)
-                json = response.json()
-                if "names" in json:
-                    return json["names"]
-                elif "detail" in json:
-                    meut.warning2(parent=self, msg=json["detail"], title="Error")
-                else:
-                    meut.warning2(
-                        parent=self,
-                        msg=f"Could not complete the request: {json}",
-                        title="Error",
-                    )
-            except Exception as ex:
-                print(traceback.format_exc())
-                msg = f"Error sending request ({response.status_code}): {ex}"
-                meut.warning2(parent=self, title="Request Error", msg=msg)
+        result = self.api.get_project_names()
+        if result.success:
+            return result.data
+        else:
+            msg = "" if result.error_message is None else result.error_message
+            msg = f"Error sending request. {msg} ({result.status_code})"
+            meut.warning2(parent=self, title="Request Error", msg=msg)
         return []
 
     def _delete_project(self, name: str) -> bool:
@@ -638,35 +573,13 @@ class ServerForm(BlankForm):
     def _delete_project_answer(self, answer: int, *, name: str) -> None:
         if answer != QMessageBox.Yes:
             return False
-        with httpx.Client() as client:
-            response = None
-            try:
-                url = f"{self.hostname}/projects/delete_project"
-                response = client.post(url, json={"name": name}, headers=self._headers)
-                if response.status_code == 200:
-                    self.server_unchanged = False
-                    self._update_project_list()
-                    #
-                    # the project list has to update and that should be enough
-                    #
-                    # meut.message(msg=f"Project {name} has been deleted", title="Deleted project")
-                    return True
-                else:
-                    meut.warning2(
-                        parent=self,
-                        msg=f"Could not delete project {name}. Return code: {response.status_code}",
-                        title="Could not delete project",
-                    )
-                    return
-            except Exception as ex:
-                print(traceback.format_exc())
-                msg = "Error sending request"
-                if response:
-                    msg = f"{msg} ({response.status_code}): {ex}"
-                else:
-                    msg = f"{msg}: {ex}"
-                meut.warning2(parent=self, title="Request Error", msg=msg)
-                return
+        result = self.api.delete_project(name)
+        if result.success:
+            self.server_unchanged = False
+            self._update_project_list()
+            return
+        else:
+            meut.warning2(parent=self, title="Request Error", msg=result.error_message)
 
     def _create_project(self, name: str) -> bool:
         if not self._server_is_enabled():
@@ -675,46 +588,21 @@ class ServerForm(BlankForm):
                 msg="Cannot create project because the server is off or there is insufficient information to make the request",
             )
             return False
-        with httpx.Client() as client:
-            msg = None
-            response = None
-            try:
-                config_str = self._create_config_str(name)
-                project_data = {"name": name, "config_str": config_str}
-                url = f"{self.hostname}/projects/new_project"
-                response = client.post(url, json=project_data, headers=self._headers)
-                if response.status_code == 200:
-                    self.server_unchanged = False
-                    self._update_project_list(name)
-                    return True
-                else:
-                    meut.warning2(
-                        parent=self,
-                        msg=f"Could not create project. Return code: {response.status_code}",
-                        title="Could not create project",
-                    )
-                    return False
-            except Exception as ex:
-                print(traceback.format_exc())
-                msg = "Error sending request"
-                if response:
-                    msg = f"{msg} ({response.status_code}): {ex}"
-                else:
-                    msg = f"{msg}: {ex}"
-                meut.warning2(parent=self, title="Request Error", msg=msg)
-                return False
+        config_str = self._create_config_str(name)
+        result = self.api.create_project(name, config_str)
+        if result.success:
+            self.server_unchanged = False
+            self._update_project_list(name)
+        else:
+            msg = "" if result.error_message is None else result.error_message
+            meut.warning2(
+                parent=self,
+                msg=f"Could not create project. {msg} ({result.status_code}) ",
+                title="Could not create project",
+            )
 
     def _ping(self) -> int:
         if self.hostname is None or self.hostname == "":
             return 400
-        with httpx.Client() as client:
-            try:
-                url = f"{self.hostname}/"
-                response = client.get(url, headers=self._headers)
-                return response.status_code
-            except Exception:
-                return 500
-
-    @property
-    def section(self) -> str:
-        return "server"
+        result = self.api.ping(self.hostname)
+        return result.status_code if result.success else 500

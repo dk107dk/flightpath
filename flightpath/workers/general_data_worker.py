@@ -155,7 +155,6 @@ class GeneralDataWorker(QRunnable):
                     i = 0 if i <= 0 else i - 1
                     break
         ret = (data, lines, i, self.NOT_LARGE_FILE)
-        print(f"gendatwor: ret: {ret}")
         return ret
 
     def prep_sampling(self) -> None:

@@ -117,7 +117,8 @@ class SidebarRightBase(QWidget):
                 return
             try:
                 with DataFileReader(from_path) as ffrom:
-                    with DataFileWriter(path=to_nos.path) as tto:
+                    mode = "wb" if from_path.endswith("xlsx") else "w"
+                    with DataFileWriter(path=to_nos.path, mode=mode) as tto:
                         tto.write(ffrom.read())
             except NotADirectoryError:
                 meut.warning2(
