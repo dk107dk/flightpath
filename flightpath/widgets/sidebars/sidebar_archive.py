@@ -342,11 +342,12 @@ class SidebarArchive(SidebarRightBase):
 
     def refresh(self) -> None:
         v = None
-        if self.tabs is None:
+        if self.tabs is None or self.tabs.isHidden():
             if self.view:
                 layout = self.layout()  # Get the existing layout
                 if layout:
                     layout.removeWidget(self.view)
+
             v = self.view
             self.view = None
             self.setup()
@@ -356,6 +357,10 @@ class SidebarArchive(SidebarRightBase):
             self.view = None
             self.setup(do_layout=False)
             self.tabs.insertTab(0, self.view, "Results")
+            #
+            # select tab at 0
+            #
+            self.tabs.setCurrentIndex(0)
         v.deleteLater()  # Delete the old widget
 
     def _setup_view_context_menu(self):
@@ -385,13 +390,62 @@ class SidebarArchive(SidebarRightBase):
         self.delete_action.setText("Permanent delete")
         self.delete_action.triggered.connect(self._delete_archive_view_item)
 
+        self.refresh_action = QAction()
+        self.refresh_action.setText("Refresh")
+        self.refresh_action.triggered.connect(self.refresh)
+
         self.context_menu.addAction(self.repeat_run_action)
         self.context_menu.addAction(self.new_run_action)
         self.context_menu.addAction(self.find_data_action)
         self.context_menu.addAction(self.copy_path_action)
         self.context_menu.addAction(self.copy_action)
         self.context_menu.addSeparator()
+        self.context_menu.addAction(self.refresh_action)
+        self.context_menu.addSeparator()
         self.context_menu.addAction(self.delete_action)
+
+    def _show_context_menu(self, position):
+        index = self.view.indexAt(position)
+        path = None
+        if index.isValid():
+            global_pos = self.view.viewport().mapToGlobal(position)
+            path = self.model.filePath(index)
+            self._last_path = path
+            nos = Nos(path)
+            #
+            # individual files may not be deleted, but we can allow dir deletes for cleanup
+            #
+            self.refresh_action.setVisible(False)
+            if nos.isfile():
+                self.delete_action.setVisible(False)
+                self.new_run_action.setVisible(True)
+                if self._has_reference(path) is False:
+                    self.repeat_run_action.setVisible(True)
+                else:
+                    self.repeat_run_action.setVisible(False)
+                self.find_data_action.setVisible(True)
+                self.copy_path_action.setVisible(True)
+                self.copy_action.setVisible(True)
+            else:
+                self.delete_action.setVisible(True)
+                self.new_run_action.setVisible(True)
+                if self._has_reference(path) is False:
+                    self.repeat_run_action.setVisible(True)
+                else:
+                    self.repeat_run_action.setVisible(False)
+                self.find_data_action.setVisible(True)
+                self.copy_path_action.setVisible(True)
+                self.copy_action.setVisible(False)
+                self.refresh_action.setVisible(True)
+            if path and (path.endswith("manifest.json") or path.endswith(".db")):
+                self.delete_action.setVisible(False)
+                self.new_run_action.setVisible(False)
+                self.repeat_run_action.setVisible(False)
+                self.find_data_action.setVisible(False)
+                self.copy_path_action.setVisible(False)
+                self.copy_action.setVisible(True)
+            if global_pos:
+                self.context_menu.exec(global_pos)
 
     def _results_mani_path_for_path(self, path: str) -> str:
         if path is None:
@@ -469,47 +523,6 @@ class SidebarArchive(SidebarRightBase):
             #
             print(f"No reference found because {type(e)}: {e}. This is probably fine.")
             return None
-
-    def _show_context_menu(self, position):
-        index = self.view.indexAt(position)
-        path = None
-        if index.isValid():
-            global_pos = self.view.viewport().mapToGlobal(position)
-            path = self.model.filePath(index)
-            self._last_path = path
-            nos = Nos(path)
-            #
-            # individual files may not be deleted, but we can allow dir deletes for cleanup
-            #
-            if nos.isfile():
-                self.delete_action.setVisible(False)
-                self.new_run_action.setVisible(True)
-                if self._has_reference(path) is False:
-                    self.repeat_run_action.setVisible(True)
-                else:
-                    self.repeat_run_action.setVisible(False)
-                self.find_data_action.setVisible(True)
-                self.copy_path_action.setVisible(True)
-                self.copy_action.setVisible(True)
-            else:
-                self.delete_action.setVisible(True)
-                self.new_run_action.setVisible(True)
-                if self._has_reference(path) is False:
-                    self.repeat_run_action.setVisible(True)
-                else:
-                    self.repeat_run_action.setVisible(False)
-                self.find_data_action.setVisible(True)
-                self.copy_path_action.setVisible(True)
-                self.copy_action.setVisible(False)
-            if path and (path.endswith("manifest.json") or path.endswith(".db")):
-                self.delete_action.setVisible(False)
-                self.new_run_action.setVisible(False)
-                self.repeat_run_action.setVisible(False)
-                self.find_data_action.setVisible(False)
-                self.copy_path_action.setVisible(False)
-                self.copy_action.setVisible(True)
-            if global_pos:
-                self.context_menu.exec(global_pos)
 
     def _new_run(self) -> None:
         maker = SidebarArchiveRefMaker(main=self.main, parent=self)

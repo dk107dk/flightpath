@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication
 
 from csvpath.util.path_util import PathUtility as pathu
 from csvpath.util.nos import Nos
+from csvpath.util.file_readers import DataFileReader
 
 from flightpath.util.message_utility import MessageUtility as meut
 from flightpath.util.editable import EditStates
@@ -23,7 +24,7 @@ class ReferenceFileHandler:
     # ===== UTIL METHODS ================
 
     def _item(self, row) -> str:
-        item_index = self.dialog.model.index(row, 0)
+        item_index = self.dialog.model.index(row, 1)
         item = self.dialog.model.itemFromIndex(item_index)
         t = item.text()
         return t
@@ -181,9 +182,13 @@ class ReferenceFileHandler:
             worker = self.main.read_validate_and_display_file_for_path(
                 path, editable=EditStates.NO_SAVE_NO_CTX
             )
-            worker.signals.finished.connect(
-                lambda: self._display_file_entry_in_manifest(t)
-            )
+            if worker is None:
+                if not self.main.is_opening(path):
+                    raise ValueError("Worker cannot be None")
+            else:
+                worker.signals.finished.connect(
+                    lambda: self._display_file_entry_in_manifest(t)
+                )
 
     def _display_file_entry_in_manifest(self, path: str) -> None:
         #
@@ -213,7 +218,6 @@ class ReferenceFileHandler:
         t = self._item(row)
         mpath = self._named_results_manifest_path(t)
         mani = None
-        from csvpath.util.file_readers import DataFileReader
 
         with DataFileReader(mpath) as file:
             mani = json.load(file.source)

@@ -76,7 +76,7 @@ class CompileEnvDialog(QDialog):
         self.layout.addWidget(box)
 
         self.filter_input = QLineEdit()
-        form_layout.addRow("Filter: ", self.filter_input)
+        form_layout.addRow("Filter local variables: ", self.filter_input)
         self.env_value = QLineEdit()
         button = QPushButton("Update filter")
         form_layout.addRow("", button)
@@ -85,7 +85,9 @@ class CompileEnvDialog(QDialog):
         self.table_of_existing = QTableWidget()
         self.table_of_existing.setFixedHeight(265)
         self.table_of_existing.setColumnCount(2)
-        self.table_of_existing.setHorizontalHeaderLabels(["Name", "Local value"])
+        self.table_of_existing.setHorizontalHeaderLabels(
+            ["Name", "Local value (click to copy)"]
+        )
         self.table_of_existing.verticalHeader().setVisible(False)
         header = self.table_of_existing.horizontalHeader()
         header.setStretchLastSection(True)
@@ -96,7 +98,9 @@ class CompileEnvDialog(QDialog):
         self.table_of_sending = QTableWidget()
         self.table_of_sending.setFixedHeight(265)
         self.table_of_sending.setColumnCount(2)
-        self.table_of_sending.setHorizontalHeaderLabels(["Name", "Server value"])
+        self.table_of_sending.setHorizontalHeaderLabels(
+            ["Name", "Server value (click to remove)"]
+        )
         self.table_of_sending.verticalHeader().setVisible(False)
         header = self.table_of_sending.horizontalHeader()
         header.setStretchLastSection(True)
@@ -126,7 +130,7 @@ class CompileEnvDialog(QDialog):
         kv_box_layout.addWidget(self.add_name)
         self.add_value = QLineEdit()
         kv_box_layout.addWidget(self.add_value)
-        button = QPushButton("Add/modify env var")
+        button = QPushButton("Add or modify value")
 
         add_form_inputs_layout.addWidget(kv_box)
         add_form_inputs_layout.addWidget(button)
@@ -135,14 +139,14 @@ class CompileEnvDialog(QDialog):
         add_form_layout.addRow("", add_form_inputs)
 
         self.cancel_button = QPushButton("Cancel")
-        self.upload_button = QPushButton("Upload")
+        self.upload_button = QPushButton("Update server")
         upload_box = QWidget()
         ubox_layout = QHBoxLayout()
         ubox_layout.setContentsMargins(0, 0, 0, 0)
         upload_box.setLayout(ubox_layout)
         ubox_layout.addWidget(self.cancel_button)
         ubox_layout.addWidget(self.upload_button)
-        add_form_layout.addRow("Upload: ", upload_box)
+        self.layout.addWidget(upload_box)
         self.upload_button.clicked.connect(self.do_upload)
         self.cancel_button.clicked.connect(self.reject)
 
@@ -173,6 +177,10 @@ class CompileEnvDialog(QDialog):
     @Slot(QTableWidgetItem)
     def table_of_sending_clicked(self, item) -> None:
         row = item.row()
+        n = self.table_of_sending.item(row, 0)
+        v = self.table_of_sending.item(row, 1)
+        self.add_name.setText(n.text())
+        self.add_value.setText(v.text())
         self.table_of_sending.removeRow(row)
 
     @Slot(QTableWidgetItem)

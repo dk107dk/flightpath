@@ -51,11 +51,11 @@ class SidebarActions:
     # -------------------------------------------------------------------------
 
     def _on_project_changed(self) -> None:
-        proj = self.projects.currentText()
+        proj = self.my_parent.projects.currentText()
         if proj == self.main.state.current_project:
             return
-        if proj == self.NEW_PROJECT:
-            self.new_project_name(callback=self._make_new_project)
+        if proj == self.my_parent.NEW_PROJECT:
+            self.my_parent.new_project_name(callback=self._make_new_project)
             return
         #
         # we need to clear the Config panel and reload it or let it lazy load
@@ -115,7 +115,7 @@ class SidebarActions:
         if path is None:
             return
         self.my_parent.stage_dialog = StageDataDialog(
-            main=self.main, path=path, parent=self
+            main=self.main, path=path, parent=self.my_parent
         )
         self.my_parent.stage_dialog.show_dialog()
 
@@ -391,7 +391,7 @@ class SidebarActions:
         """Resolve an absolute path for a new file or folder being created."""
         if name.startswith(self.main.state.cwd):
             return name
-        if self._last_path is None:
+        if self.my_parent._last_path is None:
             return os.path.join(self.main.state.cwd, name)
         base = os.path.join(self.main.state.cwd, self._last_path)
         return os.path.join(base, name)

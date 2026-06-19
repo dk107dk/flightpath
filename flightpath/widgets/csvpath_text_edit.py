@@ -329,13 +329,13 @@ class CsvPathTextEdit(QPlainTextEdit):
         self._insert_mode("validation-mode: print, no-raise")
 
     def on_generate_data(self) -> None:
-        self.main.on_ai_gen_data()
+        self.main.reactor.on_ai_gen_data()
 
     def on_ask_question(self) -> None:
-        self.main.on_ai_ask_question()
+        self.main.reactor.on_ai_ask_question()
 
     def on_explain(self) -> None:
-        self.main.on_ai_explain()
+        self.main.reactor.on_ai_explain()
 
     def on_load(self) -> None:
         loader = CsvpathLoader(main=self.main, parent=self)

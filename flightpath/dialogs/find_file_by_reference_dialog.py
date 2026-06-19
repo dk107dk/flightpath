@@ -25,6 +25,7 @@ from csvpath.util.references.files_reference_finder_2 import (
 from csvpath.util.references.results_reference_finder_2 import (
     ResultsReferenceFinder2 as ResultsReferenceFinder,
 )
+from csvpath.managers.run.run_registrar import RunRegistrar
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.icon_packager import IconPackager
@@ -129,14 +130,31 @@ class FindFileByReferenceDialog(QDialog):
         self.stack_layout.setCurrentIndex(1)
         main_layout.addWidget(self.stacker)
         #
+        # orig
         #
-        #
+        """
         self.model = QStandardItemModel(self)
         self.model.setColumnCount(1)
         self.table_view.setModel(self.model)
         header = self.table_view.horizontalHeader()
         header.hide()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table_view.verticalHeader().setVisible(False)
+        """
+        #
+        # Claude's version
+        #
+        self.model = QStandardItemModel(self)
+        self.model.setColumnCount(2)
+        self.model.setHorizontalHeaderLabels(["Date", "Path"])
+        self.table_view.setModel(self.model)
+        header = self.table_view.horizontalHeader()
+        header.setVisible(True)
+        header.setSectionResizeMode(QHeaderView.Interactive)  # user-resizable
+        header.setSectionResizeMode(0, QHeaderView.Interactive)  # Date: resizable
+        header.setSectionResizeMode(
+            1, QHeaderView.Stretch
+        )  # Path: fills remaining space
         self.table_view.verticalHeader().setVisible(False)
 
         self.count = QScrollArea()
@@ -229,11 +247,40 @@ class FindFileByReferenceDialog(QDialog):
             context_menu.addAction(copy_path_action)
             context_menu.exec(global_pos)
 
-    def add_data(self, data_list: list[str]) -> None:
-        self.model.clear()
+    def clear_table(self) -> None:
+        self.model.removeRows(0, self.model.rowCount())
+
+    def _manifest_for_datatype(self, datatype: str) -> dict:
+        if datatype is None:
+            raise ValueError("Datatype cannot be None")
+        if datatype == "files":
+            return self.main.csvpaths.file_manager.files_root_manifest
+        return RunRegistrar(self.main.csvpaths).manifest
+
+    def add_data(self, datatype: str, data_list: list[str]) -> None:
+        mani = self._manifest_for_datatype(datatype)
+        self.clear_table()
         for text in data_list:
-            item = QStandardItem(text)
-            self.model.appendRow(item)
+            date_str = self._date_for_file_from_manifest(
+                datatype=datatype, mani=mani, path=text
+            )
+            date_item = QStandardItem(date_str)
+            path_item = QStandardItem(text)
+            self.model.appendRow([date_item, path_item])
+
+    def _date_for_file_from_manifest(
+        self, *, datatype: str, path: str, mani: list[dict]
+    ) -> str:
+        for _ in mani:
+            if datatype == "files":
+                p = _.get("file_path")
+                if p and path.endswith(p):
+                    return _.get("time")
+            else:
+                p = _.get("run_home")
+                if path.endswith(p):
+                    return _.get("time")
+        return ""
 
     def _on_pick_datatype(self) -> None:
         datatype = self.datatype.currentText()
@@ -288,7 +335,6 @@ class FindFileByReferenceDialog(QDialog):
             self.named_x_name.addItem(name)
 
     def show_dialog(self) -> None:
-        # self.show()
         self.exec()
 
     def _on_copy(self) -> None:
@@ -344,7 +390,9 @@ class FindFileByReferenceDialog(QDialog):
             # we're missing either a major or a datatype
             #
             self.stack_layout.setCurrentIndex(1)
-            self.model.clear()
+
+            self.clear_table()
+            # self.model.clear()
             self.results_description.setText("")
             return
         try:
@@ -359,19 +407,21 @@ class FindFileByReferenceDialog(QDialog):
             self.ref = q.ref
             res = q.files
             if res:
-                self.add_data(res)
+                self.add_data(datatype, res)
                 n = q.ref.next
                 t = self._generate_hints(n)
                 self.hints_text.setText(t)
             else:
-                self.model.clear()
+                self.clear_table()
+                # self.model.clear()
             number = len(res) if res else 0
             self.results_description.setText(
                 f"  {number} named-{datatype} found with reference {r}"
             )
             self.stack_layout.setCurrentIndex(0)
         except Exception:
-            self.model.clear()
+            self.clear_table()
+            # self.model.clear()
             if self.name_one.text() is None or self.name_one.text().strip() == "":
                 t = self._generate_hints([])
                 self.hints_text.setText(t)

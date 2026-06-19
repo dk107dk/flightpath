@@ -165,27 +165,32 @@ class LlmForm(BlankForm):
         ai = data.get("llm", {})
         config = self.config
 
-        local = False
-        _ = config.get(
+        model = config.get(
             section="llm", name="model", default="", string_parse=False, swaps=False
         )
-        local = local if _ == "" else True
-        _ = ai.get("model", "") if _ == "" else _
-        self.model.setText(_)
-
-        _ = config.get(
+        base = config.get(
             section="llm", name="api_base", default="", string_parse=False, swaps=False
         )
-        _ = ai.get("api_base", "") if _ == "" and local is False else _
-        self.base.setText(_)
-
-        _ = config.get(
+        key = config.get(
             section="llm", name="api_key", default="", string_parse=False, swaps=False
         )
-        _ = ai.get("api_key", "") if _ == "" and local is False else _
-        self.key.setText(_)
-
+        save = False
+        if not model:
+            model = ai.get("model", "")
+            save = True
+        if not base:
+            base = ai.get("api_base", "")
+            save = True
+        if not key:
+            key = ai.get("api_key", "")
+            save = True
+        self.model.setText(model)
+        self.base.setText(base)
+        self.key.setText(key)
         self.checkbox.setChecked(self._llm_config_matches_state())
+        if save is True:
+            self.add_to_config(self.main.csvpath_config)
+            self.main.csvpath_config.save_config()
 
     @property
     def fields(self) -> list[str]:
