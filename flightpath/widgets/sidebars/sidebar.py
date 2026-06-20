@@ -62,12 +62,14 @@ class Sidebar(QWidget):
         self.icon_label.setStyleSheet(
             "background-color: #ffffff;border:1px solid #c9c9c9;"
         )
+        self.combo_building = False
 
         self.projects = QComboBox()
         size = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.projects.setSizePolicy(size)
 
-        self.projects.activated.connect(self.actions._on_project_changed)
+        self.projects.currentIndexChanged.connect(self.actions._on_project_changed)
+        # self.projects.activated.connect(self.actions._on_project_changed)
         self.projects.setStyleSheet(
             "QComboBox { margin:1px; height:23px; padding-left:5px;}"
         )
@@ -144,6 +146,7 @@ class Sidebar(QWidget):
         self.main.reactor.on_color_scheme_changed()
 
     def _build_combo(self) -> None:
+        self.combo_building = True
         self.projects.clear()
         proj = self.main.state.current_project
         ps = self._project_names()
@@ -153,6 +156,7 @@ class Sidebar(QWidget):
                 self.projects.setCurrentText(p)
         self.projects.insertSeparator(self.projects.count())
         self.projects.addItem(Sidebar.NEW_PROJECT)
+        self.combo_building = False
 
     def _project_names(self) -> list[str]:
         projs = os.path.join(self.main.state.home, self.main.state.projects_home)
