@@ -140,8 +140,13 @@ class MainWindow(QMainWindow):
         # if the current project has llm but the env.json doesn't we will still show the
         # splash. this is fine, imho -- the splash isn't completely unexpected.
         #
+        # however, for testing we'll accept -1 as meaning we don't want to show the splash
+        # under any circumstances. -1 will only be triggered by GateGuard finding
+        # FLIGHTPATH_SKIP_SPLASH in the env vars (the value of FLIGHTPATH_SKIP_SPLASH
+        # doesn't matter).
+        #
         guard = GateGuard.show_splash()
-        if noai is True or guard is True:
+        if guard != -1 and (noai is True or guard is True):
             splashpath = fiut.make_app_path(f"assets{os.sep}images{os.sep}splash.png")
             from flightpath.dialogs.splash_dialog import SplashDialog
 
@@ -247,9 +252,13 @@ class MainWindow(QMainWindow):
         if self.setup_ai_flag is True:
             self.open_ai_config()
         #
-        # kickoff a precache worker to collect some info about files
+        # kickoff a precache worker to collect some info about files. we
+        # can skip this for any reason, e.g. testing, by setting an env
+        # var to any value; presence == skip.
         #
-        QTimer.singleShot(1000, self._run_precacher)
+        skip = os.getenv("FLIGHTPATH_SKIP_PRECACHER")
+        if skip is None:
+            QTimer.singleShot(1000, self._run_precacher)
         #
         # prevent double meut asks
         #
@@ -366,10 +375,6 @@ class MainWindow(QMainWindow):
         self.clear_csvpath_config()
         """ sets the project directory into .flightpath file, cds to project dir, and reloads UI. """
         self.state.load_state_and_cd(self)
-        #
-        # if we have env vars set them for this process
-        #
-        # self.state.load_env()
         self.startup()
 
     def startup(self) -> None:

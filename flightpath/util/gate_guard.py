@@ -100,6 +100,10 @@ This requirement will be removed in a future release.
         # main window may choose to show on some other schedule, e.g.
         # if AI config not set. gate guard is more general purpose.
         #
+        skip = os.getenv("FLIGHTPATH_SKIP_SPLASH")
+        if skip is not None:
+            return -1
+
         state = State().data
         opens = state.get("opens", 0)
         if not isinstance(opens, int):
@@ -132,6 +136,9 @@ This requirement will be removed in a future release.
         # the right track, but first lets just get some usage.
         #
         return True
+        #
+        # nothing below happens. we are disabled from here down.
+        #
         #
         # the below works fine in testing. just not using atm.
         #

@@ -9,11 +9,11 @@ class StringUtility:
         if name.strip() == "":
             return False
         cs = []
-        for c in range(48, 57):
+        for c in range(48, 59):
             cs.append(chr(c))
-        for c in range(65, 90):
+        for c in range(65, 91):
             cs.append(chr(c))
-        for c in range(97, 122):
+        for c in range(97, 123):
             cs.append(chr(c))
         #
         # minimally take dash, underscore, and space;

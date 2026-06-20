@@ -51,6 +51,8 @@ class SidebarActions:
     # -------------------------------------------------------------------------
 
     def _on_project_changed(self) -> None:
+        if self.my_parent.combo_building is True:
+            return
         proj = self.my_parent.projects.currentText()
         if proj == self.main.state.current_project:
             return
@@ -401,9 +403,6 @@ class SidebarActions:
     # -------------------------------------------------------------------------
 
     def _load_worksheet(self, name: str) -> None:
-        print(
-            f"actions: _load_worksheet: path: {self._current_path()}, sheet name: {name}"
-        )
         path = f"{self._current_path()}#{name}"
         self.main.read_validate_and_display_file_for_path(path)
 
