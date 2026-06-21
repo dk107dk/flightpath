@@ -5,20 +5,26 @@ Checklist coverage:
   HOME > open file > toggle raw/grid view
   HOME > open file > file info tab
   HOME > open file > change sampling rows
+  HOME > data toolbar > random sample — random sampling mode produces different rows
+  HOME > data toolbar > set delimiter to view — toolbar delimiter changes how grid parses file
 
-All three tests open the same example CSV file, perform a toolbar action,
-and assert the expected UI state change without touching the main codebase.
+All tests open example CSV files, perform toolbar actions, and assert the
+expected UI state change without touching the main codebase.
 
 The raw-source toggle and file-info actions are synchronous.
-The rows-changed action triggers an async worker; the test waits for the
-DataViewer's table model to be replaced to confirm the reload completed.
+The rows-changed, sampling, and delimiter actions trigger async workers; tests
+wait for the DataViewer's table model to be replaced to confirm reload.
 
 Run with:
   QT_QPA_PLATFORM=offscreen poetry run python -m pytest tests/gui/test_content_actions.py -v
 """
 
 import os
+import random as _random
 
+from PySide6.QtCore import Qt
+
+from flightpath.util.data_const import DataConst
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.widgets.panels.data_viewer import DataViewer
 
@@ -31,9 +37,14 @@ def _csv_path(main) -> str:
     return os.path.join(main.state.cwd, "examples", "first steps", "test.csv")
 
 
-def _open_csv(qtbot, main) -> DataViewer:
-    """Open the example CSV and block until its DataViewer tab appears."""
-    path = _csv_path(main)
+def _large_csv_path(main) -> str:
+    return os.path.join(main.state.cwd, "examples", "debugging", "World_Port_Index_sample.csv")
+
+
+def _open_csv(qtbot, main, path: str = None) -> DataViewer:
+    """Open a CSV and block until its DataViewer tab appears."""
+    if path is None:
+        path = _csv_path(main)
     assert os.path.exists(path), f"Example CSV missing: {path}"
     main.selected_file_path = path
     main.read_validate_and_display_file_for_path(path)
@@ -42,6 +53,18 @@ def _open_csv(qtbot, main) -> DataViewer:
         timeout=TIMEOUT,
     )
     return taut.find_tab(main.content.tab_widget, path)[1]
+
+
+def _trigger_sampling_reload(qtbot, main, viewer: DataViewer, *, sampling_index: int) -> None:
+    """Switch the sampling combo and wait for the table model to be replaced."""
+    original_model = viewer.table_view.model()
+    combo = main.content.toolbar.sampling
+    combo.setCurrentIndex(sampling_index)
+    combo.activated.emit(sampling_index)
+    qtbot.waitUntil(
+        lambda: viewer.table_view.model() is not original_model,
+        timeout=TIMEOUT,
+    )
 
 
 # ========= TESTS ============
@@ -99,3 +122,157 @@ def test_data_sampling_reloads_file(qtbot, main):
     reloaded_viewer = taut.find_tab(main.content.tab_widget, path)[1]
     assert isinstance(reloaded_viewer, DataViewer)
     assert combo.currentIndex() == new_index
+
+
+# ---------------------------------------------------------------------------
+# Tests — random sampling mode (HOME > data toolbar > random sample)
+# ---------------------------------------------------------------------------
+
+
+def test_random_sample_zero_triggers_reload(qtbot, main):
+    """
+    Switching the sampling combo to 'Random from 0' must trigger a file reload:
+    the DataViewer's TableModel must be replaced with a new instance.
+
+    GeneralDataWorker uses random.randint(0, 1) % 2 == 0 to decide whether
+    to include each line; the model will contain a random subset of the file.
+    """
+    viewer = _open_csv(qtbot, main)
+    assert isinstance(viewer, DataViewer)
+
+    _trigger_sampling_reload(
+        qtbot, main, viewer,
+        sampling_index=main.content.toolbar.sampling.findText(DataConst.RANDOM_0),
+    )
+
+    reloaded = taut.find_tab(main.content.tab_widget, _csv_path(main))[1]
+    assert isinstance(reloaded, DataViewer), (
+        "DataViewer tab must survive a sampling mode change to RANDOM_0"
+    )
+
+
+def test_random_sample_all_triggers_reload(qtbot, main):
+    """
+    Switching the sampling combo to 'Random from all' must trigger a file reload.
+
+    RANDOM_ALL pre-computes a random set of line numbers via prep_sampling()
+    before reading the file (a two-pass approach).  The model must be replaced.
+    """
+    viewer = _open_csv(qtbot, main)
+    assert isinstance(viewer, DataViewer)
+
+    _trigger_sampling_reload(
+        qtbot, main, viewer,
+        sampling_index=main.content.toolbar.sampling.findText(DataConst.RANDOM_ALL),
+    )
+
+    reloaded = taut.find_tab(main.content.tab_widget, _csv_path(main))[1]
+    assert isinstance(reloaded, DataViewer), (
+        "DataViewer tab must survive a sampling mode change to RANDOM_ALL"
+    )
+
+
+def test_random_sampling_produces_different_rows(monkeypatch, qtbot, main):
+    """
+    'Random from 0' mode must vary which rows are included across reloads.
+
+    GeneralDataWorker.accept_line() uses random.randint(0, 1) % 2 == 0 to
+    decide whether to include a line.  This test drives that decision
+    deterministically via monkeypatch:
+
+      • First load — randint always returns 0  → condition is True → all rows taken
+      • Second load — randint always returns 1 → condition is False → no rows taken
+
+    The World Port Index sample (999 rows, capped at 50) provides enough rows
+    to verify the contrasting behavior clearly.  If the sampling setting were
+    being ignored and FIRST_N used instead, both loads would return the same
+    non-zero count and the assertion would fail.
+    """
+    path = _large_csv_path(main)
+    assert os.path.exists(path), f"Large example CSV missing: {path}"
+
+    # --- First load: randint always returns 0 → every row is accepted ---
+    monkeypatch.setattr(_random, "randint", lambda a, b: 0)
+    viewer = _open_csv(qtbot, main, path)
+    assert isinstance(viewer, DataViewer)
+
+    main.content.toolbar.sampling.setCurrentIndex(
+        main.content.toolbar.sampling.findText(DataConst.RANDOM_0)
+    )
+    _trigger_sampling_reload(
+        qtbot, main, viewer,
+        sampling_index=main.content.toolbar.sampling.currentIndex(),
+    )
+    rows_when_always_taken = viewer.table_view.model().rowCount()
+
+    # --- Second load: randint always returns 1 → no rows accepted ---
+    monkeypatch.setattr(_random, "randint", lambda a, b: 1)
+    _trigger_sampling_reload(
+        qtbot, main, viewer,
+        sampling_index=main.content.toolbar.sampling.currentIndex(),
+    )
+    rows_when_never_taken = viewer.table_view.model().rowCount()
+
+    assert rows_when_always_taken != rows_when_never_taken, (
+        f"RANDOM_0 with randint→0 gave {rows_when_always_taken} rows, "
+        f"with randint→1 gave {rows_when_never_taken} rows; they must differ"
+    )
+    assert rows_when_always_taken > 0, (
+        "When randint always returns 0, at least some rows must be accepted"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Tests — delimiter to view (HOME > data toolbar > set delimiter to view)
+# ---------------------------------------------------------------------------
+
+
+def test_delimiter_change_affects_column_count(qtbot, main):
+    """
+    Changing the toolbar delimiter and triggering a reload must re-parse the
+    file with the new delimiter, producing a different column count.
+
+    test.csv is comma-delimited with 3 fields per row.  When re-parsed with
+    the Pipe delimiter, each row has no pipe characters, so the whole row is
+    treated as a single field — column count drops to 1.  Switching back to
+    Comma restores the original 3-column layout.
+
+    Regression guard: if delimiter_char() or the worker constructor stop
+    reading the toolbar setting, the column count will stay at 3 for Pipe.
+    """
+    path = _csv_path(main)
+    viewer = _open_csv(qtbot, main)
+    assert isinstance(viewer, DataViewer)
+
+    assert viewer.table_view.model().columnCount() == 3, (
+        "test.csv with Comma delimiter must have 3 columns"
+    )
+
+    # --- Switch to Pipe delimiter → single column ---
+    original_model = viewer.table_view.model()
+    pipe_index = main.content.toolbar.delimiter.findText(DataConst.PIPE)
+    main.content.toolbar.delimiter.setCurrentIndex(pipe_index)
+    main.content.toolbar.delimiter.activated.emit(pipe_index)
+    qtbot.waitUntil(
+        lambda: viewer.table_view.model() is not original_model,
+        timeout=TIMEOUT,
+    )
+
+    assert viewer.table_view.model().columnCount() == 1, (
+        "test.csv re-parsed with Pipe delimiter must collapse to 1 column "
+        "(no pipes in the file content)"
+    )
+
+    # --- Switch back to Comma → 3 columns restored ---
+    original_model = viewer.table_view.model()
+    comma_index = main.content.toolbar.delimiter.findText(DataConst.COMMA)
+    main.content.toolbar.delimiter.setCurrentIndex(comma_index)
+    main.content.toolbar.delimiter.activated.emit(comma_index)
+    qtbot.waitUntil(
+        lambda: viewer.table_view.model() is not original_model,
+        timeout=TIMEOUT,
+    )
+
+    assert viewer.table_view.model().columnCount() == 3, (
+        "test.csv re-parsed with Comma delimiter must restore 3 columns"
+    )
