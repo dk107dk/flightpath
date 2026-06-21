@@ -6,8 +6,10 @@ Checklist coverage:
   HOME > create files > create csvpath file
   HOME > create files > create md file
   HOME > create files > create json file
+  HOME > create files > create JSONL file
   HOME > create directory
   HOME > file operations > delete file
+  HOME > file operations > delete directory
   HOME > permanent delete (named-files, named-paths, archive)
 
 Creation tests
@@ -144,6 +146,39 @@ def test_new_json_file_creates_file(monkeypatch, main):
     assert open(expected).read() == "{}"
 
 
+def test_new_jsonl_file_creates_file_with_object(monkeypatch, main):
+    """
+    'New file' → 'events.jsonl' must create the file.  JSONL files share the
+    JSON creation path and prompt for an initial data structure via getItem();
+    the stub selects '{}', so the file content must be '{}'.
+    """
+    filename = "events.jsonl"
+    monkeypatch.setattr(MODULE + ".QInputDialog", _make_dialog(filename, get_item_result="{}"))
+
+    main.sidebar._last_path = None
+    main.sidebar.actions._new_file_navigator_item()
+
+    expected = os.path.join(main.state.cwd, filename)
+    assert os.path.isfile(expected), f"Expected JSONL file not created: {expected}"
+    assert open(expected).read() == "{}"
+
+
+def test_new_jsonl_file_creates_file_with_array(monkeypatch, main):
+    """
+    'New file' → 'items.jsonl' with getItem() returning '[]' must create the
+    file with '[]' as starter content (array variant of the JSONL creation flow).
+    """
+    filename = "items.jsonl"
+    monkeypatch.setattr(MODULE + ".QInputDialog", _make_dialog(filename, get_item_result="[]"))
+
+    main.sidebar._last_path = None
+    main.sidebar.actions._new_file_navigator_item()
+
+    expected = os.path.join(main.state.cwd, filename)
+    assert os.path.isfile(expected), f"Expected JSONL file not created: {expected}"
+    assert open(expected).read() == "[]"
+
+
 def test_new_folder_creates_directory(monkeypatch, main):
     """
     'New folder' → 'my_data' must create the directory under the project root.
@@ -236,3 +271,37 @@ def test_delete_selected_file_shows_welcome(monkeypatch, main):
 
     assert not os.path.exists(path)
     assert len(welcome_calls) == 1, "show_welcome_screen() must be called for the selected file"
+
+
+def test_delete_directory_yes_removes_dir(monkeypatch, main):
+    """
+    Confirming 'Delete' (Yes) on a directory path must remove the entire
+    directory from disk.  Nos.remove() handles both files and directories, so
+    the same _delete_file_navigator_item action covers both cases.
+    """
+    dir_path = os.path.join(main.state.cwd, "dir_to_delete")
+    os.mkdir(dir_path)
+    assert os.path.isdir(dir_path)
+
+    _patch_yes_no2(monkeypatch, QMessageBox.Yes)
+    monkeypatch.setattr(main.sidebar.actions, "_current_path", lambda: dir_path)
+
+    main.sidebar.actions._delete_file_navigator_item()
+
+    assert not os.path.exists(dir_path), "Directory should be removed after confirming Yes"
+
+
+def test_delete_directory_no_keeps_dir(monkeypatch, main):
+    """
+    Cancelling 'Delete' (No) on a directory must leave it untouched on disk.
+    """
+    dir_path = os.path.join(main.state.cwd, "keep_this_dir")
+    os.mkdir(dir_path)
+    assert os.path.isdir(dir_path)
+
+    _patch_yes_no2(monkeypatch, QMessageBox.No)
+    monkeypatch.setattr(main.sidebar.actions, "_current_path", lambda: dir_path)
+
+    main.sidebar.actions._delete_file_navigator_item()
+
+    assert os.path.isdir(dir_path), "Directory should survive after cancelling (No)"
