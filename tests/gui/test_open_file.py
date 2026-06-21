@@ -1,15 +1,19 @@
 """
 pytest-qt tests for opening files in the content viewer.
 
-Checklist coverage: HOME > open file; HOME > editors (CsvPath, JSON, Grid/raw, Markdown)
+Checklist coverage:
+  HOME > open file
+  HOME > editors (CsvPath, JSON, Grid/raw, Markdown)
+  HOME > open jsonl as json
 
-Each test calls read_validate_and_display_file_for_path(), which is exactly what
-on_tree_click() calls after resolving the sidebar model index to a path. That function
-is the dispatch point for all file-type routing, so one test per file type covers the
-four distinct worker/viewer paths.
+Each test calls read_validate_and_display_file_for_path() (or
+_do_edit_as_json() for the JSONL case), which is exactly what the sidebar
+tree-click and context-menu handlers call.  That function is the dispatch
+point for all file-type routing, so one test per file type covers the four
+distinct worker/viewer paths.
 
-The tab's objectName is always the absolute file path, so taut.find_tab() confirms
-both that a tab opened and that it belongs to the right file.
+The tab's objectName is always the absolute file path, so taut.find_tab()
+confirms both that a tab opened and that it belongs to the right file.
 
 Run with:
   QT_QPA_PLATFORM=offscreen poetry run python -m pytest tests/gui/test_open_file.py -v
@@ -90,4 +94,24 @@ def test_open_md_file_opens_md_viewer(qtbot, main):
     viewer = _open_and_wait(qtbot, main, path)
 
     assert isinstance(viewer, MdViewer)
+    assert main.main_layout.currentIndex() == 1
+
+
+def test_open_jsonl_as_json(qtbot, main):
+    """
+    'Edit as JSON' on a .jsonl file must open a JsonViewer2 tab (editable)
+    and switch to the Content view.  This exercises the sidebar context-menu
+    path that calls _do_edit_as_json() → spin_up_json_worker().
+    """
+    path = _examples(main, "json", "prompts.jsonl")
+    assert os.path.exists(path), f"Example JSONL missing: {path}"
+
+    main.sidebar.actions._do_edit_as_json(path)
+    qtbot.waitUntil(
+        lambda: taut.find_tab(main.content.tab_widget, path) is not None,
+        timeout=TIMEOUT,
+    )
+
+    viewer = taut.find_tab(main.content.tab_widget, path)[1]
+    assert isinstance(viewer, JsonViewer2)
     assert main.main_layout.currentIndex() == 1
