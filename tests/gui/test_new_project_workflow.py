@@ -30,17 +30,15 @@ validation failure shows up as a clear assertion instead of a hang waiting on
 a dialog.finished that already fired.
 
 Run with:
-  QT_QPA_PLATFORM=offscreen pytest test_new_project_workflow.py -v
+  QT_QPA_PLATFORM=offscreen poetry run python -m pytest tests/gui/test_new_project_workflow.py -v
 """
 
 import os
-import pytest
 from PySide6.QtWidgets import QInputDialog, QMessageBox
 
-from flightpath.util.state import State
 from flightpath.widgets.sidebars.sidebar import Sidebar
-from flightpath.main import MainWindow
 
+# isolated_home and main fixtures are provided by conftest.py
 
 EXAMPLES_LIST_PATH = os.path.join(
     os.path.dirname(__file__),
@@ -56,32 +54,6 @@ EXAMPLES_LIST_PATH = os.path.join(
 def _expected_example_entries() -> list[str]:
     with open(EXAMPLES_LIST_PATH, encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip()]
-
-
-@pytest.fixture
-def isolated_home(tmp_path, monkeypatch):
-    """
-    State.home reads Path.home(). Without patching this, running the test
-    would create real ~/FlightPath/... directories on the dev machine.
-    We redirect 'home' to a tmp dir for the lifetime of the test.
-    """
-    fake_home = tmp_path / "home"
-    fake_home.mkdir()
-    monkeypatch.setattr(State, "home", property(lambda self: str(fake_home)))
-    return fake_home
-
-
-@pytest.fixture
-def main(qtbot, isolated_home):
-    """
-    Real MainWindow, real State, real CsvPaths — only 'home' is redirected.
-    we exercise actual config-writing and example-copying code, not mocks.
-    """
-    win = MainWindow()
-    qtbot.addWidget(win)
-    win.show()
-    qtbot.waitExposed(win)
-    return win
 
 
 def _find_open_input_dialog(main) -> QInputDialog | None:
