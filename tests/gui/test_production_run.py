@@ -301,3 +301,125 @@ def test_rerun_produces_second_log_tab(monkeypatch, qtbot, main):
     sidebar._repeat_run()
 
     qtbot.waitUntil(lambda: _log_tab_count(hf) == 2, timeout=TIMEOUT)
+
+
+def test_info_dialog_appears_on_info_icon_click(monkeypatch, qtbot, main):
+    """
+    Clicking the info icon on a Runs accordion item must open RunInfoDialog.
+
+    on_item_info_requested() chooses between RunInfoDialog (run succeeded,
+    run_dir is set) and RunFailedDialog (run failed or produced no archive
+    results, run_dir is None).  For a successful production run the archive
+    directory is always written; we set run_dir explicitly to the timestamp
+    directory created by the run, which mirrors what SidebarArchiveListener
+    does in the live app when it receives a results-started event.
+
+    show_dialog() is monkeypatched to prevent the window from appearing and
+    to record that the call was made.  Exactly one dialog must be triggered.
+    """
+    from flightpath.dialogs.run_info_dialog import RunInfoDialog
+
+    _setup_and_run(qtbot, main)
+
+    runs = main.sidebar_rt_bottom.runs
+    assert runs.count == 1, "Precondition: one accordion item after run"
+    item = runs.items[0]
+
+    # Ensure run_dir is set — find the timestamp directory in the archive so
+    # on_item_info_requested() takes the RunInfoDialog branch.
+    archive_group = os.path.join(
+        main.csvpath_config.get(section="results", name="archive"), "hello-world"
+    )
+    run_dir = next(
+        (
+            os.path.join(archive_group, e)
+            for e in os.listdir(archive_group)
+            if os.path.isdir(os.path.join(archive_group, e))
+        ),
+        None,
+    )
+    assert run_dir is not None, "Archive must contain a run directory after successful run"
+    item.metadata["run_dir"] = run_dir
+
+    shown = []
+    monkeypatch.setattr(RunInfoDialog, "show_dialog", lambda self: shown.append("info"))
+
+    main.sidebar_rt_bottom.on_item_info_requested(item.metadata)
+
+    assert len(shown) == 1 and shown[0] == "info", (
+        f"RunInfoDialog.show_dialog must be called exactly once; got: {shown}"
+    )
+
+
+def test_bad_template_shows_run_failed_dialog(monkeypatch, qtbot, main):
+    """
+    A production run with a non-existent template path must fail, add an error
+    accordion item, and show RunFailedDialog when the user clicks info.
+
+    Failure path:
+      RunWorker.run() → collect_paths() raises (template not found) →
+      inner except: error_manager.handle_error() + metadata_update() on item
+      (sets error_message and error_json) → signals.error → _display_error →
+      meut.message2 → callback: _display_log(error=True) → run_ended(error=True)
+      → renew_sidebar_archive() → Log tab.
+
+    meut.message2 is monkeypatched to call _display_log immediately (bypassing
+    the blocking OK dialog), so the test can wait on the Log tab.
+
+    After the run the accordion item has run_dir=None (run never produced
+    archive results) and error_message + error_json set by SidebarArchiveListener,
+    so on_item_info_requested() shows RunFailedDialog.
+
+    RunFailedDialog.show_dialog is monkeypatched to capture the call.
+    """
+    from flightpath.util.message_utility import MessageUtility
+    from flightpath.dialogs.run_failed_dialog import RunFailedDialog
+
+    csvpath_file = _examples(main, "first steps", "Hello World.csvpath")
+    csv_file = _examples(main, "first steps", "test.csv")
+    csvpaths = main.csvpaths
+    csvpaths.config.set(section="inputs", name="allow_local_files", value=True)
+    csvpaths.file_manager.add_named_file(name="test", path=csv_file, template=None)
+    csvpaths.paths_manager.add_named_paths_from_file(
+        name="hello-world", file_path=csvpath_file, template=None, append=False
+    )
+
+    # Bypass the "Error in run" OK dialog — call _display_log immediately
+    def _immediate_callback(*, parent, msg, title="", callback=None, args=None):
+        if callback:
+            callback(**(args or {}))
+
+    monkeypatch.setattr(MessageUtility, "message2", _immediate_callback)
+
+    main.run_paths(
+        method="collect_paths",
+        named_paths_name="hello-world",
+        named_file_name="test",
+        template="/nonexistent/bad_template.json",
+    )
+
+    # _display_log is called (via patched message2 → callback chain) and adds a Log tab
+    hf = main.helper.help_and_feedback
+    qtbot.waitUntil(lambda: _has_log_tab(hf), timeout=TIMEOUT)
+
+    runs = main.sidebar_rt_bottom.runs
+    assert runs.count == 1, "One accordion item must exist after the failed run"
+    item = runs.items[0]
+
+    # run_dir is None because the run never produced archive results
+    assert item.metadata.get("run_dir") is None, (
+        "run_dir must be None when the run failed before writing archive results"
+    )
+    # error_message and error_json are set by SidebarArchiveListener.update_item_error
+    assert "error_message" in item.metadata, (
+        "error_message must be set on the accordion item after a run failure"
+    )
+
+    shown = []
+    monkeypatch.setattr(RunFailedDialog, "show_dialog", lambda self: shown.append("failed"))
+
+    main.sidebar_rt_bottom.on_item_info_requested(item.metadata)
+
+    assert len(shown) == 1 and shown[0] == "failed", (
+        f"RunFailedDialog.show_dialog must be called exactly once; got: {shown}"
+    )
