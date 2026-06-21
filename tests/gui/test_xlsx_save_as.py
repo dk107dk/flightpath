@@ -2,6 +2,8 @@
 pytest-qt tests for XLSX file handling and save-as behavior.
 
 Checklist coverage:
+  HOME > open XLSX > single default worksheet opens in DataViewer
+  HOME > open XLSX with multiple worksheets > worksheet selector / named tab
   HOME > save, save-as > grid (XLSX — forced save-as to CSV)
   HOME > delimiters > save data as new delimiter (from XLSX source)
 
@@ -36,6 +38,12 @@ XLSX_PATH = os.path.join(
     "CPIForecast.xlsx",
 )
 
+# CPIForecast.xlsx contains two worksheets:
+#   'October 2024 CPI Forecast' — 37 rows × 14 cols (the main data)
+#   'Test sheet 1'              —  4 rows ×  3 cols (small helper sheet)
+SHEET_CPI = "October 2024 CPI Forecast"
+SHEET_SMALL = "Test sheet 1"
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -50,6 +58,21 @@ def _open_and_wait(qtbot, main):
         timeout=TIMEOUT,
     )
     return taut.find_tab(main.content.tab_widget, XLSX_PATH)[1]
+
+
+def _open_sheet_and_wait(qtbot, main, sheet_name: str):
+    """Open a named worksheet and block until its DataViewer tab appears.
+
+    The tab objectName is 'path#SheetName' — the same key emitted by
+    GeneralDataWorker when sheet is not None.
+    """
+    tab_key = f"{XLSX_PATH}#{sheet_name}"
+    main.read_validate_and_display_file_for_path(tab_key)
+    qtbot.waitUntil(
+        lambda: taut.find_tab(main.content.tab_widget, tab_key) is not None,
+        timeout=TIMEOUT,
+    )
+    return taut.find_tab(main.content.tab_widget, tab_key)[1]
 
 
 def _fake_dialog_cls(parent_ref: list, output_path: str, delimiter: str, exts: list):
@@ -170,3 +193,94 @@ def test_xlsx_save_as_pipe_delimited(monkeypatch, qtbot, main):
     with open(output) as f:
         first_line = f.readline()
     assert "|" in first_line, "Pipe-delimited XLSX export must contain | in header"
+
+
+# ---------------------------------------------------------------------------
+# Tests — XLSX multi-worksheet: open individual sheets
+# ---------------------------------------------------------------------------
+
+
+def test_xlsx_worksheets_for_path_returns_sheet_names(main):
+    """
+    _worksheets_for_path() must return all worksheet names for an XLSX file.
+    CPIForecast.xlsx has exactly two sheets; both must appear in the result.
+    """
+    names = main.sidebar._worksheets_for_path(XLSX_PATH)
+    assert SHEET_CPI in names, f"Expected '{SHEET_CPI}' in worksheet list: {names}"
+    assert SHEET_SMALL in names, f"Expected '{SHEET_SMALL}' in worksheet list: {names}"
+    assert len(names) == 2, f"Expected exactly 2 worksheets, got: {names}"
+
+
+def test_xlsx_named_worksheet_opens_in_data_viewer(qtbot, main):
+    """
+    Opening a named worksheet via 'path#SheetName' must produce a DataViewer
+    tab whose objectName is 'path#SheetName'.  This is the same path taken
+    when the user selects a sheet from the right-click Worksheets sub-menu.
+    """
+    viewer = _open_sheet_and_wait(qtbot, main, SHEET_SMALL)
+    assert isinstance(viewer, DataViewer), (
+        f"Worksheet '{SHEET_SMALL}' must open in a DataViewer"
+    )
+
+
+def test_xlsx_worksheet_has_correct_row_count(qtbot, main):
+    """
+    The small test sheet has 4 rows of data.  After opening it, the DataViewer
+    model must expose exactly those 4 rows (GeneralDataWorker defaults to
+    reading the first 66k rows, well above the 4-row ceiling here).
+    """
+    viewer = _open_sheet_and_wait(qtbot, main, SHEET_SMALL)
+    model = viewer.table_view.model()
+    assert model is not None, "DataViewer model must be populated after opening worksheet"
+    assert model.rowCount() == 4, (
+        f"'{SHEET_SMALL}' has 4 rows; model reported {model.rowCount()}"
+    )
+
+
+def test_xlsx_two_worksheets_open_as_separate_tabs(qtbot, main):
+    """
+    Opening both worksheets must create two independent DataViewer tabs, each
+    keyed by its own 'path#SheetName' objectName.  The tabs must coexist
+    without the second opening replacing the first.
+    """
+    _open_sheet_and_wait(qtbot, main, SHEET_SMALL)
+    _open_sheet_and_wait(qtbot, main, SHEET_CPI)
+
+    key_small = f"{XLSX_PATH}#{SHEET_SMALL}"
+    key_cpi = f"{XLSX_PATH}#{SHEET_CPI}"
+
+    assert taut.find_tab(main.content.tab_widget, key_small) is not None, (
+        f"Tab for '{SHEET_SMALL}' must still exist after opening second sheet"
+    )
+    assert taut.find_tab(main.content.tab_widget, key_cpi) is not None, (
+        f"Tab for '{SHEET_CPI}' must exist"
+    )
+
+
+def test_xlsx_worksheet_save_as_csv(monkeypatch, qtbot, main):
+    """
+    Saving a worksheet-derived DataViewer via on_save_as() must produce a
+    comma-separated CSV containing the worksheet's data.
+
+    Worksheet paths have the form 'file.xlsx#SheetName', so Path.suffix is
+    '.xlsx#SheetName' rather than '.xlsx' — on_save() does not detect them
+    as XLSX files.  on_save_as() is the correct entry point (triggered by
+    right-click Save As or Shift+Ctrl+S).
+    """
+    viewer = _open_sheet_and_wait(qtbot, main, SHEET_SMALL)
+    output = os.path.join(main.state.cwd, "sheet_small.csv")
+    parent_ref = []
+
+    monkeypatch.setattr(
+        "flightpath.widgets.panels.data_viewer.SaveCsvToDialog",
+        _fake_dialog_cls(parent_ref, output, "Comma", ["csv"]),
+    )
+
+    viewer.on_save_as()
+
+    assert os.path.isfile(output), f"Expected CSV from worksheet save-as at: {output}"
+    with open(output) as f:
+        lines = [ln for ln in f.readlines() if ln.strip()]
+    assert len(lines) == 4, (
+        f"CSV from '{SHEET_SMALL}' must have 4 data rows, got {len(lines)}"
+    )

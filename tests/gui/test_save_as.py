@@ -4,9 +4,11 @@ pytest-qt tests for save and save-as across all content viewer types.
 Checklist coverage:
   HOME > save, save-as > csvpath
   HOME > save, save-as > json
+  HOME > save, save-as > json save-as triggers input2 dialog
   HOME > save, save-as > jsonl (in JsonViewer2)
   HOME > save, save-as > grid (CSV)
   HOME > delimiters > save data as new delimiter
+  HOME > delimiters > save data with single-quote quotechar
   HOME > save, save-as > jsonl (in grid — forces save-as to CSV)
 
 Save paths:
@@ -35,6 +37,7 @@ Run with:
 
 import os
 
+from flightpath.util.message_utility import MessageUtility
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 from flightpath.widgets.panels.data_viewer import DataViewer
@@ -157,6 +160,37 @@ def test_csv_save_as_pipe_delimiter(qtbot, main):
     )
 
 
+def test_csv_save_as_single_quote_quotechar(qtbot, main):
+    """
+    Saving a CSV that contains values with commas via _save_one_of with
+    quotechar='single-quotes' must produce a file where those values are
+    wrapped in single-quote characters rather than double quotes.
+
+    DataViewer.QUOTECHARS maps 'single-quotes' → "'", so any value that
+    requires quoting (e.g. a value containing the delimiter) will be wrapped
+    in single quotes in the output.
+    """
+    src = os.path.join(main.state.cwd, "needs_quoting.csv")
+    with open(src, "w") as f:
+        f.write('a,b\n"hello,world",foo\n')
+
+    viewer = _open_and_wait(qtbot, main, src)
+    assert isinstance(viewer, DataViewer)
+
+    output = os.path.join(main.state.cwd, "out_single_quote.csv")
+    viewer._save_one_of(
+        path=output,
+        delimiter="Comma",
+        quotechar="single-quotes",
+        exts=["csv"],
+    )
+
+    assert os.path.isfile(output), f"Expected single-quote output at: {output}"
+    with open(output) as f:
+        content = f.read()
+    assert "'" in content, "Output with quotechar='single-quotes' must contain single-quote characters"
+
+
 # ---------------------------------------------------------------------------
 # Tests — JSONL in grid view forces save-as
 # ---------------------------------------------------------------------------
@@ -276,3 +310,40 @@ def test_jsonl_json_viewer_save_preserves_jsonl_format(qtbot, main):
     import json
     for line in lines:
         json.loads(line)  # each line must be valid JSON
+
+
+# ---------------------------------------------------------------------------
+# Tests — JSON save-as triggers input2 dialog
+# ---------------------------------------------------------------------------
+
+
+def test_json_viewer_save_as_triggers_input2_dialog(monkeypatch, qtbot, main):
+    """
+    Calling _save_as() on a JsonViewer2 must invoke meut.input2 to prompt
+    the user for a destination path, then write the file when the callback
+    is called with ok=True.
+
+    The test stubs input2 to capture its invocation and immediately calls
+    the callback with a new path — verifying the full _save_as → _save_as_continue
+    → _do_save round-trip in one step.
+    """
+    path = _examples(main, "named-paths groups", "my_named_paths.json")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, JsonViewer2)
+
+    input2_calls = []
+    new_path = os.path.join(main.state.cwd, "via_dialog.json")
+
+    def fake_input2(*, parent, title, width, msg, text, callback, args=None):
+        input2_calls.append(text)
+        callback((new_path, True), **(args or {}))
+
+    monkeypatch.setattr(MessageUtility, "input2", fake_input2)
+
+    viewer._save_as()
+
+    assert len(input2_calls) == 1, "_save_as() must invoke input2 exactly once"
+    assert os.path.isfile(new_path), f"File must be written after input2 callback: {new_path}"
+    with open(new_path) as f:
+        contents = f.read()
+    assert len(contents) > 0, "File written via save-as dialog must not be empty"
