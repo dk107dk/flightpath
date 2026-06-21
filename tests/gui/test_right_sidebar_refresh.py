@@ -55,25 +55,6 @@ def _inputs_csvpaths_root(main) -> str:
     return main.csvpath_config.get(section="inputs", name="csvpaths")
 
 
-def _register_named_file(main, name: str = "test_refresh") -> str:
-    """Register test.csv as a named-file and return its on-disk directory path."""
-    csv_file = _examples(main, "first steps", "test.csv")
-    csvpaths = main.csvpaths
-    csvpaths.config.set(section="inputs", name="allow_local_files", value=True)
-    csvpaths.file_manager.add_named_file(name=name, path=csv_file, template=None)
-    return os.path.join(_inputs_files_root(main), name)
-
-
-def _register_named_paths(main, name: str = "test_refresh") -> str:
-    """Register Hello World.csvpath as a named-paths group; return on-disk dir."""
-    csvpath_file = _examples(main, "first steps", "Hello World.csvpath")
-    csvpaths = main.csvpaths
-    csvpaths.config.set(section="inputs", name="allow_local_files", value=True)
-    csvpaths.paths_manager.add_named_paths_from_file(
-        name=name, file_path=csvpath_file, template=None, append=False
-    )
-    return os.path.join(_inputs_csvpaths_root(main), name)
-
 
 def _context_menu_action_texts(sidebar) -> list[str]:
     return [a.text() for a in sidebar.context_menu.actions()]
@@ -184,56 +165,70 @@ def test_archive_refresh_replaces_view(main):
 
 def test_named_files_refresh_picks_up_new_entry(main):
     """
-    Content added to the named-files backend after the sidebar's initial
-    setup must appear in the model after refresh().
+    An external filesystem change to the named-files directory must not be
+    visible in the sidebar until refresh() is called.
 
-    The TreeModel is built once at setup() time — it does not watch for
-    changes.  Calling refresh() creates a new TreeModel that reads the
-    current backend state, so a newly registered named-file directory
-    becomes visible.  Registration may also write a manifest.json at the
-    root, so the assertion checks for more entries than before rather than
-    a specific count.
+    The sidebar's TreeModel is built once at setup() and does not watch the
+    filesystem for changes — this is intentional, since the named-files
+    directory may be on S3, Azure Blob, SFTP, or another non-local backend
+    that cannot be watched cheaply.  refresh() tears down the old TreeModel
+    and builds a fresh one from the current backend state.
+
+    The test creates a directory directly under the named-files root with
+    os.makedirs(), bypassing the FlightPath registration API entirely.  This
+    simulates the real refresh use-case: a change made by another FlightPath
+    instance, a CI pipeline, or a direct filesystem tool that the running app
+    has no knowledge of.  Because only one known directory is added, the
+    assertion can be exact (initial_count + 1) rather than the weaker '>'.
     """
     sidebar = main.sidebar_rt_top
     initial_count = sidebar.model.rowCount(QModelIndex())
 
-    # Register a named-file (creates a sub-directory, possibly a manifest.json)
-    _register_named_file(main)
+    # Add a directory directly to the filesystem, bypassing the FlightPath API
+    external_dir = os.path.join(_inputs_files_root(main), "external_group")
+    os.makedirs(external_dir)
 
-    # The old model still reflects the pre-registration state — no auto-update
+    # The old model is blind to the external change — no auto-update
     assert sidebar.model.rowCount(QModelIndex()) == initial_count, (
-        "Old model must not auto-update when a new entry is added"
+        "Sidebar model must not auto-update when a directory is added externally"
     )
 
     sidebar.refresh()
 
-    # The new model reads the current backend state and sees the new content
-    assert sidebar.model.rowCount(QModelIndex()) > initial_count, (
-        "After refresh(), named-files tree must show more entries than before registration"
+    # After rebuild the new directory is visible — exactly one more entry
+    assert sidebar.model.rowCount(QModelIndex()) == initial_count + 1, (
+        "After refresh(), named-files tree must show exactly one new entry "
+        "for the externally created directory"
     )
 
 
 def test_named_paths_refresh_picks_up_new_entry(main):
     """
-    Content added to the named-paths backend after the sidebar's initial
-    setup must appear in the model after refresh().  Registration may also
-    write a manifest.json at the root, so the assertion checks for more
-    entries than before rather than a specific count.
+    An external filesystem change to the named-paths directory must not be
+    visible in the sidebar until refresh() is called.
+
+    Mirrors test_named_files_refresh_picks_up_new_entry: a directory is
+    created directly under the named-paths root via os.makedirs(), and the
+    test verifies that refresh() — not the registration API — is what makes
+    it appear.  The exact count assertion (initial_count + 1) is possible
+    because only one known directory is added.
     """
     sidebar = main.sidebar_rt_mid
     initial_count = sidebar.model.rowCount(QModelIndex())
 
-    # Register a named-paths group (creates a sub-directory, possibly a manifest)
-    _register_named_paths(main)
+    # Add a directory directly to the filesystem, bypassing the FlightPath API
+    external_dir = os.path.join(_inputs_csvpaths_root(main), "external_group")
+    os.makedirs(external_dir)
 
-    # The old model still reflects the pre-registration state
+    # The old model is blind to the external change
     assert sidebar.model.rowCount(QModelIndex()) == initial_count, (
-        "Old model must not auto-update when a new entry is added"
+        "Sidebar model must not auto-update when a directory is added externally"
     )
 
     sidebar.refresh()
 
-    # New model reflects the newly registered group (and any metadata files)
-    assert sidebar.model.rowCount(QModelIndex()) > initial_count, (
-        "After refresh(), named-paths tree must show more entries than before registration"
+    # After rebuild the new directory is visible — exactly one more entry
+    assert sidebar.model.rowCount(QModelIndex()) == initial_count + 1, (
+        "After refresh(), named-paths tree must show exactly one new entry "
+        "for the externally created directory"
     )
