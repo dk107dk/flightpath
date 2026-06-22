@@ -307,12 +307,16 @@ def test_info_dialog_appears_on_info_icon_click(monkeypatch, qtbot, main):
     """
     Clicking the info icon on a Runs accordion item must open RunInfoDialog.
 
-    on_item_info_requested() chooses between RunInfoDialog (run succeeded,
-    run_dir is set) and RunFailedDialog (run failed or produced no archive
-    results, run_dir is None).  For a successful production run the archive
-    directory is always written; we set run_dir explicitly to the timestamp
-    directory created by the run, which mirrors what SidebarArchiveListener
-    does in the live app when it receives a results-started event.
+    on_item_info_requested() chooses between RunInfoDialog (run_dir set,
+    meaning the run wrote archive results) and RunFailedDialog (run_dir None).
+
+    For a successful production run, run_dir is set automatically:
+      SidebarArchiveListener.update_item_started() is added to
+      csvpaths.results_manager.dynamic_results_listeners and is called from
+      ResultsRegistrar.register_start() inside complete_run().  complete_run()
+      is called at the end of collect_paths() — before signals.finished is
+      emitted — so run_dir is populated in item.metadata by the time
+      _display_log() runs and the Log-tab waitUntil resolves.
 
     show_dialog() is monkeypatched to prevent the window from appearing and
     to record that the call was made.  Exactly one dialog must be triggered.
@@ -325,21 +329,12 @@ def test_info_dialog_appears_on_info_icon_click(monkeypatch, qtbot, main):
     assert runs.count == 1, "Precondition: one accordion item after run"
     item = runs.items[0]
 
-    # Ensure run_dir is set — find the timestamp directory in the archive so
-    # on_item_info_requested() takes the RunInfoDialog branch.
-    archive_group = os.path.join(
-        main.csvpath_config.get(section="results", name="archive"), "hello-world"
+    # run_dir is set by SidebarArchiveListener.update_item_started() which is called
+    # from ResultsRegistrar.register_start() inside complete_run() — that fires before
+    # signals.finished is emitted, so run_dir is populated by the time _display_log runs.
+    assert item.metadata.get("run_dir") is not None, (
+        "run_dir must be set by complete_run() before signals.finished fires"
     )
-    run_dir = next(
-        (
-            os.path.join(archive_group, e)
-            for e in os.listdir(archive_group)
-            if os.path.isdir(os.path.join(archive_group, e))
-        ),
-        None,
-    )
-    assert run_dir is not None, "Archive must contain a run directory after successful run"
-    item.metadata["run_dir"] = run_dir
 
     shown = []
     monkeypatch.setattr(RunInfoDialog, "show_dialog", lambda self: shown.append("info"))
