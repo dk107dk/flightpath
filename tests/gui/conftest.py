@@ -1,7 +1,9 @@
+import gc
 import logging
 from logging import Logger
 
 import pytest
+from PySide6.QtWidgets import QApplication
 
 from flightpath.util.state import State
 from flightpath.main import MainWindow
@@ -39,12 +41,25 @@ def csvpath_logging_cleanup():
     re-initialises cleanly for the next test.
     """
     yield
+    # 1. Flush any pending Qt deferred-deletions and queued cross-thread signals
+    #    so widgets and worker objects from this test are destroyed before we
+    #    touch the logging system.
+    app = QApplication.instance()
+    if app is not None:
+        app.processEvents()
+
+    # 2. Clear the CsvPath LogUtility.LOGGERS index so stale logger names
+    #    from this test's CsvPaths instances don't accumulate.
     try:
         from csvpath.util.log_utility import LogUtility as clout
         clout.LOGGERS.clear()
     except Exception:
         pass
 
+    # 3. Close and detach all FileHandlers from every registered Python logger.
+    #    LogUtility.config_logger() has a list-mutation bug that leaves the
+    #    second handler unclosed whenever a logger has 2+ handlers; this sweeps
+    #    up anything that slipped through.
     with logging._lock:
         names = list(Logger.manager.loggerDict.keys())
 
@@ -63,6 +78,12 @@ def csvpath_logging_cleanup():
                     entry.removeHandler(handler)
         except Exception:
             pass
+
+    # 4. Force GC so handler objects are actually destroyed and their weakrefs
+    #    in logging._handlerList go dead.  Without this, logging.shutdown()
+    #    called from lout.rotate_log in the next run_paths() still sees live
+    #    (but closed) handlers and flushes them all — which is slow.
+    gc.collect()
 
 
 @pytest.fixture
