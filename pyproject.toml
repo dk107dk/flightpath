@@ -50,6 +50,12 @@ url = "file:///Users/davidkershaw/dev/csvpath/dist"
 priority = "explicit"
 
 
+[tool.pytest.ini_options]
+markers = [
+    "live_server: requires a live FlightPath Server subprocess (use -m 'not live_server' to skip)",
+]
+testpaths = ["tests"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
