@@ -440,7 +440,13 @@ Coverage annotations show the test file(s) and function name(s) for each automat
 		`test_upload_config_answer_no_skips_api`,
 		`test_upload_config_shows_warning_on_api_failure`,
 		`test_live_upload_and_download_config_round_trip`
-- [ ] sync config
+- [x] sync config — dialog tables populated, sync button state, do_sync dispatches upload
+  - `test_sync_dialogs.py`:
+		`test_sync_config_dialog_tables_have_rows`,
+		`test_sync_config_sync_button_starts_disabled`,
+		`test_sync_config_cell_edit_enables_sync_button`,
+		`test_sync_config_do_sync_calls_upload_config`,
+		`test_sync_config_local_click_copies_value_to_sending`
 - [x] download config
   - `test_server_form.py`:
 		`test_download_config_writes_file`,
@@ -450,7 +456,14 @@ Coverage annotations show the test file(s) and function name(s) for each automat
   - `test_server_form.py`:
 		`test_download_env_writes_file`,
 		`test_live_upload_and_download_env_round_trip`
-- [ ] sync env
+- [x] sync env — dialog sending table, JSON compilation, add/remove rows, dispatch and cancel
+  - `test_sync_dialogs.py`:
+		`test_compile_env_dialog_sending_table_populated`,
+		`test_compile_env_do_upload_produces_valid_json`,
+		`test_compile_env_add_row_appears_in_sending`,
+		`test_compile_env_sending_click_removes_row_and_fills_inputs`,
+		`test_upload_env_calls_api_after_dialog_confirms`,
+		`test_upload_env_skips_api_when_dialog_cancelled`
 - [ ] shutdown server
   - `test_server_form.py`:
 		`test_server_form_shutdown_button_disabled_without_credentials`,
