@@ -269,6 +269,143 @@ def test_random_sampling_produces_different_rows(monkeypatch, qtbot, main):
 
 
 # ---------------------------------------------------------------------------
+# Tests — sampling row-count guarantees (HOME > data toolbar)
+# ---------------------------------------------------------------------------
+
+
+def test_random_all_gives_same_count_as_first_n(monkeypatch, qtbot, main):
+    """
+    RANDOM_ALL must produce the same row count as FIRST_N for the same row
+    limit: both are capped at sample_size rows, they just pick different lines.
+    RANDOM_0 is probabilistic — with randint forced to reject every line, it
+    produces zero rows, which is correct but alarming if you don't expect it.
+
+    This test exists to document the intended difference so that a low RANDOM_0
+    count can be distinguished from a bug:
+      FIRST_N 50   → takes first 50 lines
+      RANDOM_ALL   → pre-selects 50 random line numbers; rowCount still 50
+      RANDOM_0 (all-reject) → zero rows; the cap was never reached, not a bug
+    """
+    path = _large_csv_path(main)
+    assert os.path.exists(path), f"Large example CSV missing: {path}"
+
+    # Default open: FIRST_N + SMALL (50) row limit
+    viewer = _open_csv(qtbot, main, path)
+    first_n_count = viewer.table_view.model().rowCount()
+    assert first_n_count == DataConst.SMALL, (
+        "FIRST_N on a large file must return exactly SMALL rows"
+    )
+
+    # RANDOM_ALL — prep_sampling pre-selects exactly sample_size line numbers
+    rall_index = main.content.toolbar.sampling.findText(DataConst.RANDOM_ALL)
+    _trigger_sampling_reload(qtbot, main, viewer, sampling_index=rall_index)
+    assert viewer.table_view.model().rowCount() == first_n_count, (
+        "RANDOM_ALL must return the same row count as FIRST_N; "
+        "it samples different lines but the same number"
+    )
+
+    # RANDOM_0 with all-reject: randint always returns 1 → condition False → 0 rows
+    monkeypatch.setattr(_random, "randint", lambda a, b: 1)
+    r0_index = main.content.toolbar.sampling.findText(DataConst.RANDOM_0)
+    _trigger_sampling_reload(qtbot, main, viewer, sampling_index=r0_index)
+    assert viewer.table_view.model().rowCount() == 0, (
+        "RANDOM_0 with randint always rejecting must produce 0 rows; "
+        "this is the expected extreme of probabilistic sampling, not data loss"
+    )
+
+
+def test_row_limit_caps_all_sampling_modes(monkeypatch, qtbot, main):
+    """
+    The SMALL (50) row limit must be respected by every sampling mode.
+
+    With a large file and a 50-row cap:
+      FIRST_N    — takes first 50 lines → rowCount == 50
+      RANDOM_ALL — pre-selects exactly 50 random lines → rowCount == 50
+      RANDOM_0   — with randint forced to 0 (always accept), fills to cap → 50
+
+    If any mode silently ignored the cap, a user switching sampling on a large
+    file could load far more rows than the UI shows.
+    """
+    path = _large_csv_path(main)
+    assert os.path.exists(path), f"Large example CSV missing: {path}"
+
+    viewer = _open_csv(qtbot, main, path)
+    assert viewer.table_view.model().rowCount() == DataConst.SMALL, (
+        "FIRST_N must cap at SMALL rows"
+    )
+
+    rall_index = main.content.toolbar.sampling.findText(DataConst.RANDOM_ALL)
+    _trigger_sampling_reload(qtbot, main, viewer, sampling_index=rall_index)
+    assert viewer.table_view.model().rowCount() == DataConst.SMALL, (
+        "RANDOM_ALL must respect the SMALL row cap"
+    )
+
+    monkeypatch.setattr(_random, "randint", lambda a, b: 0)
+    r0_index = main.content.toolbar.sampling.findText(DataConst.RANDOM_0)
+    _trigger_sampling_reload(qtbot, main, viewer, sampling_index=r0_index)
+    assert viewer.table_view.model().rowCount() == DataConst.SMALL, (
+        "RANDOM_0 must stop at the SMALL row cap even when all lines are accepted"
+    )
+
+
+def test_save_sample_passes_model_rows_not_full_file(monkeypatch, qtbot, main):
+    """
+    Save sample must write exactly the rows in the current grid model — the
+    sampled subset — not the rows from the original file.
+
+    With RANDOM_0 (randint forced to 0, all-accept) and a SMALL (50) row cap,
+    the model holds 50 rows out of a 999-row file.  The reactor's on_save_sample
+    calls model.get_data() and passes it to main.save_sample().  That data must
+    be the 50-row sample, not the 999-row original.
+
+    This pins down the confusing but correct UX sequence:
+      open 999-row file  → FIRST_N shows 50 rows
+      switch RANDOM_0    → shows ~50 rows (different lines, same cap)
+      Save sample        → writes those ~50 rows; re-opening shows ~50, not 999
+      switch RANDOM_0    → shows ~25 rows — still correct, not a bug
+    """
+    path = _large_csv_path(main)
+    assert os.path.exists(path), f"Large example CSV missing: {path}"
+
+    monkeypatch.setattr(_random, "randint", lambda a, b: 0)
+    viewer = _open_csv(qtbot, main, path)
+
+    r0_index = main.content.toolbar.sampling.findText(DataConst.RANDOM_0)
+    _trigger_sampling_reload(qtbot, main, viewer, sampling_index=r0_index)
+
+    model_rows = viewer.table_view.model().rowCount()
+    assert model_rows == DataConst.SMALL, (
+        "Setup: RANDOM_0 all-accept must fill to the SMALL cap"
+    )
+
+    # Intercept save_sample to capture the data the reactor passes to it.
+    # Returning None skips the post-save file reload.
+    captured = {}
+
+    def _mock_save(*, path, name, data):
+        captured["row_count"] = len(data)
+        return None
+
+    monkeypatch.setattr(main, "save_sample", _mock_save)
+
+    # setCurrentWidget normalises the tab-widget state before on_save_sample
+    # reads currentIndex() (same phantom-tab workaround as test_toggle_raw_view_on_csv)
+    main.content.tab_widget.setCurrentWidget(viewer)
+    main.reactor.on_save_sample()
+
+    assert captured.get("row_count") == model_rows, (
+        f"save_sample must receive exactly {model_rows} rows from the model; "
+        f"got {captured.get('row_count')!r}"
+    )
+
+    with open(path) as f:
+        total_lines = sum(1 for line in f if line.strip())
+    assert model_rows < total_lines, (
+        "The sampled model must be a strict subset of the source file"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Tests — delimiter to view (HOME > data toolbar > set delimiter to view)
 # ---------------------------------------------------------------------------
 
