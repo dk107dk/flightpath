@@ -97,21 +97,22 @@ Coverage annotations show the test file(s) and function name(s) for each automat
 		✓`test_new_md_file_creates_file`,
 		✓`test_new_csvpath_file_creates_file`,
 		✓`test_new_json_file_creates_file`
-  - [x] new JSONL file — creates `.jsonl` with starter content
+  - [✓] new JSONL file — creates `.jsonl` with starter content
     - `test_sidebar_context_menu.py`:
-		`test_new_jsonl_file_creates_file_with_object`, 		`test_new_jsonl_file_creates_file_with_array`
-  - [x] cut + paste file
-    - `test_file_operations.py`: `test_cut_paste_moves_file`
-  - [x] right-click on whitespace in project tree — shows root-level context menu
+		✓`test_new_jsonl_file_creates_file_with_object`,
+        ✓`test_new_jsonl_file_creates_file_with_array`
+  - [✓] cut + paste file
+    - ✓`test_file_operations.py`: `test_cut_paste_moves_file`
+  - [✓] right-click on whitespace in project tree — shows root-level context menu
     - `test_whitespace_context_menu.py`:
-		`test_whitespace_menu_has_new_file_action`,
-		`test_whitespace_menu_has_new_folder_action`,
-		`test_whitespace_menu_has_open_project_dir_action`,
-		`test_whitespace_menu_has_paste_action`,
-		`test_whitespace_menu_paste_disabled_when_clipboard_empty`,
-		`test_whitespace_menu_excludes_delete_action`,
-		`test_whitespace_menu_excludes_rename_action`,
-		`test_whitespace_menu_excludes_save_file_action`
+		✓`test_whitespace_menu_has_new_file_action`,
+		✓`test_whitespace_menu_has_new_folder_action`,
+		✓`test_whitespace_menu_has_open_project_dir_action`,
+		✓`test_whitespace_menu_has_paste_action`,
+		✓`test_whitespace_menu_paste_disabled_when_clipboard_empty`,
+		✓`test_whitespace_menu_excludes_delete_action`,
+		✓`test_whitespace_menu_excludes_rename_action`,
+		✓`test_whitespace_menu_excludes_save_file_action`
 - [x] save and save-as
   - [x] csvpath — in-place save writes changes to disk
     - `test_save_as.py`: `test_csvpath_save_writes_changes`
@@ -428,7 +429,12 @@ Coverage annotations show the test file(s) and function name(s) for each automat
 		`test_server_form_saves_host_and_key`,
  		`test_server_form_populates_from_config`,
 		`test_live_server_is_reachable`
-- [ ] create new key — key displayed in dialog
+- [x] create new key — key displayed in dialog
+  - `test_key_dialog.py`:
+		`test_new_key_dialog_calls_api_with_correct_fields`,
+		`test_new_key_dialog_success_displays_key`,
+		`test_new_key_dialog_validation_requires_all_fields`,
+		`test_new_key_dialog_failure_invokes_failed_callback`
 - [x] create project
   - `test_server_form.py`:
 		`test_get_project_names_populates_list`,
