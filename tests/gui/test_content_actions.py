@@ -76,6 +76,9 @@ def test_toggle_raw_view_on_csv(qtbot, main):
     grid view (layout index 0) to raw text view (layout index 1), and the
     raw text area must contain the file content.
 
+    TODO: the below is worked around in regular use, but should be fixed so it's
+    not broken behind the scenes:
+
     update_data_views() calls addTab() twice for a new file (once in the
     data_view-is-None branch at main.py:866, then unconditionally in the try
     block at main.py:900).  The second call moves the same widget inside the
@@ -104,8 +107,7 @@ def test_toggle_raw_view_on_csv(qtbot, main):
         "Raw view must contain the file content after toggle"
     )
 
-
-
+#chked
 def test_file_info_opens_info_tab(qtbot, main):
     """
     Clicking 'File info' on an open CSV must add a 'File Info' tab to the
@@ -117,7 +119,6 @@ def test_file_info_opens_info_tab(qtbot, main):
 
     info_tab = taut.find_tab(main.helper.help_and_feedback, "FileInfo")
     assert info_tab is not None, "Expected a 'File Info' tab in the helper panel"
-
 
 def test_data_sampling_reloads_file(qtbot, main):
     """
@@ -153,44 +154,67 @@ def test_data_sampling_reloads_file(qtbot, main):
 
 def test_random_sample_zero_triggers_reload(qtbot, main):
     """
-    Switching the sampling combo to 'Random from 0' must trigger a file reload:
-    the DataViewer's TableModel must be replaced with a new instance.
+    Switching the sampling combo to 'Random from 0' must trigger a file reload
+    that produces a valid, non-empty model with the correct column structure, and
+    must leave the toolbar combo on RANDOM_0.
 
     GeneralDataWorker uses random.randint(0, 1) % 2 == 0 to decide whether
-    to include each line; the model will contain a random subset of the file.
+    to include each data line; the header row is always included.  columnCount()
+    must match test.csv's 3-column structure regardless of which rows are sampled,
+    and rowCount() must be at least 1 (the header).  The deterministic
+    different-rows assertion lives in test_random_sampling_produces_different_rows.
     """
     viewer = _open_csv(qtbot, main)
     assert isinstance(viewer, DataViewer)
 
-    _trigger_sampling_reload(
-        qtbot, main, viewer,
-        sampling_index=main.content.toolbar.sampling.findText(DataConst.RANDOM_0),
-    )
+    r0_index = main.content.toolbar.sampling.findText(DataConst.RANDOM_0)
+    _trigger_sampling_reload(qtbot, main, viewer, sampling_index=r0_index)
 
     reloaded = taut.find_tab(main.content.tab_widget, _csv_path(main))[1]
     assert isinstance(reloaded, DataViewer), (
         "DataViewer tab must survive a sampling mode change to RANDOM_0"
     )
+    model = reloaded.table_view.model()
+    assert model.columnCount() == 3, (
+        "Column count must match test.csv's 3-column structure after RANDOM_0 reload"
+    )
+    assert model.rowCount() > 0, (
+        "Model must contain at least the header row after RANDOM_0 reload"
+    )
+    assert main.content.toolbar.sampling.currentIndex() == r0_index, (
+        "Sampling combo must remain on RANDOM_0 after reload"
+    )
 
 
 def test_random_sample_all_triggers_reload(qtbot, main):
     """
-    Switching the sampling combo to 'Random from all' must trigger a file reload.
+    Switching the sampling combo to 'Random from all' must trigger a file reload
+    that produces a valid, non-empty model with the correct column structure, and
+    must leave the toolbar combo on RANDOM_ALL.
 
     RANDOM_ALL pre-computes a random set of line numbers via prep_sampling()
-    before reading the file (a two-pass approach).  The model must be replaced.
+    before reading the file (a two-pass approach).  columnCount() must match
+    test.csv's 3-column structure and rowCount() must be at least 1 (the header).
     """
     viewer = _open_csv(qtbot, main)
     assert isinstance(viewer, DataViewer)
 
-    _trigger_sampling_reload(
-        qtbot, main, viewer,
-        sampling_index=main.content.toolbar.sampling.findText(DataConst.RANDOM_ALL),
-    )
+    rall_index = main.content.toolbar.sampling.findText(DataConst.RANDOM_ALL)
+    _trigger_sampling_reload(qtbot, main, viewer, sampling_index=rall_index)
 
     reloaded = taut.find_tab(main.content.tab_widget, _csv_path(main))[1]
     assert isinstance(reloaded, DataViewer), (
         "DataViewer tab must survive a sampling mode change to RANDOM_ALL"
+    )
+    model = reloaded.table_view.model()
+    assert model.columnCount() == 3, (
+        "Column count must match test.csv's 3-column structure after RANDOM_ALL reload"
+    )
+    assert model.rowCount() > 0, (
+        "Model must contain at least the header row after RANDOM_ALL reload"
+    )
+    assert main.content.toolbar.sampling.currentIndex() == rall_index, (
+        "Sampling combo must remain on RANDOM_ALL after reload"
     )
 
 
