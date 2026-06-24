@@ -173,10 +173,32 @@ Coverage annotations show the test file(s) and function name(s) for each automat
     - `test_content_actions.py`: `test_random_all_gives_same_count_as_first_n`
   - [x] random sample — row limit caps all sampling modes (FIRST_N, RANDOM_ALL, RANDOM_0)
     - `test_content_actions.py`: `test_row_limit_caps_all_sampling_modes`
-  - [x] save sample (Matches tab rt-click → CSV written to project dir)
-    - `test_one_off_run.py`: `test_one_off_run_save_matches_writes_csv`
-  - [x] save sample — passes model rows to writer, not the full source file
-    - `test_content_actions.py`: `test_save_sample_passes_model_rows_not_full_file`
+  - [✓] save sample (Matches tab rt-click → CSV written to project dir)
+    - ✓`test_one_off_run.py`: `test_one_off_run_save_matches_writes_csv`
+  - [✓] save sample — passes model rows to writer, not the full source file
+    - ✓`test_content_actions.py`: `test_save_sample_passes_model_rows_not_full_file`
+  - [x] accept_line() / prep_sampling() unit tests (worker-level, below UI tests)
+    - `test_general_data_worker.py`:
+        `test_accept_line_first_n_returns_true_until_cap`,
+        `test_accept_line_first_n_cap_is_none_not_false`,
+        `test_accept_line_first_n_increments_line_take`,
+        `test_accept_line_zero_cap_returns_none_immediately`,
+        `test_accept_line_all_lines_always_returns_true`,
+        `test_accept_line_all_lines_increments_line_take`,
+        `test_accept_line_large_file_limit_returns_false`,
+        `test_accept_line_random_0_returns_true_when_randint_zero`,
+        `test_accept_line_random_0_returns_false_when_randint_one`,
+        `test_accept_line_random_0_stops_at_cap`,
+        `test_accept_line_random_0_skipped_lines_do_not_increment_line_take`,
+        `test_accept_line_random_all_accepts_only_precomputed_lines`,
+        `test_accept_line_random_all_pops_entry_after_match`,
+        `test_accept_line_random_all_increments_line_take_on_match`,
+        `test_prep_sampling_count_matches_sample_size`,
+        `test_prep_sampling_entries_are_unique`,
+        `test_prep_sampling_sorted_descending`,
+        `test_prep_sampling_line_numbers_in_valid_range`,
+        `test_prep_sampling_small_file_sets_all_lines_mode`,
+        `test_prep_sampling_exact_size_file_sets_all_lines_mode`
   - [x] set delimiter to view — toolbar delimiter changes how grid parses file
     - `test_content_actions.py`: `test_delimiter_change_affects_column_count`
 - [x] create directory
