@@ -114,30 +114,32 @@ Coverage annotations show the test file(s) and function name(s) for each automat
 		✓`test_whitespace_menu_excludes_rename_action`,
 		✓`test_whitespace_menu_excludes_save_file_action`
 - [x] save and save-as
-  - [x] csvpath — in-place save writes changes to disk
-    - `test_save_as.py`: `test_csvpath_save_writes_changes`
-  - [x] JSON — in-place save (JsonViewer2); save-as to new path
+  - [✓] csvpath — in-place save writes changes to disk
+    - ✓`test_save_as.py`: `test_csvpath_save_writes_changes`
+  - [✓] JSON — in-place save (JsonViewer2); save-as to new path
     - `test_save_as.py`:
-		`test_json_viewer_save_writes_changes`,
-		`test_json_viewer_save_as_new_file`
-  - [x] JSONL — save in JsonViewer2 preserves JSONL line format
-    - `test_save_as.py`: `test_jsonl_json_viewer_save_preserves_jsonl_format`
-  - [x] grid/CSV — save-as with comma delimiter
-    - `test_save_as.py`: `test_csv_save_as_comma_delimiter`
-  - [x] grid/CSV — save-as with pipe delimiter; output has `|` not `,`
-    - `test_save_as.py`: `test_csv_save_as_pipe_delimiter`
-  - [x] XLSX — on_save() redirects to save-as dialog (can't save back as XLSX)
-    - `test_xlsx_save_as.py`: `test_xlsx_save_redirects_to_save_as`
-  - [x] XLSX — save-as comma CSV; save-as pipe PSV
+		✓`test_json_viewer_save_writes_changes`,
+		✓`test_json_viewer_save_as_new_file`
+  - [✓] JSONL — save in JsonViewer2 preserves JSONL line format
+    - ✓`test_save_as.py`: `test_jsonl_json_viewer_save_preserves_jsonl_format`
+  - [✓] grid/CSV — save-as with comma delimiter
+    - ✓`test_save_as.py`: `test_csv_save_as_comma_delimiter`
+  - [✓] grid/CSV — save-as with pipe delimiter; output has `|` not `,`
+    - ✓`test_save_as.py`: `test_csv_save_as_pipe_delimiter`
+  - [✓] XLSX — on_save() redirects to save-as dialog (can't save back as XLSX)
+    - ✓`test_xlsx_save_as.py`: `test_xlsx_save_redirects_to_save_as`
+  - [✓] XLSX — save-as comma CSV; save-as pipe PSV
     - `test_xlsx_save_as.py`:
-		`test_xlsx_save_as_comma_csv`,
-		`test_xlsx_save_as_pipe_delimited`
-  - [x] JSONL in grid — on_save() redirects to save-as CSV
-    - `test_save_as.py`: `test_jsonl_grid_save_redirects_to_csv`
+		✓`test_xlsx_save_as_comma_csv`,
+		✓`test_xlsx_save_as_pipe_delimited`
+  - [✓] JSONL in grid — on_save() redirects to save-as CSV
+    - ✓`test_save_as.py`: `test_jsonl_grid_save_redirects_to_csv`
   - [x] save-as with single-quote quotechar
     - `test_save_as.py`: `test_csv_save_as_single_quote_quotechar`
-  - [x] JSON save-as — prompts for path via input2 dialog
-    - `test_save_as.py`: `test_json_viewer_save_as_triggers_input2_dialog`
+  - [x] single-quote CSV misrenders at default quotechar, corrects after toolbar switch
+    - `test_save_as.py`: `test_single_quote_csv_displays_correctly_after_toolbar_switch`
+  - [✓] JSON save-as — prompts for path via input2 dialog
+    - ✓`test_save_as.py`: `test_json_viewer_save_as_triggers_input2_dialog`
 - [x] file content ops: cut, copy, paste inside editors
   - [x] cut in text editors (csvpath, MD, JSON)
     - `test_content_copy_paste.py`:

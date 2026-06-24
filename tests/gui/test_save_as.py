@@ -37,6 +37,7 @@ Run with:
 
 import os
 
+from flightpath.util.data_const import DataConst
 from flightpath.util.message_utility import MessageUtility
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
@@ -81,7 +82,7 @@ def _open_as_json_and_wait(qtbot, main, path: str):
 # Tests — csvpath
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_csvpath_save_writes_changes(qtbot, main):
     """
     Editing a csvpath file and pressing save (CsvPathTextEdit.on_save) must
@@ -91,7 +92,7 @@ def test_csvpath_save_writes_changes(qtbot, main):
     viewer = _open_and_wait(qtbot, main, path)
     assert isinstance(viewer, CsvpathViewer)
 
-    viewer.text_edit.appendPlainText("~ test-save-marker")
+    viewer.text_edit.appendPlainText("~ test-save-marker~")
     viewer.text_edit.on_save()
 
     with open(path) as f:
@@ -105,7 +106,7 @@ def test_csvpath_save_writes_changes(qtbot, main):
 # Tests — CSV grid save-as with delimiter
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_csv_save_as_comma_delimiter(qtbot, main):
     """
     Saving a CSV file via _save_one_of with Comma delimiter must write a
@@ -128,7 +129,7 @@ def test_csv_save_as_comma_delimiter(qtbot, main):
         first_line = f.readline()
     assert "," in first_line, "Comma-delimited output must contain commas in header"
 
-
+#chked
 def test_csv_save_as_pipe_delimiter(qtbot, main):
     """
     Saving a CSV file via _save_one_of with Pipe delimiter must produce a
@@ -159,7 +160,7 @@ def test_csv_save_as_pipe_delimiter(qtbot, main):
         "Pipe-delimited output header must not contain unquoted commas"
     )
 
-
+#chked
 def test_csv_save_as_single_quote_quotechar(qtbot, main):
     """
     Saving a CSV that contains values with commas via _save_one_of with
@@ -191,11 +192,68 @@ def test_csv_save_as_single_quote_quotechar(qtbot, main):
     assert "'" in content, "Output with quotechar='single-quotes' must contain single-quote characters"
 
 
+def test_single_quote_csv_displays_correctly_after_toolbar_switch(qtbot, main):
+    """
+    A CSV saved with single-quote quotechar must display incorrectly when the
+    toolbar is set to the default double-quote, then correctly after switching
+    the toolbar quotechar to 'Single-quotes'.
+
+    File content: a,b / 'hello,world',foo
+    The value 'hello,world' is a single field quoted with single-quotes.
+
+    With double-quote quotechar (default):
+      csv.reader does not treat ' as a quote character, so the comma inside
+      'hello,world' is treated as a field delimiter.  The data row splits into
+      three fields: "'hello", "world'", "foo".  TableModel.columnCount() uses
+      max(len(row) for row in data), so it returns 3 — more than the header's 2.
+
+    With single-quote quotechar:
+      csv.reader strips the single quotes and preserves the comma as part of the
+      field value.  The data row is ["hello,world", "foo"] — 2 fields matching
+      the header.  columnCount() returns 2.
+
+    This test guards against a regression where switching the toolbar quotechar
+    does not trigger a file reload or does not propagate to the worker, leaving
+    a single-quoted CSV permanently misrendered for the user.
+    """
+    src = os.path.join(main.state.cwd, "single_quoted.csv")
+    with open(src, "w") as f:
+        f.write("a,b\n'hello,world',foo\n")
+
+    viewer = _open_and_wait(qtbot, main, src)
+    assert isinstance(viewer, DataViewer)
+
+    # Default toolbar quotechar is double-quote; the single-quoted field splits
+    # on the embedded comma producing 3 columns instead of 2.
+    assert viewer.table_view.model().columnCount() == 3, (
+        "With double-quote quotechar the embedded comma must split 'hello,world' "
+        "into two fields, giving columnCount 3"
+    )
+
+    # Switch toolbar to single-quote and trigger a reload
+    original_model = viewer.table_view.model()
+    sq_index = main.content.toolbar.quotechar.findText(DataConst.SINGLE_QUOTES)
+    assert sq_index != -1, "Single-quotes option must exist in the quotechar combo"
+    main.content.toolbar.quotechar.setCurrentIndex(sq_index)
+    main.content.toolbar.quotechar.activated.emit(sq_index)
+
+    qtbot.waitUntil(
+        lambda: viewer.table_view.model() is not original_model,
+        timeout=TIMEOUT,
+    )
+
+    assert viewer.table_view.model().columnCount() == 2, (
+        "With single-quote quotechar 'hello,world' must be treated as one field, "
+        "giving columnCount 2"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Tests — JSONL in grid view forces save-as
 # ---------------------------------------------------------------------------
 
 
+#chked
 def test_jsonl_grid_save_redirects_to_csv(monkeypatch, qtbot, main):
     """
     Calling on_save() on a JSONL file open in the DataViewer must redirect to
@@ -244,7 +302,7 @@ def test_jsonl_grid_save_redirects_to_csv(monkeypatch, qtbot, main):
 # Tests — JSON in JsonViewer2
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_json_viewer_save_writes_changes(qtbot, main):
     """
     Editing a JSON file in JsonViewer2 and calling _save() must write the
@@ -263,7 +321,7 @@ def test_json_viewer_save_writes_changes(qtbot, main):
         "Saved JSON file must contain the modified content"
     )
 
-
+#chked
 def test_json_viewer_save_as_new_file(qtbot, main):
     """
     Calling _save_as_continue() on a JsonViewer2 with a new path must write
@@ -281,12 +339,11 @@ def test_json_viewer_save_as_new_file(qtbot, main):
         contents = f.read()
     assert len(contents) > 0, "Saved-as file must not be empty"
 
-
 # ---------------------------------------------------------------------------
 # Tests — JSONL in JsonViewer2 (Edit as JSON)
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_jsonl_json_viewer_save_preserves_jsonl_format(qtbot, main):
     """
     When a JSONL file is opened via 'Edit as JSON' (JsonViewer2) and saved to
@@ -316,7 +373,7 @@ def test_jsonl_json_viewer_save_preserves_jsonl_format(qtbot, main):
 # Tests — JSON save-as triggers input2 dialog
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_json_viewer_save_as_triggers_input2_dialog(monkeypatch, qtbot, main):
     """
     Calling _save_as() on a JsonViewer2 must invoke meut.input2 to prompt
