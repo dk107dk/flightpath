@@ -81,11 +81,13 @@ def _find_open_warning_dialog(main) -> QMessageBox | None:
 # ========= TESTS ============
 
 
+# chked
 def test_new_project_combo_has_entry(main):
     c = main.sidebar.projects
     assert c.itemText(c.count() - 1) == Sidebar.NEW_PROJECT
 
 
+# chked
 def test_new_project_create_end_to_end(qtbot, main):
     sidebar = main.sidebar
     combo = sidebar.projects
@@ -147,18 +149,16 @@ def test_new_project_create_end_to_end(qtbot, main):
 
     expected_entries = _expected_example_entries()
     actual_entries = set(os.listdir(examples_dir))
+    print(f"actual_enxtries: {actual_entries}")
     for entry in expected_entries:
-        # entries in list.txt may be paths like "foo/bar.csv"; only check the
-        # top-level piece against the examples dir listing
-        top_level = entry.split(os.sep)[0].split("/")[0]
-        assert top_level in actual_entries, (
-            f"Expected example entry '{top_level}' missing from {examples_dir}"
-        )
+        t = os.path.join(new_cwd, "examples", entry)
+        assert os.path.exists(t)
 
     # --- Step 7: README.md was created ------------------------------------------
     assert os.path.exists(os.path.join(new_cwd, "README.md"))
 
 
+# chked
 def test_new_project_cancel_keeps_current_project(qtbot, main):
     #
     # _make_new_project(None) called on cancel. combo should reset back to current project
