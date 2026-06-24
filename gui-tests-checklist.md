@@ -134,32 +134,34 @@ Coverage annotations show the test file(s) and function name(s) for each automat
 		✓`test_xlsx_save_as_pipe_delimited`
   - [✓] JSONL in grid — on_save() redirects to save-as CSV
     - ✓`test_save_as.py`: `test_jsonl_grid_save_redirects_to_csv`
-  - [x] save-as with single-quote quotechar
-    - `test_save_as.py`: `test_csv_save_as_single_quote_quotechar`
-  - [x] single-quote CSV misrenders at default quotechar, corrects after toolbar switch
-    - `test_save_as.py`: `test_single_quote_csv_displays_correctly_after_toolbar_switch`
+  - [✓] save-as with single-quote quotechar
+    - ✓`test_save_as.py`: `test_csv_save_as_single_quote_quotechar`
+  - [✓] single-quote CSV misrenders at default quotechar, corrects after toolbar switch
+    - ✓`test_save_as.py`: `test_single_quote_csv_displays_correctly_after_toolbar_switch`
   - [✓] JSON save-as — prompts for path via input2 dialog
     - ✓`test_save_as.py`: `test_json_viewer_save_as_triggers_input2_dialog`
 - [x] file content ops: cut, copy, paste inside editors
-  - [x] cut in text editors (csvpath, MD, JSON)
+  - [✓] cut in text editors (csvpath, MD, JSON)
     - `test_content_copy_paste.py`:
-		`test_csvpath_editor_cut_clears_editor`,
-		`test_json_editor_cut_clears_editor`
-  - [x] copy lines in grid
+		✓`test_csvpath_editor_cut_clears_editor`,
+		✓`test_json_editor_cut_clears_editor`
+  - [✓] copy lines in grid
     - `test_content_copy_paste.py`:
-		`test_grid_copy_single_cell`,
-		`test_grid_copy_rectangular_selection`
-  - [x] copy irregular cell selection in grid
-    - `test_content_copy_paste.py`: `test_grid_copy_irregular_selection`
-  - [x] paste in grid
-    - `test_content_copy_paste.py`: `test_grid_paste_single_cell`, `test_grid_paste_multi_cell`
-  - [x] paste-as-new in grid (creates deconflicted copy)
-    - `test_content_copy_paste.py`: `test_grid_paste_as_new_creates_csv`
+		✓`test_grid_copy_single_cell`,
+		✓`test_grid_copy_rectangular_selection`
+  - [✓] copy irregular cell selection in grid
+    - ✓`test_content_copy_paste.py`: `test_grid_copy_irregular_selection`
+  - [✓] paste in grid
+    - `test_content_copy_paste.py`:
+        ✓`test_grid_paste_single_cell`,
+        ✓`test_grid_paste_multi_cell`
+  - [✓] paste-as-new in grid (creates deconflicted copy)
+    - ✓`test_content_copy_paste.py`: `test_grid_paste_as_new_creates_csv`
 - [x] data toolbar
-  - [x] toggle raw view
-    - `test_content_actions.py`: `test_toggle_raw_view_on_csv`
-  - [x] file info — FileInfo tab added to helper panel
-    - `test_content_actions.py`: `test_file_info_opens_info_tab`
+  - [✓] toggle raw view
+    - ✓`test_content_actions.py`: `test_toggle_raw_view_on_csv`
+  - [✓] file info — FileInfo tab added to helper panel
+    - ✓`test_content_actions.py`: `test_file_info_opens_info_tab`
   - [x] data sampling — changing rows combo triggers worker reload
     - `test_content_actions.py`: `test_data_sampling_reloads_file`
   - [x] random sample — random sampling mode produces different rows
@@ -167,8 +169,14 @@ Coverage annotations show the test file(s) and function name(s) for each automat
 		`test_random_sampling_produces_different_rows`,
 		`test_random_sample_zero_triggers_reload`,
 		`test_random_sample_all_triggers_reload`
+  - [x] random sample — RANDOM_ALL gives same count as FIRST_N; RANDOM_0 is probabilistic
+    - `test_content_actions.py`: `test_random_all_gives_same_count_as_first_n`
+  - [x] random sample — row limit caps all sampling modes (FIRST_N, RANDOM_ALL, RANDOM_0)
+    - `test_content_actions.py`: `test_row_limit_caps_all_sampling_modes`
   - [x] save sample (Matches tab rt-click → CSV written to project dir)
     - `test_one_off_run.py`: `test_one_off_run_save_matches_writes_csv`
+  - [x] save sample — passes model rows to writer, not the full source file
+    - `test_content_actions.py`: `test_save_sample_passes_model_rows_not_full_file`
   - [x] set delimiter to view — toolbar delimiter changes how grid parses file
     - `test_content_actions.py`: `test_delimiter_change_affects_column_count`
 - [x] create directory
