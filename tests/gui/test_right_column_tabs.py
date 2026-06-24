@@ -80,7 +80,7 @@ def test_rt_tabs_hidden_on_welcome_screen(main):
 # Tests — tab bar appears for each document type
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_rt_tabs_appear_after_csv_open(qtbot, main):
     """
     Opening a CSV file must make the right-column tab bar visible.
@@ -92,6 +92,7 @@ def test_rt_tabs_appear_after_csv_open(qtbot, main):
     )
 
 
+#chked
 def test_rt_tabs_appear_after_xlsx_open(qtbot, main):
     """
     Opening an XLSX file must make the right-column tab bar visible.
@@ -103,6 +104,7 @@ def test_rt_tabs_appear_after_xlsx_open(qtbot, main):
     )
 
 
+#chked
 def test_rt_tabs_appear_after_jsonl_open(qtbot, main):
     """
     Opening a JSONL file must make the right-column tab bar visible.
@@ -114,6 +116,7 @@ def test_rt_tabs_appear_after_jsonl_open(qtbot, main):
     )
 
 
+#chked
 def test_rt_tabs_appear_after_json_open(qtbot, main):
     """
     Opening a JSON file must make the right-column tab bar visible.
@@ -125,6 +128,7 @@ def test_rt_tabs_appear_after_json_open(qtbot, main):
     )
 
 
+#chked
 def test_rt_tabs_appear_after_md_open(qtbot, main):
     """
     Opening a Markdown file must make the right-column tab bar visible.
@@ -136,6 +140,7 @@ def test_rt_tabs_appear_after_md_open(qtbot, main):
     )
 
 
+#chked
 def test_rt_tabs_appear_after_csvpath_open(qtbot, main):
     """
     Opening a csvpath file must make the right-column tab bar visible.
@@ -151,7 +156,7 @@ def test_rt_tabs_appear_after_csvpath_open(qtbot, main):
 # Tests — tab bar hides when no file is open
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_rt_tabs_hide_on_welcome_screen(qtbot, main):
     """
     Calling show_welcome_screen() after a file is open must hide the
@@ -167,7 +172,7 @@ def test_rt_tabs_hide_on_welcome_screen(qtbot, main):
         "Right-column tab bar must be hidden after returning to the Welcome screen"
     )
 
-
+#chked
 def test_rt_tabs_hide_when_last_tab_closed(qtbot, main):
     """
     Closing the last content tab must hide the right-column tab bar.
@@ -183,3 +188,4 @@ def test_rt_tabs_hide_when_last_tab_closed(qtbot, main):
     assert not _rt_bar_visible(main), (
         "Right-column tab bar must be hidden after the last content tab is closed"
     )
+

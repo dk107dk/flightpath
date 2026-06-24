@@ -147,7 +147,7 @@ def test_xlsx_save_redirects_to_save_as(monkeypatch, qtbot, main):
         "on_save() on an XLSX file must redirect to SaveCsvToDialog exactly once"
     )
 
-
+#chked
 def test_xlsx_save_as_comma_csv(monkeypatch, qtbot, main):
     """
     Saving an XLSX file via the (monkeypatched) SaveCsvToDialog with Comma
@@ -170,7 +170,7 @@ def test_xlsx_save_as_comma_csv(monkeypatch, qtbot, main):
         first_line = f.readline()
     assert "," in first_line, "Comma-delimited XLSX export must contain commas in header"
 
-
+#chked
 def test_xlsx_save_as_pipe_delimited(monkeypatch, qtbot, main):
     """
     Saving an XLSX file via the (monkeypatched) SaveCsvToDialog with Pipe
@@ -199,7 +199,7 @@ def test_xlsx_save_as_pipe_delimited(monkeypatch, qtbot, main):
 # Tests — XLSX multi-worksheet: open individual sheets
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_xlsx_worksheets_for_path_returns_sheet_names(main):
     """
     _worksheets_for_path() must return all worksheet names for an XLSX file.
@@ -210,7 +210,7 @@ def test_xlsx_worksheets_for_path_returns_sheet_names(main):
     assert SHEET_SMALL in names, f"Expected '{SHEET_SMALL}' in worksheet list: {names}"
     assert len(names) == 2, f"Expected exactly 2 worksheets, got: {names}"
 
-
+#chked
 def test_xlsx_named_worksheet_opens_in_data_viewer(qtbot, main):
     """
     Opening a named worksheet via 'path#SheetName' must produce a DataViewer
@@ -222,7 +222,7 @@ def test_xlsx_named_worksheet_opens_in_data_viewer(qtbot, main):
         f"Worksheet '{SHEET_SMALL}' must open in a DataViewer"
     )
 
-
+#svk
 def test_xlsx_worksheet_has_correct_row_count(qtbot, main):
     """
     The small test sheet has 4 rows of data.  After opening it, the DataViewer
@@ -237,6 +237,7 @@ def test_xlsx_worksheet_has_correct_row_count(qtbot, main):
     )
 
 
+#chked
 def test_xlsx_two_worksheets_open_as_separate_tabs(qtbot, main):
     """
     Opening both worksheets must create two independent DataViewer tabs, each
@@ -284,3 +285,6 @@ def test_xlsx_worksheet_save_as_csv(monkeypatch, qtbot, main):
     assert len(lines) == 4, (
         f"CSV from '{SHEET_SMALL}' must have 4 data rows, got {len(lines)}"
     )
+
+    qtbot.wait(3000)
+

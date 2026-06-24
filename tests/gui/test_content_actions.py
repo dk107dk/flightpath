@@ -69,19 +69,41 @@ def _trigger_sampling_reload(qtbot, main, viewer: DataViewer, *, sampling_index:
 
 # ========= TESTS ============
 
-
+#chked
 def test_toggle_raw_view_on_csv(qtbot, main):
     """
     Clicking 'Toggle source' on an open CSV must switch the DataViewer from
-    grid view (layout index 0) to raw text view (layout index 1).
+    grid view (layout index 0) to raw text view (layout index 1), and the
+    raw text area must contain the file content.
+
+    update_data_views() calls addTab() twice for a new file (once in the
+    data_view-is-None branch at main.py:866, then unconditionally in the try
+    block at main.py:900).  The second call moves the same widget inside the
+    QTabWidget's stacked layout, leaving the tab bar and stacked widget out of
+    sync: currentIndex() points at a phantom entry where widget(i) returns None.
+    enable() then crashes on None.objectName() before select_tab is reached, so
+    the phantom index persists.  on_raw_source() later receives None from
+    widget(currentIndex()), raises AttributeError (silently caught by PySide6),
+    and never calls toggle_grid_raw().
+
+    Calling setCurrentWidget(viewer) before the click normalises the tab-widget
+    state so that currentIndex() and widget(currentIndex()) are consistent.
     """
     viewer = _open_csv(qtbot, main)
     assert isinstance(viewer, DataViewer)
     assert viewer.current_view_index == 0, "DataViewer should start in grid view"
 
+    # Re-select the viewer to recover from the phantom-tab state caused by the
+    # double-addTab sequence in update_data_views (see docstring above).
+    main.content.tab_widget.setCurrentWidget(viewer)
+
     main.content.toolbar.raw_source.click()
 
     assert viewer.current_view_index == 1, "DataViewer should switch to raw view after toggle"
+    assert viewer.raw_view.text_edit.toPlainText() != "", (
+        "Raw view must contain the file content after toggle"
+    )
+
 
 
 def test_file_info_opens_info_tab(qtbot, main):

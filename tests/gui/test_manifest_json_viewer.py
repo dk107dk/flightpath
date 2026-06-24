@@ -91,7 +91,7 @@ def _open_and_wait(qtbot, main, path: str, editable=EditStates.UNEDITABLE):
 # Tests — manifest.json → JsonViewer (grid)
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_named_file_manifest_opens_in_json_viewer(qtbot, main):
     """
     Clicking a named-file manifest.json in the right-side sidebar must open it
@@ -115,7 +115,7 @@ def test_named_file_manifest_opens_in_json_viewer(qtbot, main):
         "Named-file manifest.json must not open in a JsonViewer2 (text editor)"
     )
 
-
+#chked
 def test_named_file_manifest_json_viewer_has_rows(qtbot, main):
     """
     The JsonViewer created for a named-file manifest.json must have a
@@ -130,7 +130,7 @@ def test_named_file_manifest_json_viewer_has_rows(qtbot, main):
         "JsonViewer model must have at least one row after loading a named-file manifest.json"
     )
 
-
+#chked
 def test_named_paths_manifest_opens_in_json_viewer(qtbot, main):
     """
     Clicking a named-paths manifest.json must also produce a JsonViewer.
@@ -155,6 +155,7 @@ def test_named_paths_manifest_opens_in_json_viewer(qtbot, main):
 # ---------------------------------------------------------------------------
 
 
+#chked
 def test_regular_json_opens_in_json_viewer2(qtbot, main):
     """
     A regular .json file (path does not end with 'manifest.json') must open
