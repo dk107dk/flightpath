@@ -90,7 +90,7 @@ def _run_hello_world(qtbot, main) -> None:
 # Tests
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_one_off_run_creates_result_tabs(qtbot, main):
     """
     Running Hello World.csvpath must populate help_and_feedback with all standard
@@ -100,7 +100,7 @@ def test_one_off_run_creates_result_tabs(qtbot, main):
     _run_hello_world(qtbot, main)
 
     hf = main.helper.help_and_feedback
-    for name in ("Log", "Errors", "Matches", "Variables", "Why"):
+    for name in ("Log", "Errors", "Matches", "Variables", "Code", "Why"):
         assert _has_tab(hf, name), f"Expected '{name}' tab in result panel"
 
     has_printouts = any(
@@ -109,7 +109,7 @@ def test_one_off_run_creates_result_tabs(qtbot, main):
     )
     assert has_printouts, "Expected at least one Printouts tab in result panel"
 
-
+#chked
 def test_one_off_run_matches_tab_has_data(qtbot, main):
     """
     The Matches tab must contain a DataViewer with a populated model after running
@@ -127,7 +127,7 @@ def test_one_off_run_matches_tab_has_data(qtbot, main):
     assert isinstance(dv, DataViewer), "Matches tab must contain a DataViewer"
     assert dv.table_view.model() is not None, "DataViewer model must be set"
 
-
+#chked
 def test_one_off_run_save_matches_writes_csv(monkeypatch, qtbot, main):
     """
     Calling on_save_sample() for the Matches tab must write a CSV file into the
@@ -150,3 +150,4 @@ def test_one_off_run_save_matches_writes_csv(monkeypatch, qtbot, main):
 
     saved = os.path.join(main.state.cwd, "matches.csv")
     assert os.path.isfile(saved), f"Expected saved CSV at: {saved}"
+

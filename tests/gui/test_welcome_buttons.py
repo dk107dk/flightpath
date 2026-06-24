@@ -21,7 +21,7 @@ import os
 
 # ========= TESTS ============
 
-
+#chked
 def test_run_button_disabled_in_empty_project(main):
     """
     A fresh project has no named files or paths registered, so 'Trigger a run'
@@ -29,7 +29,7 @@ def test_run_button_disabled_in_empty_project(main):
     """
     assert not main.welcome.button_run.isEnabled()
 
-
+#chked
 def test_find_data_button_disabled_in_empty_project(main):
     """
     A fresh project has no named files and no archived results, so 'Find data'
@@ -37,7 +37,7 @@ def test_find_data_button_disabled_in_empty_project(main):
     """
     assert not main.welcome.button_find_data.isEnabled()
 
-
+#chked
 def test_configure_ai_button_switches_to_config(main):
     """
     Clicking 'Configure AI' must navigate to the Config view (stacked layout
@@ -50,7 +50,7 @@ def test_configure_ai_button_switches_to_config(main):
     assert main.main_layout.currentIndex() == 2
     assert main.config.config_panel.forms_layout.currentIndex() == 13
 
-
+#chked
 def test_reload_button_stays_on_welcome(qtbot, main):
     """
     Clicking 'Reload Ops Files' tears down and rebuilds the central widget tree.
@@ -66,7 +66,7 @@ def test_reload_button_stays_on_welcome(qtbot, main):
     assert main.content is not None
     assert main.sidebar is not None
 
-
+#chked
 def test_copy_in_button_opens_project_dir(main, monkeypatch):
     """
     'Copy data in' must call os.system with the current project directory.

@@ -52,7 +52,7 @@ def _open_and_wait(qtbot, main, path):
 
 # ========= TESTS ============
 
-
+#chked
 def test_open_csvpath_file_opens_csvpath_viewer(qtbot, main):
     """A .csvpath file must open a CsvpathViewer tab and switch to the Content view."""
     path = _examples(main, "first steps", "Hello World.csvpath")
@@ -63,7 +63,7 @@ def test_open_csvpath_file_opens_csvpath_viewer(qtbot, main):
     assert isinstance(viewer, CsvpathViewer)
     assert main.main_layout.currentIndex() == 1
 
-
+#chked
 def test_open_csv_file_opens_data_viewer(qtbot, main):
     """A .csv file must open a DataViewer tab and switch to the Content view."""
     path = _examples(main, "first steps", "test.csv")
@@ -75,6 +75,7 @@ def test_open_csv_file_opens_data_viewer(qtbot, main):
     assert main.main_layout.currentIndex() == 1
 
 
+#chked
 def test_open_json_file_opens_json_viewer(qtbot, main):
     """A .json file must open a JsonViewer2 tab and switch to the Content view."""
     path = _examples(main, "named-paths groups", "my_named_paths.json")
@@ -85,7 +86,7 @@ def test_open_json_file_opens_json_viewer(qtbot, main):
     assert isinstance(viewer, JsonViewer2)
     assert main.main_layout.currentIndex() == 1
 
-
+#chked
 def test_open_md_file_opens_md_viewer(qtbot, main):
     """A .md file must open an MdViewer tab and switch to the Content view."""
     path = _examples(main, "first steps", "README.md")
@@ -96,7 +97,7 @@ def test_open_md_file_opens_md_viewer(qtbot, main):
     assert isinstance(viewer, MdViewer)
     assert main.main_layout.currentIndex() == 1
 
-
+#chked
 def test_open_jsonl_as_json(qtbot, main):
     """
     'Edit as JSON' on a .jsonl file must open a JsonViewer2 tab (editable)
@@ -115,3 +116,6 @@ def test_open_jsonl_as_json(qtbot, main):
     viewer = taut.find_tab(main.content.tab_widget, path)[1]
     assert isinstance(viewer, JsonViewer2)
     assert main.main_layout.currentIndex() == 1
+    qtbot.wait(2000)
+
+

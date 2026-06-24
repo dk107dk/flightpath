@@ -69,7 +69,7 @@ def _trigger_sampling_reload(qtbot, main, viewer: DataViewer, *, sampling_index:
 
 # ========= TESTS ============
 
-
+#chked
 def test_toggle_raw_view_on_csv(qtbot, main):
     """
     Clicking 'Toggle source' on an open CSV must switch the DataViewer from
@@ -103,6 +103,7 @@ def test_toggle_raw_view_on_csv(qtbot, main):
     assert viewer.raw_view.text_edit.toPlainText() != "", (
         "Raw view must contain the file content after toggle"
     )
+
 
 
 def test_file_info_opens_info_tab(qtbot, main):

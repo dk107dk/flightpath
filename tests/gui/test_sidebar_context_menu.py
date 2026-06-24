@@ -80,7 +80,7 @@ def _make_dialog(name: str, accepted: bool = True, get_item_result: str = "{}"):
 
 # ========= TESTS ============
 
-
+#chked
 def test_new_csv_file_creates_file(monkeypatch, main):
     """
     'New file' → 'new_data.csv' must create the file under the project root
@@ -96,7 +96,7 @@ def test_new_csv_file_creates_file(monkeypatch, main):
     assert os.path.isfile(expected), f"Expected file not created: {expected}"
     assert open(expected).read() == ","
 
-
+#chked
 def test_new_md_file_creates_file(monkeypatch, main):
     """
     'New file' → 'notes.md' must create the file with the Markdown starter
@@ -112,7 +112,7 @@ def test_new_md_file_creates_file(monkeypatch, main):
     assert os.path.isfile(expected), f"Expected file not created: {expected}"
     assert open(expected).read().startswith("# Title")
 
-
+#chked
 def test_new_csvpath_file_creates_file(monkeypatch, main):
     """
     'New file' → 'check.csvpath' must create the file with the csvpath
@@ -128,7 +128,7 @@ def test_new_csvpath_file_creates_file(monkeypatch, main):
     assert os.path.isfile(expected), f"Expected file not created: {expected}"
     assert "hello world" in open(expected).read()
 
-
+#chk
 def test_new_json_file_creates_file(monkeypatch, main):
     """
     'New file' → 'data.json' must create the file.  JSON files prompt for
@@ -144,7 +144,6 @@ def test_new_json_file_creates_file(monkeypatch, main):
     expected = os.path.join(main.state.cwd, filename)
     assert os.path.isfile(expected), f"Expected file not created: {expected}"
     assert open(expected).read() == "{}"
-
 
 def test_new_jsonl_file_creates_file_with_object(monkeypatch, main):
     """
@@ -220,7 +219,7 @@ def _patch_yes_no2(monkeypatch, answer: int) -> None:
 # Deletion tests
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_delete_file_yes_removes_file(monkeypatch, main):
     """
     Confirming 'Delete' (Yes) must remove the file from disk.
@@ -237,7 +236,7 @@ def test_delete_file_yes_removes_file(monkeypatch, main):
 
     assert not os.path.exists(path), "File should be deleted after confirming Yes"
 
-
+#chked
 def test_delete_file_no_keeps_file(monkeypatch, main):
     """
     Cancelling 'Delete' (No) must leave the file untouched on disk.
@@ -252,7 +251,7 @@ def test_delete_file_no_keeps_file(monkeypatch, main):
 
     assert os.path.isfile(path), "File should still exist after cancelling (No)"
 
-
+#chked
 def test_delete_selected_file_shows_welcome(monkeypatch, main):
     """
     Deleting the currently-open file (is_selected=True) must call
@@ -272,7 +271,7 @@ def test_delete_selected_file_shows_welcome(monkeypatch, main):
     assert not os.path.exists(path)
     assert len(welcome_calls) == 1, "show_welcome_screen() must be called for the selected file"
 
-
+#chked
 def test_delete_directory_yes_removes_dir(monkeypatch, main):
     """
     Confirming 'Delete' (Yes) on a directory path must remove the entire
@@ -290,7 +289,7 @@ def test_delete_directory_yes_removes_dir(monkeypatch, main):
 
     assert not os.path.exists(dir_path), "Directory should be removed after confirming Yes"
 
-
+#chked
 def test_delete_directory_no_keeps_dir(monkeypatch, main):
     """
     Cancelling 'Delete' (No) on a directory must leave it untouched on disk.
@@ -305,3 +304,4 @@ def test_delete_directory_no_keeps_dir(monkeypatch, main):
     main.sidebar.actions._delete_file_navigator_item()
 
     assert os.path.isdir(dir_path), "Directory should survive after cancelling (No)"
+    qtbot.wait(3000)
