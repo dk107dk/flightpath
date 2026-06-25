@@ -403,3 +403,132 @@ def test_json_viewer_save_as_triggers_input2_dialog(monkeypatch, qtbot, main):
     with open(new_path) as f:
         contents = f.read()
     assert len(contents) > 0, "File written via save-as dialog must not be empty"
+
+
+# ---------------------------------------------------------------------------
+# Tests — JSON save-as default text and path resolution
+# ---------------------------------------------------------------------------
+
+#chked
+def test_json_save_as_default_text_is_filename(monkeypatch, qtbot, main):
+    """
+    _save_as() must pass just the filename (not the directory path) as the
+    default text to input2.  Previously it passed os.path.dirname(self.path),
+    which defaulted to a directory and caused AttributeError on save.
+    """
+    path = _examples(main, "named-paths groups", "my_named_paths.json")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, JsonViewer2)
+
+    captured_text = []
+
+    def fake_input2(*, parent, title, width, msg, text, callback, args=None):
+        captured_text.append(text)
+        callback(("", False), **(args or {}))  # cancel immediately
+
+    monkeypatch.setattr(MessageUtility, "input2", fake_input2)
+    viewer._save_as()
+
+    assert len(captured_text) == 1
+    assert captured_text[0] == "my_named_paths.json", (
+        "Default text must be the bare filename, not the directory path"
+    )
+    assert os.sep not in captured_text[0], (
+        "Default text must not contain a path separator"
+    )
+
+
+#chked
+def test_json_save_as_bare_filename_saves_alongside_original(qtbot, main):
+    """
+    When _save_as_continue receives a bare filename (no path separator), the
+    file must be written next to the original in the same directory.
+    """
+    path = _examples(main, "named-paths groups", "my_named_paths.json")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, JsonViewer2)
+
+    viewer._save_as_continue(("sibling_copy.json", True))
+
+    expected = os.path.join(_examples(main, "named-paths groups"), "sibling_copy.json")
+    assert os.path.isfile(expected), (
+        f"Bare filename must save next to the original; expected: {expected}"
+    )
+
+
+#chked
+def test_json_save_as_shows_status_bar_on_success(qtbot, main):
+    """
+    A successful save-as must display a status-bar message so the user gets
+    visible confirmation.
+    """
+    path = _examples(main, "named-paths groups", "my_named_paths.json")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, JsonViewer2)
+
+    out = os.path.join(main.state.cwd, "status_bar_check.json")
+    viewer._save_as_continue((out, True))
+
+    msg = main.statusBar().currentMessage()
+    assert out in msg, (
+        f"Status bar must mention the saved path; got: '{msg}'"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Tests — JSON save-as error handling (directory path)
+# ---------------------------------------------------------------------------
+
+#chked
+def test_json_save_as_directory_input_shows_warning(monkeypatch, qtbot, main):
+    """
+    If the user enters a path that resolves to an existing directory,
+    _save_as_continue must call meut.warning2 to notify them.
+    Previously this path raised an unhandled exception with no user feedback.
+    """
+    path = _examples(main, "named-paths groups", "my_named_paths.json")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, JsonViewer2)
+
+    warnings = []
+
+    def fake_warning2(*, parent, title, msg):
+        warnings.append(msg)
+
+    monkeypatch.setattr(MessageUtility, "warning2", fake_warning2)
+    # Also stub _save_as so the re-open after warning doesn't try to show input2
+    monkeypatch.setattr(viewer, "_save_as", lambda: None)
+
+    # Pass the directory itself as the "name" — simulates the user hitting OK
+    # without editing the old default text that was os.path.dirname(self.path)
+    dir_path = _examples(main, "named-paths groups")
+    viewer._save_as_continue((dir_path, True))
+
+    assert len(warnings) == 1, (
+        "Entering a directory path must trigger exactly one warning"
+    )
+    assert "directory" in warnings[0].lower(), (
+        f"Warning message must mention 'directory'; got: '{warnings[0]}'"
+    )
+
+
+#chked
+def test_json_save_as_directory_input_reopens_dialog(monkeypatch, qtbot, main):
+    """
+    After showing a warning for a directory path, _save_as_continue must
+    re-invoke _save_as() so the user gets another chance to enter a valid name.
+    """
+    path = _examples(main, "named-paths groups", "my_named_paths.json")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, JsonViewer2)
+
+    monkeypatch.setattr(MessageUtility, "warning2", lambda **kw: None)
+    reopen_calls = []
+    monkeypatch.setattr(viewer, "_save_as", lambda: reopen_calls.append(1))
+
+    dir_path = _examples(main, "named-paths groups")
+    viewer._save_as_continue((dir_path, True))
+
+    assert len(reopen_calls) == 1, (
+        "_save_as() must be called once after a directory-path warning"
+    )
