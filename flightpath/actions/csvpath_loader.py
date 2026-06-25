@@ -1,3 +1,4 @@
+import os
 import traceback
 
 from PySide6.QtCore import Qt, Slot
@@ -164,7 +165,13 @@ class CsvpathLoader:
                         )
                         """
                         self.load_dialog.warning(
-                            msg="Cannot load file", title="Cannot Load"
+                            msg=(
+                                f"'{os.path.basename(name)}' could not be added as a "
+                                "named-paths group. Verify that the file contains at least "
+                                "one complete, valid csvpath (each path requires both a scan "
+                                "section and a match section)."
+                            ),
+                            title="Cannot Load",
                         )
                         return
                 else:
