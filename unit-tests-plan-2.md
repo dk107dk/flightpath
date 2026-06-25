@@ -9,7 +9,7 @@ KeyUtility, LogUtility (needs real Config), FileCollector.
 
 ---
 
-## Step 1 — `test_server_api.py` — `FlightPathServerApi` shared methods
+## Step 1 — `test_server_api.py` — `FlightPathServerApi` shared methods ✓
 
 These methods live in `server_api.py` and are inherited by both V1 and V2.
 `_to_result` is the highest-value target: it is the single conversion point
@@ -47,7 +47,7 @@ without mocking the network.
 
 ---
 
-## Step 2 — `test_server_api_v1.py` — V1 result-parsing logic
+## Step 2 — `test_server_api_v1.py` — V1 result-parsing logic ✓
 
 V1's `download_log` and `get_project_names` have non-trivial logic that
 runs after the HTTP call completes. Test by constructing a `V1` instance
@@ -80,7 +80,7 @@ pre-built `Result` tuples, then assert on the method's output logic.
 
 ---
 
-## Step 3 — `test_server_api_v2.py` — V2 result-parsing logic
+## Step 3 — `test_server_api_v2.py` — V2 result-parsing logic ✓
 
 **Bug to pin (same download_log issue as V1, plus a new one):**
 - V2 `download_log` URL is `"/v2/projects/{name}/files/logs/csvpath.log"` — missing
@@ -111,7 +111,7 @@ pre-built `Result` tuples, then assert on the method's output logic.
 
 ---
 
-## Step 4 — `test_state.py` — `State` isolated with `tmp_path`
+## Step 4 — `test_state.py` — `State` isolated with `tmp_path` ✓
 
 `State` reads/writes `~/.flightpath` and creates directories under `~/FlightPath/`.
 Isolation: set `state.state_path` to a `tmp_path` file before any property
@@ -161,7 +161,7 @@ access; monkeypatch `pathlib.Path.home` to return `tmp_path` to redirect
 
 ---
 
-## Step 5 — `tests/gui/test_table_model.py` — `TableModel`
+## Step 5 — `tests/gui/test_table_model.py` — `TableModel` ✓
 
 `TableModel` subclasses `QAbstractTableModel` so requires `qapp`.  The pure
 data-manipulation logic is fully testable without rendering.
@@ -204,7 +204,7 @@ data-manipulation logic is fully testable without rendering.
 
 ---
 
-## Step 6 — `test_csvpath_utility.py` — remaining `CsvpathUtility` methods
+## Step 6 — `test_csvpath_utility.py` — remaining `CsvpathUtility` methods ✓
 
 `_add_to_external_comment_of_csvpath_at_position` is already covered in
 `test_insert_metadata.py`.  This step covers the remaining methods.
@@ -245,6 +245,15 @@ data-manipulation logic is fully testable without rendering.
 - [ ] Comment with no `test-quotechar` → `None`
 
 ---
+
+## Additional bugs found during Step 6
+
+- `_get_char("tab", default)` → `""` not `"\t"`: `c.strip()` strips the tab character; the `None` guard never fires. Pinned in `test_get_char_tab_bug_returns_empty_string`.
+- `_get_char("int", default)` → `"int"` not default: `except` block is bare `...`; `c` stays `"int"` and is not `None` so default is skipped. Pinned in `test_get_char_int_bug_returns_literal_int_string`.
+- `get_delimiter(None)` and `get_quotechar(None)` → `TypeError`: both pass `None` directly to `get_metadata()` unlike `get_filepath` which guards against it. Pinned in respective None tests.
+- Comment format note: `get_filepath`/`get_delimiter`/`get_quotechar` expect inner comment text (no `~` markers). Passing raw csvpath string with markers includes the trailing `~` in extracted values.
+
+All six bugs added to memory: `project_missing_none_guards.md`.
 
 ## After all steps: full suite regression check
 
