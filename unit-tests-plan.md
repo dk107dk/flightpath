@@ -44,12 +44,16 @@ After all steps are complete, begin the second plan: testability improvements an
 - [x] Add: `connect` falls back to lower version when highest is unimplemented
 - [x] Add: `connect` with malformed version string propagates ValueError
 
-## Step 4 — `test_test_data_utility.py`
-- [ ] Convert from `unittest.TestCase` to bare pytest functions
-- [ ] Add: csvpath text with no `test-data` annotation
-- [ ] Add: multiple `test-data` annotations (which one is returned?)
-- [ ] Add: malformed annotation (colon present, no path follows)
-- [ ] Add: annotation with leading/trailing whitespace in the path value
+## Step 4 — `test_test_data_utility.py` ✓
+- [x] Convert from `unittest.TestCase` to bare pytest functions
+- [x] Add: no `test-data` annotation → None
+- [x] Add: no comment block at all → None
+- [x] Add: empty string → None
+- [x] Add: multiple csvpaths (MARKER-separated) → first annotation returned
+- [x] Add: annotation only in second block → found and returned
+- [x] Add: whitespace around path value → stripped
+- [x] Add: malformed annotation (colon, empty value) → None
+- [x] Add: None input → AttributeError (documents missing None guard)
 
 ## Step 5 — `test_templates.py`
 - [ ] Convert from `unittest.TestCase` to bare pytest functions
