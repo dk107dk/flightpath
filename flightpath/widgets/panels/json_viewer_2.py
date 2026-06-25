@@ -219,24 +219,36 @@ class JsonViewer2(QWidget):
         menu.exec(global_pos)
 
     def _save_as(self) -> None:
-        path = os.path.dirname(self.path)
         meut.input2(
             parent=self,
             title="Save As",
             width=580,
-            msg="Where should the new file live? ",
-            text=path,
+            msg="New file name (saves to same directory; or enter a full path): ",
+            text=os.path.basename(self.path),
             callback=self._save_as_continue,
         )
 
     @Slot(tuple)
     def _save_as_continue(self, t: tuple[str, bool]) -> None:
-        path, ok = t
+        name, ok = t
         if not ok:
             return
-        if str(path) in ["", "None"]:
+        if str(name) in ["", "None"]:
+            return
+        if os.sep in name:
+            path = name
+        else:
+            path = os.path.join(os.path.dirname(self.path), name)
+        if os.path.isdir(path):
+            meut.warning2(
+                parent=self,
+                title="Cannot save",
+                msg=f"'{path}' is a directory. Enter a file name, not a directory path.",
+            )
+            self._save_as()
             return
         self._do_save(path)
+        self.main.statusBar().showMessage(f"  Saved to: {path}")
 
     def _save(self) -> None:
         self._do_save(self.path)
