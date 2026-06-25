@@ -29,6 +29,7 @@ class GeneralDataWorker(QRunnable):
         sheet: str = None,
     ):
         super().__init__()
+        self.setAutoDelete(False)
         self.main = main
         self.filepath = filepath
         self.signals = DataWorkerSignals()

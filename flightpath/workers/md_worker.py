@@ -10,6 +10,7 @@ from .data_worker_signals import DataWorkerSignals
 class MdWorker(QRunnable):
     def __init__(self, filepath, main, editable=EditStates.EDITABLE):
         super().__init__()
+        self.setAutoDelete(False)
         self.filepath = str(filepath)
         self.editable = editable
         self.signals = DataWorkerSignals()

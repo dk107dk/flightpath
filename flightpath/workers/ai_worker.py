@@ -11,6 +11,7 @@ class AiWorkerSignals(QObject):
 class AiWorker(QRunnable):
     def __init__(self, job: AiJob):
         super().__init__()
+        self.setAutoDelete(False)
         self.job = job
         self.signals = AiWorkerSignals()
 

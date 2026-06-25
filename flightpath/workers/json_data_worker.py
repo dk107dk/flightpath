@@ -14,6 +14,7 @@ from .data_worker_signals import DataWorkerSignals
 class JsonDataWorker(QRunnable):
     def __init__(self, filepath, main, editable=EditStates.EDITABLE):
         super().__init__()
+        self.setAutoDelete(False)
         #
         #
         #
