@@ -395,7 +395,7 @@ class SidebarActions:
             return name
         if self.my_parent._last_path is None:
             return os.path.join(self.main.state.cwd, name)
-        base = os.path.join(self.main.state.cwd, self._last_path)
+        base = os.path.join(self.main.state.cwd, self.my_parent._last_path)
         return os.path.join(base, name)
 
     # -------------------------------------------------------------------------

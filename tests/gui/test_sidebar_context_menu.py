@@ -1,4 +1,19 @@
 """
+pytest-qt tests for sidebar context-menu file/folder creation, deletion, and
+path resolution.
+
+_resolve_new_item_path coverage
+--------------------------------
+Bug fixed: line 398 of sidebar_actions.py read self._last_path instead of
+self.my_parent._last_path.  When _last_path was set on Sidebar, the method
+raised AttributeError because SidebarActions has no such attribute.
+
+Three branches:
+  1. name already starts with cwd → returned unchanged (absolute path passed in)
+  2. _last_path is None → os.path.join(cwd, name)  (no prior selection)
+  3. _last_path is set → os.path.join(cwd, _last_path, name)  (relative to last
+     selected directory — this was the broken branch)
+
 pytest-qt tests for sidebar context-menu file/folder creation and deletion.
 
 Checklist coverage:
@@ -304,3 +319,43 @@ def test_delete_directory_no_keeps_dir(monkeypatch, main):
     main.sidebar.actions._delete_file_navigator_item()
 
     assert os.path.isdir(dir_path), "Directory should survive after cancelling (No)"
+
+
+# ---------------------------------------------------------------------------
+# _resolve_new_item_path — unit tests
+# ---------------------------------------------------------------------------
+
+def test_resolve_absolute_path_returned_unchanged(main):
+    """
+    When the name already starts with cwd (i.e. is an absolute path), it must
+    be returned as-is — no join is applied.
+    """
+    cwd = main.state.cwd
+    absolute = os.path.join(cwd, "subdir", "file.csv")
+    result = main.sidebar.actions._resolve_new_item_path(absolute)
+    assert result == absolute
+
+
+def test_resolve_no_last_path_joins_cwd_and_name(main):
+    """
+    When _last_path is None (no prior tree selection), the path must be
+    os.path.join(cwd, name) — placed at the project root.
+    """
+    main.sidebar._last_path = None
+    result = main.sidebar.actions._resolve_new_item_path("new_file.csv")
+    assert result == os.path.join(main.state.cwd, "new_file.csv")
+
+
+def test_resolve_with_last_path_joins_cwd_last_path_and_name(main):
+    """
+    When _last_path is set on Sidebar, the resolved path must be
+    os.path.join(cwd, _last_path, name).
+
+    This is the branch that triggered AttributeError before the fix:
+    sidebar_actions.py read self._last_path but the property lives on
+    self.my_parent (_last_path was moved to Sidebar during refactoring).
+    """
+    main.sidebar._last_path = "examples"
+    result = main.sidebar.actions._resolve_new_item_path("check.csvpath")
+    assert result == os.path.join(main.state.cwd, "examples", "check.csvpath")
+    main.sidebar._last_path = None  # restore so other tests aren't affected
