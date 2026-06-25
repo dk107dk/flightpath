@@ -145,7 +145,9 @@ class SidebarActions:
     def _paste(self) -> None:
         if self.my_parent.cutted is None and self.my_parent.copied is None:
             return
-        path = self._current_path() or self.main.state.cwd
+        # Use _last_path (set explicitly by the right-click that opened this menu)
+        # rather than _current_path() (stale tree selection, not user intent).
+        path = self.my_parent._last_path or self.main.state.cwd
         if os.path.isfile(path):
             path = os.path.dirname(path)
         if self.my_parent.cutted:

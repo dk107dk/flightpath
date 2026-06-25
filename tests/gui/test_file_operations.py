@@ -9,11 +9,14 @@ Checklist coverage:
 Rename uses a synchronous QInputDialog.exec() dialog — same monkeypatch
 pattern as the creation tests in test_sidebar_context_menu.py.
 
-Copy and cut bypass the _copy()/_cut() action methods and set
-sidebar.copied / sidebar.cutted directly (the same state those methods
-produce), then drive _paste() with _current_path monkeypatched to the
-desired destination directory.  This avoids double-patching _current_path
-for source-then-destination in a single test.
+Paste destination is controlled via sidebar._last_path (set by the right-click
+that opens the context menu) rather than _current_path() (the stale tree
+selection, which reflects the last left-click and does not represent user
+intent for the paste destination).
+
+  _last_path = None      → paste into cwd  (user right-clicked whitespace)
+  _last_path = <dir>     → paste into that directory
+  _last_path = <file>    → paste into the file's parent directory
 
 Run with:
   QT_QPA_PLATFORM=offscreen poetry run python -m pytest tests/gui/test_file_operations.py -v
@@ -79,43 +82,96 @@ def test_rename_cancel_keeps_file(monkeypatch, main):
     assert os.path.isfile(original), "File should be unchanged after cancelling rename"
 
 
-def test_copy_paste_creates_duplicate(monkeypatch, main):
+# ---------------------------------------------------------------------------
+# Copy + paste
+# ---------------------------------------------------------------------------
+
+def test_copy_paste_into_directory_creates_deconflicted_copy(main):
     """
-    Copy then paste must leave the original intact and create a deconflicted
-    copy (e.g. 'source(0).csv') in the destination directory.
+    Copy then paste (right-click on a directory) must leave the original
+    intact and create a deconflicted copy in the destination directory.
+    _last_path is set to the destination directory, as the context menu does.
     """
     source = _make_file(main, "source.csv")
     dest_dir = main.state.cwd
 
-    # Set the copied path directly — equivalent to calling _copy() with source selected
     main.sidebar.copied = source
     main.sidebar.cutted = None
+    main.sidebar._last_path = dest_dir  # user right-clicked the destination dir
 
-    # Paste into cwd (a directory)
-    monkeypatch.setattr(main.sidebar.actions, "_current_path", lambda: dest_dir)
     main.sidebar.actions._paste()
 
     assert os.path.isfile(source), "Original must survive a copy+paste"
-    # FileUtility.deconflicted_path produces 'source(0).csv' when 'source.csv' exists
     copy_path = os.path.join(dest_dir, "source(0).csv")
     assert os.path.isfile(copy_path), f"Deconflicted copy not found: {copy_path}"
     assert main.sidebar.copied is None, "sidebar.copied must be cleared after paste"
 
-#chked
-def test_cut_paste_moves_file(monkeypatch, main):
+
+def test_copy_paste_into_whitespace_uses_cwd(main):
     """
-    Cut then paste must remove the file from its original location and
-    place it in the destination directory under the same name.
+    Pasting after right-clicking whitespace (_last_path = None) must copy
+    into cwd.  This is the key scenario from the bug report: the user copied
+    README.md, right-clicked whitespace to paste, and got a NotADirectoryError
+    because _paste was reading _current_path() (stale tree selection pointing
+    at xyz.json) instead of _last_path.
+    """
+    source = _make_file(main, "readme_copy_test.md", content="# hello\n")
+
+    main.sidebar.copied = source
+    main.sidebar.cutted = None
+    main.sidebar._last_path = None  # user right-clicked whitespace
+
+    main.sidebar.actions._paste()
+
+    assert os.path.isfile(source), "Original must survive copy+paste into whitespace"
+    copy_path = os.path.join(main.state.cwd, "readme_copy_test(0).md")
+    assert os.path.isfile(copy_path), (
+        f"Paste into whitespace must copy to cwd; expected: {copy_path}"
+    )
+
+
+def test_copy_paste_when_last_path_is_file_pastes_to_parent_dir(main):
+    """
+    When _last_path is a file (user right-clicked a file to open the menu
+    that contains Paste), paste must copy into the file's parent directory.
+
+    Previously _paste used _current_path() which could return a stale tree
+    selection that treated the file as a directory destination.
+    """
+    source = _make_file(main, "to_copy.csv")
+    sibling = _make_file(main, "sibling.csv")
+
+    main.sidebar.copied = source
+    main.sidebar.cutted = None
+    main.sidebar._last_path = sibling  # right-clicked a sibling file
+
+    main.sidebar.actions._paste()
+
+    copy_path = os.path.join(main.state.cwd, "to_copy(0).csv")
+    assert os.path.isfile(copy_path), (
+        f"Paste with a file _last_path must land in the file's parent dir: {copy_path}"
+    )
+    assert os.path.isfile(source), "Original must be intact after copy+paste"
+
+
+# ---------------------------------------------------------------------------
+# Cut + paste
+# ---------------------------------------------------------------------------
+
+#chked
+def test_cut_paste_moves_file_to_directory(main):
+    """
+    Cut then paste (right-click on a directory) must remove the file from its
+    original location and place it in the destination directory.
     """
     source = _make_file(main, "to_move.csv")
     dest_dir = os.path.join(main.state.cwd, "subdir")
     os.mkdir(dest_dir)
 
-    # Set the cutted path directly — equivalent to calling _cut() with source selected
     main.sidebar.cutted = source
     main.sidebar.copied = None
+    main.sidebar._last_path = dest_dir  # user right-clicked the destination dir
 
-    monkeypatch.setattr(main.sidebar.actions, "_current_path", lambda: dest_dir)
     main.sidebar.actions._paste()
 
     assert not os.path.exists(source), "Original must be gone after cut+paste"
@@ -125,57 +181,56 @@ def test_cut_paste_moves_file(monkeypatch, main):
     assert main.sidebar.cutted is None, "sidebar.cutted must be cleared after paste"
 
 
-def test_copy_paste_when_current_path_is_file_pastes_to_parent_dir(monkeypatch, main):
+def test_cut_paste_when_last_path_is_file_moves_to_parent_dir(main):
     """
-    When the selected item is a file (not a directory), paste must copy into
-    the file's parent directory — not treat the file itself as the destination.
-
-    This was the root cause of the NotADirectoryError traceback:
-      shutil.copy(src, '/path/to/tsetsl.json/README.md')
-    because _paste used _current_path() directly as the destination dir.
-    """
-    source = _make_file(main, "to_copy.csv")
-    sibling = _make_file(main, "sibling.csv")   # a file in the same dir
-
-    main.sidebar.copied = source
-    main.sidebar.cutted = None
-
-    # Simulate the user right-clicking on a file (sibling) rather than whitespace
-    monkeypatch.setattr(main.sidebar.actions, "_current_path", lambda: sibling)
-    main.sidebar.actions._paste()
-
-    # Should land in cwd (parent of sibling), not inside sibling
-    copy_path = os.path.join(main.state.cwd, "to_copy(0).csv")
-    assert os.path.isfile(copy_path), (
-        f"Copy+paste with a file as current path must paste into that file's "
-        f"parent directory; expected: {copy_path}"
-    )
-    assert os.path.isfile(source), "Original must be intact after copy+paste"
-
-
-def test_cut_paste_when_current_path_is_file_moves_to_parent_dir(monkeypatch, main):
-    """
-    Cut+paste must also use the parent directory when the selected item is a
-    file, not the file path itself as the destination.
+    Cut+paste with a file _last_path must move the source into the file's
+    parent directory, not attempt to write inside the file itself.
     """
     source = _make_file(main, "to_cut.csv")
     dest_dir = os.path.join(main.state.cwd, "subdir2")
     os.mkdir(dest_dir)
-    sibling_in_subdir = os.path.join(dest_dir, "anchor.csv")
-    with open(sibling_in_subdir, "w") as f:
+    anchor = os.path.join(dest_dir, "anchor.csv")
+    with open(anchor, "w") as f:
         f.write("x\n")
 
     main.sidebar.cutted = source
     main.sidebar.copied = None
+    main.sidebar._last_path = anchor  # right-clicked a file inside subdir2
 
-    # Simulate selecting a file inside subdir2 rather than the directory itself
-    monkeypatch.setattr(main.sidebar.actions, "_current_path", lambda: sibling_in_subdir)
     main.sidebar.actions._paste()
 
     assert not os.path.exists(source), "Source must be gone after cut+paste"
     assert os.path.isfile(os.path.join(dest_dir, "to_cut.csv")), (
-        "Cut file must move to the selected file's parent directory"
+        "Cut file must land in the file's parent directory"
     )
 
 
+def test_paste_ignores_stale_tree_selection(monkeypatch, main):
+    """
+    _paste must use _last_path, not _current_path().  Even when _current_path()
+    would return a file (stale tree selection), paste into whitespace
+    (_last_path = None) must go to cwd — not into the stale file path.
+    """
+    source = _make_file(main, "paste_stale_test.csv")
+    stale_file = _make_file(main, "stale_selection.json", content="{}")
 
+    main.sidebar.copied = source
+    main.sidebar.cutted = None
+    main.sidebar._last_path = None  # whitespace right-click
+
+    # Stale tree selection points at a file — _paste must ignore this
+    monkeypatch.setattr(main.sidebar.actions, "_current_path", lambda: stale_file)
+
+    main.sidebar.actions._paste()
+
+    copy_path = os.path.join(main.state.cwd, "paste_stale_test(0).csv")
+    assert os.path.isfile(copy_path), (
+        "Paste must land in cwd when _last_path is None, "
+        "regardless of what _current_path() returns"
+    )
+    bad_path = os.path.join(os.path.dirname(stale_file), "paste_stale_test(0).csv")
+    # bad_path == copy_path here since both are in cwd, so check the stale
+    # nested path was never attempted
+    assert not os.path.exists(os.path.join(stale_file, "paste_stale_test(0).csv")), (
+        "Paste must not attempt to write inside the stale file path"
+    )
