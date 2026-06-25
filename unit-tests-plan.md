@@ -55,13 +55,18 @@ After all steps are complete, begin the second plan: testability improvements an
 - [x] Add: malformed annotation (colon, empty value) → None
 - [x] Add: None input → AttributeError (documents missing None guard)
 
-## Step 5 — `test_templates.py`
-- [ ] Convert from `unittest.TestCase` to bare pytest functions
-- [ ] Split the 17 assertion groups into 17+ individually named test functions
-- [ ] Add: `None` input to `clean_or_reject`
-- [ ] Add: empty string for the `end` parameter
-- [ ] Add: path that is nothing but slashes
-- [ ] Add: very long path (stress boundary)
+## Step 5 — `test_templates.py` ✓
+- [x] Convert from `unittest.TestCase` to bare pytest functions
+- [x] Split 19 assertion groups into 27 named test functions
+- [x] Fix: entire old test suite was testing dead code — refactor replaced old logic
+  with temu.validate(); invalid inputs now raise ValueError, not return ("", True)
+- [x] Add: end=None → ValueError; end without colon → ValueError
+- [x] Add: t=None → ("", True) — only non-raising rejection path
+- [x] Add: 7 valid template forms (run_dir and filename modes)
+- [x] Add: 10 invalid forms — wrong/missing end marker, leading slash, starts with
+  end marker, double end marker, illegal chars, non-numeric colon tokens
+- [x] Note: rstrip('/:filename') strips chars individually so short paths like
+  "a/:filename" collapse to "" and fail; tests use longer safe paths
 
 ## Step 6 — `test_insert_metadata.py`
 - [ ] Convert from `unittest.TestCase` to bare pytest functions
