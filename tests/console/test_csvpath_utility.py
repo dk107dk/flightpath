@@ -78,16 +78,8 @@ def test_get_char_semi_colon_hyphenated():
     assert cput._get_char("semi-colon", ",") == ";"
 
 
-def test_get_char_tab_bug_returns_empty_string():
-    """
-    Bug: _get_char("tab", default) returns "" not "\\t".
-    The method sets c = "\\t" in the elif branch but then calls c.strip(),
-    which strips the tab character, leaving an empty string.
-    The default is NOT used as a fallback — c is "" which is falsy but
-    not None, so the `if c is None: c = default` guard is not triggered.
-    """
-    result = cput._get_char("tab", ",")
-    assert result == "", "Bug: tab is stripped to empty string by c.strip()"
+def test_get_char_tab_returns_tab_character():
+    assert cput._get_char("tab", ",") == "\t"
 
 
 def test_get_char_quotes():
@@ -107,15 +99,10 @@ def test_get_char_unknown_name_returns_default():
     assert cput._get_char("not_a_real_name", ",") == ","
 
 
-def test_get_char_int_bug_returns_literal_int_string():
-    """
-    Bug: _get_char("int", default) returns the string "int" instead of the
-    default.  When exut.to_int("int") raises, the except branch is bare `...`
-    so c is never reassigned.  c remains "int", which is not None, so the
-    `if c is None: c = default` guard is skipped.  c.strip() returns "int".
-    """
-    result = cput._get_char("int", ",")
-    assert result == "int", "Bug: 'int' is returned unchanged instead of the default"
+@pytest.mark.xfail(strict=True, reason="Bug: except branch is bare '...' so c stays 'int' instead of falling back to default")
+def test_get_char_non_numeric_name_falls_back_to_default():
+    """When to_int() fails the except branch should set c = None to trigger the default."""
+    assert cput._get_char("int", ",") == ","
 
 
 def test_get_char_at_sign():
@@ -217,27 +204,16 @@ def test_get_delimiter_pipe():
     assert cput.get_delimiter("test-delimiter: pipe") == "|"
 
 
-def test_get_delimiter_tab_bug_returns_empty_string():
-    """
-    Bug: get_delimiter returns "" for tab rather than "\\t", because
-    _get_char("tab", ...) strips the tab character (see _get_char tab bug).
-    """
-    result = cput.get_delimiter("test-delimiter: tab")
-    assert result == "", "Bug: tab delimiter is stripped to empty string"
+def test_get_delimiter_tab_returns_tab_character():
+    assert cput.get_delimiter("test-delimiter: tab") == "\t"
 
 
 def test_get_delimiter_no_annotation_returns_none():
     assert cput.get_delimiter("no delimiter here") is None
 
 
-def test_get_delimiter_none_raises_type_error():
-    """
-    Bug: get_delimiter(None) raises TypeError because it passes None directly
-    to get_metadata() which iterates over it.  get_filepath guards against
-    None but get_delimiter does not.
-    """
-    with pytest.raises(TypeError):
-        cput.get_delimiter(None)
+def test_get_delimiter_none_returns_none():
+    assert cput.get_delimiter(None) is None
 
 
 # ---------------------------------------------------------------------------
@@ -257,9 +233,5 @@ def test_get_quotechar_no_annotation_returns_none():
     assert cput.get_quotechar("some comment") is None
 
 
-def test_get_quotechar_none_raises_type_error():
-    """
-    Bug: same missing None guard as get_delimiter — TypeError on None input.
-    """
-    with pytest.raises(TypeError):
-        cput.get_quotechar(None)
+def test_get_quotechar_none_returns_none():
+    assert cput.get_quotechar(None) is None

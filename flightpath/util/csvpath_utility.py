@@ -74,6 +74,8 @@ class CsvpathUtility:
 
     @classmethod
     def get_delimiter(cls, comment: str = None) -> str:
+        if comment is None:
+            return None
         c = None
         mdata = cls.get_metadata(comment)
         if mdata:
@@ -84,6 +86,8 @@ class CsvpathUtility:
 
     @classmethod
     def get_quotechar(cls, comment: str = None) -> str:
+        if comment is None:
+            return None
         c = None
         mdata = cls.get_metadata(comment)
         if mdata:
@@ -110,7 +114,7 @@ class CsvpathUtility:
             except Exception:
                 ...
         elif c == "tab":
-            c = "\t"
+            return "\t"
         else:
             try:
                 c = cls.CHAR_NAMES.get(c)

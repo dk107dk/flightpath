@@ -1,7 +1,7 @@
 import unittest
 import pytest
 import socket
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError
 
 
 class TestBackends(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestBackends(unittest.TestCase):
         for scheme, uri in schemes.items():
             print(f"scheme: {scheme}: {uri}")
             with pytest.raises(
-                (OSError, ValueError, TypeError, ClientError, socket.gaierror)
+                (OSError, ValueError, TypeError, ClientError, NoCredentialsError, socket.gaierror)
             ):
                 with smart_open.open(uri, "rb"):
                     ...

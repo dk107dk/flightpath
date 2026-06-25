@@ -106,14 +106,11 @@ def test_empty_addto_spaced_comment_intact():
     assert result.strip() == "~ two fish ~ $[*][ yes()]"
 
 
-def test_none_addto_inserts_literal_none_string():
-    """
-    There is no None guard on addto: Python's f-string interpolation converts
-    None to the string 'None' and inserts it into the comment.  This test
-    pins that (unguarded) behavior so a future fix is noticed here.
-    """
-    result = _insert(ONE, position=20, addto=None)
-    assert "None" in result
+@pytest.mark.xfail(strict=True, reason="Bug: no None guard on addto — f-string silently inserts 'None' string")
+def test_none_addto_raises_value_error():
+    """After fix: addto=None should raise ValueError, not silently insert 'None'."""
+    with pytest.raises(ValueError):
+        _insert(ONE, position=20, addto=None)
 
 
 # ---------------------------------------------------------------------------

@@ -128,20 +128,12 @@ def test_get_project_names_unexpected_response_returns_failure(monkeypatch):
     assert "Unexpected response" in result.error_message
 
 
-def test_get_project_names_result_arg_count_bug(monkeypatch):
-    """
-    Bug: get_project_names() calls Result(True, data["names"], status_code)
-    with 3 positional args.  Result has 4 fields so the integer status code
-    ends up in the error_message slot and status_code is left as None.
-    Pin the current behaviour so a future fix is visible.
-    """
+@pytest.mark.xfail(strict=True, reason="Bug: Result(True, names, status_code) uses 3 args — status_code lands in error_message")
+def test_get_project_names_result_has_correct_fields(monkeypatch):
+    """After fix: Result should have error_message=None and status_code=200."""
     payload = {"names": ["alpha"]}
     api = _api(monkeypatch, post_result=Result(True, payload, None, 200))
     result = api.get_project_names()
     assert result.success is True
-    assert isinstance(result.error_message, int), (
-        "Bug: status_code integer is in the error_message field"
-    )
-    assert result.status_code is None, (
-        "Bug: status_code field is None because it was shifted out by the 3-arg call"
-    )
+    assert result.error_message is None
+    assert result.status_code == 200

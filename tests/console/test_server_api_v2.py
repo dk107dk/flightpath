@@ -85,15 +85,9 @@ def test_v2_download_log_invalid_base64_returns_failure(monkeypatch):
     assert "Could not decode" in result.error_message
 
 
-def test_v2_download_log_url_missing_f_prefix_bug(monkeypatch):
-    """
-    Bug: the URL in download_log is a plain string, not an f-string:
-      self._get("/v2/projects/{name}/files/logs/csvpath.log")
-    The {name} token is never interpolated; the literal string
-    '/v2/projects/{name}/files/logs/csvpath.log' is always sent.
-    This test captures the URL that _get actually receives so the bug
-    is visible and a future fix triggers a test change.
-    """
+@pytest.mark.xfail(strict=True, reason="Bug: download_log URL is missing f-prefix so {name} is never interpolated")
+def test_v2_download_log_url_interpolates_project_name(monkeypatch):
+    """After fix: URL must contain the actual project name, not literal {name}."""
     captured = []
 
     def capture_get(path):
@@ -105,12 +99,8 @@ def test_v2_download_log_url_missing_f_prefix_bug(monkeypatch):
     api.download_log("real_project_name")
 
     assert len(captured) == 1
-    assert "{name}" in captured[0], (
-        "Bug not present — if this fails, the f-string was fixed; update this test"
-    )
-    assert "real_project_name" not in captured[0], (
-        "Bug not present — name was interpolated; update this test"
-    )
+    assert "real_project_name" in captured[0]
+    assert "{name}" not in captured[0]
 
 
 # ---------------------------------------------------------------------------
@@ -197,16 +187,12 @@ def test_v2_get_project_names_missing_names_key_returns_failure(monkeypatch):
     assert "Unexpected response" in result.error_message
 
 
-def test_v2_get_project_names_result_arg_count_bug(monkeypatch):
-    """
-    Same 3-arg Result bug as V1: Result(True, names, status_code) puts the
-    integer status code in error_message and leaves status_code as None.
-    """
+@pytest.mark.xfail(strict=True, reason="Bug: same 3-arg Result call as V1 — status_code lands in error_message")
+def test_v2_get_project_names_result_has_correct_fields(monkeypatch):
+    """After fix: error_message should be None and status_code should be 200."""
     payload = {"names": ["proj1"]}
     api = _api(monkeypatch, get_result=Result(True, payload, None, 200))
     result = api.get_project_names()
     assert result.success is True
-    assert isinstance(result.error_message, int), (
-        "Bug: status_code integer is in the error_message field"
-    )
-    assert result.status_code is None
+    assert result.error_message is None
+    assert result.status_code == 200

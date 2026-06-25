@@ -15,12 +15,14 @@ Run with:
 """
 
 import os
+from pathlib import Path
 
 import pytest
 
 from flightpath.util.examples_marshal import ExamplesMarshal
 
-SOURCE = os.path.join("tests", "test_resources", "examples_source")
+_TESTS = Path(__file__).parent.parent
+SOURCE = str(_TESTS / "test_resources" / "examples_source")
 
 
 # ---------------------------------------------------------------------------

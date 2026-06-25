@@ -19,6 +19,7 @@ Run with:
 """
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -30,7 +31,8 @@ from flightpath.util.html_generator import HtmlGenerator
 # Shared fixtures
 # ---------------------------------------------------------------------------
 
-CSV_PATH    = "tests/test_resources/examples/test.csv"
+_TESTS = Path(__file__).parent.parent
+CSV_PATH    = str(_TESTS / "test_resources" / "examples" / "test.csv")
 TEMPLATE_PATH = fiut.make_app_path(
     f"assets{os.sep}help{os.sep}templates{os.sep}file_details.html"
 )
