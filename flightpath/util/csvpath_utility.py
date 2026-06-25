@@ -1,3 +1,5 @@
+import re
+
 from csvpath.util.metadata_parser import MetadataParser
 from csvpath.managers.paths.paths_manager import PathsManager
 from csvpath.matching.util.expression_utility import ExpressionUtility as exut
@@ -27,6 +29,40 @@ class CsvpathUtility:
         "tick": "`",
         "tab": None,
     }
+
+    @classmethod
+    def validate_csvpath_content(cls, *, content: str, filename: str) -> tuple[bool, str]:
+        """Parse each csvpath in content using the library's raise validation mode.
+
+        Returns (True, "") when all paths are valid; (False, error_message) otherwise.
+        Handles single-path .csvpath files and multi-path .csvpaths files (paths
+        separated by ---- CSVPATH ---- or similar ---- delimiters).
+        """
+        from csvpath import CsvPath
+
+        if not content.strip():
+            return False, f"'{filename}' contains no csvpath expressions."
+
+        parts = re.split(r"^-{4,}.*$", content, flags=re.MULTILINE)
+        expressions = [p.strip() for p in parts if p.strip()]
+
+        if not expressions:
+            return False, f"'{filename}' contains no csvpath expressions."
+
+        for expr in expressions:
+            try:
+                c = CsvPath()
+                c.modes.validation_mode.value = "raise"
+                matcher = c.parse(expr, disposably=True)
+                matcher.check_valid()
+            except Exception as e:
+                return False, (
+                    f"'{filename}' contains an invalid csvpath. "
+                    f"Each path requires both a scan part and a match part. "
+                    f"Validation error: {e}"
+                )
+
+        return True, ""
 
     @classmethod
     def statement_and_comment(cls, csvpath: str) -> tuple[str, str]:

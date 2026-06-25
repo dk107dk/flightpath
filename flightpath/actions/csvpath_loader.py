@@ -1,5 +1,4 @@
 import os
-import re
 import traceback
 
 from PySide6.QtCore import Qt, Slot
@@ -9,6 +8,7 @@ from csvpath import CsvPaths
 from csvpath.util.nos import Nos
 
 from flightpath.dialogs.load_paths_dialog import LoadPathsDialog
+from flightpath.util.csvpath_utility import CsvpathUtility as csut
 
 
 class CsvpathLoader:
@@ -160,7 +160,7 @@ class CsvpathLoader:
                             title="Cannot Load",
                         )
                         return
-                    ok, reason = CsvpathLoader._validate_csvpath_content(
+                    ok, reason = csut.validate_csvpath_content(
                         content=raw, filename=os.path.basename(name)
                     )
                     if not ok:
@@ -403,37 +403,3 @@ class CsvpathLoader:
         except Exception:
             ...
 
-    @staticmethod
-    def _validate_csvpath_content(*, content: str, filename: str) -> tuple[bool, str]:
-        """Parse each csvpath in content using the library's validation mode.
-
-        Returns (True, "") when all paths are valid; (False, error_message) otherwise.
-        Handles single-path .csvpath files and multi-path .csvpaths files (separated
-        by ---- delimiters).
-        """
-        from csvpath import CsvPath
-
-        if not content.strip():
-            return False, f"'{filename}' contains no csvpath expressions."
-
-        # Multi-path .csvpaths files use ---- ... ---- delimiters between paths
-        parts = re.split(r"^-{4,}.*$", content, flags=re.MULTILINE)
-        expressions = [p.strip() for p in parts if p.strip()]
-
-        if not expressions:
-            return False, f"'{filename}' contains no csvpath expressions."
-
-        for expr in expressions:
-            try:
-                c = CsvPath()
-                c.modes.validation_mode.value = "raise"
-                matcher = c.parse(expr, disposably=True)
-                matcher.check_valid()
-            except Exception as e:
-                return False, (
-                    f"'{filename}' contains an invalid csvpath. "
-                    f"Each path requires both a scan part and a match part. "
-                    f"Validation error: {e}"
-                )
-
-        return True, ""

@@ -17,6 +17,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from flightpath.actions.csvpath_loader import CsvpathLoader
+from flightpath.util.csvpath_utility import CsvpathUtility as csut
 
 
 # ---------------------------------------------------------------------------
@@ -155,7 +156,7 @@ def test_load_failure_empty_ref_shows_warning(tmp_path):
 
 def test_validate_accepts_minimal_valid_csvpath():
     """A minimal well-formed csvpath with scan and match parts must pass."""
-    ok, msg = CsvpathLoader._validate_csvpath_content(
+    ok, msg = csut.validate_csvpath_content(
         content="$[*][not(all())]",
         filename="test.csvpath",
     )
@@ -165,7 +166,7 @@ def test_validate_accepts_minimal_valid_csvpath():
 def test_validate_accepts_valid_csvpath_with_metadata():
     """Metadata blocks before the path must not cause false failures."""
     content = "~\nvalidation-mode: print\n~\n$[*][not(all())]"
-    ok, msg = CsvpathLoader._validate_csvpath_content(
+    ok, msg = csut.validate_csvpath_content(
         content=content,
         filename="meta.csvpath",
     )
@@ -174,7 +175,7 @@ def test_validate_accepts_valid_csvpath_with_metadata():
 
 def test_validate_rejects_match_only_fragment():
     """A match-only expression without a root or scan part must be rejected."""
-    ok, msg = CsvpathLoader._validate_csvpath_content(
+    ok, msg = csut.validate_csvpath_content(
         content=" not(all()) -> counter.lines_with_blanks() ",
         filename="bad.csvpath",
     )
@@ -183,7 +184,7 @@ def test_validate_rejects_match_only_fragment():
 
 def test_validate_rejects_empty_content():
     """Entirely empty or whitespace-only content must be rejected."""
-    ok, msg = CsvpathLoader._validate_csvpath_content(
+    ok, msg = csut.validate_csvpath_content(
         content="   \n  ",
         filename="empty.csvpath",
     )
@@ -192,7 +193,7 @@ def test_validate_rejects_empty_content():
 
 def test_validate_error_message_names_file():
     """The error message returned for an invalid csvpath must include the filename."""
-    _, msg = CsvpathLoader._validate_csvpath_content(
+    _, msg = csut.validate_csvpath_content(
         content=" not(all()) -> counter() ",
         filename="myfile.csvpath",
     )
@@ -201,7 +202,7 @@ def test_validate_error_message_names_file():
 
 def test_validate_error_message_mentions_scan_and_match():
     """The error message must guide the user to add both scan and match parts."""
-    _, msg = CsvpathLoader._validate_csvpath_content(
+    _, msg = csut.validate_csvpath_content(
         content=" not(all()) -> counter() ",
         filename="bad.csvpath",
     )
