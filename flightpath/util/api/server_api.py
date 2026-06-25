@@ -152,7 +152,7 @@ class FlightPathServerApi(ABC):
         except httpx.HTTPError as ex:
             return Result(False, None, f"Error sending request: {ex}", -1)
         except Exception as ex:
-            return (False, None, f"Unknown error: {ex}", -1)
+            return Result(False, None, f"Unknown error: {ex}", -1)
 
     @classmethod
     def ping(cls, host: str) -> Result:
@@ -166,7 +166,7 @@ class FlightPathServerApi(ABC):
         except httpx.HTTPError as ex:
             return Result(False, None, f"Error sending request: {ex}", -1)
         except Exception as ex:
-            return (False, None, f"Unknown error: {ex}", -1)
+            return Result(False, None, f"Unknown error: {ex}", -1)
 
     # ====================
     # api

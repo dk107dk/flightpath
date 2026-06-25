@@ -57,7 +57,7 @@ class FlightPathServerApiV1(FlightPathServerApi):
         if not success:
             return Result(success, data, error_message, status_code)
         if isinstance(data, dict) and "names" in data:
-            return Result(True, data["names"], status_code)
+            return Result(True, data["names"], None, status_code)
         return Result(False, None, f"Unexpected response: {data}", status_code)
 
     def delete_project(self, name: str) -> Result:

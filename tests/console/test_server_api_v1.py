@@ -128,9 +128,7 @@ def test_get_project_names_unexpected_response_returns_failure(monkeypatch):
     assert "Unexpected response" in result.error_message
 
 
-@pytest.mark.xfail(strict=True, reason="Bug: Result(True, names, status_code) uses 3 args — status_code lands in error_message")
 def test_get_project_names_result_has_correct_fields(monkeypatch):
-    """After fix: Result should have error_message=None and status_code=200."""
     payload = {"names": ["alpha"]}
     api = _api(monkeypatch, post_result=Result(True, payload, None, 200))
     result = api.get_project_names()
