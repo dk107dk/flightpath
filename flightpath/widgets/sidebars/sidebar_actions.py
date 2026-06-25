@@ -146,6 +146,8 @@ class SidebarActions:
         if self.my_parent.cutted is None and self.my_parent.copied is None:
             return
         path = self._current_path() or self.main.state.cwd
+        if os.path.isfile(path):
+            path = os.path.dirname(path)
         if self.my_parent.cutted:
             name = os.path.basename(self.my_parent.cutted)
             dest = os.path.join(path, name)
@@ -395,9 +397,10 @@ class SidebarActions:
         """Resolve an absolute path for a new file or folder being created."""
         if name.startswith(self.main.state.cwd):
             return name
-        if self.my_parent._last_path is None:
+        last = self.my_parent._last_path
+        if last is None:
             return os.path.join(self.main.state.cwd, name)
-        base = os.path.join(self.main.state.cwd, self.my_parent._last_path)
+        base = os.path.dirname(last) if os.path.isfile(last) else last
         return os.path.join(base, name)
 
     # -------------------------------------------------------------------------

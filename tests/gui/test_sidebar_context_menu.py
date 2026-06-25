@@ -417,14 +417,33 @@ def test_resolve_no_last_path_joins_cwd_and_name(main):
 
 def test_resolve_with_last_path_joins_cwd_last_path_and_name(main):
     """
-    When _last_path is set on Sidebar, the resolved path must be
-    os.path.join(cwd, _last_path, name).
-
-    This is the branch that triggered AttributeError before the fix:
-    sidebar_actions.py read self._last_path but the property lives on
-    self.my_parent (_last_path was moved to Sidebar during refactoring).
+    When _last_path is set on Sidebar to a directory, the resolved path must be
+    os.path.join(_last_path, name) — _last_path is always an absolute path set
+    by the context menu, so cwd is not prepended.
     """
-    main.sidebar._last_path = "examples"
+    examples_dir = os.path.join(main.state.cwd, "examples")
+    main.sidebar._last_path = examples_dir
     result = main.sidebar.actions._resolve_new_item_path("check.csvpath")
-    assert result == os.path.join(main.state.cwd, "examples", "check.csvpath")
+    assert result == os.path.join(examples_dir, "check.csvpath")
     main.sidebar._last_path = None  # restore so other tests aren't affected
+
+
+def test_resolve_with_last_path_as_file_uses_parent_directory(main):
+    """
+    When _last_path points to a file (the user right-clicked a file before
+    choosing New File), the resolved path must land in the file's parent
+    directory, not try to nest inside the file itself.
+
+    Previously os.path.join(cwd, last_path, name) treated the file as a
+    directory, producing '/path/to/file.json/new.csv' which fails at open().
+    """
+    existing = os.path.join(main.state.cwd, "anchor.json")
+    with open(existing, "w") as f:
+        f.write("{}")
+
+    main.sidebar._last_path = existing   # absolute path to a file
+    result = main.sidebar.actions._resolve_new_item_path("new_file.csv")
+    assert result == os.path.join(main.state.cwd, "new_file.csv"), (
+        "When _last_path is a file, new item must be created in its parent directory"
+    )
+    main.sidebar._last_path = None

@@ -125,4 +125,57 @@ def test_cut_paste_moves_file(monkeypatch, main):
     assert main.sidebar.cutted is None, "sidebar.cutted must be cleared after paste"
 
 
+def test_copy_paste_when_current_path_is_file_pastes_to_parent_dir(monkeypatch, main):
+    """
+    When the selected item is a file (not a directory), paste must copy into
+    the file's parent directory — not treat the file itself as the destination.
+
+    This was the root cause of the NotADirectoryError traceback:
+      shutil.copy(src, '/path/to/tsetsl.json/README.md')
+    because _paste used _current_path() directly as the destination dir.
+    """
+    source = _make_file(main, "to_copy.csv")
+    sibling = _make_file(main, "sibling.csv")   # a file in the same dir
+
+    main.sidebar.copied = source
+    main.sidebar.cutted = None
+
+    # Simulate the user right-clicking on a file (sibling) rather than whitespace
+    monkeypatch.setattr(main.sidebar.actions, "_current_path", lambda: sibling)
+    main.sidebar.actions._paste()
+
+    # Should land in cwd (parent of sibling), not inside sibling
+    copy_path = os.path.join(main.state.cwd, "to_copy(0).csv")
+    assert os.path.isfile(copy_path), (
+        f"Copy+paste with a file as current path must paste into that file's "
+        f"parent directory; expected: {copy_path}"
+    )
+    assert os.path.isfile(source), "Original must be intact after copy+paste"
+
+
+def test_cut_paste_when_current_path_is_file_moves_to_parent_dir(monkeypatch, main):
+    """
+    Cut+paste must also use the parent directory when the selected item is a
+    file, not the file path itself as the destination.
+    """
+    source = _make_file(main, "to_cut.csv")
+    dest_dir = os.path.join(main.state.cwd, "subdir2")
+    os.mkdir(dest_dir)
+    sibling_in_subdir = os.path.join(dest_dir, "anchor.csv")
+    with open(sibling_in_subdir, "w") as f:
+        f.write("x\n")
+
+    main.sidebar.cutted = source
+    main.sidebar.copied = None
+
+    # Simulate selecting a file inside subdir2 rather than the directory itself
+    monkeypatch.setattr(main.sidebar.actions, "_current_path", lambda: sibling_in_subdir)
+    main.sidebar.actions._paste()
+
+    assert not os.path.exists(source), "Source must be gone after cut+paste"
+    assert os.path.isfile(os.path.join(dest_dir, "to_cut.csv")), (
+        "Cut file must move to the selected file's parent directory"
+    )
+
+
 
