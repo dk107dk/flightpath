@@ -1,4 +1,5 @@
 import os
+import re
 import traceback
 
 from PySide6.QtCore import Qt, Slot
@@ -150,6 +151,21 @@ class CsvpathLoader:
                     paths.config.set(
                         section="inputs", name="allow_local_files", value=True
                     )
+                    try:
+                        with open(name, encoding="utf-8") as fh:
+                            raw = fh.read()
+                    except Exception as e:
+                        self.load_dialog.warning(
+                            msg=f"Could not read '{os.path.basename(name)}': {e}",
+                            title="Cannot Load",
+                        )
+                        return
+                    ok, reason = CsvpathLoader._validate_csvpath_content(
+                        content=raw, filename=os.path.basename(name)
+                    )
+                    if not ok:
+                        self.load_dialog.warning(msg=reason, title="Cannot Load")
+                        return
                     ref = paths.paths_manager.add_named_paths_from_file(
                         name=named_paths_name,
                         file_path=name,
@@ -386,3 +402,38 @@ class CsvpathLoader:
             self.load_dialog = None
         except Exception:
             ...
+
+    @staticmethod
+    def _validate_csvpath_content(*, content: str, filename: str) -> tuple[bool, str]:
+        """Parse each csvpath in content using the library's validation mode.
+
+        Returns (True, "") when all paths are valid; (False, error_message) otherwise.
+        Handles single-path .csvpath files and multi-path .csvpaths files (separated
+        by ---- delimiters).
+        """
+        from csvpath import CsvPath
+
+        if not content.strip():
+            return False, f"'{filename}' contains no csvpath expressions."
+
+        # Multi-path .csvpaths files use ---- ... ---- delimiters between paths
+        parts = re.split(r"^-{4,}.*$", content, flags=re.MULTILINE)
+        expressions = [p.strip() for p in parts if p.strip()]
+
+        if not expressions:
+            return False, f"'{filename}' contains no csvpath expressions."
+
+        for expr in expressions:
+            try:
+                c = CsvPath()
+                c.modes.validation_mode.value = "raise"
+                matcher = c.parse(expr, disposably=True)
+                matcher.check_valid()
+            except Exception as e:
+                return False, (
+                    f"'{filename}' contains an invalid csvpath. "
+                    f"Each path requires both a scan part and a match part. "
+                    f"Validation error: {e}"
+                )
+
+        return True, ""
