@@ -60,7 +60,7 @@ class TabsUtility:
     def select_tab(cls, tabs:QTabWidget, i:int|QWidget) -> bool:
         if isinstance(i, int):
             if i >= tabs.count():
-                raise ValueError("No such tab: {i}")
+                raise ValueError(f"No such tab: {i}")
             tabs.setCurrentIndex(i)
             return True
         else:

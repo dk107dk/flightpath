@@ -85,9 +85,7 @@ def test_v2_download_log_invalid_base64_returns_failure(monkeypatch):
     assert "Could not decode" in result.error_message
 
 
-@pytest.mark.xfail(strict=True, reason="Bug: download_log URL is missing f-prefix so {name} is never interpolated")
 def test_v2_download_log_url_interpolates_project_name(monkeypatch):
-    """After fix: URL must contain the actual project name, not literal {name}."""
     captured = []
 
     def capture_get(path):
@@ -187,9 +185,7 @@ def test_v2_get_project_names_missing_names_key_returns_failure(monkeypatch):
     assert "Unexpected response" in result.error_message
 
 
-@pytest.mark.xfail(strict=True, reason="Bug: same 3-arg Result call as V1 — status_code lands in error_message")
 def test_v2_get_project_names_result_has_correct_fields(monkeypatch):
-    """After fix: error_message should be None and status_code should be 200."""
     payload = {"names": ["proj1"]}
     api = _api(monkeypatch, get_result=Result(True, payload, None, 200))
     result = api.get_project_names()
