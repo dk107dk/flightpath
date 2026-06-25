@@ -88,14 +88,18 @@ After all steps are complete, begin the second plan: testability improvements an
 - [x] Add: cwd not ending with current_project → cwd used as root regardless
 - [x] Add: absolute path from a different project → only basename kept
 
-## Step 8 — `test_inspector.py`
-- [ ] Replace `test.html` side-effect with `tmp_path` (or remove file write)
-- [ ] Convert from `unittest.TestCase` to bare pytest functions
-- [ ] Replace `html is not None and len > 0` with specific content assertions
-  (known column names from test.csv, expected section headings)
-- [ ] Add: `_compile_scan` with `c=0`
-- [ ] Add: `_compile_scan` with `c` equal to `sample_size` exactly
-- [ ] Add: `_compile_scan` with `c` less than `sample_size`
+## Step 8 — `test_inspector.py` ✓
+- [x] Remove test.html write (was debug-only; no tmp_path needed)
+- [x] Convert from `unittest.TestCase` to bare pytest functions
+- [x] Add 6 Inspector.info tests: dict type, filename, required keys,
+  header names matching CSV, header_count consistency, total_lines > 0
+- [x] Add 6 HtmlGenerator tests: non-empty string, filename in output,
+  all 3 column headers in output, keyword sections present, path=None→None,
+  output > 1 KB
+- [x] Add _compile_scan: c=0 → "*" (clamped to 0 is falsy → wildcard)
+- [x] Add _compile_scan: c == sample_size → "0-50" (strict > so no clamp)
+- [x] Add _compile_scan: c < sample_size → clamped (already tested; added c=1)
+- [x] Add _compile_scan: from_line=5 → "5-15" range
 
 ## Step 9 — `test_examples.py`
 - [ ] Convert from `unittest.TestCase` to bare pytest functions
