@@ -119,7 +119,7 @@ def test_xlsx_opens_in_data_viewer(qtbot, main):
         "First cell must contain the CPI spreadsheet title"
     )
 
-
+#chked
 def test_xlsx_save_redirects_to_save_as(monkeypatch, qtbot, main):
     """
     Calling on_save() on an XLSX DataViewer must redirect to on_save_as(),

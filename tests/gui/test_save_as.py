@@ -191,7 +191,7 @@ def test_csv_save_as_single_quote_quotechar(qtbot, main):
         content = f.read()
     assert "'" in content, "Output with quotechar='single-quotes' must contain single-quote characters"
 
-
+#chked
 def test_single_quote_csv_displays_correctly_after_toolbar_switch(qtbot, main):
     """
     A CSV saved with single-quote quotechar must display incorrectly when the
@@ -246,7 +246,6 @@ def test_single_quote_csv_displays_correctly_after_toolbar_switch(qtbot, main):
         "With single-quote quotechar 'hello,world' must be treated as one field, "
         "giving columnCount 2"
     )
-
 
 # ---------------------------------------------------------------------------
 # Tests — JSONL in grid view forces save-as

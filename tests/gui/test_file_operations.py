@@ -101,7 +101,7 @@ def test_copy_paste_creates_duplicate(monkeypatch, main):
     assert os.path.isfile(copy_path), f"Deconflicted copy not found: {copy_path}"
     assert main.sidebar.copied is None, "sidebar.copied must be cleared after paste"
 
-
+#chked
 def test_cut_paste_moves_file(monkeypatch, main):
     """
     Cut then paste must remove the file from its original location and
@@ -110,6 +110,7 @@ def test_cut_paste_moves_file(monkeypatch, main):
     source = _make_file(main, "to_move.csv")
     dest_dir = os.path.join(main.state.cwd, "subdir")
     os.mkdir(dest_dir)
+    qtbot.wait(1000)
 
     # Set the cutted path directly — equivalent to calling _cut() with source selected
     main.sidebar.cutted = source
@@ -123,3 +124,6 @@ def test_cut_paste_moves_file(monkeypatch, main):
         "File must appear in destination after cut+paste"
     )
     assert main.sidebar.cutted is None, "sidebar.cutted must be cleared after paste"
+
+
+

@@ -165,6 +165,11 @@ class GeneralDataWorker(QRunnable):
         #
         # find a random sample of lines within 0-i sufficient to fill up self.sample_size
         #
+        # this vvvv note seems to say we should have the drop-downs react differently
+        # than they do today (jun 2026). I'm not sure what it says would be an
+        # improvement but the sampling tools don't feel perfect yet from a UX
+        # perspective, so I'm leaving the note:
+        #
         # sample size can be < total lines. if so, we should reset the comboboxes to
         # reflect collecting all lines.
         #

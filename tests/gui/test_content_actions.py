@@ -313,7 +313,7 @@ def test_random_all_gives_same_count_as_first_n(monkeypatch, qtbot, main):
         "this is the expected extreme of probabilistic sampling, not data loss"
     )
 
-
+#chked
 def test_row_limit_caps_all_sampling_modes(monkeypatch, qtbot, main):
     """
     The SMALL (50) row limit must be respected by every sampling mode.
@@ -347,7 +347,7 @@ def test_row_limit_caps_all_sampling_modes(monkeypatch, qtbot, main):
         "RANDOM_0 must stop at the SMALL row cap even when all lines are accepted"
     )
 
-
+#chked
 def test_save_sample_passes_model_rows_not_full_file(monkeypatch, qtbot, main):
     """
     Save sample must write exactly the rows in the current grid model — the
