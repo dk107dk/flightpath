@@ -152,20 +152,21 @@ def test_data_sampling_reloads_file(qtbot, main):
 # ---------------------------------------------------------------------------
 
 
-def test_random_sample_zero_triggers_reload(qtbot, main):
+def test_random_sample_zero_triggers_reload(monkeypatch, qtbot, main):
     """
     Switching the sampling combo to 'Random from 0' must trigger a file reload
     that produces a valid, non-empty model with the correct column structure, and
     must leave the toolbar combo on RANDOM_0.
 
-    GeneralDataWorker uses random.randint(0, 1) % 2 == 0 to decide whether
-    to include each data line; the header row is always included.  columnCount()
-    must match test.csv's 3-column structure regardless of which rows are sampled,
-    and rowCount() must be at least 1 (the header).  The deterministic
-    different-rows assertion lives in test_random_sampling_produces_different_rows.
+    random.randint is pinned to 0 so every RANDOM_0 coin-flip accepts the row.
+    Without pinning, accept_line applies the flip to the header (line 0) as well,
+    making columnCount() non-deterministic across runs.  columnCount() must match
+    test.csv's 3-column structure and rowCount() must be at least 1.
     """
     viewer = _open_csv(qtbot, main)
     assert isinstance(viewer, DataViewer)
+
+    monkeypatch.setattr(_random, "randint", lambda a, b: 0)
 
     r0_index = main.content.toolbar.sampling.findText(DataConst.RANDOM_0)
     _trigger_sampling_reload(qtbot, main, viewer, sampling_index=r0_index)
