@@ -46,11 +46,11 @@ from flightpath.util.csvpath_utility import CsvpathUtility as cput
 # ---------------------------------------------------------------------------
 
 _BARE_CSVPATH = "$[*][yes()]"
-_FULL_CSVPATH = f"~ test-data: /data/test.csv ~\n{_BARE_CSVPATH}"
+_OUTER_COMMENT_TEXT = "test-data: /data/test.csv"
+_FULL_CSVPATH = f"~ {_OUTER_COMMENT_TEXT} ~\n{_BARE_CSVPATH}"
 
-# Inner comment text (no ~ markers) — the format get_filepath/get_delimiter/
+# Outer comment text (no ~ markers) — the format get_filepath/get_delimiter/
 # get_quotechar expect as input.
-_INNER_COMMENT = "test-data: /data/test.csv"
 
 
 # ---------------------------------------------------------------------------
@@ -131,8 +131,8 @@ def test_get_char_hash():
 # ---------------------------------------------------------------------------
 
 
-def test_get_filepath_extracts_path_from_inner_comment():
-    """Pass the inner comment (no ~ markers) — the format used in production."""
+def test_get_filepath_extracts_path_from_comment():
+    """Pass the comment (no ~ markers) — the format used in production."""
     result = cput.get_filepath("test-data: /data/test.csv")
     assert result == "/data/test.csv"
 
@@ -208,12 +208,12 @@ def test_statement_and_comment_no_comment_returns_empty_comment():
 
 
 # ---------------------------------------------------------------------------
-# get_delimiter — expects inner comment text
+# get_delimiter — expects comment text
 # ---------------------------------------------------------------------------
 
 
 def test_get_delimiter_pipe():
-    """Pass the inner comment (no ~ markers)."""
+    """Pass the comment (no ~ markers)."""
     assert cput.get_delimiter("test-delimiter: pipe") == "|"
 
 

@@ -233,7 +233,6 @@ def test_json_editor_cut_clears_editor(qtbot, main):
     assert viewer.view.toPlainText() == "", (
         "Editor must be empty after cut() on a full selection"
     )
-    qtbot.wait(10000)
 
 
 def test_json_editor_paste_inserts_text(qtbot, main):

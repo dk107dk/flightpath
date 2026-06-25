@@ -110,7 +110,6 @@ def test_cut_paste_moves_file(monkeypatch, main):
     source = _make_file(main, "to_move.csv")
     dest_dir = os.path.join(main.state.cwd, "subdir")
     os.mkdir(dest_dir)
-    qtbot.wait(1000)
 
     # Set the cutted path directly — equivalent to calling _cut() with source selected
     main.sidebar.cutted = source
