@@ -124,10 +124,31 @@ After all steps are complete, begin the second plan: testability improvements an
 - [x] `select_tab_widget`: found sets index, not found → False, empty → False
 - [x] Bug pinned: select_tab raises ValueError with literal "{i}" (broken f-string)
 
-## Step 11 — Survey and fill utility class gaps
-- [ ] Read full source of `JsonUtility` — list untested methods
-- [ ] Read full source of `FileUtility` — list methods beyond what step 1 covers
-- [ ] Read full source of `StringUtility` — list methods beyond what step 2 covers
-- [ ] Read any other utility class in `flightpath/util/` with zero test coverage
-- [ ] For each untested method: pure logic → write test now; Qt-dependent → note for plan 2; trivial delegation → skip
-- [ ] Write targeted tests for all pure-logic methods identified above
+## Step 11 — Survey and fill utility class gaps ✓
+
+Surveyed all 30 files in flightpath/util/.  Deferred to plan 2: KeyUtility
+(Qt key events), StyleUtility (private helpers + Qt widgets), LogUtility
+(needs real Config), FileCollector (Qt dialog), RunInfo/GeneratorUtility/
+ServerUtility (external deps).  Skipped: DataConst (constants).
+
+### New: `test_json_utility.py` (10 tests)
+- [x] `is_jsonl`: .jsonl, .jsonlines, .ndjson all match
+- [x] Non-matching: .json, .csv, empty string, uppercase .JSONL → False
+- [x] Quirk pinned: no-dot "ndjson" suffix also matches (bare string check in source)
+- [x] None → AttributeError (missing guard documented)
+
+### New: `test_os_utility.py` (15 tests)
+- [x] `is_sandboxed`: env var set → True, absent → False, empty string → True
+- [x] `is_windows/is_mac/is_unix`: all three platforms via monkeypatch
+- [x] `file_system_open_cmd`: "open"/"explorer"/"xdg-open" per platform
+
+### Extended: `test_file_util.py` (+17 tests)
+- [x] `is_a`: match, multi-ext list, no match, None guard, case sensitive, last ext wins, empty list
+- [x] `count_files`: empty dir, two files, grows after add
+- [x] `is_new_writable`: True for new path, cleans up probe, False if exists, False if parent missing
+- [x] `is_writable_dir`: True for writable dir, False for missing dir
+- [x] `move_file_to_numbered`: moves file, preserves content, no-op if source missing
+
+### Extended: `test_string_util.py` (+4 tests)
+- [x] `jsonl_text_to_lines`: returns str (not list, despite annotation), no newline for 1 object, joined for 2, empty → ""
+- [x] Bug noted: return type annotation says `list[str]` but method returns `str`

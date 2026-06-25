@@ -2,9 +2,10 @@
 Unit tests for StringUtility (flightpath/util/string_utility.py).
 
 Covers:
-  jsonl_text_to_list — parse concatenated JSON objects/lines from raw text
-  good_name          — character allowlist validator for project/file names
-  sanitize_json      — strip literal control characters from a JSON string
+  jsonl_text_to_list  — parse concatenated JSON objects/lines from raw text
+  jsonl_text_to_lines — same parsing, returned as a newline-joined string
+  good_name           — character allowlist validator for project/file names
+  sanitize_json       — strip literal control characters from a JSON string
 
 Run with:
   poetry run python -m pytest tests/test_string_util.py -v
@@ -218,3 +219,31 @@ def test_sanitize_json_preserves_space():
 def test_sanitize_json_empty_string():
     """An empty string returns an empty string without raising."""
     assert strut.sanitize_json("") == ""
+
+
+# ---------------------------------------------------------------------------
+# jsonl_text_to_lines — newline-joined variant
+# ---------------------------------------------------------------------------
+
+
+def test_jsonl_text_to_lines_returns_string():
+    """jsonl_text_to_lines returns a str, not a list — despite the type hint."""
+    result = strut.jsonl_text_to_lines('{"a":1}')
+    assert isinstance(result, str)
+
+
+def test_jsonl_text_to_lines_single_object_no_newline():
+    """A single parsed object produces a string with no newline."""
+    result = strut.jsonl_text_to_lines('{"a":1}')
+    assert "\n" not in result
+
+
+def test_jsonl_text_to_lines_two_objects_joined_with_newline():
+    """Two objects are joined with a single newline between them."""
+    result = strut.jsonl_text_to_lines('{"a":1}\n{"b":2}')
+    parts = result.split("\n")
+    assert len(parts) == 2
+
+
+def test_jsonl_text_to_lines_empty_string_returns_empty():
+    assert strut.jsonl_text_to_lines("") == ""

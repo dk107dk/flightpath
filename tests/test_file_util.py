@@ -2,10 +2,15 @@
 Unit tests for FileUtility (flightpath/util/file_utility.py).
 
 Covers:
-  join_local_overlapped — overlap-stripping path join for local paths
-  deconflict_file_name  — sequential rename when a filename already exists
-  deconflicted_path     — convenience wrapper that returns the full path
-  split_filename        — basename splitter used internally by deconflict logic
+  join_local_overlapped  — overlap-stripping path join for local paths
+  deconflict_file_name   — sequential rename when a filename already exists
+  deconflicted_path      — convenience wrapper that returns the full path
+  split_filename         — basename splitter used internally by deconflict logic
+  is_a                   — extension membership check using Path.suffix
+  count_files            — count entries in a directory
+  is_new_writable        — True if path does not exist and parent is writable
+  is_writable_dir        — True if directory exists and is writable
+  move_file_to_numbered  — moves a file into a backup dir with a numeric suffix
 
 Run with:
   poetry run python -m pytest tests/test_file_util.py -v
@@ -181,3 +186,141 @@ def test_deconflicted_path_result_does_not_exist(tmp_path):
     (tmp_path / "output.csv").write_text("x")
     result = fiut.deconflicted_path(str(tmp_path), "output.csv")
     assert not os.path.exists(result)
+
+
+# ---------------------------------------------------------------------------
+# is_a — extension check
+# ---------------------------------------------------------------------------
+
+
+def test_is_a_matching_extension_returns_true():
+    assert fiut.is_a("report.csv", ["csv"]) is True
+
+
+def test_is_a_extension_in_list_of_many():
+    assert fiut.is_a("report.csv", ["txt", "csv", "tsv"]) is True
+
+
+def test_is_a_non_matching_extension_returns_false():
+    assert fiut.is_a("report.csv", ["txt"]) is False
+
+
+def test_is_a_none_path_returns_false():
+    """is_a has an explicit None guard."""
+    assert fiut.is_a(None, ["csv"]) is False
+
+
+def test_is_a_case_sensitive():
+    """Extension comparison is case-sensitive: .CSV does not match 'csv'."""
+    assert fiut.is_a("report.CSV", ["csv"]) is False
+
+
+def test_is_a_uses_last_extension():
+    """Path.suffix returns the last extension, so .gz matches but .tar does not."""
+    assert fiut.is_a("archive.tar.gz", ["gz"]) is True
+    assert fiut.is_a("archive.tar.gz", ["tar"]) is False
+
+
+def test_is_a_empty_list_returns_false():
+    assert fiut.is_a("report.csv", []) is False
+
+
+# ---------------------------------------------------------------------------
+# count_files
+# ---------------------------------------------------------------------------
+
+
+def test_count_files_empty_dir(tmp_path):
+    assert fiut.count_files(str(tmp_path)) == 0
+
+
+def test_count_files_with_two_files(tmp_path):
+    (tmp_path / "a.txt").write_text("a")
+    (tmp_path / "b.txt").write_text("b")
+    assert fiut.count_files(str(tmp_path)) == 2
+
+
+def test_count_files_grows_after_adding_file(tmp_path):
+    before = fiut.count_files(str(tmp_path))
+    (tmp_path / "new.txt").write_text("x")
+    assert fiut.count_files(str(tmp_path)) == before + 1
+
+
+# ---------------------------------------------------------------------------
+# is_new_writable
+# ---------------------------------------------------------------------------
+
+
+def test_is_new_writable_true_for_new_path(tmp_path):
+    """A path that does not exist yet in a writable directory returns True."""
+    path = str(tmp_path / "new_file.txt")
+    result = fiut.is_new_writable(path)
+    assert result is True
+
+
+def test_is_new_writable_cleans_up_probe_file(tmp_path):
+    """is_new_writable must remove the probe file it creates."""
+    path = str(tmp_path / "probe.txt")
+    fiut.is_new_writable(path)
+    assert not os.path.exists(path)
+
+
+def test_is_new_writable_false_when_file_already_exists(tmp_path):
+    """An already-existing path is not writable-as-new."""
+    path = tmp_path / "existing.txt"
+    path.write_text("data")
+    assert fiut.is_new_writable(str(path)) is False
+
+
+def test_is_new_writable_false_when_parent_dir_missing(tmp_path):
+    path = str(tmp_path / "no_such_dir" / "file.txt")
+    assert fiut.is_new_writable(path) is False
+
+
+# ---------------------------------------------------------------------------
+# is_writable_dir
+# ---------------------------------------------------------------------------
+
+
+def test_is_writable_dir_true_for_existing_writable_dir(tmp_path):
+    assert fiut.is_writable_dir(str(tmp_path)) is True
+
+
+def test_is_writable_dir_false_for_missing_dir(tmp_path):
+    missing = str(tmp_path / "no_such_dir")
+    assert fiut.is_writable_dir(missing) is False
+
+
+# ---------------------------------------------------------------------------
+# move_file_to_numbered
+# ---------------------------------------------------------------------------
+
+
+def test_move_file_to_numbered_moves_file_to_backup_dir(tmp_path):
+    """The source file is moved; backup dir is created; file is renamed with _N suffix."""
+    src = tmp_path / "app.log"
+    src.write_text("log content")
+    backup_dir = str(tmp_path / "bak")
+    fiut.move_file_to_numbered(str(src), backup_dir)
+    assert not src.exists()
+    files = os.listdir(backup_dir)
+    assert len(files) == 1
+    assert files[0].startswith("app.log_")
+
+
+def test_move_file_to_numbered_preserves_content(tmp_path):
+    """The moved file must have the same content as the source."""
+    src = tmp_path / "data.log"
+    src.write_text("important data")
+    backup_dir = str(tmp_path / "bak")
+    fiut.move_file_to_numbered(str(src), backup_dir)
+    backed_up = os.path.join(backup_dir, os.listdir(backup_dir)[0])
+    assert open(backed_up).read() == "important data"
+
+
+def test_move_file_to_numbered_no_op_when_source_missing(tmp_path):
+    """If the source does not exist, the method returns silently and creates nothing."""
+    missing = str(tmp_path / "ghost.log")
+    backup_dir = str(tmp_path / "bak")
+    fiut.move_file_to_numbered(missing, backup_dir)
+    assert not os.path.exists(backup_dir)
