@@ -78,9 +78,7 @@ def test_get_char_semi_colon_hyphenated():
     assert cput._get_char("semi-colon", ",") == ";"
 
 
-@pytest.mark.xfail(strict=True, reason="Bug: c.strip() strips the tab character to ''")
 def test_get_char_tab_returns_tab_character():
-    """c.strip() strips the tab; fix is to return '\\t' before the strip call."""
     assert cput._get_char("tab", ",") == "\t"
 
 
@@ -206,7 +204,6 @@ def test_get_delimiter_pipe():
     assert cput.get_delimiter("test-delimiter: pipe") == "|"
 
 
-@pytest.mark.xfail(strict=True, reason="Bug: same c.strip() bug strips tab to '' in _get_char")
 def test_get_delimiter_tab_returns_tab_character():
     assert cput.get_delimiter("test-delimiter: tab") == "\t"
 
@@ -215,7 +212,6 @@ def test_get_delimiter_no_annotation_returns_none():
     assert cput.get_delimiter("no delimiter here") is None
 
 
-@pytest.mark.xfail(strict=True, reason="Bug: missing None guard — passes None to get_metadata() which raises TypeError")
 def test_get_delimiter_none_returns_none():
     assert cput.get_delimiter(None) is None
 
@@ -237,6 +233,5 @@ def test_get_quotechar_no_annotation_returns_none():
     assert cput.get_quotechar("some comment") is None
 
 
-@pytest.mark.xfail(strict=True, reason="Bug: missing None guard — same as get_delimiter")
 def test_get_quotechar_none_returns_none():
     assert cput.get_quotechar(None) is None
