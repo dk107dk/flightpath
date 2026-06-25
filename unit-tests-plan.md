@@ -68,11 +68,14 @@ After all steps are complete, begin the second plan: testability improvements an
 - [x] Note: rstrip('/:filename') strips chars individually so short paths like
   "a/:filename" collapse to "" and fail; tests use longer safe paths
 
-## Step 6 — `test_insert_metadata.py`
-- [ ] Convert from `unittest.TestCase` to bare pytest functions
-- [ ] Split 4 assertion groups into 4 named test functions
-- [ ] Add: `position` beyond end of text
-- [ ] Add: empty string for `addto`
+## Step 6 — `test_insert_metadata.py` ✓
+- [x] Convert from `unittest.TestCase` to bare pytest functions
+- [x] Split 4 assertion groups into 4 named test functions
+- [x] Add: position == len(text) → ValueError("out of string")
+- [x] Add: position well past end → ValueError
+- [x] Add: empty addto → comment text left intact (2 variants)
+- [x] Add: None addto → literal "None" inserted (documents missing guard)
+- [x] Add: no ~ markers in text → synthetic comment created
 
 ## Step 7 — `test_env_file.py` → `test_config_form.py`
 - [ ] Rename file to `test_config_form.py`
