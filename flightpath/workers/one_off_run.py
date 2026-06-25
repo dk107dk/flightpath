@@ -13,6 +13,7 @@ from .run_worker_signals import RunWorkerSignals
 class OneOffRunWorker(QRunnable):
     def __init__(self, *, csvpath: CsvPath, csvpath_str: str, printer) -> None:
         super().__init__()
+        self.setAutoDelete(False)
         self.csvpath = csvpath
         self.csvpath_str = csvpath_str
         self.printer = printer

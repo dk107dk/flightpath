@@ -8,6 +8,7 @@ from .precache_worker_signals import PreCacheWorkerSignals
 class PreCacheWorker(QRunnable):
     def __init__(self, cwd: str, *, main):
         super().__init__()
+        self.setAutoDelete(False)
         self.cwd = cwd
         self.signals = PreCacheWorkerSignals()
         self.csvpaths = main.csvpaths

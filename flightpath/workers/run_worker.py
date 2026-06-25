@@ -18,6 +18,7 @@ class RunWorker(QRunnable):
         csvpaths,
     ) -> None:
         super().__init__()
+        self.setAutoDelete(False)
         #
         # need a new csvpaths because a) we don't encourage reusing them; although, it
         # is possible, and b) the listeners in the accordian require separate hook-ups.
