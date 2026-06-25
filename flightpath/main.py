@@ -1069,6 +1069,9 @@ class MainWindow(QMainWindow):
         runner.signals.finished.connect(self._display_log)
         runner.signals.error.connect(self._display_error)
         runner.signals.messages.connect(self.statusBar().showMessage)
+        runner.signals.item_update.connect(
+            lambda error: runner.item.metadata_update(error) if runner.item is not None else None
+        )
         self.threadpool.start(runner)
 
     @Slot(tuple)

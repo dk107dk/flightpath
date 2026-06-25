@@ -124,8 +124,8 @@ class RunWorker(QRunnable):
                 # run events are supported, but others not. and it's too hard to set up.
                 #
                 paths.error_manager.handle_error(source=paths, msg=msg)
-                if self.item is not None and paths.errors:
-                    self.item.metadata_update(paths.errors[0])
+                if paths.errors:
+                    self.signals.item_update.emit(paths.errors[0])
                 #
                 # emit the error that main will catch for _display_error. that does not
                 # update the item.
