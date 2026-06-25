@@ -304,4 +304,3 @@ def test_delete_directory_no_keeps_dir(monkeypatch, main):
     main.sidebar.actions._delete_file_navigator_item()
 
     assert os.path.isdir(dir_path), "Directory should survive after cancelling (No)"
-    qtbot.wait(3000)
