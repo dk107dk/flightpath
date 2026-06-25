@@ -247,6 +247,7 @@ class JsonViewer2(QWidget):
             )
             self._save_as()
             return
+        path = fiut.deconflicted_path(os.path.dirname(path), os.path.basename(path))
         self._do_save(path)
         self.main.statusBar().showMessage(f"  Saved to: {path}")
 

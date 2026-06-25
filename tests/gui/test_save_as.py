@@ -532,3 +532,52 @@ def test_json_save_as_directory_input_reopens_dialog(monkeypatch, qtbot, main):
     assert len(reopen_calls) == 1, (
         "_save_as() must be called once after a directory-path warning"
     )
+
+
+# ---------------------------------------------------------------------------
+# Tests — JSON save-as deconfliction
+# ---------------------------------------------------------------------------
+
+#chked
+def test_json_save_as_same_name_produces_deconflicted_file(qtbot, main):
+    """
+    When the user accepts the default filename unchanged (save-as to the same
+    name), the existing file must not be overwritten.  fiut.deconflicted_path
+    must produce a name with a numeric suffix, e.g. test(0).json.
+    """
+    path = _examples(main, "named-paths groups", "my_named_paths.json")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, JsonViewer2)
+
+    # Simulate accepting the default filename unchanged
+    viewer._save_as_continue(("my_named_paths.json", True))
+
+    expected = _examples(main, "named-paths groups", "my_named_paths(0).json")
+    assert os.path.isfile(expected), (
+        "Save-as with the same filename must produce a deconflicted copy, "
+        f"expected: {expected}"
+    )
+    # Original must be untouched
+    assert os.path.isfile(path), "Original file must still exist after deconflicted save-as"
+
+
+#chked
+def test_json_save_as_new_name_saves_without_suffix(qtbot, main):
+    """
+    When the user enters a filename that does not already exist, save-as must
+    write to exactly that name — no deconfliction suffix should be added.
+    """
+    path = _examples(main, "named-paths groups", "my_named_paths.json")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, JsonViewer2)
+
+    viewer._save_as_continue(("brand_new_export.json", True))
+
+    expected = _examples(main, "named-paths groups", "brand_new_export.json")
+    assert os.path.isfile(expected), (
+        f"Save-as to a new name must create exactly that file: {expected}"
+    )
+    suffixed = _examples(main, "named-paths groups", "brand_new_export(0).json")
+    assert not os.path.exists(suffixed), (
+        "A deconfliction suffix must not be added when the target name is free"
+    )
