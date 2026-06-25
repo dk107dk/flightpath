@@ -40,7 +40,7 @@ def _action_texts(main) -> list[str]:
 # Tests — required actions are present
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_whitespace_menu_has_new_file_action(main):
     """
     Right-clicking on blank space must offer 'New file' — the primary way to
@@ -51,6 +51,7 @@ def test_whitespace_menu_has_new_file_action(main):
     )
 
 
+#chked
 def test_whitespace_menu_has_new_folder_action(main):
     """
     Right-clicking on blank space must offer 'New folder' for project
@@ -61,6 +62,7 @@ def test_whitespace_menu_has_new_folder_action(main):
     )
 
 
+#chked
 def test_whitespace_menu_has_open_project_dir_action(main):
     """
     Right-clicking on blank space must offer 'Open project directory' — this
@@ -72,6 +74,7 @@ def test_whitespace_menu_has_open_project_dir_action(main):
     )
 
 
+#chked
 def test_whitespace_menu_has_paste_action(main):
     """
     Right-clicking on blank space must offer 'Paste' so the user can paste a
@@ -82,6 +85,7 @@ def test_whitespace_menu_has_paste_action(main):
     )
 
 
+#chked
 def test_whitespace_menu_paste_disabled_when_clipboard_empty(main):
     """
     'Paste' must be disabled when nothing has been cut or copied yet.
@@ -102,6 +106,7 @@ def test_whitespace_menu_paste_disabled_when_clipboard_empty(main):
 # ---------------------------------------------------------------------------
 
 
+#chked
 def test_whitespace_menu_excludes_delete_action(main):
     """
     'Delete' must not appear in the empty-space menu — there is no item
@@ -112,6 +117,7 @@ def test_whitespace_menu_excludes_delete_action(main):
     )
 
 
+#chked
 def test_whitespace_menu_excludes_rename_action(main):
     """
     'Rename' must not appear in the empty-space menu — rename is only
@@ -122,6 +128,7 @@ def test_whitespace_menu_excludes_rename_action(main):
     )
 
 
+#chked
 def test_whitespace_menu_excludes_save_file_action(main):
     """
     'Save file' must not appear in the empty-space menu — saving is only

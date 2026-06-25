@@ -97,66 +97,71 @@ Coverage annotations show the test file(s) and function name(s) for each automat
 		✓`test_new_md_file_creates_file`,
 		✓`test_new_csvpath_file_creates_file`,
 		✓`test_new_json_file_creates_file`
-  - [x] new JSONL file — creates `.jsonl` with starter content
+  - [✓] new JSONL file — creates `.jsonl` with starter content
     - `test_sidebar_context_menu.py`:
-		`test_new_jsonl_file_creates_file_with_object`, 		`test_new_jsonl_file_creates_file_with_array`
-  - [x] cut + paste file
-    - `test_file_operations.py`: `test_cut_paste_moves_file`
-  - [x] right-click on whitespace in project tree — shows root-level context menu
+		✓`test_new_jsonl_file_creates_file_with_object`,
+        ✓`test_new_jsonl_file_creates_file_with_array`
+  - [✓] cut + paste file
+    - ✓`test_file_operations.py`: `test_cut_paste_moves_file`
+  - [✓] right-click on whitespace in project tree — shows root-level context menu
     - `test_whitespace_context_menu.py`:
-		`test_whitespace_menu_has_new_file_action`,
-		`test_whitespace_menu_has_new_folder_action`,
-		`test_whitespace_menu_has_open_project_dir_action`,
-		`test_whitespace_menu_has_paste_action`,
-		`test_whitespace_menu_paste_disabled_when_clipboard_empty`,
-		`test_whitespace_menu_excludes_delete_action`,
-		`test_whitespace_menu_excludes_rename_action`,
-		`test_whitespace_menu_excludes_save_file_action`
+		✓`test_whitespace_menu_has_new_file_action`,
+		✓`test_whitespace_menu_has_new_folder_action`,
+		✓`test_whitespace_menu_has_open_project_dir_action`,
+		✓`test_whitespace_menu_has_paste_action`,
+		✓`test_whitespace_menu_paste_disabled_when_clipboard_empty`,
+		✓`test_whitespace_menu_excludes_delete_action`,
+		✓`test_whitespace_menu_excludes_rename_action`,
+		✓`test_whitespace_menu_excludes_save_file_action`
 - [x] save and save-as
-  - [x] csvpath — in-place save writes changes to disk
-    - `test_save_as.py`: `test_csvpath_save_writes_changes`
-  - [x] JSON — in-place save (JsonViewer2); save-as to new path
+  - [✓] csvpath — in-place save writes changes to disk
+    - ✓`test_save_as.py`: `test_csvpath_save_writes_changes`
+  - [✓] JSON — in-place save (JsonViewer2); save-as to new path
     - `test_save_as.py`:
-		`test_json_viewer_save_writes_changes`,
-		`test_json_viewer_save_as_new_file`
-  - [x] JSONL — save in JsonViewer2 preserves JSONL line format
-    - `test_save_as.py`: `test_jsonl_json_viewer_save_preserves_jsonl_format`
-  - [x] grid/CSV — save-as with comma delimiter
-    - `test_save_as.py`: `test_csv_save_as_comma_delimiter`
-  - [x] grid/CSV — save-as with pipe delimiter; output has `|` not `,`
-    - `test_save_as.py`: `test_csv_save_as_pipe_delimiter`
-  - [x] XLSX — on_save() redirects to save-as dialog (can't save back as XLSX)
-    - `test_xlsx_save_as.py`: `test_xlsx_save_redirects_to_save_as`
-  - [x] XLSX — save-as comma CSV; save-as pipe PSV
+		✓`test_json_viewer_save_writes_changes`,
+		✓`test_json_viewer_save_as_new_file`
+  - [✓] JSONL — save in JsonViewer2 preserves JSONL line format
+    - ✓`test_save_as.py`: `test_jsonl_json_viewer_save_preserves_jsonl_format`
+  - [✓] grid/CSV — save-as with comma delimiter
+    - ✓`test_save_as.py`: `test_csv_save_as_comma_delimiter`
+  - [✓] grid/CSV — save-as with pipe delimiter; output has `|` not `,`
+    - ✓`test_save_as.py`: `test_csv_save_as_pipe_delimiter`
+  - [✓] XLSX — on_save() redirects to save-as dialog (can't save back as XLSX)
+    - ✓`test_xlsx_save_as.py`: `test_xlsx_save_redirects_to_save_as`
+  - [✓] XLSX — save-as comma CSV; save-as pipe PSV
     - `test_xlsx_save_as.py`:
-		`test_xlsx_save_as_comma_csv`,
-		`test_xlsx_save_as_pipe_delimited`
-  - [x] JSONL in grid — on_save() redirects to save-as CSV
-    - `test_save_as.py`: `test_jsonl_grid_save_redirects_to_csv`
-  - [x] save-as with single-quote quotechar
-    - `test_save_as.py`: `test_csv_save_as_single_quote_quotechar`
-  - [x] JSON save-as — prompts for path via input2 dialog
-    - `test_save_as.py`: `test_json_viewer_save_as_triggers_input2_dialog`
+		✓`test_xlsx_save_as_comma_csv`,
+		✓`test_xlsx_save_as_pipe_delimited`
+  - [✓] JSONL in grid — on_save() redirects to save-as CSV
+    - ✓`test_save_as.py`: `test_jsonl_grid_save_redirects_to_csv`
+  - [✓] save-as with single-quote quotechar
+    - ✓`test_save_as.py`: `test_csv_save_as_single_quote_quotechar`
+  - [✓] single-quote CSV misrenders at default quotechar, corrects after toolbar switch
+    - ✓`test_save_as.py`: `test_single_quote_csv_displays_correctly_after_toolbar_switch`
+  - [✓] JSON save-as — prompts for path via input2 dialog
+    - ✓`test_save_as.py`: `test_json_viewer_save_as_triggers_input2_dialog`
 - [x] file content ops: cut, copy, paste inside editors
-  - [x] cut in text editors (csvpath, MD, JSON)
+  - [✓] cut in text editors (csvpath, MD, JSON)
     - `test_content_copy_paste.py`:
-		`test_csvpath_editor_cut_clears_editor`,
-		`test_json_editor_cut_clears_editor`
-  - [x] copy lines in grid
+		✓`test_csvpath_editor_cut_clears_editor`,
+		✓`test_json_editor_cut_clears_editor`
+  - [✓] copy lines in grid
     - `test_content_copy_paste.py`:
-		`test_grid_copy_single_cell`,
-		`test_grid_copy_rectangular_selection`
-  - [x] copy irregular cell selection in grid
-    - `test_content_copy_paste.py`: `test_grid_copy_irregular_selection`
-  - [x] paste in grid
-    - `test_content_copy_paste.py`: `test_grid_paste_single_cell`, `test_grid_paste_multi_cell`
-  - [x] paste-as-new in grid (creates deconflicted copy)
-    - `test_content_copy_paste.py`: `test_grid_paste_as_new_creates_csv`
+		✓`test_grid_copy_single_cell`,
+		✓`test_grid_copy_rectangular_selection`
+  - [✓] copy irregular cell selection in grid
+    - ✓`test_content_copy_paste.py`: `test_grid_copy_irregular_selection`
+  - [✓] paste in grid
+    - `test_content_copy_paste.py`:
+        ✓`test_grid_paste_single_cell`,
+        ✓`test_grid_paste_multi_cell`
+  - [✓] paste-as-new in grid (creates deconflicted copy)
+    - ✓`test_content_copy_paste.py`: `test_grid_paste_as_new_creates_csv`
 - [x] data toolbar
-  - [x] toggle raw view
-    - `test_content_actions.py`: `test_toggle_raw_view_on_csv`
-  - [x] file info — FileInfo tab added to helper panel
-    - `test_content_actions.py`: `test_file_info_opens_info_tab`
+  - [✓] toggle raw view
+    - ✓`test_content_actions.py`: `test_toggle_raw_view_on_csv`
+  - [✓] file info — FileInfo tab added to helper panel
+    - ✓`test_content_actions.py`: `test_file_info_opens_info_tab`
   - [x] data sampling — changing rows combo triggers worker reload
     - `test_content_actions.py`: `test_data_sampling_reloads_file`
   - [x] random sample — random sampling mode produces different rows
@@ -164,8 +169,36 @@ Coverage annotations show the test file(s) and function name(s) for each automat
 		`test_random_sampling_produces_different_rows`,
 		`test_random_sample_zero_triggers_reload`,
 		`test_random_sample_all_triggers_reload`
-  - [x] save sample (Matches tab rt-click → CSV written to project dir)
-    - `test_one_off_run.py`: `test_one_off_run_save_matches_writes_csv`
+  - [x] random sample — RANDOM_ALL gives same count as FIRST_N; RANDOM_0 is probabilistic
+    - `test_content_actions.py`: `test_random_all_gives_same_count_as_first_n`
+  - [x] random sample — row limit caps all sampling modes (FIRST_N, RANDOM_ALL, RANDOM_0)
+    - `test_content_actions.py`: `test_row_limit_caps_all_sampling_modes`
+  - [✓] save sample (Matches tab rt-click → CSV written to project dir)
+    - ✓`test_one_off_run.py`: `test_one_off_run_save_matches_writes_csv`
+  - [✓] save sample — passes model rows to writer, not the full source file
+    - ✓`test_content_actions.py`: `test_save_sample_passes_model_rows_not_full_file`
+  - [x] accept_line() / prep_sampling() unit tests (worker-level, below UI tests)
+    - `test_general_data_worker.py`:
+        `test_accept_line_first_n_returns_true_until_cap`,
+        `test_accept_line_first_n_cap_is_none_not_false`,
+        `test_accept_line_first_n_increments_line_take`,
+        `test_accept_line_zero_cap_returns_none_immediately`,
+        `test_accept_line_all_lines_always_returns_true`,
+        `test_accept_line_all_lines_increments_line_take`,
+        `test_accept_line_large_file_limit_returns_false`,
+        `test_accept_line_random_0_returns_true_when_randint_zero`,
+        `test_accept_line_random_0_returns_false_when_randint_one`,
+        `test_accept_line_random_0_stops_at_cap`,
+        `test_accept_line_random_0_skipped_lines_do_not_increment_line_take`,
+        `test_accept_line_random_all_accepts_only_precomputed_lines`,
+        `test_accept_line_random_all_pops_entry_after_match`,
+        `test_accept_line_random_all_increments_line_take_on_match`,
+        `test_prep_sampling_count_matches_sample_size`,
+        `test_prep_sampling_entries_are_unique`,
+        `test_prep_sampling_sorted_descending`,
+        `test_prep_sampling_line_numbers_in_valid_range`,
+        `test_prep_sampling_small_file_sets_all_lines_mode`,
+        `test_prep_sampling_exact_size_file_sets_all_lines_mode`
   - [x] set delimiter to view — toolbar delimiter changes how grid parses file
     - `test_content_actions.py`: `test_delimiter_change_affects_column_count`
 - [x] create directory
@@ -428,7 +461,12 @@ Coverage annotations show the test file(s) and function name(s) for each automat
 		`test_server_form_saves_host_and_key`,
  		`test_server_form_populates_from_config`,
 		`test_live_server_is_reachable`
-- [ ] create new key — key displayed in dialog
+- [x] create new key — key displayed in dialog
+  - `test_key_dialog.py`:
+		`test_new_key_dialog_calls_api_with_correct_fields`,
+		`test_new_key_dialog_success_displays_key`,
+		`test_new_key_dialog_validation_requires_all_fields`,
+		`test_new_key_dialog_failure_invokes_failed_callback`
 - [x] create project
   - `test_server_form.py`:
 		`test_get_project_names_populates_list`,
@@ -440,7 +478,13 @@ Coverage annotations show the test file(s) and function name(s) for each automat
 		`test_upload_config_answer_no_skips_api`,
 		`test_upload_config_shows_warning_on_api_failure`,
 		`test_live_upload_and_download_config_round_trip`
-- [ ] sync config
+- [x] sync config — dialog tables populated, sync button state, do_sync dispatches upload
+  - `test_sync_dialogs.py`:
+		`test_sync_config_dialog_tables_have_rows`,
+		`test_sync_config_sync_button_starts_disabled`,
+		`test_sync_config_cell_edit_enables_sync_button`,
+		`test_sync_config_do_sync_calls_upload_config`,
+		`test_sync_config_local_click_copies_value_to_sending`
 - [x] download config
   - `test_server_form.py`:
 		`test_download_config_writes_file`,
@@ -450,7 +494,14 @@ Coverage annotations show the test file(s) and function name(s) for each automat
   - `test_server_form.py`:
 		`test_download_env_writes_file`,
 		`test_live_upload_and_download_env_round_trip`
-- [ ] sync env
+- [x] sync env — dialog sending table, JSON compilation, add/remove rows, dispatch and cancel
+  - `test_sync_dialogs.py`:
+		`test_compile_env_dialog_sending_table_populated`,
+		`test_compile_env_do_upload_produces_valid_json`,
+		`test_compile_env_add_row_appears_in_sending`,
+		`test_compile_env_sending_click_removes_row_and_fills_inputs`,
+		`test_upload_env_calls_api_after_dialog_confirms`,
+		`test_upload_env_skips_api_when_dialog_cancelled`
 - [ ] shutdown server
   - `test_server_form.py`:
 		`test_server_form_shutdown_button_disabled_without_credentials`,

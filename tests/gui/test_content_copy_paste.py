@@ -122,7 +122,7 @@ def test_csvpath_editor_copy_to_clipboard(qtbot, main):
         "copy() must leave the editor content unchanged"
     )
 
-
+#chked
 def test_csvpath_editor_cut_clears_editor(qtbot, main):
     """
     Selecting all text in a CsvpathViewer and calling cut() must place the
@@ -208,7 +208,7 @@ def test_json_editor_copy_to_clipboard(qtbot, main):
         "copy() must not modify the editor content"
     )
 
-
+#chked
 def test_json_editor_cut_clears_editor(qtbot, main):
     """
     Selecting all text in a JsonViewer2 and calling cut() must place the
@@ -233,6 +233,7 @@ def test_json_editor_cut_clears_editor(qtbot, main):
     assert viewer.view.toPlainText() == "", (
         "Editor must be empty after cut() on a full selection"
     )
+    qtbot.wait(10000)
 
 
 def test_json_editor_paste_inserts_text(qtbot, main):
@@ -266,7 +267,7 @@ def test_json_editor_paste_inserts_text(qtbot, main):
 # Tests — grid copy (single cell, rectangular, irregular)
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_grid_copy_single_cell(qtbot, main):
     """
     Selecting a single cell and calling copy_selection_to_clipboard() must
@@ -293,7 +294,7 @@ def test_grid_copy_single_cell(qtbot, main):
     )
     assert len(cells) == 1, "Single-cell selection must copy exactly one cell"
 
-
+#chked
 def test_grid_copy_rectangular_selection(qtbot, main):
     """
     Selecting a 2×2 rectangle and calling copy_selection_to_clipboard() must
@@ -321,7 +322,7 @@ def test_grid_copy_rectangular_selection(qtbot, main):
     assert cells.get((1, 0)) == "cat"
     assert cells.get((1, 1)) == "bert"
 
-
+#chked
 def test_grid_copy_irregular_selection(qtbot, main):
     """
     Selecting two non-adjacent cells and calling copy_selection_to_clipboard()
@@ -359,7 +360,7 @@ def test_grid_copy_irregular_selection(qtbot, main):
 # Tests — grid paste
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_grid_paste_single_cell(qtbot, main):
     """
     Loading the clipboard with a single-cell JSON payload and calling
@@ -394,7 +395,7 @@ def test_grid_paste_single_cell(qtbot, main):
         f"Cell (1, 0) must be 'pasted_value' after paste; got {result!r}"
     )
 
-
+#chked
 def test_grid_paste_multi_cell(qtbot, main):
     """
     A multi-cell clipboard payload must paste all cells relative to the
@@ -431,7 +432,7 @@ def test_grid_paste_multi_cell(qtbot, main):
 # Tests — paste-as-new (copy selected cells to a new CSV file)
 # ---------------------------------------------------------------------------
 
-
+#chked
 def test_grid_paste_as_new_creates_csv(monkeypatch, qtbot, main):
     """
     Selecting cells and calling _copy_to_new() must write them to a new CSV

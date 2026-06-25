@@ -128,7 +128,7 @@ def test_new_csvpath_file_creates_file(monkeypatch, main):
     assert os.path.isfile(expected), f"Expected file not created: {expected}"
     assert "hello world" in open(expected).read()
 
-#chk
+#chked
 def test_new_json_file_creates_file(monkeypatch, main):
     """
     'New file' → 'data.json' must create the file.  JSON files prompt for
@@ -145,6 +145,7 @@ def test_new_json_file_creates_file(monkeypatch, main):
     assert os.path.isfile(expected), f"Expected file not created: {expected}"
     assert open(expected).read() == "{}"
 
+#chked
 def test_new_jsonl_file_creates_file_with_object(monkeypatch, main):
     """
     'New file' → 'events.jsonl' must create the file.  JSONL files share the
@@ -161,7 +162,7 @@ def test_new_jsonl_file_creates_file_with_object(monkeypatch, main):
     assert os.path.isfile(expected), f"Expected JSONL file not created: {expected}"
     assert open(expected).read() == "{}"
 
-
+#chked
 def test_new_jsonl_file_creates_file_with_array(monkeypatch, main):
     """
     'New file' → 'items.jsonl' with getItem() returning '[]' must create the
@@ -176,7 +177,6 @@ def test_new_jsonl_file_creates_file_with_array(monkeypatch, main):
     expected = os.path.join(main.state.cwd, filename)
     assert os.path.isfile(expected), f"Expected JSONL file not created: {expected}"
     assert open(expected).read() == "[]"
-
 
 def test_new_folder_creates_directory(monkeypatch, main):
     """
