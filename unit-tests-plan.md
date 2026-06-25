@@ -101,11 +101,14 @@ After all steps are complete, begin the second plan: testability improvements an
 - [x] Add _compile_scan: c < sample_size → clamped (already tested; added c=1)
 - [x] Add _compile_scan: from_line=5 → "5-15" range
 
-## Step 9 — `test_examples.py`
-- [ ] Convert from `unittest.TestCase` to bare pytest functions
-- [ ] Replace output directory with `tmp_path` (eliminates need for cleanup)
-- [ ] Replace `len(listdir()) == 2` with assertions on actual filenames
-- [ ] Add: spot-check that at least one copied file has non-empty content
+## Step 9 — `test_examples.py` ✓
+- [x] Convert from `unittest.TestCase` to bare pytest functions
+- [x] Replace shared tests/test_resources/examples/ with tmp_path
+- [x] Assert both filenames (test.csv, test.csvpath) explicitly
+- [x] Assert both copied files have non-empty content
+- [x] Assert copied CSV is byte-for-byte identical to source
+- [x] Assert source directory is unchanged after copy
+- [x] Sanity check: tmp_path empty before / populated after
 
 ## Step 10 — New `test_tabs_utility.py`
 - [ ] Create `tests/gui/test_tabs_utility.py` with `_require_qapp` autouse fixture
