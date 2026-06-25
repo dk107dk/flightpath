@@ -141,10 +141,6 @@ class Inspector:
             m = f"""{m} \n\thas_dups(#{header}) -> counter.{header}_dups() """
             m = f"""{m} \n\tin(datatype(#{header}), "integer|decimal") -> @m = min.{header}_min(#{header}) """
             m = f"""{m} \n\tin(datatype(#{header}), "integer|decimal") -> @m = max.{header}_max(#{header}) \n"""
-        if True:
-            print("writing csvpath")
-            with open("./__inspector.csvpath", "w") as file:
-                file.write(m)
         return m
 
     def scan(self) -> str:

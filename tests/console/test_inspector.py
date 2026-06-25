@@ -8,10 +8,6 @@ HtmlGenerator.load_and_transform renders those stats into HTML via Jinja2.
 Inspector._compile_scan builds the CsvPath scan range string from sample_size
 and from_line settings.
 
-Side-effect note: Inspector.compile_match() writes __inspector.csvpath to the
-working directory at source level.  This cannot be avoided without modifying
-the source; it is a known issue and is not addressed here.
-
 The original test wrote test.html to the project root — that write is removed.
 
 Run with:
@@ -181,3 +177,25 @@ def test_compile_scan_single_row_visible():
     insp = Inspector(main=None, filepath=CSV_PATH)
     insp.sample_size = 50
     assert insp._compile_scan(c=1) == "0-1"
+
+
+# ---------------------------------------------------------------------------
+# Inspector.compile_match — no disk side-effects
+# ---------------------------------------------------------------------------
+
+
+def test_compile_match_returns_nonempty_string():
+    """compile_match must return a non-empty string containing csvpath expressions."""
+    insp = _inspector()
+    result = insp.compile_match()
+    assert isinstance(result, str) and len(result.strip()) > 0
+
+
+def test_compile_match_does_not_write_file(tmp_path, monkeypatch):
+    """compile_match must not write __inspector.csvpath (removed debug artifact)."""
+    monkeypatch.chdir(tmp_path)
+    insp = _inspector()
+    insp.compile_match()
+    assert not (tmp_path / "__inspector.csvpath").exists(), (
+        "__inspector.csvpath must not be written to disk by compile_match"
+    )
