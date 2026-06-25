@@ -24,15 +24,24 @@ from flightpath.actions.csvpath_loader import CsvpathLoader
 # ---------------------------------------------------------------------------
 
 
-def _make_loader(tmp_path, add_named_paths_return=None):
+_INVALID_CONTENT = " not(all()) -> counter.lines_with_blanks() "
+_VALID_CONTENT = "$[*][not(all())]"
+
+
+def _make_loader(tmp_path, add_named_paths_return=None, file_content=None):
     """
     Build a CsvpathLoader wired to lightweight stubs.
 
     load_dialog.path points at a real .csvpath file in tmp_path so that
     Nos(name).isfile() returns True and the extension check passes.
+    file_content defaults to an invalid match-only fragment so that the
+    error-warning tests remain concise.  Pass a valid csvpath string for
+    tests that exercise the success path.
     """
+    if file_content is None:
+        file_content = _INVALID_CONTENT
     csvpath_file = tmp_path / "bad_match_only.csvpath"
-    csvpath_file.write_text(" not(all()) -> counter.lines_with_blanks() ")
+    csvpath_file.write_text(file_content)
 
     # Stub for load_dialog
     warning_calls = []
@@ -119,7 +128,11 @@ def test_load_failure_warning_mentions_scan_and_match(tmp_path):
 
 def test_load_success_shows_no_warning(tmp_path):
     """When loading succeeds (ref is not None) no warning must be shown."""
-    loader, calls = _make_loader(tmp_path, add_named_paths_return="my_group")
+    loader, calls = _make_loader(
+        tmp_path,
+        add_named_paths_return="my_group",
+        file_content=_VALID_CONTENT,
+    )
 
     loader.do_load_file(overwrite=True)
 
@@ -133,3 +146,65 @@ def test_load_failure_empty_ref_shows_warning(tmp_path):
     loader.do_load_file(overwrite=True)
 
     assert len(calls) == 1
+
+
+# ---------------------------------------------------------------------------
+# Tests: _validate_csvpath_content — unit tests for the static validator
+# ---------------------------------------------------------------------------
+
+
+def test_validate_accepts_minimal_valid_csvpath():
+    """A minimal well-formed csvpath with scan and match parts must pass."""
+    ok, msg = CsvpathLoader._validate_csvpath_content(
+        content="$[*][not(all())]",
+        filename="test.csvpath",
+    )
+    assert ok, f"Expected valid; got: {msg}"
+
+
+def test_validate_accepts_valid_csvpath_with_metadata():
+    """Metadata blocks before the path must not cause false failures."""
+    content = "~\nvalidation-mode: print\n~\n$[*][not(all())]"
+    ok, msg = CsvpathLoader._validate_csvpath_content(
+        content=content,
+        filename="meta.csvpath",
+    )
+    assert ok, f"Expected valid; got: {msg}"
+
+
+def test_validate_rejects_match_only_fragment():
+    """A match-only expression without a root or scan part must be rejected."""
+    ok, msg = CsvpathLoader._validate_csvpath_content(
+        content=" not(all()) -> counter.lines_with_blanks() ",
+        filename="bad.csvpath",
+    )
+    assert not ok
+
+
+def test_validate_rejects_empty_content():
+    """Entirely empty or whitespace-only content must be rejected."""
+    ok, msg = CsvpathLoader._validate_csvpath_content(
+        content="   \n  ",
+        filename="empty.csvpath",
+    )
+    assert not ok
+
+
+def test_validate_error_message_names_file():
+    """The error message returned for an invalid csvpath must include the filename."""
+    _, msg = CsvpathLoader._validate_csvpath_content(
+        content=" not(all()) -> counter() ",
+        filename="myfile.csvpath",
+    )
+    assert "myfile.csvpath" in msg, f"Filename missing from error: {msg}"
+
+
+def test_validate_error_message_mentions_scan_and_match():
+    """The error message must guide the user to add both scan and match parts."""
+    _, msg = CsvpathLoader._validate_csvpath_content(
+        content=" not(all()) -> counter() ",
+        filename="bad.csvpath",
+    )
+    assert "scan" in msg.lower() and "match" in msg.lower(), (
+        f"Message should mention scan and match parts: {msg}"
+    )
