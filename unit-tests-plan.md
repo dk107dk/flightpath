@@ -16,16 +16,19 @@ After all steps are complete, begin the second plan: testability improvements an
 - [x] Add: `deconflict_file_name` with a file that has no extension
 - [x] Add: `split_filename` tests (used internally; 4 cases)
 
-## Step 2 — `test_string_util.py`
-- [ ] Convert from `unittest.TestCase` to bare pytest functions
-- [ ] Split into one function per assertion (currently 2 functions, 3 assertions each)
-- [ ] Add: `jsonl_text_to_list` with empty string
-- [ ] Add: `jsonl_text_to_list` with a single JSON object (not a list)
-- [ ] Add: `jsonl_text_to_list` with malformed JSON
-- [ ] Add: `jsonl_text_to_list` with whitespace-only input
-- [ ] Add: `good_name` with empty string
-- [ ] Add: `good_name` with `None`
-- [ ] Add: `good_name` with every character in the default allowlist at the boundary
+## Step 2 — `test_string_util.py` ✓
+- [x] Convert from `unittest.TestCase` to bare pytest functions
+- [x] Split into one function per assertion
+- [x] Add: `jsonl_text_to_list` with empty string → `[]`
+- [x] Add: `jsonl_text_to_list` with a single JSON object → 1-item list
+- [x] Add: `jsonl_text_to_list` with malformed JSON → raw string entry returned
+- [x] Add: `jsonl_text_to_list` with whitespace-only input → `[]`
+- [x] Add: `jsonl_text_to_list` with `None` → `""` (documents current contract)
+- [x] Add: `good_name` with empty string → False
+- [x] Add: `good_name` with `None` → False
+- [x] Add: `good_name` boundary chars for all three ranges + default extras
+- [x] Add: `good_name` colon quirk (range(48,59) includes ':') pinned
+- [x] Add: `sanitize_json` — 4 tests (control chars, printable, space boundary, empty)
 
 ## Step 3 — `test_api_versions.py`
 - [ ] Convert from `unittest.TestCase` to bare pytest functions
