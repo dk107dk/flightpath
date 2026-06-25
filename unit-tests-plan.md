@@ -77,13 +77,16 @@ After all steps are complete, begin the second plan: testability improvements an
 - [x] Add: None addto → literal "None" inserted (documents missing guard)
 - [x] Add: no ~ markers in text → synthetic comment created
 
-## Step 7 — `test_env_file.py` → `test_config_form.py`
-- [ ] Rename file to `test_config_form.py`
-- [ ] Convert from `unittest.TestCase` to bare pytest functions
-- [ ] Split 10 path permutations into 10 named test functions
-- [ ] Add: `None` for `cwd`
-- [ ] Add: `cwd` that doesn't end with `current_project`
-- [ ] Add: absolute `path` that lives under a different project directory
+## Step 7 — `test_env_file.py` → `test_config_form.py` ✓
+- [x] Create test_config_form.py; stub out test_env_file.py (not deleted)
+- [x] Bare pytest functions throughout
+- [x] Split 11 path permutations into 11 named tests
+- [x] Add: path=None with cwd=None → "env" (short-circuits before cwd guard)
+- [x] Add: real path with cwd=None → ValueError
+- [x] Add: current_project=None → falls back to basename(cwd)
+- [x] Add: "env" sentinel with surrounding spaces → "env"
+- [x] Add: cwd not ending with current_project → cwd used as root regardless
+- [x] Add: absolute path from a different project → only basename kept
 
 ## Step 8 — `test_inspector.py`
 - [ ] Replace `test.html` side-effect with `tmp_path` (or remove file write)
