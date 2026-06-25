@@ -1,3 +1,4 @@
+import os
 import traceback
 from PySide6.QtWidgets import (  # pylint: disable=E0611
     QVBoxLayout,
@@ -16,6 +17,7 @@ from csvpath import CsvPaths
 
 from flightpath.widgets.help.plus_help import HelpIconPackager
 from flightpath.util.help_finder import HelpFinder
+from flightpath.util.csvpath_utility import CsvpathUtility as csut
 from flightpath.util.message_utility import MessageUtility as meut
 
 
@@ -312,10 +314,35 @@ class NewRunDialog(QDialog):
                 msg=f"Unknown csvpaths name: {self.named_paths_name}",
             )
             return
+        ok, reason = self._validate_named_paths_content(npn)
+        if not ok:
+            meut.warning2(
+                parent=self,
+                title="Invalid Csvpath",
+                msg=f"The named-paths group '{npn}' cannot be run: {reason}",
+            )
+            return
         #
         # we may need to shut the paths CsvPath down to release the logger. not sure yet.
         #
         self._do_run(template=template)
+
+    def _validate_named_paths_content(self, named_paths_name: str) -> tuple[bool, str]:
+        """Read group.csvpaths for the named group and validate each csvpath inside it."""
+        named_paths_rel = self.main.csvpath_config.get(
+            section="inputs", name="csvpaths"
+        )
+        group_file = os.path.join(
+            self.main.state.cwd, named_paths_rel, named_paths_name, "group.csvpaths"
+        )
+        if not os.path.isfile(group_file):
+            return True, ""
+        try:
+            with open(group_file, encoding="utf-8") as fh:
+                content = fh.read()
+        except Exception as e:
+            return False, f"Could not read named-paths group file: {e}"
+        return csut.validate_csvpath_content(content=content, filename="group.csvpaths")
 
     def _do_run(self, template: str) -> None:
         self.sidebar.main.run_paths(
