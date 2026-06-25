@@ -110,18 +110,19 @@ After all steps are complete, begin the second plan: testability improvements an
 - [x] Assert source directory is unchanged after copy
 - [x] Sanity check: tmp_path empty before / populated after
 
-## Step 10 — New `test_tabs_utility.py`
-- [ ] Create `tests/gui/test_tabs_utility.py` with `_require_qapp` autouse fixture
-- [ ] `find_tab`: tab found returns `(index, widget)`
-- [ ] `find_tab`: tab not found returns `None`
-- [ ] `find_tab`: empty tab widget returns `None`
-- [ ] `select_tab`: by valid index sets `currentIndex`
-- [ ] `select_tab`: index out of range raises `ValueError`
-- [ ] `select_tab`: by widget delegates to `select_tab_widget`
-- [ ] `tab_index`: found returns correct index
-- [ ] `tab_index`: not found raises `ValueError`
-- [ ] `tab_index_if`: found returns correct index; not found returns `-1`
-- [ ] `tab_index_by_name` and `tab_index_by_name_if`: same found/not-found split
+## Step 10 — New `test_tabs_utility.py` ✓
+- [x] Create `tests/gui/test_tabs_utility.py` with `_require_qapp` autouse fixture
+- [x] `find_tab`: found (first/middle/last), not found, empty, widget identity check
+- [x] `tab_index`: found, first, not found raises, empty raises
+- [x] `tab_index_if`: found, not found → -1, empty → -1
+- [x] `tab_index_by_name`: found (first/last), not found raises, empty raises
+- [x] `tab_index_by_name_if`: found, not found → -1, empty → -1
+- [x] `tabs`: count, order preserved, empty → [], single widget
+- [x] `has_type`: match → True, no match → False, empty → False
+- [x] `select_tab` by int: sets index, index=0, out-of-range raises
+- [x] `select_tab` by widget: found sets index, not found → False
+- [x] `select_tab_widget`: found sets index, not found → False, empty → False
+- [x] Bug pinned: select_tab raises ValueError with literal "{i}" (broken f-string)
 
 ## Step 11 — Survey and fill utility class gaps
 - [ ] Read full source of `JsonUtility` — list untested methods
