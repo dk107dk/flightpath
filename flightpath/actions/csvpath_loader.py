@@ -169,7 +169,7 @@ class CsvpathLoader:
                                 f"'{os.path.basename(name)}' could not be added as a "
                                 "named-paths group. Verify that the file contains at least "
                                 "one complete, valid csvpath (each path requires both a scan "
-                                "section and a match section)."
+                                "part and a match part)."
                             ),
                             title="Cannot Load",
                         )

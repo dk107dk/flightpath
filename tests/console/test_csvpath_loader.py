@@ -106,14 +106,14 @@ def test_load_failure_warning_title_is_cannot_load(tmp_path):
 
 
 def test_load_failure_warning_mentions_scan_and_match(tmp_path):
-    """The warning must tell the user that both scan and match sections are required."""
+    """The warning must tell the user that both scan and match parts are required."""
     loader, calls = _make_loader(tmp_path, add_named_paths_return=None)
 
     loader.do_load_file(overwrite=True)
 
     msg = calls[0]["msg"].lower()
     assert "scan" in msg and "match" in msg, (
-        "Warning must mention both scan and match sections to guide the user"
+        "Warning must mention both scan and match parts to guide the user"
     )
 
 
