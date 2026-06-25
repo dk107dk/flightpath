@@ -30,13 +30,19 @@ After all steps are complete, begin the second plan: testability improvements an
 - [x] Add: `good_name` colon quirk (range(48,59) includes ':') pinned
 - [x] Add: `sanitize_json` — 4 tests (control chars, printable, space boundary, empty)
 
-## Step 3 — `test_api_versions.py`
-- [ ] Convert from `unittest.TestCase` to bare pytest functions
-- [ ] Split into one function per assertion
-- [ ] Add: `_parse_versions` with an empty list
-- [ ] Add: `_parse_versions` with a non-`v`-prefixed string → raises
-- [ ] Add: `connect` with an empty versions list → raises
-- [ ] Add: `connect` with `v2` if a V2 implementation exists
+## Step 3 — `test_api_versions.py` ✓
+- [x] Convert from `unittest.TestCase` to bare pytest functions
+- [x] Split into one function per assertion
+- [x] Fix 2 pre-existing broken tests: source raises ValueError/ModuleNotFoundError, not ApiException
+- [x] Add: `_parse_versions` with `None` → ValueError
+- [x] Add: `_parse_versions` with empty list → ValueError
+- [x] Add: `_parse_versions` with non-`v`-prefixed string → ValueError
+- [x] Add: `_parse_versions` with bare integer, float, and arbitrary word
+- [x] Add: `_parse_versions` with mixed valid/invalid list → raises on first bad entry
+- [x] Add: `connect` with `v2` → FlightPathServerApiV2
+- [x] Add: `connect` with `["v1", "v2"]` → prefers highest (v2)
+- [x] Add: `connect` falls back to lower version when highest is unimplemented
+- [x] Add: `connect` with malformed version string propagates ValueError
 
 ## Step 4 — `test_test_data_utility.py`
 - [ ] Convert from `unittest.TestCase` to bare pytest functions
