@@ -298,18 +298,20 @@ class SidebarActions:
             return  # user cancelled or unknown extension — error already shown
 
         dest = self._resolve_new_item_path(new_name)
+        dest = fiut.deconflicted_path(os.path.dirname(dest), os.path.basename(dest))
         try:
             with open(dest, "w", encoding="utf-8") as f:
                 f.write(content)
+            self.main.statusBar().showMessage(f"  Created: {os.path.basename(dest)}")
         except PermissionError:
             meut.warning2(
                 parent=self.my_parent, title="Error", msg="Operation not permitted."
             )
-        except OSError:
+        except OSError as ex:
             meut.warning2(
                 parent=self.my_parent,
                 title="Error",
-                msg="File with this name already exists.",
+                msg=f"Could not create file: {ex}",
             )
 
     def _initial_content_for(self, new_name: str) -> str | None:

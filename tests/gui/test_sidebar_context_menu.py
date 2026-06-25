@@ -208,6 +208,75 @@ def test_new_folder_creates_directory(monkeypatch, main):
 
 
 # ---------------------------------------------------------------------------
+# Deconfliction tests — duplicate filename on New File
+# ---------------------------------------------------------------------------
+
+def test_new_file_duplicate_name_creates_deconflicted_copy(monkeypatch, main):
+    """
+    Creating a file whose name already exists must produce a deconflicted name
+    (e.g. test(0).csv) rather than silently overwriting the original.
+
+    Previously open(..., 'w') overwrote the existing file with starter content
+    and gave no feedback.  Now fiut.deconflicted_path is applied before writing.
+    """
+    filename = "dup_test.csv"
+    original = os.path.join(main.state.cwd, filename)
+    with open(original, "w") as f:
+        f.write("original,content\n")
+
+    monkeypatch.setattr(MODULE + ".QInputDialog", _make_dialog(filename))
+    main.sidebar._last_path = None
+    main.sidebar.actions._new_file_navigator_item()
+
+    deconflicted = os.path.join(main.state.cwd, "dup_test(0).csv")
+    assert os.path.isfile(deconflicted), (
+        f"Duplicate filename must create a deconflicted file: {deconflicted}"
+    )
+    with open(original) as f:
+        assert f.read() == "original,content\n", (
+            "Original file must be untouched when a deconflicted copy is created"
+        )
+
+
+def test_new_file_unique_name_creates_without_suffix(monkeypatch, main):
+    """
+    Creating a file whose name does not already exist must use exactly the
+    entered name — no deconfliction suffix should be added.
+    """
+    filename = "unique_file.csv"
+    monkeypatch.setattr(MODULE + ".QInputDialog", _make_dialog(filename))
+    main.sidebar._last_path = None
+    main.sidebar.actions._new_file_navigator_item()
+
+    expected = os.path.join(main.state.cwd, filename)
+    assert os.path.isfile(expected), f"Unique filename must be used as-is: {expected}"
+    suffixed = os.path.join(main.state.cwd, "unique_file(0).csv")
+    assert not os.path.exists(suffixed), (
+        "No deconfliction suffix must be added for a name that does not already exist"
+    )
+
+
+def test_new_file_duplicate_shows_status_bar_with_actual_name(monkeypatch, main):
+    """
+    After a deconflicted create, the status bar must show the actual filename
+    used so the user knows what was created.
+    """
+    filename = "status_dup.csv"
+    original = os.path.join(main.state.cwd, filename)
+    with open(original, "w") as f:
+        f.write("x\n")
+
+    monkeypatch.setattr(MODULE + ".QInputDialog", _make_dialog(filename))
+    main.sidebar._last_path = None
+    main.sidebar.actions._new_file_navigator_item()
+
+    msg = main.statusBar().currentMessage()
+    assert "status_dup(0).csv" in msg, (
+        f"Status bar must mention the deconflicted filename; got: '{msg}'"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Helpers for deletion tests
 # ---------------------------------------------------------------------------
 
