@@ -255,14 +255,11 @@ def test_select_tab_by_int_zero():
     assert tw.currentIndex() == 0
 
 
+@pytest.mark.xfail(strict=True, reason="Bug: missing f-prefix — error message is literal 'No such tab: {i}' not the actual index")
 def test_select_tab_by_int_out_of_range_raises():
-    """
-    The ValueError message is 'No such tab: {i}' (literal braces) because the
-    source uses a plain string rather than an f-string.  This test pins both
-    the exception type and the broken message so a future fix is noticed.
-    """
+    """After fix: error message should contain the actual index value."""
     tw = _tw("alpha")
-    with pytest.raises(ValueError, match=r"\{i\}"):
+    with pytest.raises(ValueError, match="No such tab: 99"):
         taut.select_tab(tw, 99)
 
 

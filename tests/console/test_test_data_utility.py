@@ -113,11 +113,7 @@ def test_colon_with_no_path_returns_none():
 # ---------------------------------------------------------------------------
 
 
-def test_none_input_raises():
-    """
-    test_data_path_from_csvpath has no None guard: calling csvpath.split()
-    on None raises AttributeError.  This test pins the current (unguarded)
-    behavior so that if a guard is added later, the test is updated too.
-    """
-    with pytest.raises((AttributeError, TypeError)):
-        tdut.test_data_path_from_csvpath(None)
+@pytest.mark.xfail(strict=True, reason="Bug: no None guard — None.split() raises AttributeError")
+def test_none_input_returns_none():
+    """After fix: None input should return None, not raise."""
+    assert tdut.test_data_path_from_csvpath(None) is None
