@@ -178,3 +178,39 @@ def test_permanent_delete_archive_result(qtbot, main):
     assert main.sidebar_rt_bottom is not None, (
         "sidebar_rt_bottom must be rebuilt by renew_sidebar_archive callback"
     )
+
+
+def test_permanent_delete_archive_preserves_results_tab(qtbot, main):
+    """
+    After a permanent delete from the archive sidebar, the Results tab (index 0)
+    must remain selected.
+
+    Bug: renew_sidebar_archive() recreated SidebarArchive, whose show_tabs()
+    always called setCurrentIndex(1) (Runs), silently switching away from the
+    Results tab the user was viewing.
+
+    Fix: renew_sidebar_archive() now saves the current tab index before
+    recreation and restores it afterward.
+    """
+    _run_and_wait(qtbot, main, named_paths_name="hello-world")
+
+    archive_group_dir = os.path.join(_archive_root(main), "hello-world")
+    assert os.path.isdir(archive_group_dir), (
+        f"Archive group directory not found after run: {archive_group_dir}"
+    )
+
+    # Explicitly select the Results tab (index 0) before the delete
+    main.sidebar_rt_bottom.tabs.setCurrentIndex(0)
+    assert main.sidebar_rt_bottom.tabs.currentIndex() == 0, (
+        "Results tab must be selected before delete for this test to be meaningful"
+    )
+
+    main.sidebar_rt_bottom._do_delete_item(
+        QMessageBox.Yes,
+        path=archive_group_dir,
+        callback=main.renew_sidebar_archive,
+    )
+
+    assert main.sidebar_rt_bottom.tabs.currentIndex() == 0, (
+        "Results tab (index 0) must still be selected after permanent delete and sidebar rebuild"
+    )
