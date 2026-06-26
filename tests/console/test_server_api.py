@@ -144,8 +144,12 @@ def test_headers_contains_content_type(api):
     assert api.headers["Content-Type"] == "application/json"
 
 
-def test_headers_access_token_is_none_initially(api):
-    assert api.headers["access_token"] is None
+def test_headers_access_token_absent_when_no_key_set(api):
+    # access_token must be omitted entirely when no key is set.
+    # Previously the header was included with value None, which caused
+    # httpx to raise TypeError when making a request (None is not a valid
+    # header value).
+    assert "access_token" not in api.headers
 
 
 def test_headers_reflects_key_after_set(api):
@@ -177,3 +181,55 @@ def test_result_namedtuple_has_success_attribute():
     assert named.success is False
     with pytest.raises(AttributeError):
         _ = plain.success
+
+
+# ---------------------------------------------------------------------------
+# headers — keyless first-key bootstrap fix
+# ---------------------------------------------------------------------------
+
+
+def test_headers_with_key_includes_access_token(api):
+    """
+    When a key is set, headers must include access_token so the server can
+    authenticate the request.
+    """
+    api.key = "my-secret-key"
+    h = api.headers
+    assert "access_token" in h, "headers must include access_token when a key is set"
+    assert h["access_token"] == "my-secret-key"
+
+
+def test_headers_without_key_omits_access_token(api):
+    """
+    When no key is set (key is None), headers must NOT include access_token.
+
+    Bug: the original headers property returned {"access_token": None, ...}.
+    httpx raises TypeError when a header value is None.  This prevented
+    create_key() from being called at all on a new server with no existing
+    keys (the first-key bootstrap scenario).
+
+    Fix: only add access_token to headers when self._key is not None.
+    """
+    assert api.key is None, "Fixture must start with no key"
+    h = api.headers
+    assert "access_token" not in h, (
+        "headers must omit access_token entirely when no key is set — "
+        "passing None to httpx raises TypeError"
+    )
+    assert "Content-Type" in h, "Content-Type must always be present"
+
+
+def test_headers_key_none_does_not_raise(api):
+    """
+    Accessing headers when key is None must not raise.
+
+    This guards the httpx TypeError that occurred when access_token was
+    set to None in the headers dict.
+    """
+    assert api.key is None
+    try:
+        _ = api.headers
+    except (TypeError, ValueError) as exc:
+        raise AssertionError(
+            f"headers must not raise when key is None; got: {exc}"
+        ) from exc

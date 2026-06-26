@@ -27,7 +27,7 @@ Run with:
   QT_QPA_PLATFORM=offscreen poetry run python -m pytest tests/gui/test_key_dialog.py -v
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -228,4 +228,96 @@ def test_new_key_dialog_failure_invokes_failed_callback(monkeypatch, qtbot, main
     )
     assert dialog.key_area is None, (
         "key_area must remain None when key creation fails"
+    )
+
+
+def test_do_key_create_bootstraps_keyless_api_when_no_key_on_form(
+    monkeypatch, qtbot, main, mock_api
+):
+    """
+    do_key_create() must fall back to a keyless FlightPathServerApi when
+    parent.api raises ValueError (no API key entered on the server form).
+
+    This is the first-key bootstrap scenario: a brand-new server has no
+    existing keys, so the user cannot fill in the API-key field before
+    clicking "Create new API key".  The server allows unauthenticated
+    create_key calls when no keys exist.
+
+    Bug: do_key_create() called self.my_parent.api unconditionally.  The api
+    property raises ValueError when the key field is empty, propagating as an
+    uncaught exception rather than attempting the call without authentication.
+
+    Fix: do_key_create() catches ValueError from self.my_parent.api and falls
+    back to FlightPathServerApi(self.my_parent.hostname) — a keyless connection
+    that omits the access_token header entirely.
+    """
+    form = _open_server_form(main)
+    form._api = None
+    form.host.setText("http://localhost:19999")
+    form.key.setText("")
+
+    monkeypatch.setattr(NewKeyDialog, "exec", lambda self: None)
+
+    dialog = NewKeyDialog(parent=form, failed_callback=form._create_key_failed)
+    qtbot.addWidget(dialog)
+
+    dialog.key_name.setText("bootstrap-key")
+    dialog.key_owner.setText("Bootstrap Owner")
+    dialog.key_owner_contact.setText("boot@example.com")
+
+    with patch(
+        "flightpath.dialogs.new_key_dialog.FlightPathServerApi",
+        return_value=mock_api,
+    ):
+        dialog.do_key_create()
+
+    mock_api.create_key.assert_called_once_with(
+        key_name="bootstrap-key",
+        owner="Bootstrap Owner",
+        owner_contact="boot@example.com",
+    )
+
+
+def test_do_key_create_shows_warning_when_server_unreachable_on_bootstrap(
+    monkeypatch, qtbot, main
+):
+    """
+    When the server is unreachable and parent.api raises ValueError, the
+    fallback FlightPathServerApi() call raises ApiException.  do_key_create()
+    must show a warning dialog rather than propagating the exception.
+    """
+    from flightpath.util.api.server_api import ApiException
+
+    form = _open_server_form(main)
+    form._api = None
+    form.host.setText("http://localhost:19999")
+    form.key.setText("")
+
+    monkeypatch.setattr(NewKeyDialog, "exec", lambda self: None)
+
+    dialog = NewKeyDialog(parent=form, failed_callback=form._create_key_failed)
+    qtbot.addWidget(dialog)
+
+    dialog.key_name.setText("key-name")
+    dialog.key_owner.setText("Owner")
+    dialog.key_owner_contact.setText("owner@example.com")
+
+    warnings = []
+    monkeypatch.setattr(
+        MessageUtility,
+        "warning2",
+        lambda **kw: warnings.append(kw.get("msg", "")),
+    )
+
+    with patch(
+        "flightpath.dialogs.new_key_dialog.FlightPathServerApi",
+        side_effect=ApiException("connection refused"),
+    ):
+        dialog.do_key_create()
+
+    assert len(warnings) == 1, (
+        f"A warning must be shown when the server is unreachable; got {len(warnings)}"
+    )
+    assert "connection refused" in warnings[0].lower() or "connect" in warnings[0].lower(), (
+        f"Warning must mention the connection error; got {warnings[0]!r}"
     )

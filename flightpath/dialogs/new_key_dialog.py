@@ -1,6 +1,7 @@
 from typing import Callable
 import darkdetect
 
+from flightpath.util.api.server_api import FlightPathServerApi, ApiException
 from PySide6.QtWidgets import (  # pylint: disable=E0611
     QWidget,
     QVBoxLayout,
@@ -78,7 +79,21 @@ class NewKeyDialog(QDialog):
             )
             return
         key = None
-        result = self.my_parent.api.create_key(
+        try:
+            api = self.my_parent.api
+        except ValueError:
+            # No existing key — bootstrap the first key without authentication.
+            # The server permits unauthenticated create_key calls when no keys exist.
+            try:
+                api = FlightPathServerApi(self.my_parent.hostname)
+            except ApiException as exc:
+                meut.warning2(
+                    parent=self,
+                    title="Connection error",
+                    msg=f"Cannot connect to server: {exc}",
+                )
+                return
+        result = api.create_key(
             key_name=self.key_name.text(),
             owner=self.key_owner.text(),
             owner_contact=self.key_owner_contact.text(),
