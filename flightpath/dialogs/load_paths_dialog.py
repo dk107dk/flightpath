@@ -145,8 +145,8 @@ class LoadPathsDialog(QDialog):
     # don't pop-under on Windows.
     #
 
-    def warning(self, msg, title) -> None:
-        meut.warning2(parent=self, title=title, msg=msg)
+    def warning(self, msg, title, callback=None) -> None:
+        meut.warning2(parent=self, title=title, msg=msg, callback=callback)
 
     def yesNo(self, *, title: str, msg: str, callback: Callable, args: dict) -> None:
         meut.yesNo2(
