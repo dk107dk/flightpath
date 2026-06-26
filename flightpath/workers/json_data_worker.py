@@ -4,8 +4,6 @@ import traceback
 from PySide6.QtCore import QRunnable
 
 from csvpath.util.file_readers import DataFileReader
-from csvpath import CsvPaths
-from csvpath.util.box import Box
 
 from flightpath.util.editable import EditStates
 from .data_worker_signals import DataWorkerSignals
@@ -26,15 +24,6 @@ class JsonDataWorker(QRunnable):
         self.signals.messages.emit("Reading file...")
         try:
             data = []
-            #
-            # this is a hack workaround for sftp. a change has been made in csvpath so
-            # this code can be deleted after the next update after 546.
-            #
-            config = CsvPaths().config
-            Box().add(Box.CSVPATHS_CONFIG, config)
-            #
-            #
-            #
             with DataFileReader(str(self.filepath)) as file:
                 s = None
                 try:

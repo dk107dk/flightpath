@@ -15,6 +15,7 @@ Run with:
   QT_QPA_PLATFORM=offscreen poetry run python -m pytest tests/gui/test_worker_auto_delete.py -v
 """
 
+import inspect
 from unittest.mock import MagicMock
 
 import pytest
@@ -120,3 +121,26 @@ def test_run_worker_auto_delete_false(qapp):
         template=None,
         csvpaths=MagicMock(),
     ).autoDelete()
+
+
+def test_json_data_worker_does_not_instantiate_csvpaths_in_run():
+    """
+    JsonDataWorker.run() must not call CsvPaths() on the thread-pool thread.
+
+    Bug: run() called CsvPaths() to get a config object for the Box singleton
+    (stale SFTP workaround). Creating a CsvPaths() instance on a background
+    thread initialises the Lark grammar parser, which races with PySide's
+    main-thread slot dispatch and corrupts Python reference counts, producing a
+    callCppDestructor<QLineEdit> / mainThreadDeletionHandler shiboken crash.
+    The csvpath library fixed the underlying SFTP issue at version 546; we are
+    at 614. Fix: remove the two stale lines and their unused imports.
+    """
+    import flightpath.workers.json_data_worker as _mod
+
+    assert not hasattr(_mod, "CsvPaths"), (
+        "CsvPaths must not be imported in json_data_worker — shiboken crash risk"
+    )
+    run_source = inspect.getsource(JsonDataWorker.run)
+    assert "CsvPaths()" not in run_source, (
+        "JsonDataWorker.run() must not call CsvPaths() on the background thread"
+    )

@@ -288,6 +288,9 @@ class Sidebar(QWidget):
         return True
 
     def _show_context_menu(self, position):
+        index = self.file_navigator.indexAt(position)
+        if index.isValid():
+            self.file_navigator.setCurrentIndex(index)
         self.context_menu_maker.show_context_menu(position)
 
     def _worksheets_for_path(self, path: str) -> list[str]:
