@@ -561,11 +561,13 @@ class MainWindow(QMainWindow):
 
     def renew_sidebar_archive(self) -> None:
         d = self.sidebar_rt_bottom
+        current_tab = d.tabs.currentIndex()
         self.sidebar_rt_bottom = SidebarArchive(
             main=self, config=self.csvpath_config, role=3, tabs=d.tabs
         )
         self.rt_col.replaceWidget(2, self.sidebar_rt_bottom)
         d.deleteLater()
+        self.sidebar_rt_bottom.tabs.setCurrentIndex(current_tab)
 
     def renew_sidebar_named_files(self) -> None:
         d = self.sidebar_rt_top
