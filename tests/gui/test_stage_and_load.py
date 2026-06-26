@@ -9,6 +9,8 @@ Checklist coverage:
   DIALOGS > load csvpaths > load from a JSON definition file (when well-formed)
   DIALOGS > load csvpaths > load from malformed JSON — errors show in errors form
   DIALOGS > load csvpaths > overwrite existing definition (copy-back flow)
+  DIALOGS > load csvpaths > definition.json is pretty-printed after loading from JSON
+  DIALOGS > load csvpaths > copy-back of definition.json from named-paths sidebar preserves pretty-printing
 
 == Stage Data flow ==
 
@@ -58,8 +60,13 @@ from csvpath.managers.files.files_activation_listener import FileActivationListe
 from flightpath.actions.csvpath_loader import CsvpathLoader
 from flightpath.dialogs.load_paths_dialog import LoadPathsDialog
 from flightpath.dialogs.stage_data_dialog import StageDataDialog
+from flightpath.util.editable import EditStates
+from flightpath.util.tabs_utility import TabsUtility as taut
+from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
 
 # isolated_home and main fixtures are provided by conftest.py
+
+TIMEOUT = 8000  # ms
 
 
 # ---------------------------------------------------------------------------
@@ -435,4 +442,96 @@ def test_overwrite_existing_named_paths_succeeds(qtbot, main):
     pm = main.csvpaths.paths_manager
     assert pm.has_named_paths("hello-world"), (
         "Named-paths group must still be registered after overwrite"
+    )
+
+
+def _named_paths_root(main) -> str:
+    return main.csvpath_config.get(section="inputs", name="csvpaths")
+
+
+def test_load_json_definition_writes_pretty_printed_definition_json(
+    qtbot, tmp_path, main
+):
+    """
+    Loading a JSON definition file must write a pretty-printed definition.json
+    (indent=2) inside the named-paths group directory.
+
+    add_named_paths_from_json() calls store_json_paths_file() which delegates
+    to paths_describer.store_json(), using json.dump(j, writer.sink, indent=2).
+    The resulting file must contain newlines so it remains readable as the
+    definition grows with additional paths.
+    """
+    csvpath_file = _examples(main, "first steps", "Hello World.csvpath")
+    json_data = {"json-def-group": [csvpath_file]}
+    json_path = tmp_path / "definition.json"
+    json_path.write_text(json.dumps(json_data))
+
+    main.csvpaths.paths_manager.add_named_paths_from_json(file_path=str(json_path))
+
+    def_json = os.path.join(
+        _named_paths_root(main), "json-def-group", "definition.json"
+    )
+    assert os.path.isfile(def_json), f"definition.json must exist after JSON load: {def_json}"
+
+    content = open(def_json).read()
+    assert "\n" in content, (
+        "definition.json must be pretty-printed (contain newlines); "
+        f"got: {content!r}"
+    )
+    parsed = json.loads(content)
+    assert "json-def-group" in parsed, (
+        "definition.json must contain the loaded group name"
+    )
+
+
+def test_copy_back_of_definition_json_preserves_pretty_printing(qtbot, tmp_path, main):
+    """
+    Copy-back of a definition.json from the named-paths sidebar must produce
+    a pretty-printed file in the project working directory.
+
+    The copy-back flow (JsonViewer2._copy_back_answer → fiut.copy_results_back_to_cwd)
+    copies the raw file bytes; the test verifies those bytes contain newlines,
+    i.e. that the on-disk definition.json written by the library is already
+    pretty-printed and is faithfully reproduced by the copy.
+    """
+    csvpath_file = _examples(main, "first steps", "Hello World.csvpath")
+    json_data = {"copy-back-group": [csvpath_file]}
+    json_path = tmp_path / "definition.json"
+    json_path.write_text(json.dumps(json_data))
+
+    main.csvpaths.paths_manager.add_named_paths_from_json(file_path=str(json_path))
+
+    source_def = os.path.join(
+        _named_paths_root(main), "copy-back-group", "definition.json"
+    )
+    assert os.path.isfile(source_def), f"source definition.json must exist: {source_def}"
+
+    # Open the definition.json as UNEDITABLE, as the named-paths sidebar does.
+    main.read_validate_and_display_file_for_path(source_def, editable=EditStates.UNEDITABLE)
+    qtbot.waitUntil(
+        lambda: taut.find_tab(main.content.tab_widget, source_def) is not None,
+        timeout=TIMEOUT,
+    )
+    viewer = taut.find_tab(main.content.tab_widget, source_def)[1]
+    assert isinstance(viewer, JsonViewer2), (
+        "definition.json must open in JsonViewer2"
+    )
+
+    # Suppress the subsequent re-open so we can inspect the copied file directly.
+    main.read_validate_and_display_file_for_path = lambda *a, **kw: None
+
+    viewer._copy_back_answer(QMessageBox.Yes)
+
+    copied = os.path.join(main.state.cwd, "definition.json")
+    assert os.path.isfile(copied), (
+        f"copy-back must write definition.json to the project cwd: {copied}"
+    )
+    content = open(copied).read()
+    assert "\n" in content, (
+        "Copied definition.json must be pretty-printed (contain newlines); "
+        f"got: {content!r}"
+    )
+    parsed = json.loads(content)
+    assert "copy-back-group" in parsed, (
+        "Copied definition.json must contain the group name"
     )
