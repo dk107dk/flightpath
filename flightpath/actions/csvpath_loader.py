@@ -368,19 +368,21 @@ class CsvpathLoader:
             name=named_paths_name, directory=name, template=template
         )
         if lst is None or len(lst) == 0:
-            """
-            meut.warning2(
-                parent=self.load_dialog,
-                msg="Cannot load directory.",
-                title="Cannot Load",
-                callback=self._do_load_dir_finish,
-            )
-            """
-            self.load_dialog.warning(
-                msg="Cannot load directory.",
-                title="Cannot Load",
-                callback=self._do_load_dir_finish,
-            )
+            if paths.has_errors() and paths.errors:
+                es = [e.to_json() for e in paths.errors]
+                self.load_dialog.load_errors(
+                    msg="Could not load named-paths from the directory.",
+                    title="Cannot Load",
+                    errors=es,
+                )
+            else:
+                self.load_dialog.warning(
+                    msg=(
+                        "No valid csvpath files were found in the directory. "
+                        "Files must use a csvpath extension (e.g. .csvpath, .csvpaths)."
+                    ),
+                    title="Cannot Load",
+                )
         else:
             self._do_load_dir_finish()
         #

@@ -452,6 +452,72 @@ def _named_paths_root(main) -> str:
     return main.csvpath_config.get(section="inputs", name="csvpaths")
 
 
+# ---------------------------------------------------------------------------
+# Load Csvpaths from directory — error handling tests
+# ---------------------------------------------------------------------------
+
+
+def test_load_dir_with_no_csvpath_files_shows_warning(monkeypatch, tmp_path, main):
+    """
+    Loading a directory that contains no files with csvpath extensions must
+    show a warning dialog instead of crashing with a TypeError.
+
+    Bug: _do_load_dir_answer called self.load_dialog.warning(callback=...) but
+    LoadPathsDialog.warning() did not accept a callback parameter, causing a
+    TypeError that swallowed the error silently.
+
+    Fix: LoadPathsDialog.warning() now accepts an optional callback, and the
+    error message names the expected extensions so the user knows how to fix it.
+    """
+    (tmp_path / "my_named_paths.json").write_text('{"group": ["file.csvpath"]}')
+    (tmp_path / "notes.txt").write_text("some text")
+
+    loader, dialog = _make_loader_and_dialog(main, str(tmp_path))
+    dialog.named_paths_name_ctl.setText("dir-group")
+
+    warnings_shown = []
+    monkeypatch.setattr(
+        dialog,
+        "warning",
+        lambda msg, title, callback=None: warnings_shown.append((msg, title)),
+    )
+
+    loader._do_load_dir_answer(
+        QMessageBox.Yes,
+        paths=main.csvpaths,
+        named_paths_name="dir-group",
+        name=str(tmp_path),
+        template=None,
+    )
+
+    assert len(warnings_shown) >= 1, (
+        "A warning must be shown when the directory has no valid csvpath files"
+    )
+    msg, title = warnings_shown[0]
+    assert "csvpath" in msg.lower(), (
+        f"Warning must mention csvpath extensions; got: {msg!r}"
+    )
+
+
+def test_load_dir_warning_callback_does_not_crash(monkeypatch, tmp_path, main):
+    """
+    LoadPathsDialog.warning() must accept an optional callback without raising
+    TypeError.
+
+    Previously warning(msg, title) rejected a callback keyword argument, which
+    crashed _do_load_dir_answer before the user ever saw an error message.
+    """
+    loader, dialog = _make_loader_and_dialog(main, str(tmp_path))
+
+    callback_called = []
+    dialog.warning(
+        msg="test message",
+        title="Test",
+        callback=lambda answer: callback_called.append(answer),
+    )
+    # No TypeError raised — test passes if we reach this line.
+
+
 def test_load_json_definition_writes_pretty_printed_definition_json(
     qtbot, tmp_path, main
 ):
