@@ -135,7 +135,10 @@ class FlightPathServerApi(ABC):
 
     @property
     def headers(self) -> dict:
-        return {"access_token": self._key, "Content-Type": "application/json"}
+        h = {"Content-Type": "application/json"}
+        if self._key is not None:
+            h["access_token"] = self._key
+        return h
 
     def _url(self, path: str) -> str:
         return f"{self.host}/{path.lstrip('/')}"
