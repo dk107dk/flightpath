@@ -19,10 +19,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import inspect
+
 from flightpath.workers.ai_worker import AiWorker
 from flightpath.workers.csvpath_file_worker import CsvpathFileWorker
 from flightpath.workers.general_data_worker import GeneralDataWorker
 from flightpath.workers.json_data_worker import JsonDataWorker
+import flightpath.workers.json_data_worker as _json_data_worker_mod
 from flightpath.workers.md_worker import MdWorker
 from flightpath.workers.one_off_run import OneOffRunWorker
 from flightpath.workers.precache_worker import PreCacheWorker
@@ -120,3 +123,33 @@ def test_run_worker_auto_delete_false(qapp):
         template=None,
         csvpaths=MagicMock(),
     ).autoDelete()
+
+
+def test_json_data_worker_does_not_instantiate_csvpaths_in_run():
+    """
+    JsonDataWorker.run() must not call CsvPaths() on the worker thread.
+
+    The run() method previously contained a stale SFTP workaround that called
+    CsvPaths() unconditionally.  Creating a CsvPaths instance initializes the
+    Lark grammar parser, which is a CPU-heavy Python operation.  Running that
+    from the thread pool while the main thread is dispatching Python slots via
+    PySide's signal manager triggers a shiboken crash:
+
+        callCppDestructor<QLineEdit> / mainThreadDeletionHandler
+
+    This is the same crash class that was fixed in the RunWorker (commit e407015).
+    The fix: remove the two stale lines; the csvpath library fixed the underlying
+    SFTP issue at version 546 and we are at 614.
+
+    This test checks that neither the module-level namespace nor the run() source
+    code contains a CsvPaths instantiation, catching both import-level and
+    inline regressions.
+    """
+    assert not hasattr(_json_data_worker_mod, "CsvPaths"), (
+        "json_data_worker must not import CsvPaths — any CsvPaths() call in the "
+        "worker thread initializes Lark grammar and triggers a shiboken segfault"
+    )
+    run_source = inspect.getsource(JsonDataWorker.run)
+    assert "CsvPaths()" not in run_source, (
+        "JsonDataWorker.run() must not call CsvPaths() — see test docstring for why"
+    )
