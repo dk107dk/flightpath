@@ -208,7 +208,6 @@ class CsvpathLoader:
             )
 
     def do_load_json(self) -> None:
-        print("oad groupdef")
         paths = self.main.csvpaths
         #
         # not sure this hint is necessary or helpful. tbd.
@@ -228,6 +227,7 @@ class CsvpathLoader:
 
         name = self.load_dialog.path
         name = "" if not name else name.strip()
+        paths.config.set(section="inputs", name="allow_local_files", value=True)
         ex = None
         msg = None
         try:

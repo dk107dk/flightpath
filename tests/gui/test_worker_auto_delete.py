@@ -15,6 +15,7 @@ Run with:
   QT_QPA_PLATFORM=offscreen poetry run python -m pytest tests/gui/test_worker_auto_delete.py -v
 """
 
+import inspect
 from unittest.mock import MagicMock
 
 import pytest
@@ -127,6 +128,7 @@ def test_run_worker_auto_delete_false(qapp):
 
 def test_json_data_worker_does_not_instantiate_csvpaths_in_run():
     """
+
     JsonDataWorker.run() must not call CsvPaths() on the worker thread.
 
     The run() method previously contained a stale SFTP workaround that called
@@ -152,4 +154,5 @@ def test_json_data_worker_does_not_instantiate_csvpaths_in_run():
     run_source = inspect.getsource(JsonDataWorker.run)
     assert "CsvPaths()" not in run_source, (
         "JsonDataWorker.run() must not call CsvPaths() — see test docstring for why"
+
     )

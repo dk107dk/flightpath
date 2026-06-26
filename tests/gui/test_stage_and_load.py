@@ -50,10 +50,13 @@ Run with:
   QT_QPA_PLATFORM=offscreen poetry run python -m pytest tests/gui/test_stage_and_load.py -v
 """
 
+import inspect
 import json
 import os
 
 from PySide6.QtWidgets import QMessageBox
+
+import flightpath.actions.csvpath_loader as _csvpath_loader_mod
 
 from csvpath.managers.files.files_activation_listener import FileActivationListener
 
@@ -600,4 +603,97 @@ def test_copy_back_of_definition_json_preserves_pretty_printing(qtbot, tmp_path,
     parsed = json.loads(content)
     assert "copy-back-group" in parsed, (
         "Copied definition.json must contain the group name"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Bug-regression tests for load dialog warning() and do_load_json()
+# ---------------------------------------------------------------------------
+
+
+def test_load_dialog_warning_accepts_callback_kwarg(main):
+    """
+    LoadPathsDialog.warning() must accept an optional callback keyword argument.
+
+    Bug: _do_load_dir_answer() called dialog.warning(msg=..., title=..., callback=...)
+    but warning() did not declare callback in its signature, causing a TypeError
+    that swallowed the failure silently with no user notification.
+
+    Fix: warning() now accepts callback=None and forwards it to meut.warning2.
+    """
+    csvpath_file = _examples(main, "first steps", "Hello World.csvpath")
+    _, dialog = _make_loader_and_dialog(main, csvpath_file)
+
+    called = []
+    try:
+        dialog.warning(
+            msg="Test message",
+            title="Test Title",
+            callback=lambda: called.append(True),
+        )
+    except TypeError as exc:
+        raise AssertionError(
+            f"warning() raised TypeError with callback kwarg (bug regression): {exc}"
+        ) from exc
+
+
+def test_load_dialog_warning_works_without_callback(main):
+    """
+    LoadPathsDialog.warning() must still work when callback is omitted (backward compat).
+    """
+    csvpath_file = _examples(main, "first steps", "Hello World.csvpath")
+    _, dialog = _make_loader_and_dialog(main, csvpath_file)
+
+    try:
+        dialog.warning(msg="Test message", title="Test Title")
+    except TypeError as exc:
+        raise AssertionError(
+            f"warning() raised TypeError without callback kwarg: {exc}"
+        ) from exc
+
+
+def test_do_load_json_has_no_debug_print():
+    """
+    CsvpathLoader.do_load_json() must not contain the debug print statement
+    'oad groupdef' that was left over from development.
+
+    Bug: print("oad groupdef") was present at csvpath_loader.py:211 and
+    emitted to stdout on every JSON definition load.
+    """
+    from flightpath.actions.csvpath_loader import CsvpathLoader
+
+    src = inspect.getsource(CsvpathLoader.do_load_json)
+    assert "oad groupdef" not in src, (
+        "Debug print('oad groupdef') must be removed from do_load_json()"
+    )
+
+
+def test_do_load_json_sets_allow_local_files(monkeypatch, tmp_path, main):
+    """
+    do_load_json() must set allow_local_files=True on the CsvPaths config before
+    calling add_named_paths_from_json(), matching the behaviour of do_load_file().
+
+    Without this, definition.json files referencing local paths are silently
+    rejected by the library's can_load() guard (default allow_local_files=False),
+    and the load produces no named-paths groups with no error shown to the user.
+    """
+    csvpath_file = _examples(main, "first steps", "Hello World.csvpath")
+    json_data = {"local-files-group": [csvpath_file]}
+    json_path = tmp_path / "definition.json"
+    json_path.write_text(json.dumps(json_data))
+
+    main.csvpaths.config.set(section="inputs", name="allow_local_files", value=False)
+
+    loader, dialog = _make_loader_and_dialog(main, str(json_path))
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        staticmethod(lambda *a, **kw: QMessageBox.Yes),
+    )
+
+    loader.do_load_json()
+
+    cfg_val = main.csvpaths.config.get(section="inputs", name="allow_local_files")
+    assert str(cfg_val).strip().lower() in ("true", "yes"), (
+        "do_load_json() must set allow_local_files=True before calling the library"
     )

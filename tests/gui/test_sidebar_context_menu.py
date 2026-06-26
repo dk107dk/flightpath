@@ -56,6 +56,7 @@ Run with:
 
 import os
 
+from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QMessageBox
 
 from flightpath.util.message_utility import MessageUtility
@@ -447,3 +448,79 @@ def test_resolve_with_last_path_as_file_uses_parent_directory(main):
         "When _last_path is a file, new item must be created in its parent directory"
     )
     main.sidebar._last_path = None
+
+
+def test_show_context_menu_syncs_current_index_to_right_clicked_item(monkeypatch, main):
+    """
+    _show_context_menu() must call file_navigator.setCurrentIndex() with the
+    item at the right-click position so that _current_path() (which reads
+    currentIndex()) returns the right-clicked item rather than the previously
+    left-clicked selection.
+
+    Bug: right-clicking definition.json while a parent directory was selected
+    showed the correct context menu (the menu uses indexAt(position)), but
+    the triggered 'Load csvpaths' action called _current_path() which returned
+    the stale directory.  This caused do_load_dir() to run instead of
+    do_load_json(), and the library raised ValueError: Must end in :run_dir.
+
+    Fix: _show_context_menu() now calls file_navigator.setCurrentIndex(index)
+    before building the menu, syncing the selection to the right-clicked item.
+    """
+    from unittest.mock import MagicMock
+    from PySide6.QtCore import QModelIndex
+
+    nav = main.sidebar.file_navigator
+
+    fake_index = MagicMock(spec=QModelIndex)
+    fake_index.isValid.return_value = True
+
+    monkeypatch.setattr(nav, "indexAt", lambda pos: fake_index)
+
+    set_calls = []
+    monkeypatch.setattr(nav, "setCurrentIndex", lambda idx: set_calls.append(idx))
+    monkeypatch.setattr(
+        main.sidebar.context_menu_maker,
+        "show_context_menu",
+        lambda pos: None,
+    )
+
+    main.sidebar._show_context_menu(QPoint(5, 5))
+
+    assert len(set_calls) == 1, (
+        "_show_context_menu() must call setCurrentIndex() exactly once"
+    )
+    assert set_calls[0] is fake_index, (
+        "_show_context_menu() must call setCurrentIndex() with the indexAt() result, "
+        "not the stale currentIndex()"
+    )
+
+
+def test_show_context_menu_does_not_change_index_for_invalid_position(monkeypatch, main):
+    """
+    When the right-click position maps to no tree item (e.g. whitespace below
+    the last row), _show_context_menu() must NOT call setCurrentIndex() so the
+    existing selection is not cleared.
+    """
+    from unittest.mock import MagicMock
+    from PySide6.QtCore import QModelIndex
+
+    nav = main.sidebar.file_navigator
+
+    invalid_index = MagicMock(spec=QModelIndex)
+    invalid_index.isValid.return_value = False
+    monkeypatch.setattr(nav, "indexAt", lambda pos: invalid_index)
+
+    set_calls = []
+    monkeypatch.setattr(nav, "setCurrentIndex", lambda idx: set_calls.append(idx))
+    monkeypatch.setattr(
+        main.sidebar.context_menu_maker,
+        "show_context_menu",
+        lambda pos: None,
+    )
+
+    main.sidebar._show_context_menu(QPoint(999, 999))
+
+    assert len(set_calls) == 0, (
+        "_show_context_menu() must not call setCurrentIndex() when the position "
+        "maps to no valid tree item"
+    )
