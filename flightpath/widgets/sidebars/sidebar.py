@@ -353,7 +353,7 @@ class Sidebar(QWidget):
             return
 
         regex = None
-        if hasattr(self.stage_dialog, "regex"):
+        if hasattr(self.stage_dialog, "regex_ctl"):
             regex = self.stage_dialog.regex_ctl.text()
         named_file_name = self.stage_dialog.named_file_name_ctl.text()
         named_file_name = named_file_name.strip() if named_file_name else ""

@@ -133,6 +133,40 @@ def test_stage_single_file_sidebar_refreshes(monkeypatch, qtbot, main):
     )
 
 
+def test_stage_directory_with_regex_registers_only_matching_file(monkeypatch, tmp_path, main):
+    """
+    Staging a directory with a regex in regex_ctl must register only the files
+    whose paths match the regex, not all files in the directory.
+
+    Bug: do_stage() checked hasattr(dialog, "regex") instead of
+    hasattr(dialog, "regex_ctl"), so regex was always None and every file in
+    the directory was registered regardless of the pattern.
+
+    Fix: the hasattr check now uses "regex_ctl", so regex is read correctly
+    and passed to add_named_files_from_dir(), which skips non-matching files.
+    """
+    monkeypatch.setattr(FileActivationListener, "metadata_update", lambda self, mdata: None)
+
+    (tmp_path / "alpha.csv").write_text("id,value\n1,a\n")
+    (tmp_path / "beta.csv").write_text("id,value\n2,b\n")
+
+    dialog = StageDataDialog(main=main, path=str(tmp_path), parent=main.sidebar)
+    main.sidebar.stage_dialog = dialog
+
+    dialog.separate_ctl.setChecked(True)
+    dialog.regex_ctl.setText("alpha")
+
+    main.sidebar.do_stage()
+
+    fm = main.csvpaths.file_manager
+    assert fm.has_named_file("alpha"), (
+        "Regex 'alpha' must match alpha.csv and register it as a named-file"
+    )
+    assert not fm.has_named_file("beta"), (
+        "Regex 'alpha' must not match beta.csv; beta must not be registered"
+    )
+
+
 def test_stage_directory_registers_multiple_named_files(monkeypatch, qtbot, main):
     """
     Staging a directory with 'separate named-files' checked must register each
