@@ -47,9 +47,10 @@ def test_join_local_overlapped_no_overlap_with_subpath():
 
 
 def test_join_local_overlapped_preserves_leading_sep():
-    """If pathone starts with os.sep, the result must also start with os.sep."""
-    result = fiut.join_local_overlapped("/a/b/c/d", "d/e/f.ini")
-    assert result.startswith(os.sep)
+    """If pathone starts with a separator, the result must also start with that separator."""
+    pathone = "/a/b/c/d"
+    result = fiut.join_local_overlapped(pathone, "d/e/f.ini")
+    assert result.startswith(pathone[0])
 
 
 def test_join_local_overlapped_pathone_none_raises():

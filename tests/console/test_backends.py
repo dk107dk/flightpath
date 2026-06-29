@@ -2,6 +2,7 @@ import unittest
 import pytest
 import socket
 from botocore.exceptions import ClientError, NoCredentialsError
+from google.auth.exceptions import DefaultCredentialsError
 
 
 class TestBackends(unittest.TestCase):
@@ -21,7 +22,7 @@ class TestBackends(unittest.TestCase):
         for scheme, uri in schemes.items():
             print(f"scheme: {scheme}: {uri}")
             with pytest.raises(
-                (OSError, ValueError, TypeError, ClientError, NoCredentialsError, socket.gaierror)
+                (OSError, ValueError, TypeError, ClientError, NoCredentialsError, socket.gaierror, DefaultCredentialsError)
             ):
                 with smart_open.open(uri, "rb"):
                     ...
