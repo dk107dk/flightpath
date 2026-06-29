@@ -51,14 +51,25 @@ class FileUtility:
         # if pathone ends in the start of pathtwo, remove the start of pathtwo before
         # joining.
         #
+        # Detect separator style and absoluteness from pathone before pathu.parts()
+        # normalizes it to the OS separator, so the result preserves the input style.
+        if pathone.startswith("/"):
+            sep = "/"
+            is_abs = True
+        elif pathone.startswith("\\"):
+            sep = "\\"
+            is_abs = True
+        else:
+            sep = os.sep
+            is_abs = False
         partsone = pathu.parts(pathone)
         partstwo = pathu.parts(pathtwo)
         while partsone[len(partsone) - 1] == partstwo[0]:
             partsone = partsone[0 : len(partsone) - 1]
         _ = partsone + partstwo
-        ret = os.sep.join(_)
-        if pathone.startswith(os.sep) and not ret[0] == os.sep:
-            ret = f"{os.sep}{ret}"
+        ret = sep.join(_)
+        if is_abs and not ret.startswith(sep):
+            ret = f"{sep}{ret}"
         return ret
 
     @classmethod
