@@ -182,6 +182,34 @@ def test_paths_template_dialog_saves_template(qtbot, main):
     )
 
 
+def test_add_named_file_after_assure_activation_spawns_background_thread(monkeypatch, qtbot, main):
+    """
+    After assure_activation() writes the activation listener config, the next
+    add_named_file() call fires a metadata event that instantiates
+    FileActivationListener and calls metadata_update(), which spawns a raw
+    threading.Thread via self.start().
+
+    That thread creates CsvPaths() and parses the Lark grammar concurrently with
+    Qt's main-thread event loop (filterAcceptsRow on the proxy model), which is
+    the root cause of the segfault seen in Thread 0 of the crash report.
+
+    FileActivationListener.start is patched here to a no-op so the thread never
+    actually runs — preventing the segfault in the test suite.  The assertion
+    confirms that start() is called, proving the spawn path exists and would
+    race Qt's event loop in production.
+    """
+    thread_starts = []
+    monkeypatch.setattr(FileActivationListener, "start", lambda self: thread_starts.append(True))
+
+    liut.assure_activation(main)
+    _register_named_file(main)
+
+    assert len(thread_starts) >= 1, (
+        "add_named_file() after assure_activation() must attempt to start a "
+        "FileActivationListener thread — the background thread that races Qt's event loop"
+    )
+
+
 def test_webhooks_dialog_saves_url(monkeypatch, qtbot, main):
     """
     WebhooksDialog must persist a webhook URL for the on_complete_all event via do_set().
