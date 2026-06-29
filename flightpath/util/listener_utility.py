@@ -1,26 +1,3 @@
-from csvpath import CsvPaths
-from csvpath.managers.files.files_activation_listener import FileActivationListener
-
-
-def _fixed_activation_metadata_update(self, mdata) -> None:
-    # Library bug workaround: the library's _metadata_update passes
-    # mdata.named_file_ref ("$name.files.<fingerprint>") to activate_if(),
-    # which then forwards it as the filename argument to the run method.
-    # get_named_file_uuid() only accepts $name.results.xxx references,
-    # so it raises ValueError for $name.files.xxx references.
-    # Fix: use mdata.named_file_name (the plain name) instead.
-    csvpaths = CsvPaths()
-    activator = csvpaths.file_manager.activator
-    name = mdata.named_file_name
-    csvpaths.logger.info("Activating for %s if any activation is configured", name)
-    activator.activate_if(name)
-    csvpaths.logger.info("Activation for %s completed", name)
-    csvpaths.wrap_up()
-
-
-FileActivationListener._metadata_update = _fixed_activation_metadata_update
-
-
 class ListenerUtility:
     @classmethod
     def assure_activation(cls, main) -> None:
