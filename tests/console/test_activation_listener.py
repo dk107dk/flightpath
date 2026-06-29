@@ -28,6 +28,9 @@ Run with:
   poetry run python -m pytest tests/console/test_activation_listener.py -v
 """
 
+import threading
+
+import pytest
 from unittest.mock import MagicMock, patch
 
 from csvpath.managers.files.files_activation_listener import FileActivationListener
@@ -43,6 +46,20 @@ def _make_mdata(*, named_file_name: str, named_file_ref: str) -> MagicMock:
     return mdata
 
 
+@pytest.mark.xfail(
+    reason=(
+        "This test verifies the current workaround behavior in "
+        "_fixed_activation_metadata_update, which passes mdata.named_file_name "
+        "(the plain name) to activate_if() instead of the full mdata.named_file_ref. "
+        "That workaround is semantically incorrect: named_file_ref carries the "
+        "fingerprint of the specific registration that arrived, and losing it means "
+        "activation may run against the wrong version. "
+        "When FileManager.get_named_file_uuid() is fixed to accept "
+        "$name.files.<fingerprint> references (not just $name.results.<fingerprint>), "
+        "revert _fixed_activation_metadata_update to pass mdata.named_file_ref and "
+        "update this test to assert activate_if() receives the full reference."
+    ),
+)
 def test_metadata_update_passes_plain_name_to_activate_if():
     """
     The patched _metadata_update() must call activate_if() with
@@ -76,6 +93,18 @@ def test_metadata_update_passes_plain_name_to_activate_if():
     )
 
 
+@pytest.mark.xfail(
+    reason=(
+        "This test verifies the current workaround behavior: that "
+        "_fixed_activation_metadata_update never forwards the files reference "
+        "to activate_if(). It will need to be replaced once "
+        "FileManager.get_named_file_uuid() is fixed to accept "
+        "$name.files.<fingerprint> references. At that point the correct "
+        "assertion is the inverse: activate_if() MUST receive the full "
+        "mdata.named_file_ref so the specific arriving registration is activated, "
+        "not an arbitrary version resolved by name alone."
+    ),
+)
 def test_metadata_update_does_not_pass_reference_to_activate_if():
     """
     Regression guard: _metadata_update() must never forward the
@@ -121,3 +150,81 @@ def test_metadata_update_calls_wrap_up():
         listener._metadata_update(mdata)
 
     mock_csvpaths.wrap_up.assert_called_once_with()
+
+
+# ---------------------------------------------------------------------------
+# Thread-spawn and thread-safety tests
+# ---------------------------------------------------------------------------
+
+
+def test_metadata_update_stores_mdata_on_self():
+    """
+    FileActivationListener.metadata_update() must store mdata on self.metadata
+    before calling self.start(), so the thread can access it via self.metadata
+    inside run().
+
+    This is the first half of the thread-spawn sequence that causes the segfault:
+    the thread is started with its input data on self, then runs _metadata_update
+    concurrently with Qt's event loop.
+    """
+    mdata = _make_mdata(named_file_name="my-file", named_file_ref="$my-file.files.abc")
+    listener = object.__new__(FileActivationListener)
+
+    with patch.object(listener, "start"):
+        listener.metadata_update(mdata)
+
+    assert listener.metadata is mdata, (
+        "metadata_update() must store mdata on self.metadata so the thread can "
+        "access it via self.metadata inside run()"
+    )
+
+
+def test_metadata_update_calls_thread_start():
+    """
+    FileActivationListener.metadata_update() calls self.start() — this spawns a
+    raw threading.Thread that runs _metadata_update() concurrently with Qt's main
+    event loop.  When _metadata_update creates CsvPaths() and parses the Lark
+    grammar, GIL contention with Qt's proxy-model filterAcceptsRow() causes the
+    segfault seen in Thread 0 of the crash report.
+
+    start() is mocked here to prevent the thread from actually running; the
+    assertion confirms the spawn is attempted.
+    """
+    mdata = _make_mdata(named_file_name="my-file", named_file_ref="$my-file.files.abc")
+    listener = object.__new__(FileActivationListener)
+
+    with patch.object(listener, "start") as mock_start:
+        listener.metadata_update(mdata)
+
+    mock_start.assert_called_once_with()
+
+
+@pytest.mark.xfail(
+    raises=AttributeError,
+    strict=True,
+    reason=(
+        "run() calls self.csvpaths.wrap_up() after _metadata_update() returns, "
+        "but _fixed_activation_metadata_update stores CsvPaths() in a local "
+        "variable and never assigns self.csvpaths — so self.csvpaths remains "
+        "None and the trailing wrap_up() raises AttributeError."
+    ),
+)
+def test_run_does_not_crash_on_self_csvpaths_wrap_up():
+    """
+    FileActivationListener.run() calls self._metadata_update(self.metadata) then
+    self.csvpaths.wrap_up().  The patched _fixed_activation_metadata_update creates
+    a local 'csvpaths' and calls wrap_up() on it, but never assigns self.csvpaths.
+    After _metadata_update returns, self.csvpaths is still None, so the trailing
+    self.csvpaths.wrap_up() in run() raises AttributeError.
+
+    Fix: assign self.csvpaths = CsvPaths() in _fixed_activation_metadata_update
+    instead of a local variable, so run()'s cleanup call can succeed.
+    """
+    mdata = _make_mdata(named_file_name="any", named_file_ref="$any.files.abc")
+    listener = object.__new__(FileActivationListener)
+    listener.csvpaths = None
+    listener.metadata = mdata
+
+    mock_csvpaths = MagicMock()
+    with patch("flightpath.util.listener_utility.CsvPaths", return_value=mock_csvpaths):
+        listener.run()  # raises AttributeError: 'NoneType' object has no attribute 'wrap_up'
