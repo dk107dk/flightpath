@@ -153,6 +153,16 @@ May 6 2026
 
 
 
+June 30 2026
+ Version: 1.1.89
+    - CsvPath 0.0.616
+    - FlightPath Server: 0.1.59
+    - FlightPath Generator: 0.1.59
+    - FlightPath Data: 0.1.31
+ git tag -a v1.1.89 -m "RC accepted"
+ git push origin v1.1.89
+
+
 
 
 

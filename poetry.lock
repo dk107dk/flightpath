@@ -1260,13 +1260,13 @@ url = "assets/flightpath_generator-0.1.59.tar.gz"
 
 [[package]]
 name = "flightpath-server"
-version = "0.1.58"
+version = "0.1.59"
 description = "A DataOps data ingestion preboarding automation server for FlightPath and CsvPath Framework"
 optional = false
 python-versions = "<4.0,>3.10"
 groups = ["main"]
 files = [
-    {file = "flightpath_server-0.1.58.tar.gz", hash = "sha256:a2a5afa1fc4f6b98c653c1f3f331d5258555cda3d0ae56564ef4eba7c3d49c81"},
+    {file = "flightpath_server-0.1.59.tar.gz", hash = "sha256:2c7d82da109a05165bd160477cb4e72d106f46dcc196d1bd09f1eafa61efab7b"},
 ]
 
 [package.dependencies]
@@ -1278,7 +1278,7 @@ uvicorn = "0.34.3"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_server-0.1.58.tar.gz"
+url = "assets/flightpath_server-0.1.59.tar.gz"
 
 [[package]]
 name = "frozenlist"
@@ -5987,4 +5987,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.15"
-content-hash = "f91224a8b7f23bfe321e0a465b6d99677ca9a371e59a1944a62dcc86b220e5bc"
+content-hash = "9ae73b5aea7c65f85dc61ecc5e56ee94d07ce2a3f6fa9b9363167a0d19742f2e"
