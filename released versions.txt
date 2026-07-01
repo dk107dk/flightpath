@@ -151,9 +151,7 @@ May 6 2026
  git tag -a v1.1.88k -m "Windows RC accepted"
  git push origin v1.1.88k
 
-
-
-June 30 2026
+July 1 2026
  Version: 1.1.89
     - CsvPath 0.0.616
     - FlightPath Server: 0.1.59
