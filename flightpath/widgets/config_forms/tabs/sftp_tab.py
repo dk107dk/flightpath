@@ -38,7 +38,7 @@ class SftpTab(QWidget):
         self.test_button = QPushButton("Test Connection")
         self.test_button.clicked.connect(self.test_connection)
         buttons_layout.addWidget(self.test_button)
-        layout.addRow(buttons)
+        layout.addRow("", buttons)
 
         self.server.textChanged.connect(self.form.main.reactor.on_config_changed)
         self.port.textChanged.connect(self.form.main.reactor.on_config_changed)

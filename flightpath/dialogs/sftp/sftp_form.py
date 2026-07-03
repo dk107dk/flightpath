@@ -64,7 +64,7 @@ class SftpForm(QWidget):
         buttons_layout.addWidget(self.remove_button)
         buttons_layout.addWidget(self.add_button)
 
-        layout.addWidget(buttons)
+        layout.addRow("", buttons)
 
     # ===================================
 

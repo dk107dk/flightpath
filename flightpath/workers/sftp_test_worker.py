@@ -31,6 +31,7 @@ class SftpTestWorker(QRunnable):
                 password=self.password,
                 allow_agent=False,
                 look_for_keys=False,
+                timeout=10,
             )
             self.signals.finished.emit(True, "Connected successfully")
         except paramiko.AuthenticationException:
