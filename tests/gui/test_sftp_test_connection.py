@@ -342,3 +342,100 @@ def test_test_connection_defaults_port_to_22(qtbot, monkeypatch):
     qtbot.waitUntil(lambda: len(connected_ports) > 0, timeout=5000)
 
     assert connected_ports[0] == 22
+
+
+# ---------------------------------------------------------------------------
+# 3. SftpTab integration tests (Integrations config panel)
+# ---------------------------------------------------------------------------
+
+
+def _sftp_tab(main):
+    """Return the live SftpTab from a fully initialised MainWindow."""
+    main.open_config()
+    form = main.config.config_panel.get_form("listeners")
+    assert form is not None, "ListenersForm must be present in config panel"
+    tab = form.tab_groups.get("sftp")
+    assert tab is not None, "sftp tab must exist in ListenersForm tab_groups"
+    return tab
+
+
+def test_sftp_tab_test_button_exists(qtbot, main):
+    """SftpTab must expose a 'Test Connection' button."""
+    tab = _sftp_tab(main)
+    assert hasattr(tab, "test_button"), "SftpTab must have a test_button attribute"
+    assert tab.test_button.text() == "Test Connection"
+
+
+def test_sftp_tab_shows_missing_server_message(qtbot, main, monkeypatch):
+    """
+    Calling test_connection() with an empty server field must show a warning
+    via meut.message2 and must NOT submit a worker to the thread pool.
+    """
+    captured = []
+    monkeypatch.setattr(meut, "message2", lambda **kw: captured.append(kw))
+
+    tab = _sftp_tab(main)
+    tab.server.setText("")
+    tab.test_connection()
+
+    assert len(captured) == 1
+    assert (
+        "server" in captured[0]["title"].lower()
+        or "server" in captured[0]["msg"].lower()
+    )
+    assert tab.test_button.isEnabled(), "Button must stay enabled when server is missing"
+
+
+def test_sftp_tab_success_shows_message(qtbot, main, monkeypatch):
+    """
+    A successful connection probe must call meut.message2 with a success
+    title and leave the button enabled.
+    """
+    monkeypatch.setattr(paramiko, "SSHClient", _ssh_client_succeeds)
+
+    captured = []
+    monkeypatch.setattr(meut, "message2", lambda **kw: captured.append(kw))
+
+    tab = _sftp_tab(main)
+    tab.server.setText("sftp.example.com")
+    tab.port.setText("22")
+    tab.username.setText("user")
+    tab.password.setText("pass")
+
+    tab.test_connection()
+
+    QThreadPool.globalInstance().waitForDone(5000)
+    qtbot.waitUntil(lambda: len(captured) > 0, timeout=5000)
+
+    assert captured[0]["title"] == "Connection Successful"
+    assert tab.test_button.isEnabled()
+
+
+def test_sftp_tab_failure_shows_message(qtbot, main, monkeypatch):
+    """
+    An authentication failure must call meut.message2 with a failure title
+    and leave the button enabled.
+    """
+    monkeypatch.setattr(
+        paramiko,
+        "SSHClient",
+        lambda: _ssh_client_raises(paramiko.AuthenticationException()),
+    )
+
+    captured = []
+    monkeypatch.setattr(meut, "message2", lambda **kw: captured.append(kw))
+
+    tab = _sftp_tab(main)
+    tab.server.setText("sftp.example.com")
+    tab.port.setText("22")
+    tab.username.setText("user")
+    tab.password.setText("wrong")
+
+    tab.test_connection()
+
+    QThreadPool.globalInstance().waitForDone(5000)
+    qtbot.waitUntil(lambda: len(captured) > 0, timeout=5000)
+
+    assert captured[0]["title"] == "Connection Failed"
+    assert "authentication" in captured[0]["msg"].lower()
+    assert tab.test_button.isEnabled()
