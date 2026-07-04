@@ -260,6 +260,7 @@ class MdViewer(QWidget):
                 self.text_edit.setMarkdown(txt)
             editor.hide()
             editor.deleteLater()
+            self.saved = saved
             if saved:
                 self.reset_saved()
         else:

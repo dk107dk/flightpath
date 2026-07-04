@@ -24,7 +24,6 @@ Run with:
 
 import os
 
-import pytest
 from PySide6.QtCore import Qt
 
 from flightpath.util.tabs_utility import TabsUtility as taut
@@ -107,21 +106,11 @@ def test_md_raw_text_view_edit_marks_unsaved(qtbot, main):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Bug: on_toggle() calls _make_editor() which constructs a new "
-        "RawTextEdit; RawTextEdit.__init__ unconditionally sets "
-        "self.my_parent.saved = True, overwriting the False that was set by "
-        "editing in markdown view.  The file silently appears saved after "
-        "toggling, so close_tab skips the save prompt."
-    ),
-)
 def test_md_unsaved_state_survives_toggle_to_raw(qtbot, main):
     """
     Edits made in markdown view must still be reflected as unsaved after
-    toggling to raw text.  Currently _make_editor() resets saved=True,
-    losing the unsaved state and causing close_tab to skip the prompt.
+    toggling to raw text.  Fixed in on_toggle() by restoring self.saved
+    after _make_editor() resets it.
     """
     viewer = _open_md(qtbot, main)
     assert viewer.saved is True
