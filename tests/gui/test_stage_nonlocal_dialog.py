@@ -447,6 +447,26 @@ def test_resolve_local_path_renames_file_when_extension_differs(qtbot, tmp_path)
 # --- SFTP no-server notice ---
 
 
+def test_proceed_shows_error_when_resolved_path_is_a_directory(qtbot, tmp_path):
+    """If a directory exists at the resolved copy-destination path, _proceed must
+    show a clear error instead of passing the directory path to DataFileWriter."""
+    # Reproduce the scenario: old behavior created 'bug.csv' as a directory
+    (tmp_path / "bug.csv").mkdir()
+
+    dialog, fake_main, _ = _make_dialog(qtbot, tmp_path)
+    dialog._uri_is_remote = False
+
+    dialog._proceed(
+        uri="/Users/davidkershaw/bug.txt",
+        name="test4",
+        dest="bug.csv",
+        must_copy=True,
+    )
+
+    assert dialog.error_label.isVisible()
+    assert "directory" in dialog.error_label.text().lower()
+
+
 def test_sftp_notice_shown_when_no_sftp_configured(qtbot, tmp_path):
     """_start_sftp_check shows the SFTP notice (not red error) when no SFTP server
     is configured at all."""
