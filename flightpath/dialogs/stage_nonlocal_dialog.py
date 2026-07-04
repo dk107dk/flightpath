@@ -547,4 +547,4 @@ class StageNonLocalDialog(QDialog):
         meut.warning2(parent=self, title=title, msg=msg)
 
     def show_dialog(self) -> None:
-        self.exec()
+        self.show()
