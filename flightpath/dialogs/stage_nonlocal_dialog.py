@@ -377,7 +377,7 @@ class StageNonLocalDialog(QDialog):
         any_sftp, creds = self._check_sftp_config(host)
 
         if not any_sftp:
-            self._show_sftp_notice()
+            self._show_sftp_notice(host=host, name=name)
             return
         if creds is None:
             self._show_error(
@@ -412,8 +412,20 @@ class StageNonLocalDialog(QDialog):
     # SFTP notice actions
     # -----------------------------------------------------------------------
 
-    def _show_sftp_notice(self) -> None:
-        """Show the informational SFTP notice and hide the red error label."""
+    def _show_sftp_notice(self, *, host: str = "", name: str = "") -> None:
+        """Show the informational SFTP notice, customized with host/name when available."""
+        if host:
+            self.sftp_notice_label.setText(
+                f"You must configure the {host} server before using it."
+            )
+            self.sftp_add_button.setText(
+                f"Add {host} to {name}" if name else "Add SFTP Named File"
+            )
+        else:
+            self.sftp_notice_label.setText(
+                "You must configure an SFTP server before using it."
+            )
+            self.sftp_add_button.setText("Add SFTP Named File")
         self.error_label.setVisible(False)
         self.sftp_notice.setVisible(True)
         self._update_stage_button()
@@ -458,9 +470,15 @@ class StageNonLocalDialog(QDialog):
     # -----------------------------------------------------------------------
 
     def _resolve_local_path(self, uri: str, dest: str) -> str:
-        filename = os.path.basename(uri.rstrip("/").split("?")[0])
-        dest_dir = os.path.join(self.main.state.cwd, dest.lstrip("/"))
-        return fiut.deconflicted_path(dest_dir, filename)
+        source_filename = os.path.basename(uri.rstrip("/").split("?")[0])
+        dest_clean = dest.lstrip("/")
+        _, dest_ext = os.path.splitext(os.path.basename(dest_clean))
+        if dest_ext:
+            # dest already names the target file (possibly with a different extension)
+            return os.path.join(self.main.state.cwd, dest_clean)
+        # dest is a directory; append source filename with deconfliction
+        dest_dir = os.path.join(self.main.state.cwd, dest_clean)
+        return fiut.deconflicted_path(dest_dir, source_filename)
 
     def _copy_local(self, src: str, local_path: str, name: str) -> None:
         try:

@@ -413,13 +413,35 @@ def test_stage_click_with_unchecked_copy_shows_yesno_confirmation(
 # --- local_path resolution ---
 
 
-def test_resolve_local_path_joins_cwd_dest_filename(qtbot, tmp_path):
+def test_resolve_local_path_appends_source_name_when_dest_is_dir(qtbot, tmp_path):
+    """dest with no extension → treat as directory, append source filename."""
     dialog, _, _ = _make_dialog(qtbot, tmp_path)
     local = dialog._resolve_local_path("sftp://host/some/path/data.csv", "inputs/ext")
     assert local.startswith(str(tmp_path))
     assert local.endswith("data.csv")
     assert "inputs" in local
     assert "ext" in local
+
+
+def test_resolve_local_path_uses_dest_path_when_same_extension(qtbot, tmp_path):
+    """dest = 'bug.txt' (same extension as source) → <cwd>/bug.txt, no double nesting."""
+    dialog, _, _ = _make_dialog(qtbot, tmp_path)
+    local = dialog._resolve_local_path("/Users/davidkershaw/bug.txt", "bug.txt")
+    assert local == str(tmp_path / "bug.txt")
+
+
+def test_resolve_local_path_uses_dest_path_with_subdir(qtbot, tmp_path):
+    """dest = 'copied/bug.txt' → <cwd>/copied/bug.txt, no source filename appended."""
+    dialog, _, _ = _make_dialog(qtbot, tmp_path)
+    local = dialog._resolve_local_path("/Users/davidkershaw/bug.txt", "copied/bug.txt")
+    assert local == str(tmp_path / "copied" / "bug.txt")
+
+
+def test_resolve_local_path_renames_file_when_extension_differs(qtbot, tmp_path):
+    """dest = 'copied/bug.csv' → <cwd>/copied/bug.csv even though source is .txt."""
+    dialog, _, _ = _make_dialog(qtbot, tmp_path)
+    local = dialog._resolve_local_path("/Users/davidkershaw/bug.txt", "copied/bug.csv")
+    assert local == str(tmp_path / "copied" / "bug.csv")
 
 
 # --- SFTP no-server notice ---
@@ -434,6 +456,18 @@ def test_sftp_notice_shown_when_no_sftp_configured(qtbot, tmp_path):
 
     assert dialog.sftp_notice.isVisible()
     assert not dialog.error_label.isVisible()
+
+
+def test_sftp_notice_label_and_button_include_host_and_name(qtbot, tmp_path):
+    """_start_sftp_check must put the hostname and named-file name into the notice
+    label and the 'Add' button text."""
+    dialog, _, _ = _make_dialog(qtbot, tmp_path)
+    dialog._start_sftp_check(
+        "sftp://cloudsftp:2022/myfiles/bug.txt", "test7", "", False
+    )
+
+    assert "cloudsftp" in dialog.sftp_notice_label.text()
+    assert dialog.sftp_add_button.text() == "Add cloudsftp to test7"
 
 
 def test_sftp_notice_cleared_on_uri_change(qtbot, tmp_path):
