@@ -929,14 +929,14 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "csvpath"
-version = "0.0.616"
+version = "0.0.617"
 description = "CsvPath Framework is a data preboarding automation library for receiving, validating, and tracking CSV, Excel, JSONL and other tabular data files before they can corrupt downstream data consumers."
 optional = false
 python-versions = "<4.0,>3.10"
 groups = ["main"]
 files = [
-    {file = "csvpath-0.0.616-py3-none-any.whl", hash = "sha256:5dee82e6b9e22479687a5729f11001a5cf3e1ef061de5a98f55a375fd62417fe"},
-    {file = "csvpath-0.0.616.tar.gz", hash = "sha256:5fc8e430ea17fce0fde4b9bd8873c36d2dbd77746c5983b198857cfe9344b60f"},
+    {file = "csvpath-0.0.617-py3-none-any.whl", hash = "sha256:f144f0a56ce29f2f11af831c0458bdba30fdeb0508a2a49e9b1b731ac5a34ff5"},
+    {file = "csvpath-0.0.617.tar.gz", hash = "sha256:5e03233227c5f6914c070b8f958a0869af3abae9b07c3b8b03655d53033f183c"},
 ]
 
 [package.dependencies]
@@ -1238,17 +1238,17 @@ files = [
 
 [[package]]
 name = "flightpath-generator"
-version = "0.1.59"
+version = "0.1.60"
 description = "The AI component of FlightPath Data"
 optional = false
 python-versions = ">3.10,<4.0"
 groups = ["main"]
 files = [
-    {file = "flightpath_generator-0.1.59.tar.gz", hash = "sha256:b8c6e70cf0b4ebd91c82f541b77247b5c2e982e8aadbd53520f88b4cebc78ddc"},
+    {file = "flightpath_generator-0.1.60.tar.gz", hash = "sha256:ba8a10d94d366c14a91c595ec2c93cb499f262291cf853a0622d63428bbe9975"},
 ]
 
 [package.dependencies]
-csvpath = "0.0.616"
+csvpath = "0.0.617"
 jsonpickle = "4.1.1"
 litellm = "1.83.0"
 openai = "2.29.0"
@@ -1256,21 +1256,21 @@ pydantic = "2.12.5"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_generator-0.1.59.tar.gz"
+url = "assets/flightpath_generator-0.1.60.tar.gz"
 
 [[package]]
 name = "flightpath-server"
-version = "0.1.59"
+version = "0.1.62"
 description = "A DataOps data ingestion preboarding automation server for FlightPath and CsvPath Framework"
 optional = false
 python-versions = "<4.0,>3.10"
 groups = ["main"]
 files = [
-    {file = "flightpath_server-0.1.59.tar.gz", hash = "sha256:2c7d82da109a05165bd160477cb4e72d106f46dcc196d1bd09f1eafa61efab7b"},
+    {file = "flightpath_server-0.1.62.tar.gz", hash = "sha256:c3bfdd73df1bff483b0a21b0348e45423e1a271908c0eb164990ac313139e106"},
 ]
 
 [package.dependencies]
-csvpath = "0.0.616"
+csvpath = "0.0.617"
 fastapi = "0.115.14"
 filelock = ">=3.12"
 python-json-logger = "3.3.0"
@@ -1278,7 +1278,7 @@ uvicorn = "0.34.3"
 
 [package.source]
 type = "file"
-url = "assets/flightpath_server-0.1.59.tar.gz"
+url = "assets/flightpath_server-0.1.62.tar.gz"
 
 [[package]]
 name = "frozenlist"
@@ -5987,4 +5987,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.15"
-content-hash = "9ae73b5aea7c65f85dc61ecc5e56ee94d07ce2a3f6fa9b9363167a0d19742f2e"
+content-hash = "faad589eff86067c1fc11ded83fd438c7a2a88687901be575691cc78f7fcfd55"
