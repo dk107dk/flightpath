@@ -46,7 +46,8 @@ class StageNonLocalDialog(QDialog):
         self.setWindowTitle("Stage Non-Local File")
         self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.NonModal)
-        self.setFixedSize(660, 280)
+        self.setFixedWidth(660)
+        self.setMaximumHeight(300)
 
         form = QFormLayout()
         self.setLayout(form)
@@ -207,6 +208,7 @@ class StageNonLocalDialog(QDialog):
                 self.note_label.setVisible(False)
 
         self._update_stage_button()
+        self.adjustSize()
 
     def _show_copy_row_checked(self) -> None:
         """Show the copy row and default the checkbox to checked."""
@@ -218,6 +220,7 @@ class StageNonLocalDialog(QDialog):
     def _on_copy_changed(self) -> None:
         self.dest_ctl.setVisible(self.copy_ctl.isChecked())
         self._update_stage_button()
+        self.adjustSize()
 
     def _on_dest_changed(self, text: str) -> None:
         if text.strip() and not self.copy_ctl.isChecked():
@@ -433,6 +436,7 @@ class StageNonLocalDialog(QDialog):
         self.error_label.setVisible(False)
         self.sftp_notice.setVisible(True)
         self._update_stage_button()
+        self.adjustSize()
 
     def _on_configure_sftp_clicked(self) -> None:
         """Navigate the main window to Config > Integrations (index 8)."""
@@ -533,6 +537,7 @@ class StageNonLocalDialog(QDialog):
         self.sftp_notice.setVisible(False)
         self.error_label.setText(msg)
         self.error_label.setVisible(True)
+        self.adjustSize()
 
     def _clear_error(self) -> None:
         self.error_label.setVisible(False)
