@@ -449,6 +449,20 @@ class Sidebar(QWidget):
         self.main.welcome.update_run_button()
         self.main.welcome.update_find_data_button()
 
+    def do_stage_nonlocal(self, *, path: str, name: str) -> None:
+        if not path:
+            raise ValueError("path cannot be empty")
+        if not name:
+            raise ValueError("name cannot be empty")
+        paths = self.main.csvpaths
+        paths.file_manager.add_named_file(name=name, path=path, template=None)
+        self.main.sidebar_rt_top = SidebarNamedFiles(
+            main=self.main, config=self.main.csvpath_config, role=1
+        )
+        self.main.rt_col.replaceWidget(0, self.main.sidebar_rt_top)
+        self.main.welcome.update_run_button()
+        self.main.welcome.update_find_data_button()
+
     def _valid_new_folder(self, name: str) -> tuple[bool, str]:
         b = name.find(".") == -1
         if b:

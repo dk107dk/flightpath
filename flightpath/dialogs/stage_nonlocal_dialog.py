@@ -1,0 +1,525 @@
+import os
+import traceback
+from urllib.parse import urlparse
+
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QDialog,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+from PySide6.QtCore import Qt, QThreadPool
+
+from csvpath.util.nos import Nos
+from csvpath.util.file_readers import DataFileReader
+from csvpath.util.file_writers import DataFileWriter
+
+from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.util.file_utility import FileUtility as fiut
+from flightpath.workers.sftp_test_worker import SftpTestWorker
+from flightpath.workers.download_worker import DownloadWorker
+from flightpath.dialogs.sftp_servers_dialog import SftpServersDialog
+
+
+class StageNonLocalDialog(QDialog):
+    """Stage a non-local (or out-of-project local) file as a named-file.
+
+    Supports sftp://, s3://, azure://, gs:// URIs and local paths.
+    For local paths outside the project the user may copy the file in;
+    sftp:// URIs are always connection-validated before proceeding.
+    """
+
+    ALLOWED_PROTOCOLS = frozenset(["sftp://", "s3://", "azure://", "gs://"])
+
+    def __init__(self, *, main, parent) -> None:
+        super().__init__(None)
+        self.sidebar = parent
+        self.main = main
+        self._uri_is_remote = False
+
+        self.setWindowTitle("Stage Non-Local File")
+        self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.NonModal)
+        self.setFixedWidth(660)
+
+        form = QFormLayout()
+        self.setLayout(form)
+
+        self.named_file_name_ctl = QLineEdit()
+        self.named_file_name_ctl.textChanged.connect(self._update_stage_button)
+        form.addRow("Named-file name:", self.named_file_name_ctl)
+
+        self.uri_ctl = QLineEdit()
+        self.uri_ctl.setPlaceholderText(
+            "sftp://host/path/file.csv  •  s3://bucket/key  •  /local/path/file.csv"
+        )
+        self.uri_ctl.textChanged.connect(self._on_uri_changed)
+        form.addRow("File or URI:", self.uri_ctl)
+
+        self.note_label = QLabel()
+        self.note_label.setWordWrap(True)
+        self.note_label.setStyleSheet("QLabel { color: #666; font-style: italic; }")
+        self.note_label.setVisible(False)
+        form.addRow("", self.note_label)
+
+        # "Copy to project:" label; field side is [checkbox | dest text field]
+        self.copy_label = QLabel("Copy to project:")
+        self.copy_label.setVisible(False)
+
+        self.copy_ctl = QCheckBox()
+        self.copy_ctl.stateChanged.connect(self._on_copy_changed)
+
+        self.dest_ctl = QLineEdit()
+        self.dest_ctl.setPlaceholderText("e.g., inputs/external/")
+        self.dest_ctl.textChanged.connect(self._on_dest_changed)
+        self.dest_ctl.setVisible(False)
+
+        copy_row = QWidget()
+        copy_row_layout = QHBoxLayout()
+        copy_row_layout.setContentsMargins(0, 0, 0, 0)
+        copy_row_layout.addWidget(self.copy_ctl)
+        copy_row_layout.addWidget(self.dest_ctl)
+        copy_row.setLayout(copy_row_layout)
+        self.copy_row = copy_row
+        self.copy_row.setVisible(False)
+
+        form.addRow(self.copy_label, self.copy_row)
+
+        self.error_label = QLabel()
+        self.error_label.setWordWrap(True)
+        self.error_label.setStyleSheet("QLabel { color: #cc0000; }")
+        self.error_label.setVisible(False)
+        form.addRow("", self.error_label)
+
+        # SFTP notice — shown instead of the red error when no SFTP server is
+        # configured.  Provides two action buttons rather than just a message.
+        self.sftp_notice = self._build_sftp_notice()
+        form.addRow("", self.sftp_notice)
+
+        self.stage_button = QPushButton("Stage")
+        self.stage_button.setEnabled(False)
+        self.stage_button.clicked.connect(self._on_stage_clicked)
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.reject)
+
+        blay = QHBoxLayout()
+        blay.setContentsMargins(0, 0, 0, 0)
+        blay.addWidget(self.cancel_button)
+        blay.addWidget(self.stage_button)
+        form.addRow("", blay)
+
+    def _build_sftp_notice(self) -> QWidget:
+        """Build the non-blocking SFTP-not-configured notice with action buttons."""
+        notice_label = QLabel(
+            "You must configure an SFTP server before using it."
+        )
+        notice_label.setWordWrap(True)
+        notice_label.setStyleSheet("QLabel { color: #1a5276; font-style: italic; }")
+        self.sftp_notice_label = notice_label
+
+        self.sftp_configure_button = QPushButton("Configure SFTP")
+        self.sftp_configure_button.clicked.connect(self._on_configure_sftp_clicked)
+
+        self.sftp_add_button = QPushButton("Add SFTP Named File")
+        self.sftp_add_button.setEnabled(False)
+        self.sftp_add_button.clicked.connect(self._on_add_sftp_named_file_clicked)
+
+        btn_row = QHBoxLayout()
+        btn_row.setContentsMargins(0, 0, 0, 0)
+        btn_row.addWidget(self.sftp_configure_button)
+        btn_row.addWidget(self.sftp_add_button)
+
+        vlay = QVBoxLayout()
+        vlay.setContentsMargins(0, 4, 0, 0)
+        vlay.addWidget(notice_label)
+        vlay.addLayout(btn_row)
+
+        container = QWidget()
+        container.setLayout(vlay)
+        container.setVisible(False)
+        return container
+
+    # -----------------------------------------------------------------------
+    # URI plausibility
+    # -----------------------------------------------------------------------
+
+    @staticmethod
+    def _is_plausible_uri(text: str) -> bool:
+        """Return True if text looks like a plausible remote URI.
+
+        Requires at minimum protocol://host-or-bucket/some-path — two
+        non-empty segments after the scheme separator.
+        """
+        if "://" not in text:
+            return False
+        rest = text.split("://", 1)[1]
+        parts = [p for p in rest.split("/") if p.strip()]
+        return len(parts) >= 2
+
+    # -----------------------------------------------------------------------
+    # URI field change handler
+    # -----------------------------------------------------------------------
+
+    def _on_uri_changed(self, text: str) -> None:
+        text = text.strip()
+        self._uri_is_remote = False
+        self._clear_error()
+
+        if not text:
+            self._hide_copy_controls()
+            self.note_label.setVisible(False)
+            self._update_stage_button()
+            return
+
+        if "://" in text:
+            protocol = text.split("://")[0] + "://"
+            if protocol in self.ALLOWED_PROTOCOLS:
+                self._uri_is_remote = True
+                self._show_copy_row_checked()
+                self.note_label.setVisible(False)
+            else:
+                self._hide_copy_controls()
+                self.note_label.setText(
+                    f"Unsupported protocol '{protocol}'. "
+                    "Use sftp://, s3://, azure://, or gs://."
+                )
+                self.note_label.setVisible(True)
+        else:
+            abs_path = os.path.abspath(text)
+            if not Nos(abs_path).isfile():
+                self._hide_copy_controls()
+                self.note_label.setText("File not found.")
+                self.note_label.setVisible(True)
+            elif abs_path.startswith(self.main.state.cwd):
+                self._hide_copy_controls()
+                self.note_label.setText(
+                    "This file is in your project and will be registered directly."
+                )
+                self.note_label.setVisible(True)
+            else:
+                self._show_copy_row_checked()
+                self.note_label.setVisible(False)
+
+        self._update_stage_button()
+        self.adjustSize()
+
+    def _show_copy_row_checked(self) -> None:
+        """Show the copy row and default the checkbox to checked."""
+        self.copy_label.setVisible(True)
+        self.copy_row.setVisible(True)
+        if not self.copy_ctl.isChecked():
+            self.copy_ctl.setChecked(True)
+
+    def _on_copy_changed(self) -> None:
+        self.dest_ctl.setVisible(self.copy_ctl.isChecked())
+        self._update_stage_button()
+        self.adjustSize()
+
+    def _on_dest_changed(self, text: str) -> None:
+        if text.strip() and not self.copy_ctl.isChecked():
+            self.copy_ctl.setChecked(True)
+        self._update_stage_button()
+
+    def _hide_copy_controls(self) -> None:
+        self.copy_label.setVisible(False)
+        self.copy_row.setVisible(False)
+        self.copy_ctl.setChecked(False)
+        self.dest_ctl.setVisible(False)
+
+    # -----------------------------------------------------------------------
+    # Stage button state
+    # -----------------------------------------------------------------------
+
+    def _update_stage_button(self) -> None:
+        name = self.named_file_name_ctl.text().strip()
+        uri = self.uri_ctl.text().strip()
+
+        self.sftp_add_button.setEnabled(bool(name))
+
+        if not uri or not name:
+            self.stage_button.setEnabled(False)
+            return
+
+        if "://" in uri:
+            protocol = uri.split("://")[0] + "://"
+            if protocol not in self.ALLOWED_PROTOCOLS or not self._is_plausible_uri(uri):
+                self.stage_button.setEnabled(False)
+                return
+        else:
+            if not Nos(os.path.abspath(uri)).isfile():
+                self.stage_button.setEnabled(False)
+                return
+
+        if self.copy_ctl.isChecked():
+            self.stage_button.setEnabled(bool(self.dest_ctl.text().strip()))
+        else:
+            self.stage_button.setEnabled(True)
+
+    # -----------------------------------------------------------------------
+    # Stage click and validation
+    # -----------------------------------------------------------------------
+
+    def _on_stage_clicked(self) -> None:
+        self._clear_error()
+        uri = self.uri_ctl.text().strip()
+        name = self.named_file_name_ctl.text().strip()
+
+        if not uri or not name:
+            self._show_error("Enter a file path or URI and a named-file name.")
+            return
+
+        if "://" in uri:
+            protocol = uri.split("://")[0] + "://"
+            if protocol not in self.ALLOWED_PROTOCOLS:
+                self._show_error(
+                    "Unsupported protocol. Use sftp://, s3://, azure://, or gs://."
+                )
+                return
+            self._uri_is_remote = True
+        else:
+            abs_path = os.path.abspath(uri)
+            if not Nos(abs_path).isfile():
+                self._show_error("File not found.")
+                return
+
+        if self.copy_row.isVisible() and not self.copy_ctl.isChecked():
+            meut.yesNo2(
+                parent=self,
+                title="Register without copying",
+                msg="Register file without adding it to your project?",
+                callback=self._on_confirm_register_without_copy,
+                args={"uri": uri, "name": name},
+            )
+            return
+
+        must_copy = self.copy_ctl.isChecked()
+        dest = self.dest_ctl.text().strip() if must_copy else ""
+
+        if must_copy and not dest:
+            self._show_error("Enter a project-relative destination path.")
+            return
+
+        if uri.startswith("sftp://"):
+            self._start_sftp_check(uri, name, dest, must_copy)
+        else:
+            self._proceed(uri, name, dest, must_copy)
+
+    def _on_confirm_register_without_copy(self, answer, *, uri: str, name: str) -> None:
+        if answer != QMessageBox.Yes:
+            return
+        if uri.startswith("sftp://"):
+            self._start_sftp_check(uri, name, dest="", must_copy=False)
+        else:
+            self._proceed(uri, name, dest="", must_copy=False)
+
+    def _proceed(self, uri: str, name: str, dest: str, must_copy: bool) -> None:
+        if must_copy:
+            local_path = self._resolve_local_path(uri, dest)
+            if self._uri_is_remote:
+                self._start_download(uri, local_path, name)
+            else:
+                self._copy_local(uri, local_path, name)
+        else:
+            self._register(uri, name)
+
+    # -----------------------------------------------------------------------
+    # SFTP validation
+    # -----------------------------------------------------------------------
+
+    def _check_sftp_config(self, host: str) -> tuple[bool, dict | None]:
+        """Return (any_sftp_configured, credentials_or_None).
+
+        (False, None)  — no SFTP configured at all
+        (True,  None)  — SFTP configured but host does not match
+        (True,  creds) — host matched; creds ready to test
+        """
+        config = self.main.csvpath_config
+        server = str(config.get(section="sftp", name="server")).strip()
+
+        any_sftp = bool(server)
+        if not any_sftp:
+            inputs_files = str(config.get(section="inputs", name="files")).strip()
+            any_sftp = inputs_files.startswith("sftp://")
+
+        if not any_sftp:
+            return False, None
+
+        def _build_creds(srv):
+            port_raw = str(config.get(section="sftp", name="port")).strip()
+            try:
+                port = int(port_raw) if port_raw else 22
+            except ValueError:
+                port = 22
+            username = str(config.get(section="sftp", name="username")).strip()
+            password = str(config.get(section="sftp", name="password")).strip()
+            return {"server": srv, "port": port, "username": username, "password": password}
+
+        if server == host:
+            return True, _build_creds(server)
+
+        inputs_files = str(config.get(section="inputs", name="files")).strip()
+        if inputs_files.startswith("sftp://"):
+            if urlparse(inputs_files).hostname == host:
+                return True, _build_creds(server)
+
+        return True, None
+
+    def _start_sftp_check(
+        self, uri: str, name: str, dest: str, must_copy: bool
+    ) -> None:
+        host = urlparse(uri).hostname or ""
+        any_sftp, creds = self._check_sftp_config(host)
+
+        if not any_sftp:
+            self._show_sftp_notice()
+            return
+        if creds is None:
+            self._show_error(
+                f"No SFTP server configured for '{host}'. "
+                "Check Config > Integrations > SFTP."
+            )
+            return
+
+        self.stage_button.setEnabled(False)
+        self.stage_button.setText("Validating…")
+        worker = SftpTestWorker(
+            server=creds["server"],
+            port=creds["port"],
+            username=creds["username"],
+            password=creds["password"],
+        )
+        worker.signals.finished.connect(
+            lambda ok, msg: self._on_sftp_checked(ok, msg, uri, name, dest, must_copy)
+        )
+        QThreadPool.globalInstance().start(worker)
+
+    def _on_sftp_checked(
+        self, success: bool, message: str, uri: str, name: str, dest: str, must_copy: bool
+    ) -> None:
+        self._restore_stage_button()
+        if not success:
+            self._show_error(f"SFTP connection failed: {message}")
+            return
+        self._proceed(uri, name, dest, must_copy)
+
+    # -----------------------------------------------------------------------
+    # SFTP notice actions
+    # -----------------------------------------------------------------------
+
+    def _show_sftp_notice(self) -> None:
+        """Show the informational SFTP notice and hide the red error label."""
+        self.error_label.setVisible(False)
+        self.sftp_notice.setVisible(True)
+        self._update_stage_button()
+        self.adjustSize()
+
+    def _on_configure_sftp_clicked(self) -> None:
+        """Navigate the main window to Config > Integrations (index 8)."""
+        self.main.open_config()
+        self.main.config.config_panel.forms_layout.setCurrentIndex(8)
+
+    def _on_add_sftp_named_file_clicked(self) -> None:
+        """Register a placeholder named-file if needed, then open SftpServersDialog."""
+        name = self.named_file_name_ctl.text().strip()
+        uri = self.uri_ctl.text().strip()
+        if not name:
+            return
+
+        file_manager = self.main.csvpaths.file_manager
+        if not file_manager.has_named_file(name):
+            file_manager.add_named_file(name=name, path=uri, template=None)
+
+        config = file_manager.describer.get_config(name)
+        configs = config.sources if config else {}
+
+        self.sftp_sources_dialog = SftpServersDialog(
+            parent=self,
+            main=self.main,
+            name=name,
+            configs=configs,
+        )
+        self.sftp_sources_dialog.show_dialog()
+
+    def set_sftps(self, name: str, configs) -> None:
+        """Callback invoked by SftpServersDialog when the user saves."""
+        file_manager = self.main.csvpaths.file_manager
+        config = file_manager.describer.get_config(name)
+        config.sources = configs
+        file_manager.describer.store_config(name, config)
+
+    # -----------------------------------------------------------------------
+    # Copy / download
+    # -----------------------------------------------------------------------
+
+    def _resolve_local_path(self, uri: str, dest: str) -> str:
+        filename = os.path.basename(uri.rstrip("/").split("?")[0])
+        dest_dir = os.path.join(self.main.state.cwd, dest.lstrip("/"))
+        return fiut.deconflicted_path(dest_dir, filename)
+
+    def _copy_local(self, src: str, local_path: str, name: str) -> None:
+        try:
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            mode = "wb" if src.endswith(".xlsx") else "w"
+            with DataFileReader(src) as reader:
+                with DataFileWriter(path=local_path, mode=mode) as writer:
+                    writer.write(reader.read())
+            self._register(local_path, name)
+        except Exception:
+            self._show_error(f"Copy failed: {traceback.format_exc(limit=1)}")
+
+    def _start_download(self, uri: str, local_path: str, name: str) -> None:
+        self.stage_button.setEnabled(False)
+        self.stage_button.setText("Downloading…")
+        worker = DownloadWorker(uri=uri, local_path=local_path)
+        worker.signals.finished.connect(
+            lambda ok, result: self._on_downloaded(ok, result, name)
+        )
+        QThreadPool.globalInstance().start(worker)
+
+    def _on_downloaded(self, success: bool, path_or_error: str, name: str) -> None:
+        self._restore_stage_button()
+        if not success:
+            self._show_error(f"Download failed: {path_or_error}")
+            return
+        self._register(path_or_error, name)
+
+    # -----------------------------------------------------------------------
+    # Registration
+    # -----------------------------------------------------------------------
+
+    def _register(self, path: str, name: str) -> None:
+        try:
+            self.sidebar.do_stage_nonlocal(path=path, name=name)
+            self.accept()
+        except Exception:
+            self._show_error(f"Registration failed: {traceback.format_exc(limit=1)}")
+
+    # -----------------------------------------------------------------------
+    # UI helpers
+    # -----------------------------------------------------------------------
+
+    def _restore_stage_button(self) -> None:
+        self.stage_button.setText("Stage")
+        self._update_stage_button()
+
+    def _show_error(self, msg: str) -> None:
+        self.sftp_notice.setVisible(False)
+        self.error_label.setText(msg)
+        self.error_label.setVisible(True)
+        self.adjustSize()
+
+    def _clear_error(self) -> None:
+        self.error_label.setVisible(False)
+        self.sftp_notice.setVisible(False)
+
+    def warning(self, msg: str, title: str) -> None:
+        meut.warning2(parent=self, title=title, msg=msg)
+
+    def show_dialog(self) -> None:
+        self.exec()
