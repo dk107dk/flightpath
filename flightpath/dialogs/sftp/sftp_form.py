@@ -1,11 +1,16 @@
+from PySide6.QtCore import QThreadPool
 from PySide6.QtWidgets import (
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QFormLayout,
     QHBoxLayout,
     QWidget,
 )
 from PySide6.QtGui import QIntValidator
+
+from flightpath.util.message_utility import MessageUtility as meut
+from flightpath.workers.sftp_test_worker import SftpTestWorker
 
 
 class SftpForm(QWidget):
@@ -43,6 +48,10 @@ class SftpForm(QWidget):
         buttons_layout = QHBoxLayout()
         buttons.setLayout(buttons_layout)
 
+        self.test_button = QPushButton()
+        self.test_button.setText("Test Connection")
+        self.test_button.clicked.connect(self.test_connection)
+
         self.remove_button = QPushButton()
         self.remove_button.setText("Remove")
         self.remove_button.clicked.connect(self.remove_server)
@@ -51,12 +60,44 @@ class SftpForm(QWidget):
         self.add_button.setText("Set")
         self.add_button.clicked.connect(self.set_server)
 
+        buttons_layout.addWidget(self.test_button)
         buttons_layout.addWidget(self.remove_button)
         buttons_layout.addWidget(self.add_button)
 
-        layout.addWidget(buttons)
+        layout.addRow("", buttons)
 
     # ===================================
+
+    def test_connection(self) -> None:
+        server = self.server.text().strip()
+        if not server:
+            meut.message2(
+                parent=self,
+                title="Missing server",
+                msg="Enter a server address before testing the connection.",
+            )
+            return
+        port_text = self.port.text().strip()
+        try:
+            port = int(port_text) if port_text else 22
+        except ValueError:
+            port = 22
+        username = self.username.text().strip()
+        password = self.password.text()
+        self.test_button.setEnabled(False)
+        self.test_button.setText("Testing…")
+        worker = SftpTestWorker(
+            server=server, port=port, username=username, password=password
+        )
+        worker.signals.finished.connect(self.on_test_result)
+        QThreadPool.globalInstance().start(worker)
+
+    def on_test_result(self, success: bool, message: str) -> None:
+        self.test_button.setEnabled(True)
+        self.test_button.setText("Test Connection")
+        title = "Connection Successful" if success else "Connection Failed"
+        icon = QMessageBox.Information if success else QMessageBox.Warning
+        meut.message2(parent=self, title=title, msg=message, icon=icon)
 
     def set_server(self) -> None:
         print("sftp form: set_server")
