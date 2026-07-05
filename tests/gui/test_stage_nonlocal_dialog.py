@@ -230,6 +230,23 @@ def test_check_sftp_config_matches_via_inputs_files(qtbot, tmp_path):
     assert creds is not None
 
 
+# --- URI / host parsing ---
+
+
+def test_parse_sftp_host_port_extracts_host_and_explicit_port(qtbot, tmp_path):
+    dialog, _, _ = _make_dialog(qtbot, tmp_path)
+    host, port = dialog._parse_sftp_host_port("sftp://cloudsftp:2022/myfiles/bug.txt")
+    assert host == "cloudsftp"
+    assert port == 2022
+
+
+def test_parse_sftp_host_port_defaults_to_22_when_no_port(qtbot, tmp_path):
+    dialog, _, _ = _make_dialog(qtbot, tmp_path)
+    host, port = dialog._parse_sftp_host_port("sftp://myhost/some/path/file.csv")
+    assert host == "myhost"
+    assert port == 22
+
+
 # --- URI plausibility ---
 
 
@@ -527,16 +544,28 @@ def test_configure_sftp_button_opens_integrations_form(qtbot, tmp_path):
     fake_main.config.config_panel.forms_layout.setCurrentIndex.assert_called_with(8)
 
 
-def test_sftp_add_registers_placeholder_when_named_file_not_found(
+def _make_mock_configs(host: str, port: int) -> dict:
+    """Return a configs dict with one ServerConfig that matches host:port."""
+    sc = MagicMock()
+    sc.server = host
+    sc.port = port
+    return {"srv1": sc}
+
+
+def test_sftp_add_registers_placeholder_via_tempfile_when_named_file_not_found(
     qtbot, tmp_path, monkeypatch
 ):
-    """When the named-file doesn't exist yet, a placeholder must be registered
-    before opening SftpServersDialog."""
+    """When the named-file doesn't exist, add_named_file is called with a temp-file
+    path (not the URI), and the temp file is unlinked afterwards."""
     dialog, fake_main, _ = _make_dialog(qtbot, tmp_path)
     dialog.named_file_name_ctl.setText("my_data")
     dialog.uri_ctl.setText("sftp://host/data.csv")
 
     fake_main.csvpaths.file_manager.has_named_file.return_value = False
+    # Empty sources → no match → will open SftpServersDialog
+    fake_cfg = MagicMock()
+    fake_cfg.sources = {}
+    fake_main.csvpaths.file_manager.describer.get_config.return_value = fake_cfg
 
     mock_sftp_dialog = MagicMock()
     monkeypatch.setattr(
@@ -546,9 +575,14 @@ def test_sftp_add_registers_placeholder_when_named_file_not_found(
 
     dialog._on_add_sftp_named_file_clicked()
 
-    fake_main.csvpaths.file_manager.add_named_file.assert_called_once_with(
-        name="my_data", path="sftp://host/data.csv", template=None
-    )
+    call = fake_main.csvpaths.file_manager.add_named_file.call_args
+    assert call is not None, "add_named_file must have been called"
+    assert call.kwargs["name"] == "my_data"
+    assert call.kwargs["template"] is None
+    # path must be a temp file path, NOT the SFTP URI
+    assert call.kwargs["path"] != "sftp://host/data.csv"
+    # temp file must have been cleaned up
+    assert not os.path.exists(call.kwargs["path"])
     mock_sftp_dialog.show_dialog.assert_called_once()
 
 
@@ -561,6 +595,9 @@ def test_sftp_add_skips_registration_when_named_file_exists(
     dialog.uri_ctl.setText("sftp://host/data.csv")
 
     fake_main.csvpaths.file_manager.has_named_file.return_value = True
+    fake_cfg = MagicMock()
+    fake_cfg.sources = {}
+    fake_main.csvpaths.file_manager.describer.get_config.return_value = fake_cfg
 
     mock_sftp_dialog = MagicMock()
     monkeypatch.setattr(
@@ -572,6 +609,73 @@ def test_sftp_add_skips_registration_when_named_file_exists(
 
     fake_main.csvpaths.file_manager.add_named_file.assert_not_called()
     mock_sftp_dialog.show_dialog.assert_called_once()
+
+
+def test_sftp_add_proceeds_without_dialog_when_server_already_in_named_file_config(
+    qtbot, tmp_path, monkeypatch
+):
+    """When the URI host:port matches an existing ServerConfig on the named-file,
+    _proceed must be called with the pending args and SftpServersDialog must NOT
+    be opened."""
+    dialog, fake_main, _ = _make_dialog(qtbot, tmp_path)
+    dialog.named_file_name_ctl.setText("test7")
+    dialog.uri_ctl.setText("sftp://cloudsftp:2022/myfiles/bug.txt")
+
+    # Pre-load a pending stage (normally set by _start_sftp_check)
+    dialog._pending_stage = ("sftp://cloudsftp:2022/myfiles/bug.txt", "test7", "", False)
+
+    fake_main.csvpaths.file_manager.has_named_file.return_value = True
+    fake_cfg = MagicMock()
+    fake_cfg.sources = _make_mock_configs("cloudsftp", 2022)
+    fake_main.csvpaths.file_manager.describer.get_config.return_value = fake_cfg
+
+    proceed_calls = []
+    monkeypatch.setattr(dialog, "_proceed", lambda *a: proceed_calls.append(a))
+
+    mock_sftp_cls = MagicMock()
+    monkeypatch.setattr(
+        "flightpath.dialogs.stage_nonlocal_dialog.SftpServersDialog", mock_sftp_cls
+    )
+
+    dialog._on_add_sftp_named_file_clicked()
+
+    assert proceed_calls == [
+        ("sftp://cloudsftp:2022/myfiles/bug.txt", "test7", "", False)
+    ]
+    assert dialog._pending_stage is None
+    mock_sftp_cls.assert_not_called()
+
+
+def test_sftp_add_clears_notice_before_opening_dialog(qtbot, tmp_path, monkeypatch):
+    """The SFTP notice must be hidden before SftpServersDialog is opened so
+    it doesn't linger while the child dialog is on screen."""
+    dialog, fake_main, _ = _make_dialog(qtbot, tmp_path)
+    dialog.named_file_name_ctl.setText("my_data")
+    dialog.uri_ctl.setText("sftp://host/data.csv")
+    dialog.sftp_notice.setVisible(True)  # simulate notice showing
+
+    fake_main.csvpaths.file_manager.has_named_file.return_value = True
+    fake_cfg = MagicMock()
+    fake_cfg.sources = {}
+    fake_main.csvpaths.file_manager.describer.get_config.return_value = fake_cfg
+
+    notice_was_hidden = []
+
+    real_show = MagicMock()
+
+    def _capturing_show_dialog():
+        notice_was_hidden.append(not dialog.sftp_notice.isVisible())
+
+    mock_sftp = MagicMock()
+    mock_sftp.show_dialog.side_effect = _capturing_show_dialog
+    monkeypatch.setattr(
+        "flightpath.dialogs.stage_nonlocal_dialog.SftpServersDialog",
+        lambda **kwargs: mock_sftp,
+    )
+
+    dialog._on_add_sftp_named_file_clicked()
+
+    assert notice_was_hidden == [True], "Notice must be hidden before show_dialog() is called"
 
 
 def test_sftp_add_noops_when_name_is_empty(qtbot, tmp_path, monkeypatch):
@@ -602,6 +706,22 @@ def test_set_sftps_saves_config_to_file_manager(qtbot, tmp_path):
     saved_config = fake_main.csvpaths.file_manager.describer.get_config.return_value
     assert saved_config.sources == configs
     fake_main.csvpaths.file_manager.describer.store_config.assert_called_once()
+    assert dialog._pending_stage is None  # no pending → no auto-proceed
+
+
+def test_set_sftps_auto_proceeds_with_pending_stage(qtbot, tmp_path, monkeypatch):
+    """After saving SFTP config, set_sftps must call _proceed with the stored
+    pending args so the user doesn't have to click Stage again."""
+    dialog, fake_main, _ = _make_dialog(qtbot, tmp_path)
+    dialog._pending_stage = ("sftp://host/data.csv", "my_data", "", False)
+
+    proceed_calls = []
+    monkeypatch.setattr(dialog, "_proceed", lambda *a: proceed_calls.append(a))
+
+    dialog.set_sftps("my_data", {"srv1": MagicMock()})
+
+    assert proceed_calls == [("sftp://host/data.csv", "my_data", "", False)]
+    assert dialog._pending_stage is None
 
 
 # ---------------------------------------------------------------------------

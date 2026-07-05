@@ -1,4 +1,5 @@
 import os
+import tempfile
 import traceback
 from urllib.parse import urlparse
 
@@ -42,6 +43,7 @@ class StageNonLocalDialog(QDialog):
         self.sidebar = parent
         self.main = main
         self._uri_is_remote = False
+        self._pending_stage = None  # (uri, name, dest, must_copy) stored when SFTP notice shows
 
         self.setWindowTitle("Stage Non-Local File")
         self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
@@ -162,6 +164,15 @@ class StageNonLocalDialog(QDialog):
         rest = text.split("://", 1)[1]
         parts = [p for p in rest.split("/") if p.strip()]
         return len(parts) >= 2
+
+    @staticmethod
+    def _parse_sftp_host_port(uri: str) -> tuple[str, int]:
+        """Return (hostname, port) parsed from an sftp:// URI.
+
+        Port defaults to 22 when absent.
+        """
+        parsed = urlparse(uri)
+        return parsed.hostname or "", parsed.port or 22
 
     # -----------------------------------------------------------------------
     # URI field change handler
@@ -384,6 +395,7 @@ class StageNonLocalDialog(QDialog):
         any_sftp, creds = self._check_sftp_config(host)
 
         if not any_sftp:
+            self._pending_stage = (uri, name, dest, must_copy)
             self._show_sftp_notice(host=host, name=name)
             return
         if creds is None:
@@ -444,19 +456,53 @@ class StageNonLocalDialog(QDialog):
         self.main.config.config_panel.forms_layout.setCurrentIndex(8)
 
     def _on_add_sftp_named_file_clicked(self) -> None:
-        """Register a placeholder named-file if needed, then open SftpServersDialog."""
+        """Ensure named-file exists, check its SFTP configs, then either proceed
+        (server already configured) or open SftpServersDialog to configure it."""
         name = self.named_file_name_ctl.text().strip()
         uri = self.uri_ctl.text().strip()
-        if not name:
+        if not name or not uri:
             return
 
         file_manager = self.main.csvpaths.file_manager
+
+        # There is no independent way to create a named-file separate from registering
+        # a file. We create a temp file, register it as the placeholder, then unlink
+        # the temp file. The named-file record and any SFTP config it later accumulates
+        # live on independently in the framework's storage.
+        # Windows may not allow re-opening a NamedTemporaryFile, so we use delete=False,
+        # close it via the context manager, then unlink explicitly.
         if not file_manager.has_named_file(name):
-            file_manager.add_named_file(name=name, path=uri, template=None)
+            tempname = None
+            try:
+                with tempfile.NamedTemporaryFile(
+                    mode="w+t", suffix=".txt", delete=False
+                ) as tmp:
+                    tempname = tmp.name
+                    tmp.write("Placeholder file")
+                file_manager.add_named_file(name=name, path=tempname, template=None)
+            finally:
+                try:
+                    if tempname:
+                        os.unlink(tempname)
+                except Exception:
+                    pass
 
         config = file_manager.describer.get_config(name)
-        configs = config.sources if config else {}
+        configs = config.sources if config and config.sources else {}
 
+        host, port = self._parse_sftp_host_port(uri)
+        for server_config in configs.values():
+            if server_config.server == host and server_config.port == port:
+                # Named-file already has this server; no dialog needed — proceed to staging.
+                self._clear_error()
+                if self._pending_stage:
+                    self._proceed(*self._pending_stage)
+                    self._pending_stage = None
+                return
+
+        # Server not yet in named-file config — clear the notice first (comment #3),
+        # then open SftpServersDialog to collect credentials.
+        self._clear_error()
         self.sftp_sources_dialog = SftpServersDialog(
             parent=self,
             main=self.main,
@@ -466,11 +512,18 @@ class StageNonLocalDialog(QDialog):
         self.sftp_sources_dialog.show_dialog()
 
     def set_sftps(self, name: str, configs) -> None:
-        """Callback invoked by SftpServersDialog when the user saves."""
+        """Callback invoked by SftpServersDialog when the user saves.
+
+        Persists the SFTP server configs for the named-file and auto-proceeds
+        with the pending stage so the user doesn't need to click Stage again.
+        """
         file_manager = self.main.csvpaths.file_manager
         config = file_manager.describer.get_config(name)
         config.sources = configs
         file_manager.describer.store_config(name, config)
+        if self._pending_stage:
+            self._proceed(*self._pending_stage)
+            self._pending_stage = None
 
     # -----------------------------------------------------------------------
     # Copy / download
