@@ -1,5 +1,4 @@
 import os
-import tempfile
 import traceback
 from urllib.parse import urlparse
 
@@ -465,27 +464,11 @@ class StageNonLocalDialog(QDialog):
 
         file_manager = self.main.csvpaths.file_manager
 
-        # There is no independent way to create a named-file separate from registering
-        # a file. We create a temp file, register it as the placeholder, then unlink
-        # the temp file. The named-file record and any SFTP config it later accumulates
-        # live on independently in the framework's storage.
-        # Windows may not allow re-opening a NamedTemporaryFile, so we use delete=False,
-        # close it via the context manager, then unlink explicitly.
+        # assure_named_file() is available from CsvPath Framework 0.0.618 onward.
+        # Inline the two-line body here for compatibility with 0.0.617.
         if not file_manager.has_named_file(name):
-            tempname = None
-            try:
-                with tempfile.NamedTemporaryFile(
-                    mode="w+t", suffix=".txt", delete=False
-                ) as tmp:
-                    tempname = tmp.name
-                    tmp.write("Placeholder file")
-                file_manager.add_named_file(name=name, path=tempname, template=None)
-            finally:
-                try:
-                    if tempname:
-                        os.unlink(tempname)
-                except Exception:
-                    pass
+            home = file_manager.assure_named_file_home(name)
+            file_manager.registrar.manifest_path(home)
 
         config = file_manager.describer.get_config(name)
         configs = config.sources if config and config.sources else {}

@@ -552,17 +552,17 @@ def _make_mock_configs(host: str, port: int) -> dict:
     return {"srv1": sc}
 
 
-def test_sftp_add_registers_placeholder_via_tempfile_when_named_file_not_found(
+def test_sftp_add_creates_named_file_home_when_not_found(
     qtbot, tmp_path, monkeypatch
 ):
-    """When the named-file doesn't exist, add_named_file is called with a temp-file
-    path (not the URI), and the temp file is unlinked afterwards."""
+    """When the named-file doesn't exist, assure_named_file_home() and
+    registrar.manifest_path() must be called (inlining assure_named_file()
+    from CsvPath Framework 0.0.618)."""
     dialog, fake_main, _ = _make_dialog(qtbot, tmp_path)
     dialog.named_file_name_ctl.setText("my_data")
     dialog.uri_ctl.setText("sftp://host/data.csv")
 
     fake_main.csvpaths.file_manager.has_named_file.return_value = False
-    # Empty sources → no match → will open SftpServersDialog
     fake_cfg = MagicMock()
     fake_cfg.sources = {}
     fake_main.csvpaths.file_manager.describer.get_config.return_value = fake_cfg
@@ -575,14 +575,11 @@ def test_sftp_add_registers_placeholder_via_tempfile_when_named_file_not_found(
 
     dialog._on_add_sftp_named_file_clicked()
 
-    call = fake_main.csvpaths.file_manager.add_named_file.call_args
-    assert call is not None, "add_named_file must have been called"
-    assert call.kwargs["name"] == "my_data"
-    assert call.kwargs["template"] is None
-    # path must be a temp file path, NOT the SFTP URI
-    assert call.kwargs["path"] != "sftp://host/data.csv"
-    # temp file must have been cleaned up
-    assert not os.path.exists(call.kwargs["path"])
+    fake_main.csvpaths.file_manager.assure_named_file_home.assert_called_once_with("my_data")
+    home = fake_main.csvpaths.file_manager.assure_named_file_home.return_value
+    fake_main.csvpaths.file_manager.registrar.manifest_path.assert_called_once_with(home)
+    # original add_named_file must NOT be called
+    fake_main.csvpaths.file_manager.add_named_file.assert_not_called()
     mock_sftp_dialog.show_dialog.assert_called_once()
 
 
