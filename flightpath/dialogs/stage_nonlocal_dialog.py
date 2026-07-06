@@ -532,7 +532,7 @@ class StageNonLocalDialog(QDialog):
                     writer.write(reader.read())
             self._register(local_path, name)
         except Exception:
-            self._show_error(f"Copy failed: {traceback.format_exc(limit=1)}")
+            self._show_exception("Copy failed")
 
     def _start_download(self, uri: str, local_path: str, name: str) -> None:
         self.stage_button.setEnabled(False)
@@ -559,7 +559,7 @@ class StageNonLocalDialog(QDialog):
             self.sidebar.do_stage_nonlocal(path=path, name=name)
             self.accept()
         except Exception:
-            self._show_error(f"Registration failed: {traceback.format_exc(limit=1)}")
+            self._show_exception("Registration failed")
 
     # -----------------------------------------------------------------------
     # UI helpers
@@ -574,6 +574,13 @@ class StageNonLocalDialog(QDialog):
         self.error_label.setText(msg)
         self.error_label.setVisible(True)
         self.adjustSize()
+
+    def _show_exception(self, title: str) -> None:
+        """Show the current exception's full traceback in a popup.
+
+        Avoids clipping the stack dump inside the dialog's bounded error label.
+        """
+        meut.message2(parent=self, title=title, msg=traceback.format_exc())
 
     def _clear_error(self) -> None:
         self.error_label.setVisible(False)
