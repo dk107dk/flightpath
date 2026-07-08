@@ -55,6 +55,10 @@ class OffsetsForm(BlankForm):
         daut.OFFSET_DAYS = 0
         daut.OFFSET_MONTHS = 0
         daut.OFFSET_YEARS = 0
+        self.days.setText("0")
+        self.months.setText("0")
+        self.years.setText("0")
+        self.now.setText(str(daut.now()))
 
     def on_set(self) -> None:
         d = self.days.text()
