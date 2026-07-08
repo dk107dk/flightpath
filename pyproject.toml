@@ -16,7 +16,7 @@ jsonpickle = "4.1.1"
 #
 #
 #
-csvpath = "0.0.617"
+csvpath = "0.0.619"
 #csvpath = { path = "../csvpath/builds/csvpath-0.0.613.tar.gz" }
 flightpath_server = { path = "./assets/flightpath_server-0.1.62.tar.gz" }
 flightpath_generator = { path = "./assets/flightpath_generator-0.1.63.tar.gz"}
