@@ -110,10 +110,6 @@ class SidebarContextMenuMaker:
             menu.addAction(action)
 
     def _add_standard_file_actions(self, menu: QMenu, path: str):
-        save = QAction("Save file", menu)
-        save.triggered.connect(self.my_parent.actions._save_file_navigator_item)
-        menu.addAction(save)
-
         rename = QAction("Rename", menu)
         rename.triggered.connect(self.my_parent.actions._rename_file_navigator_item)
         menu.addAction(rename)
