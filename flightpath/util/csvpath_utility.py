@@ -165,6 +165,8 @@ class CsvpathUtility:
     def _add_to_external_comment_of_csvpath_at_position(
         cls, *, text: str, position: int, addto: str
     ) -> tuple[str, dict]:
+        if addto is None:
+            raise ValueError("addto cannot be None")
         #
         # text: the whole file
         # position: where the cursor is, indicating which csvpath
