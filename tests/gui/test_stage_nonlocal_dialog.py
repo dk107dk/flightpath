@@ -547,7 +547,7 @@ def test_configure_sftp_button_opens_integrations_form(qtbot, tmp_path):
 def _make_mock_configs(host: str, port: int) -> dict:
     """Return a configs dict with one ServerConfig that matches host:port."""
     sc = MagicMock()
-    sc.server = host
+    sc.address = host
     sc.port = port
     return {"srv1": sc}
 
