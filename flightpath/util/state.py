@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
 import traceback
 from csvpath import CsvPaths
@@ -214,12 +215,29 @@ class State:
             env[k] = v
         self.data = data
 
+    def record_library_versions(self) -> None:
+        packages = {
+            "csvpath": "csvpath",
+            "flightpath_server": "flightpath-server",
+            "flightpath_generator": "flightpath-generator",
+        }
+        versions = {}
+        for key, dist_name in packages.items():
+            try:
+                versions[key] = version(dist_name)
+            except PackageNotFoundError:
+                versions[key] = "unknown"
+        data = self.data
+        data["last_launch_versions"] = versions
+        self.data = data
+
     def load_state_and_cd(self, main) -> None:
         #
         # we have been loading the .flightpath env vars at startup and project change.
         # it's quick and fine. most often won't be needed.
         #
         self.load_env()
+        self.record_library_versions()
         #
         #
         #
