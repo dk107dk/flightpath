@@ -217,6 +217,7 @@ class State:
 
     def record_library_versions(self) -> None:
         packages = {
+            "flightpath": "flightpath",
             "csvpath": "csvpath",
             "flightpath_server": "flightpath-server",
             "flightpath_generator": "flightpath-generator",
