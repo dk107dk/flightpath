@@ -47,8 +47,9 @@ class StageNonLocalDialog(QDialog):
         self.setWindowTitle("Stage Non-Local File")
         self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.NonModal)
-        self.setFixedWidth(660)
-        self.setMaximumHeight(300)
+        # was setFixedWidth 660
+        self.setMinimumWidth(860)
+        #self.setMaximumHeight(300)
 
         form = QFormLayout()
         self.setLayout(form)
@@ -475,7 +476,7 @@ class StageNonLocalDialog(QDialog):
 
         host, port = self._parse_sftp_host_port(uri)
         for server_config in configs.values():
-            if server_config.server == host and server_config.port == port:
+            if server_config.address == host and server_config.port == port:
                 # Named-file already has this server; no dialog needed — proceed to staging.
                 self._clear_error()
                 if self._pending_stage:
