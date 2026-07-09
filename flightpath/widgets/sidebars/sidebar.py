@@ -205,6 +205,9 @@ class Sidebar(QWidget):
 
     def _setup_tree(self, *, replace=False) -> None:
         old = self.file_navigator
+        old_proxy = getattr(self, "proxy_model", None)
+        old_file_model = getattr(self, "file_model", None)
+
         self.file_navigator = CustomTreeView()
         self.file_model = QFileSystemModel()
         self.file_model.setRootPath(self.main.state.cwd)
@@ -275,6 +278,15 @@ class Sidebar(QWidget):
 
         if replace and old:
             self.layout().replaceWidget(old, self.file_navigator)
+            # Disconnect the old model chain before deletion so Qt cannot
+            # call back into garbage-collected Python wrappers during teardown.
+            old.setModel(None)
+            if old_proxy is not None:
+                old_proxy.setSourceModel(None)
+                old_proxy.deleteLater()
+            if old_file_model is not None:
+                old_file_model.deleteLater()
+            old.deleteLater()
         else:
             self.layout().addWidget(self.file_navigator)
 
