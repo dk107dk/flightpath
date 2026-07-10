@@ -34,11 +34,25 @@ Run with:
 """
 
 import os
+
+import pytest
 from PySide6.QtWidgets import QInputDialog, QMessageBox
 
 from flightpath.widgets.sidebars.sidebar import Sidebar
 
 # isolated_home and main fixtures are provided by conftest.py
+
+
+@pytest.fixture(autouse=True)
+def allow_examples(monkeypatch):
+    """Allow ExamplesMarshal to run for these new-project workflow tests.
+
+    conftest sets FLIGHTPATH_SKIP_EXAMPLES globally to keep per-test disk usage
+    low. This module's end-to-end test specifically verifies that new project
+    creation populates the examples directory, so we need the real code path.
+    The monkeypatch.delenv here overrides the conftest setenv for this module.
+    """
+    monkeypatch.delenv("FLIGHTPATH_SKIP_EXAMPLES", raising=False)
 
 EXAMPLES_LIST_PATH = os.path.join(
     os.path.dirname(__file__),
