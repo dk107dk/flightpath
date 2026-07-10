@@ -123,6 +123,59 @@ def test_download_worker_emits_false_on_reader_error(qtbot, tmp_path, monkeypatc
     assert "connection refused" in captured[0][1]
 
 
+def test_download_worker_passes_configs_to_reader(qtbot, tmp_path, monkeypatch):
+    """When configs is provided, DownloadWorker must set reader.server_config
+    and use the manual open/close path rather than the context-manager path.
+
+    This covers the branch in run() that wires ServerConfig objects into the
+    DataFileReader so smart-open can authenticate against private SFTP servers.
+    """
+    configs_received = []
+
+    class _TrackingReader:
+        def __init__(self, uri, *a, **kw):
+            self._data = "a,b\n1,2\n"
+            configs_received.append(self)
+        def read(self):
+            return self._data
+        def close(self):
+            pass
+
+    class _FakeWriter:
+        def __init__(self, *a, **kw):
+            pass
+        def __enter__(self):
+            return self
+        def __exit__(self, *a):
+            pass
+        def write(self, data):
+            pass
+
+    monkeypatch.setattr(
+        "flightpath.workers.download_worker.DataFileReader", _TrackingReader
+    )
+    monkeypatch.setattr(
+        "flightpath.workers.download_worker.DataFileWriter", _FakeWriter
+    )
+    monkeypatch.setattr("os.makedirs", lambda *a, **kw: None)
+
+    fake_configs = {"myhost": object()}
+    captured = []
+    worker = DownloadWorker(
+        uri="sftp://host/file.csv",
+        local_path=str(tmp_path / "out.csv"),
+        configs=fake_configs,
+    )
+    worker.signals.finished.connect(lambda ok, p: captured.append((ok, p)))
+    worker.run()
+
+    assert captured[0][0] is True, f"worker must succeed; got: {captured[0][1]}"
+    assert len(configs_received) == 1, "DataFileReader must have been instantiated once"
+    assert configs_received[0].server_config is fake_configs, (
+        "worker must assign configs to reader.server_config"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Section 2 — StageNonLocalDialog unit tests (mock parents)
 # ---------------------------------------------------------------------------
@@ -161,8 +214,9 @@ def _make_dialog(qtbot, tmp_path):
 def test_check_sftp_config_returns_false_when_unconfigured(qtbot, tmp_path):
     dialog, fake_main, _ = _make_dialog(qtbot, tmp_path)
     fake_main.csvpath_config.get.return_value = ""
+    fake_main.csvpaths.file_manager.has_named_file.return_value = False
 
-    any_sftp, creds = dialog._check_sftp_config("myhost.example.com")
+    any_sftp, creds = dialog._check_sftp_config("myhost.example.com", "test-file")
 
     assert any_sftp is False
     assert creds is None
@@ -181,7 +235,7 @@ def test_check_sftp_config_returns_creds_when_server_matches(qtbot, tmp_path):
 
     fake_main.csvpath_config.get.side_effect = _cfg_get
 
-    any_sftp, creds = dialog._check_sftp_config("myhost.example.com")
+    any_sftp, creds = dialog._check_sftp_config("myhost.example.com", "test-file")
 
     assert any_sftp is True
     assert creds is not None
@@ -190,7 +244,13 @@ def test_check_sftp_config_returns_creds_when_server_matches(qtbot, tmp_path):
     assert creds["port"] == 22
 
 
-def test_check_sftp_config_returns_none_creds_when_host_mismatched(qtbot, tmp_path):
+def test_check_sftp_config_returns_false_when_host_mismatched_and_no_server_configs(
+    qtbot, tmp_path
+):
+    """When config.ini has a different server AND the named-file has no
+    ServerConfig sources, _check_sftp_config must return (False, None) so
+    the caller shows the two-button configure/stage notice.
+    """
     dialog, fake_main, _ = _make_dialog(qtbot, tmp_path)
 
     def _cfg_get(*, section, name, **kw):
@@ -199,35 +259,45 @@ def test_check_sftp_config_returns_none_creds_when_host_mismatched(qtbot, tmp_pa
             ("sftp", "port"): "22",
             ("sftp", "username"): "alice",
             ("sftp", "password"): "secret",
-            ("inputs", "files"): "/local/path",
         }.get((section, name), "")
 
     fake_main.csvpath_config.get.side_effect = _cfg_get
+    fake_main.csvpaths.file_manager.has_named_file.return_value = False
 
-    any_sftp, creds = dialog._check_sftp_config("myhost.example.com")
+    any_sftp, creds = dialog._check_sftp_config("myhost.example.com", "test-file")
 
-    assert any_sftp is True
+    assert any_sftp is False
     assert creds is None
 
 
-def test_check_sftp_config_matches_via_inputs_files(qtbot, tmp_path):
+def test_check_sftp_config_matches_via_server_config(qtbot, tmp_path):
+    """When config.ini has no match but the named-file has a ServerConfig whose
+    address matches the URI host, return (True, creds) built from that ServerConfig.
+    """
+    from unittest.mock import MagicMock
+
     dialog, fake_main, _ = _make_dialog(qtbot, tmp_path)
+    fake_main.csvpath_config.get.return_value = ""
 
-    def _cfg_get(*, section, name, **kw):
-        return {
-            ("sftp", "server"): "mainhost.example.com",
-            ("sftp", "port"): "22",
-            ("sftp", "username"): "bob",
-            ("sftp", "password"): "pass",
-            ("inputs", "files"): "sftp://mainhost.example.com/named_files",
-        }.get((section, name), "")
+    sc = MagicMock()
+    sc.address = "myhost.example.com"
+    sc.port = 2022
+    sc.username = "carol"
+    sc.password = "hunter2"
 
-    fake_main.csvpath_config.get.side_effect = _cfg_get
+    fake_file_cfg = MagicMock()
+    fake_file_cfg.sources = {"myhost": sc}
+    fake_main.csvpaths.file_manager.has_named_file.return_value = True
+    fake_main.csvpaths.file_manager.describer.get_config.return_value = fake_file_cfg
 
-    any_sftp, creds = dialog._check_sftp_config("mainhost.example.com")
+    any_sftp, creds = dialog._check_sftp_config("myhost.example.com", "test-file")
 
     assert any_sftp is True
     assert creds is not None
+    assert creds["server"] == "myhost.example.com"
+    assert creds["port"] == 2022
+    assert creds["username"] == "carol"
+    assert creds["password"] == "hunter2"
 
 
 # --- URI / host parsing ---
