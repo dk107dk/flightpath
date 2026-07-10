@@ -89,6 +89,8 @@ class SidebarContextMenuMaker:
         menu.addSeparator()
         self._add_open_project_dir_action(menu)
         menu.addSeparator()
+        self._add_stage_nonlocal_action(menu)
+        menu.addSeparator()
 
         paste_action = QAction("Paste", menu)
         paste_action.setEnabled(bool(self.my_parent.cutted or self.my_parent.copied))
@@ -108,10 +110,6 @@ class SidebarContextMenuMaker:
             menu.addAction(action)
 
     def _add_standard_file_actions(self, menu: QMenu, path: str):
-        save = QAction("Save file", menu)
-        save.triggered.connect(self.my_parent.actions._save_file_navigator_item)
-        menu.addAction(save)
-
         rename = QAction("Rename", menu)
         rename.triggered.connect(self.my_parent.actions._rename_file_navigator_item)
         menu.addAction(rename)
@@ -133,6 +131,11 @@ class SidebarContextMenuMaker:
     def _add_open_project_dir_action(self, menu: QMenu):
         action = QAction("Open project directory", menu)
         action.triggered.connect(self.my_parent.actions._open_project_dir)
+        menu.addAction(action)
+
+    def _add_stage_nonlocal_action(self, menu: QMenu):
+        action = QAction("Stage non-local file", menu)
+        action.triggered.connect(self.my_parent.actions._stage_nonlocal_data)
         menu.addAction(action)
 
     def _add_path_copy_actions(self, menu: QMenu):

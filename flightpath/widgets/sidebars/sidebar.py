@@ -205,6 +205,9 @@ class Sidebar(QWidget):
 
     def _setup_tree(self, *, replace=False) -> None:
         old = self.file_navigator
+        old_proxy = getattr(self, "proxy_model", None)
+        old_file_model = getattr(self, "file_model", None)
+
         self.file_navigator = CustomTreeView()
         self.file_model = QFileSystemModel()
         self.file_model.setRootPath(self.main.state.cwd)
@@ -275,6 +278,15 @@ class Sidebar(QWidget):
 
         if replace and old:
             self.layout().replaceWidget(old, self.file_navigator)
+            # Disconnect the old model chain before deletion so Qt cannot
+            # call back into garbage-collected Python wrappers during teardown.
+            old.setModel(None)
+            if old_proxy is not None:
+                old_proxy.setSourceModel(None)
+                old_proxy.deleteLater()
+            if old_file_model is not None:
+                old_file_model.deleteLater()
+            old.deleteLater()
         else:
             self.layout().addWidget(self.file_navigator)
 
@@ -448,6 +460,24 @@ class Sidebar(QWidget):
         self.stage_dialog = None
         self.main.welcome.update_run_button()
         self.main.welcome.update_find_data_button()
+
+    def do_stage_nonlocal(self, *, path: str, name: str) -> None:
+        try:
+            if not path:
+                raise ValueError("path cannot be empty")
+            if not name:
+                raise ValueError("name cannot be empty")
+            paths = self.main.csvpaths
+            paths.file_manager.add_named_file(name=name, path=path, template=None)
+            self.main.sidebar_rt_top = SidebarNamedFiles(
+                main=self.main, config=self.main.csvpath_config, role=1
+            )
+            self.main.rt_col.replaceWidget(0, self.main.sidebar_rt_top)
+            self.main.welcome.update_run_button()
+            self.main.welcome.update_find_data_button()
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
 
     def _valid_new_folder(self, name: str) -> tuple[bool, str]:
         b = name.find(".") == -1

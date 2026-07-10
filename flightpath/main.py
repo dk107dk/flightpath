@@ -81,6 +81,8 @@ from flightpath.util.editable import EditStates
 
 
 def run():
+    #from csvpath.util.code import Code
+    #print(Code.get_source_dir(CsvPaths))
     #
     # if --server-mode:
     #    - check for server mode key

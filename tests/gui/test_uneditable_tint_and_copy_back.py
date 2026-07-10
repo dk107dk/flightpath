@@ -55,6 +55,7 @@ from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
 
 # isolated_home and main fixtures are provided by conftest.py
+# Small example files are copied by the main fixture in conftest.py.
 
 TIMEOUT = 8000  # ms — file workers run on the Qt thread pool
 

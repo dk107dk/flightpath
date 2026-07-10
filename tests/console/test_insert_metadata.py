@@ -106,7 +106,6 @@ def test_empty_addto_spaced_comment_intact():
     assert result.strip() == "~ two fish ~ $[*][ yes()]"
 
 
-@pytest.mark.xfail(strict=True, reason="Bug: no None guard on addto — f-string silently inserts 'None' string")
 def test_none_addto_raises_value_error():
     """After fix: addto=None should raise ValueError, not silently insert 'None'."""
     with pytest.raises(ValueError):

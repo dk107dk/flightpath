@@ -121,6 +121,12 @@ class SidebarActions:
         )
         self.my_parent.stage_dialog.show_dialog()
 
+    def _stage_nonlocal_data(self) -> None:
+        from flightpath.dialogs.stage_nonlocal_dialog import StageNonLocalDialog
+        dialog = StageNonLocalDialog(main=self.main, parent=self.my_parent)
+        self.my_parent.stage_nonlocal_dialog = dialog
+        dialog.show_dialog()
+
     def _load_paths(self) -> None:
         path = self._current_path()
         if path is None:

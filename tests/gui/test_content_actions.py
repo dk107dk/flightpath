@@ -22,15 +22,37 @@ Run with:
 import os
 import random as _random
 
+import pytest
 from PySide6.QtCore import Qt
 
 from flightpath.util.data_const import DataConst
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.widgets.panels.data_viewer import DataViewer
 
-# isolated_home and main fixtures are provided by conftest.py
+# isolated_home, main, and copy_examples are provided by conftest.py
 
-TIMEOUT = 5000  # ms — file workers run on the Qt thread pool
+
+_ASSETS_EXAMPLES = os.path.join(
+    os.path.dirname(__file__), "..", "..", "flightpath", "assets", "examples"
+)
+
+
+@pytest.fixture(autouse=True)
+def large_example_csv(main):
+    """Copy World_Port_Index_sample.csv (905 KB) for the sampling tests.
+
+    This file is excluded from the default small-examples copy in conftest.py
+    to keep per-test disk usage low. Only this module's sampling tests need it.
+    """
+    import shutil
+
+    rel = os.path.join("debugging", "World_Port_Index_sample.csv")
+    src = os.path.join(_ASSETS_EXAMPLES, rel)
+    dst = os.path.join(main.state.cwd, "examples", rel)
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.copy2(src, dst)
+
+TIMEOUT = 8000  # ms — file workers run on the Qt thread pool
 
 
 def _csv_path(main) -> str:
@@ -42,7 +64,12 @@ def _large_csv_path(main) -> str:
 
 
 def _open_csv(qtbot, main, path: str = None) -> DataViewer:
-    """Open a CSV and block until its DataViewer tab appears."""
+    """Open a CSV and block until its DataViewer tab appears AND has a model.
+
+    The tab can appear (first addTab in update_data_views) before the worker
+    has finished setting the model on the viewer, so a second waitUntil on
+    model() is not None guards against reading rowCount() too early.
+    """
     if path is None:
         path = _csv_path(main)
     assert os.path.exists(path), f"Example CSV missing: {path}"
@@ -52,7 +79,12 @@ def _open_csv(qtbot, main, path: str = None) -> DataViewer:
         lambda: taut.find_tab(main.content.tab_widget, path) is not None,
         timeout=TIMEOUT,
     )
-    return taut.find_tab(main.content.tab_widget, path)[1]
+    viewer = taut.find_tab(main.content.tab_widget, path)[1]
+    qtbot.waitUntil(
+        lambda: viewer.table_view.model() is not None,
+        timeout=TIMEOUT,
+    )
+    return viewer
 
 
 def _trigger_sampling_reload(qtbot, main, viewer: DataViewer, *, sampling_index: int) -> None:

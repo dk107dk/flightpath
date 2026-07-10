@@ -56,9 +56,34 @@ from flightpath.util.message_utility import MessageUtility
 from flightpath.util.tabs_utility import TabsUtility as taut
 from flightpath.widgets.panels.csvpath_viewer import CsvpathViewer
 
-# isolated_home and main fixtures are provided by conftest.py
+# isolated_home, main, and copy_examples are provided by conftest.py
 
 TIMEOUT = 20000  # ms — examples may be slower than Hello World
+
+
+_ASSETS_EXAMPLES = os.path.join(
+    os.path.dirname(__file__), "..", "..", "flightpath", "assets", "examples"
+)
+
+
+@pytest.fixture(autouse=True)
+def large_example_csv(main):
+    """Copy Alzheimers_Disease_and_Healthy_Aging_Data_sample.csv (2 MB) for
+    the large-file-warning test.
+
+    This file is excluded from the default small-examples copy in conftest.py
+    to keep per-test disk usage low. Only test_large_file_triggers_warning
+    needs it; including it here via autouse keeps the test self-contained.
+    """
+    import shutil
+
+    rel = os.path.join(
+        "duplicates", "Alzheimers_Disease_and_Healthy_Aging_Data_sample.csv"
+    )
+    src = os.path.join(_ASSETS_EXAMPLES, rel)
+    dst = os.path.join(main.state.cwd, "examples", rel)
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.copy2(src, dst)
 
 
 # ---------------------------------------------------------------------------
