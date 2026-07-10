@@ -350,49 +350,50 @@ class StageNonLocalDialog(QDialog):
     # SFTP validation
     # -----------------------------------------------------------------------
 
-    def _check_sftp_config(self, host: str) -> tuple[bool, dict | None]:
-        """Return (any_sftp_configured, credentials_or_None).
+    def _check_sftp_config(self, host: str, name: str) -> tuple[bool, dict | None]:
+        """Return (configured, credentials_or_None).
 
-        (False, None)  — no SFTP configured at all
-        (True,  None)  — SFTP configured but host does not match
-        (True,  creds) — host matched; creds ready to test
+        (True,  creds) — host matched a known config; creds dict ready for SftpTestWorker
+        (False, None)  — no matching config found; caller should show the notice/buttons
         """
-        config = self.main.csvpath_config
-        server = str(config.get(section="sftp", name="server")).strip()
-
-        any_sftp = bool(server)
-        if not any_sftp:
-            inputs_files = str(config.get(section="inputs", name="files")).strip()
-            any_sftp = inputs_files.startswith("sftp://")
-
-        if not any_sftp:
-            return False, None
-
-        def _build_creds(srv):
-            port_raw = str(config.get(section="sftp", name="port")).strip()
+        # --- 1. Project-wide SFTP in config.ini [sftp] section ---
+        csvpath_config = self.main.csvpath_config
+        server = str(csvpath_config.get(section="sftp", name="server") or "").strip()
+        if server and server == host:
+            port_raw = str(csvpath_config.get(section="sftp", name="port") or "").strip()
             try:
                 port = int(port_raw) if port_raw else 22
             except ValueError:
                 port = 22
-            username = str(config.get(section="sftp", name="username")).strip()
-            password = str(config.get(section="sftp", name="password")).strip()
-            return {"server": srv, "port": port, "username": username, "password": password}
+            username = str(csvpath_config.get(section="sftp", name="username") or "").strip()
+            password = str(csvpath_config.get(section="sftp", name="password") or "").strip()
+            return True, {"server": server, "port": port, "username": username, "password": password}
 
-        if server == host:
-            return True, _build_creds(server)
+        # --- 2. Per-named-file ServerConfig definitions ---
+        file_manager = self.main.csvpaths.file_manager
+        named_file_config = (
+            file_manager.describer.get_config(name)
+            if file_manager.has_named_file(name)
+            else None
+        )
+        sources = named_file_config.sources if named_file_config and named_file_config.sources else {}
+        for sc in sources.values():
+            if sc.address == host:
+                return True, {
+                    "server": sc.address,
+                    "port": sc.port if sc.port else 22,
+                    "username": sc.username or "",
+                    "password": sc.password or "",
+                }
 
-        inputs_files = str(config.get(section="inputs", name="files")).strip()
-        if inputs_files.startswith("sftp://"):
-            if urlparse(inputs_files).hostname == host:
-                return True, _build_creds(server)
-
-        return True, None
+        # --- 3. No matching config found ---
+        return False, None
 
     def _start_sftp_check(
         self, uri: str, name: str, dest: str, must_copy: bool
     ) -> None:
         host = urlparse(uri).hostname or ""
-        any_sftp, creds = self._check_sftp_config(host)
+        any_sftp, creds = self._check_sftp_config(host, name)
 
         if not any_sftp:
             self._pending_stage = (uri, name, dest, must_copy)
@@ -438,13 +439,13 @@ class StageNonLocalDialog(QDialog):
                 f"You must configure the {host} server before using it."
             )
             self.sftp_add_button.setText(
-                f"Add {host} to {name}" if name else "Add SFTP Named File"
+                f"Add {host} to {name}" if name else "Stage SFTP file"
             )
         else:
             self.sftp_notice_label.setText(
                 "You must configure an SFTP server before using it."
             )
-            self.sftp_add_button.setText("Add SFTP Named File")
+            self.sftp_add_button.setText("Stage SFTP file")
         self.error_label.setVisible(False)
         self.sftp_notice.setVisible(True)
         self._update_stage_button()
@@ -538,7 +539,16 @@ class StageNonLocalDialog(QDialog):
     def _start_download(self, uri: str, local_path: str, name: str) -> None:
         self.stage_button.setEnabled(False)
         self.stage_button.setText("Downloading…")
-        worker = DownloadWorker(uri=uri, local_path=local_path)
+        #
+        # we may have either setup new SFTP backend or added ServerConfigs to
+        # the named-file we're adding/using. because it might be the latter
+        # we have to pull any configs and pass them along.
+        #
+        file_manager = self.main.csvpaths.file_manager
+        config = file_manager.describer.get_config(name)
+        configs = config.sources if config and config.sources else {}
+
+        worker = DownloadWorker(uri=uri, local_path=local_path, configs=configs)
         worker.signals.finished.connect(
             lambda ok, result: self._on_downloaded(ok, result, name)
         )
