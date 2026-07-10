@@ -41,9 +41,7 @@ Run with:
 """
 
 import os
-import shutil
 
-import pytest
 from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QMessageBox
 
@@ -57,32 +55,7 @@ from flightpath.widgets.panels.json_viewer import JsonViewer
 from flightpath.widgets.panels.json_viewer_2 import JsonViewer2
 
 # isolated_home and main fixtures are provided by conftest.py
-
-_ASSETS_EXAMPLES = os.path.join(
-    os.path.dirname(__file__), "..", "..", "flightpath", "assets", "examples"
-)
-
-_NEEDED_EXAMPLES = [
-    os.path.join("first steps", "test.csv"),
-    os.path.join("first steps", "Hello World.csvpath"),
-    os.path.join("named-paths groups", "my_named_paths.json"),
-]
-
-
-@pytest.fixture(autouse=True)
-def example_files(main):
-    """Copy the minimal example files these tests need into the isolated project.
-
-    conftest sets FLIGHTPATH_SKIP_EXAMPLES to avoid copying 5 MB of large CSVs
-    on every test. This fixture provides only the three small files this module
-    actually uses.
-    """
-    examples_dir = os.path.join(main.state.cwd, "examples")
-    for rel in _NEEDED_EXAMPLES:
-        src = os.path.join(_ASSETS_EXAMPLES, rel)
-        dst = os.path.join(examples_dir, rel)
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        shutil.copy2(src, dst)
+# Small example files are copied by the main fixture in conftest.py.
 
 TIMEOUT = 8000  # ms — file workers run on the Qt thread pool
 
