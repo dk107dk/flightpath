@@ -55,6 +55,7 @@ markers = [
     "live_server: requires a live FlightPath Server subprocess (use -m 'not live_server' to skip)",
 ]
 testpaths = ["tests"]
+tmp_path_retention_count = 1
 
 [build-system]
 requires = ["poetry-core"]

@@ -350,7 +350,7 @@ class State:
             examples = os.path.join(cwd, "examples")
             if os.path.exists(examples):
                 ...
-            else:
+            elif not os.environ.get("FLIGHTPATH_SKIP_EXAMPLES"):
                 os.makedirs(examples)
                 em = ExamplesMarshal(main)
                 em.add_examples(path=examples)

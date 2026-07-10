@@ -15,6 +15,7 @@ def suppress_flightpath_background(monkeypatch):
     """
     monkeypatch.setenv("FLIGHTPATH_SKIP_SPLASH", "1")
     monkeypatch.setenv("FLIGHTPATH_SKIP_PRECACHER", "1")
+    monkeypatch.setenv("FLIGHTPATH_SKIP_EXAMPLES", "1")
 
 
 @pytest.fixture(autouse=True)
