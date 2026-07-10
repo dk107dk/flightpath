@@ -126,10 +126,10 @@ class StageNonLocalDialog(QDialog):
         notice_label.setStyleSheet("QLabel { color: #1a5276; font-style: italic; }")
         self.sftp_notice_label = notice_label
 
-        self.sftp_configure_button = QPushButton("Configure SFTP")
+        self.sftp_configure_button = QPushButton("Configure project-wide SFTP")
         self.sftp_configure_button.clicked.connect(self._on_configure_sftp_clicked)
 
-        self.sftp_add_button = QPushButton("Add SFTP Named File")
+        self.sftp_add_button = QPushButton("Stage SFTP file")
         self.sftp_add_button.setEnabled(False)
         self.sftp_add_button.clicked.connect(self._on_add_sftp_named_file_clicked)
 
