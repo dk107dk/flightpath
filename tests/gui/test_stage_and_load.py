@@ -507,6 +507,10 @@ def test_load_dir_warning_callback_does_not_crash(monkeypatch, tmp_path, main):
     Previously warning(msg, title) rejected a callback keyword argument, which
     crashed _do_load_dir_answer before the user ever saw an error message.
     """
+    from flightpath.util.message_utility import MessageUtility
+
+    monkeypatch.setattr(MessageUtility, "warning2", lambda **kw: None)
+
     loader, dialog = _make_loader_and_dialog(main, str(tmp_path))
 
     callback_called = []
@@ -611,7 +615,7 @@ def test_copy_back_of_definition_json_preserves_pretty_printing(qtbot, tmp_path,
 # ---------------------------------------------------------------------------
 
 
-def test_load_dialog_warning_accepts_callback_kwarg(main):
+def test_load_dialog_warning_accepts_callback_kwarg(monkeypatch, main):
     """
     LoadPathsDialog.warning() must accept an optional callback keyword argument.
 
@@ -621,6 +625,10 @@ def test_load_dialog_warning_accepts_callback_kwarg(main):
 
     Fix: warning() now accepts callback=None and forwards it to meut.warning2.
     """
+    from flightpath.util.message_utility import MessageUtility
+
+    monkeypatch.setattr(MessageUtility, "warning2", lambda **kw: None)
+
     csvpath_file = _examples(main, "first steps", "Hello World.csvpath")
     _, dialog = _make_loader_and_dialog(main, csvpath_file)
 
@@ -637,10 +645,14 @@ def test_load_dialog_warning_accepts_callback_kwarg(main):
         ) from exc
 
 
-def test_load_dialog_warning_works_without_callback(main):
+def test_load_dialog_warning_works_without_callback(monkeypatch, main):
     """
     LoadPathsDialog.warning() must still work when callback is omitted (backward compat).
     """
+    from flightpath.util.message_utility import MessageUtility
+
+    monkeypatch.setattr(MessageUtility, "warning2", lambda **kw: None)
+
     csvpath_file = _examples(main, "first steps", "Hello World.csvpath")
     _, dialog = _make_loader_and_dialog(main, csvpath_file)
 
