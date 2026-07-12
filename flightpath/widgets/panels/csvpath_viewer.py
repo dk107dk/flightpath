@@ -31,7 +31,7 @@ class CsvpathViewer(QWidget):
         #
         layout = QVBoxLayout()
         self.setLayout(layout)
-        self.saved = True
+        self._saved = True
         self.mdata = None
         self._comment = None
         self.path = None
@@ -57,6 +57,22 @@ class CsvpathViewer(QWidget):
         name = self.main.content.tab_widget.tabText(i)
         name = name.replace("+", "")
         self.main.content.tab_widget.setTabText(i, name)
+
+    def mark_unsaved(self) -> None:
+        self.saved = False
+        i = self.main.content.tab_widget.currentIndex()
+        name = self.main.content.tab_widget.tabText(i)
+        if name and len(name) > 0 and "+" != name[0]:
+            name = f"+{name}"
+            self.main.content.tab_widget.setTabText(i, name)
+
+    @property
+    def saved(self) -> bool:
+        return self._saved
+
+    @saved.setter
+    def saved(self, t:bool) -> None:
+        self._saved = t
 
     def open_file(self, *, path: str, data: str) -> None:
         self.path = path

@@ -76,7 +76,9 @@ class BlankForm(QWidget):
             s = self.config.get(section=self.section, name=field)
             if isinstance(s, list):
                 s = ",".join(s)
-            vi = QTableWidgetItem(s if s is not None else "")
+            if s is None:
+                s = ""
+            vi = QTableWidgetItem(str(s))
             self.table.setItem(row, 0, ki)
             self.table.setItem(row, 1, vi)
         self.updating = False

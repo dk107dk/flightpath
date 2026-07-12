@@ -430,7 +430,7 @@ class Reactor:
         filepath = Path(path)
         ext = filepath.suffix
         if ext in [".jsonl", ".jsonlines", ".ndjson"]:
-            self.main.sidebar._do_edit_as_json(path)
+            self.main.sidebar.actions._do_edit_as_json(path)
         else:
             t.toggle_grid_raw()
 

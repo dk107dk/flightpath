@@ -91,7 +91,12 @@ from csvpath.managers.integrations.ol.results_listener_ol import (
     OpenLineageResultsListener,
 )
 from csvpath.managers.integrations.slack.sender import SlackSender
-
+#
+# new for v1.1.89
+#
+from flightpath.util.api.v1 import FlightPathServerApiV1
+from flightpath.util.api.v2 import FlightPathServerApiV2
+from csvpath.managers.files.files_activation_listener import FileActivationListener
 
 #
 # these packages need to be referenced so they are found by PyInstaller

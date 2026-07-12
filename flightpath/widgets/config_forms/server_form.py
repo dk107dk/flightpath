@@ -7,7 +7,9 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QFormLayout,
     QPushButton,
+    QHBoxLayout,
     QLabel,
+    QWidget,
     QScrollArea,
     QMessageBox,
 )
@@ -47,10 +49,28 @@ class ServerForm(BlankForm):
         layout = QFormLayout()
 
         self.host = QLineEdit()
-        layout.addRow("Host with port: ", self.host)
+        self.update_host_button = QPushButton("Update")
+        row_layout = QHBoxLayout()
+        row_layout.setContentsMargins(0, 0, 0, 0)
+        row_layout.addWidget(self.host)
+        row_layout.addWidget(self.update_host_button)
+        row = QWidget()
+        row.setLayout(row_layout)
+        layout.addRow("Host with port: ", row)
+
 
         self.key = QLineEdit()
-        layout.addRow("API key: ", self.key)
+        self.update_key_button = QPushButton("Update")
+        key_layout = QHBoxLayout()
+        key_layout.setContentsMargins(0, 0, 0, 0)
+        key_layout.addWidget(self.key)
+        key_layout.addWidget(self.update_key_button)
+        row = QWidget()
+        row.setLayout(key_layout)
+        layout.addRow("API key: ", row)
+
+
+
 
         self.create_new_key = QPushButton("Create new API key")
         layout.addRow("Create new key: ", self.create_new_key)
@@ -177,12 +197,21 @@ class ServerForm(BlankForm):
         self.shut_down_server.setText("Shutdown FlightPath Server")
 
     def _setup(self) -> None:
-        self.host.textChanged.connect(self.main.reactor.on_config_changed)
-        self.host.textChanged.connect(self._update_project_list_new_host)
+        #self.host.textChanged.connect(self.main.reactor.on_config_changed)
+        #self.host.textChanged.connect(self._update_project_list_new_host)
+        self.update_host_button.clicked.connect(self.main.reactor.on_config_changed)
+        self.update_host_button.clicked.connect(self._update_project_list_new_host)
 
-        self.key.textChanged.connect(self.main.reactor.on_config_changed)
-        self.key.textChanged.connect(self._set_projects_path)
-        self.key.textChanged.connect(self._update_project_list_new_key)
+
+        #self.key.textChanged.connect(self.main.reactor.on_config_changed)
+        #self.key.textChanged.connect(self._set_projects_path)
+        #self.key.textChanged.connect(self._update_project_list_new_key)
+
+        self.update_key_button.clicked.connect(self.main.reactor.on_config_changed)
+        self.update_key_button.clicked.connect(self._set_projects_path)
+        self.update_key_button.clicked.connect(self._update_project_list_new_key)
+
+
 
         self.shut_down_server.clicked.connect(self._do_shutdown)
         self.create_new_key.clicked.connect(self._create_key)
@@ -259,14 +288,25 @@ class ServerForm(BlankForm):
 
     def _update_project_list_new_host(self) -> None:
         text = self.hostname
+        self.server_unchanged = False
         if text and text.strip() == "":
             self.proj_list.clear()
         else:
-            self.server_unchanged = False
-            self._update_project_list()
+            p = self._ping()
+            if p == 200:
+                self._update_project_list()
+            else:
+                self.proj_list.clear()
+                self.server_unchanged = False
+                meut.warning2(
+                    parent=self,
+                    msg="Cannot connect to server"
+                )
+
 
     def _update_project_list_new_key(self) -> None:
         text = self.key.text()
+        self.api.key = text
         if text and text.strip() == "":
             self.proj_list.clear()
         else:
@@ -486,6 +526,8 @@ class ServerForm(BlankForm):
             msg = result.error_message
             msg = "" if msg is None else msg
             msg = f"Cannot download log. {msg} ({result.status_code})"
+            if str(result.status_code) == "404":
+                msg = f"{msg}. Logs are not created until there is activity."
             meut.warning2(parent=self, title="Cannot download log", msg=msg)
 
     def _download_config(self, name: str) -> None:

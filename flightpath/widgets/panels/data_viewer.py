@@ -136,13 +136,11 @@ class DataViewer(QWidget):
         return self.editable == EditStates.EDITABLE
 
     def _show_uneditable_context_menu(self, position: QPoint):
+        return
         viewport_position = self.table_view.viewport().mapFrom(
             self.table_view, position
         )
         index = self.table_view.indexAt(viewport_position)
-        # self.table_view.rowAt(viewport_position.y())
-        # index.column()
-        # index.row()
         global_position = self.table_view.mapToGlobal(position)
         if index.isValid():
             # index.row()
@@ -387,7 +385,6 @@ class DataViewer(QWidget):
 
     def _new_line(self, at: int, number: int) -> None:
         if at < 0 or at > self.table_view.model().rowCount():
-            print(f"Cannot insert a line at {at}")
             return
         model = self.table_view.model()
         i = model.columnCount()
@@ -561,7 +558,7 @@ class DataViewer(QWidget):
         from flightpath.util.json_utility import JsonUtility as jsut
 
         if jsut.is_jsonl(self.path):
-            self.main.on_raw_source()
+            self.main.reactor.on_raw_source()
         else:
             i = self.current_view_index
             i = 0 if i == 1 else 1
@@ -831,8 +828,8 @@ class DataViewer(QWidget):
     def _copy_back_question(self, action="edit") -> None:
         meut.yesNo2(
             parent=self,
-            msg=f"You can't {action} here. Copy back to project?",
-            title="Copy file to project?",
+            msg=f"You can't update here. Copy back to project?",
+            title="Update not permitted",
             callback=self._copy_back_answer,
         )
 

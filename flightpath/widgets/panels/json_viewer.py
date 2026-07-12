@@ -284,8 +284,8 @@ class JsonViewer(QWidget):
         meut.yesNo2(
             parent=self,
             callback=self._copy_back_answer,
-            msg="You can't edit here. Copy back to project?",
-            title="Copy file to project?",
+            msg="You can't update here. Copy back to project?",
+            title="Update not permitted",
         )
 
     @Slot(int)

@@ -110,8 +110,8 @@ class JsonViewer2(QWidget):
     def _copy_back_question(self) -> None:
         meut.yesNo2(
             parent=self,
-            msg="You can't edit here. Copy back to project?",
-            title="Copy file to project?",
+            msg="You can't update here. Copy back to project?",
+            title="Update not permitted",
             callback=self._copy_back_answer,
         )
 

@@ -67,6 +67,11 @@ class CsvPathTextEdit(QPlainTextEdit):
 
         self.load_dialog = None
 
+        self.textChanged.connect(self.mark_modified)
+
+    def mark_modified(self) -> None:
+        self.saved = False
+
     @property
     def saved(self) -> bool:
         if self.my_parent and self.my_parent != self:
@@ -77,7 +82,11 @@ class CsvPathTextEdit(QPlainTextEdit):
     @saved.setter
     def saved(self, s: bool) -> None:
         if self.my_parent and self.my_parent != self:
-            self.my_parent.saved = s
+            #self.my_parent.saved = s
+            if s is True:
+                return self.my_parent.reset_saved()
+            else:
+                return self.my_parent.mark_unsaved()
         else:
             ...
 
@@ -428,8 +437,8 @@ class CsvPathTextEdit(QPlainTextEdit):
             return
         meut.yesNo2(
             parent=self,
-            msg=f"You can't {action} here. Copy back to project?",
-            title="Copy file to project?",
+            msg=f"You can't update here. Copy back to project?",
+            title="Update not permitted",
             callback=self._do_copy_back,
         )
 
