@@ -195,6 +195,37 @@ def test_errors_form_saves_pattern(main):
     )
 
 
+def test_errors_form_all_unchecked_defaults_to_collect(main):
+    """
+    When all error action checkboxes are unchecked and the form is saved,
+    add_to_config() must write 'collect' for both csvpath and csvpaths error
+    policies rather than leaving them empty.
+
+    An empty error-actions list causes CsvPath to swallow errors silently.
+    The fallback guarantees at least one action is always configured.
+    """
+    form = _form(main, "errors")
+    for cb in [
+        form.csvpath_raise, form.csvpath_print, form.csvpath_stop,
+        form.csvpath_fail, form.csvpath_collect,
+        form.csvpaths_raise, form.csvpaths_print, form.csvpaths_stop,
+        form.csvpaths_fail, form.csvpaths_collect,
+    ]:
+        cb.setChecked(False)
+    _save(main)
+
+    csvpath_val = _get(main, section="errors", name="csvpath")
+    csvpaths_val = _get(main, section="errors", name="csvpaths")
+    assert "collect" in csvpath_val, (
+        f"csvpath error policy must include 'collect' when all checkboxes are unchecked; "
+        f"got {csvpath_val!r}"
+    )
+    assert "collect" in csvpaths_val, (
+        f"csvpaths error policy must include 'collect' when all checkboxes are unchecked; "
+        f"got {csvpaths_val!r}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Tests — extensions section
 # ---------------------------------------------------------------------------

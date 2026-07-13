@@ -205,26 +205,24 @@ def test_server_form_shutdown_button_enabled_with_credentials(qtbot, main, mock_
 
 def test_get_project_names_populates_list(qtbot, main, mock_api):
     """
-    When the ServerForm becomes the visible form and host + key are set,
-    _update_project_list() must call api.get_project_names() and populate
+    When the ServerForm is visible and host + key are set, clicking the
+    Update host button must call api.get_project_names() and populate
     proj_list.
 
-    _update_project_list() guards on 'forms_layout.currentWidget() == self', so
-    the test navigates to form index 11 (the server form) to satisfy the guard.
-    Only AFTER navigation are host and key set — setting them triggers
-    _update_project_list_new_host/key(), which calls _update_project_list() with
-    the guard now satisfied.
+    _update_project_list() guards on 'forms_layout.currentWidget() == self',
+    so the test navigates to form index 11 first.  The host update path is
+    then triggered explicitly via _update_project_list_new_host() — the
+    former textChanged trigger was replaced with a button click in the
+    same commit that added the Update buttons.
     """
     form = _open_server_form(main)
-    form._api = mock_api  # install mock before making form visible
+    form._api = mock_api
 
-    # Navigate to the server form (index 11 in forms_layout)
     main.config.config_panel.forms_layout.setCurrentIndex(11)
-
-    # Setting text after navigation — guard passes, _get_project_names() is called
     form.host.setText("http://localhost:19999")
     form.key.setText("test-api-key")
-    # key change triggers _update_project_list via _update_project_list_new_key
+    # textChanged is no longer connected; trigger the update explicitly
+    form._update_project_list_new_host()
 
     assert form.proj_list.count() == 2, (
         f"proj_list must contain 2 items from mock_api.get_project_names(); "
@@ -467,6 +465,166 @@ def test_shutdown_answer_yes_calls_api(qtbot, main, mock_api):
     mock_api.shutdown.assert_called_once()
     assert not form.shut_down_server.isEnabled(), (
         "Shutdown button must be disabled after a successful shutdown call"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Mock-tier tests — Update host and key buttons
+# ---------------------------------------------------------------------------
+
+
+def test_update_host_button_with_empty_host_shows_warning(monkeypatch, qtbot, main):
+    """
+    Calling _update_project_list_new_host() with an empty host field must
+    show a 'Cannot connect to server' warning.
+
+    _ping() returns 400 immediately for any None or empty hostname without
+    making an API call, which triggers the warning branch.  The host Update
+    button replaced the old textChanged connection, so the button is now
+    the single point where this path is exercised.
+    """
+    form = _open_server_form(main)
+    form.host.setText("")
+
+    warnings = []
+    monkeypatch.setattr(
+        MessageUtility,
+        "warning2",
+        lambda **kw: warnings.append(kw.get("msg", "")),
+    )
+
+    form._update_project_list_new_host()
+
+    assert len(warnings) == 1, (
+        f"Exactly one warning must appear when host is empty; got {len(warnings)}"
+    )
+    assert form.proj_list.count() == 0, (
+        "Project list must be empty when the host update fails"
+    )
+
+
+def test_update_host_button_ping_failure_shows_warning(monkeypatch, qtbot, main, mock_api):
+    """
+    When _update_project_list_new_host() is called with a host that is
+    unreachable (ping returns non-200), a warning must be shown and the
+    project list must be cleared.
+    """
+    mock_api.ping.return_value = Result(False, None, "Connection refused", 503)
+
+    form = _open_server_form(main)
+    _wire_mock(form, mock_api)
+
+    warnings = []
+    monkeypatch.setattr(
+        MessageUtility,
+        "warning2",
+        lambda **kw: warnings.append(kw.get("msg", "")),
+    )
+
+    form._update_project_list_new_host()
+
+    assert len(warnings) == 1, (
+        f"Exactly one warning must appear when the host ping fails; got {len(warnings)}"
+    )
+    assert form.proj_list.count() == 0, (
+        "Project list must be empty after a failed ping"
+    )
+
+
+def test_update_host_button_ping_success_populates_list(qtbot, main, mock_api):
+    """
+    When _update_project_list_new_host() succeeds (ping 200) the project
+    list must be populated with names returned by api.get_project_names().
+
+    The server form must be the active config page (index 11) for
+    _update_project_list()'s visibility guard to pass.
+    """
+    form = _open_server_form(main)
+    form._api = mock_api
+
+    main.config.config_panel.forms_layout.setCurrentIndex(11)
+    form.host.setText("http://localhost:19999")
+    form.key.setText("test-api-key")
+
+    form._update_project_list_new_host()
+
+    assert form.proj_list.count() == 2, (
+        f"Project list must contain 2 items after a successful ping; "
+        f"got {form.proj_list.count()}"
+    )
+    names = [form.proj_list.item(i).text() for i in range(form.proj_list.count())]
+    assert "proj-alpha" in names and "proj-beta" in names, (
+        f"Project list must show the names from get_project_names(); got {names}"
+    )
+
+
+def test_update_key_button_empty_key_clears_list(qtbot, main, mock_api):
+    """
+    When the key field is cleared and _update_project_list_new_key() is
+    called, the project list must be cleared without showing a warning.
+
+    _update_project_list() guards on 'key in [None, ""]' and returns early
+    silently — an absent key is valid for a first-time user who has not yet
+    generated an API key.
+    """
+    form = _open_server_form(main)
+    form._api = mock_api
+
+    # Navigate to the server form and pre-populate the project list
+    main.config.config_panel.forms_layout.setCurrentIndex(11)
+    form.host.setText("http://localhost:19999")
+    form.key.setText("test-api-key")
+    form.server_unchanged = False
+    form._update_project_list()
+    assert form.proj_list.count() == 2, "Precondition: list must be populated before clearing"
+
+    # Clear the key and trigger the key-update path
+    form.key.setText("")
+    form.server_unchanged = False
+    form._update_project_list_new_key()
+
+    assert form.proj_list.count() == 0, (
+        "Project list must be empty when the key field is cleared"
+    )
+
+
+def test_update_host_url_only_no_key_clears_list_without_warning(
+    monkeypatch, qtbot, main, mock_api
+):
+    """
+    When the host URL is set but no API key is present, calling
+    _update_project_list_new_host() must silently clear the project list
+    without raising a warning dialog.
+
+    This is a valid first-use state: the server is reachable (ping 200) but
+    the user has not yet generated a key.  _update_project_list() returns
+    early when key is empty, and no warning is issued.
+    """
+    form = _open_server_form(main)
+    # Install mock so _ping() can succeed via the already-set _api, even
+    # though the key field is empty (api property only raises when _api is None)
+    form._api = mock_api
+
+    main.config.config_panel.forms_layout.setCurrentIndex(11)
+    form.host.setText("http://localhost:19999")
+    form.key.setText("")
+    form.server_unchanged = False
+
+    warnings = []
+    monkeypatch.setattr(
+        MessageUtility,
+        "warning2",
+        lambda **kw: warnings.append(kw.get("msg", "")),
+    )
+
+    form._update_project_list_new_host()
+
+    assert len(warnings) == 0, (
+        f"No warning must appear when the host is valid but the key is absent; "
+        f"got {warnings}"
+    )
+    assert form.proj_list.count() == 0, (
+        "Project list must be empty when key is absent"
     )
 
 
