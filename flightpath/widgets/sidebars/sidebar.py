@@ -489,7 +489,8 @@ class Sidebar(QWidget):
         if name is None or name.strip() == "":
             return False, "Name cannot be empty"
         if (name.find("/") > -1 or name.find("\\") > -1) and not (
-            name.startswith(self.main.state.cwd) or name.startswith(f".{os.sep}")
+            os.path.normcase(name).startswith(os.path.normcase(self.main.state.cwd))
+            or name.startswith(f".{os.sep}")
         ):
             return False, "File must be in or below the working directory"
         if name.find(".", 1) == -1:

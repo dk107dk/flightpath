@@ -516,7 +516,7 @@ class StageNonLocalDialog(QDialog):
 
     def _resolve_local_path(self, uri: str, dest: str) -> str:
         source_filename = os.path.basename(uri.rstrip("/").split("?")[0])
-        dest_clean = dest.lstrip("/")
+        dest_clean = os.path.normpath(dest.lstrip("/"))
         _, dest_ext = os.path.splitext(os.path.basename(dest_clean))
         if dest_ext:
             # dest already names the target file (possibly with a different extension)
