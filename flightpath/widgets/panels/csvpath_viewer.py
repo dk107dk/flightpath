@@ -93,6 +93,7 @@ class CsvpathViewer(QWidget):
 
         self.main.show_now_or_later(self.text_edit)
         self.text_edit.setPlainText(data)
+        self.text_edit.saved = True
         c = "cmd" if osut.is_mac() else "ctrl"
         self.main.statusBar().showMessage(
             f"{c}-s to save, {c}-r to run • Opened {path}"
