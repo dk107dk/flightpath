@@ -274,7 +274,7 @@ class DataViewer(QWidget):
         path = os.path.dirname(self.path)
         i = path.rfind(self.main.state.current_project)
         path = path[i + len(self.main.state.current_project) :]
-        path = path.lstrip(os.sep)
+        path = path.lstrip("/\\")
         return path
 
     def _copy_to_new(self) -> None:
@@ -292,7 +292,9 @@ class DataViewer(QWidget):
             b, msg = self._valid_new_file(new_name)
             if b is True:
                 try:
-                    if not new_name.startswith(self.main.state.cwd):
+                    if not os.path.normcase(new_name).startswith(
+                        os.path.normcase(self.main.state.cwd)
+                    ):
                         new_name = os.path.join(self.main.state.cwd, new_name)
                     self._write_new_from_selected(new_name)
                 except PermissionError:
@@ -344,7 +346,8 @@ class DataViewer(QWidget):
         if name is None or name.strip() == "":
             return False, "Name cannot be empty"
         if (name.find("/") > -1 or name.find("\\") > -1) and not (
-            name.startswith(self.main.state.cwd) or name.startswith(f".{os.sep}")
+            os.path.normcase(name).startswith(os.path.normcase(self.main.state.cwd))
+            or name.startswith(f".{os.sep}")
         ):
             return False, "File must be in or below the working directory"
         if not name.endswith(".csv", 1):
