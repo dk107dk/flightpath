@@ -105,6 +105,8 @@ class ErrorsForm(BlankForm):
             csvpath_policy.append("fail")
         if self.csvpath_collect.isChecked():
             csvpath_policy.append("collect")
+        if len(csvpath_policy) == 0:
+            csvpath_policy.append("collect")
         config.csvpath_errors_policy = csvpath_policy
 
         csvpaths_policy = []
@@ -117,6 +119,8 @@ class ErrorsForm(BlankForm):
         if self.csvpaths_fail.isChecked():
             csvpaths_policy.append("fail")
         if self.csvpaths_collect.isChecked():
+            csvpaths_policy.append("collect")
+        if len(csvpaths_policy) == 0:
             csvpaths_policy.append("collect")
         config.csvpaths_errors_policy = csvpaths_policy
 

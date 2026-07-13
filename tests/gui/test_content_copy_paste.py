@@ -149,6 +149,84 @@ def test_csvpath_editor_cut_clears_editor(qtbot, main):
     )
 
 
+def test_csvpath_cut_marks_viewer_unsaved(qtbot, main):
+    """
+    cut() on a CsvpathViewer's text editor must set viewer.saved=False.
+
+    Previously only keyPressEvent drove the unsaved state; context-menu cut
+    and programmatic cut() bypassed it.  The fix connects textChanged to
+    mark_modified() so any document change — including cut — sets saved=False.
+
+    Note: opening a file also fires textChanged (setPlainText), so
+    reset_saved() is called first to establish a clean saved=True baseline
+    before testing cut behaviour.
+    """
+    path = _examples(main, "first steps", "Hello World.csvpath")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, CsvpathViewer)
+
+    viewer.reset_saved()
+    assert viewer.saved is True, "Precondition: viewer must be in the saved state"
+
+    viewer.text_edit.selectAll()
+    viewer.text_edit.cut()
+
+    assert viewer.saved is False, (
+        "viewer.saved must be False after cut() — textChanged must fire mark_modified()"
+    )
+
+
+def test_csvpath_cut_prefixes_tab_with_plus(qtbot, main):
+    """
+    After cut(), the tab label for the csvpath file must acquire a '+' prefix
+    to signal unsaved changes.
+
+    mark_modified() → saved setter → CsvpathViewer.mark_unsaved() updates
+    the tab text via tab_widget.setTabText().
+    """
+    path = _examples(main, "first steps", "Hello World.csvpath")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, CsvpathViewer)
+
+    viewer.reset_saved()
+    tab_idx = main.content.tab_widget.currentIndex()
+    original_name = main.content.tab_widget.tabText(tab_idx)
+    assert "+" not in original_name, (
+        f"Tab must not have a '+' prefix after reset_saved(); got {original_name!r}"
+    )
+
+    viewer.text_edit.selectAll()
+    viewer.text_edit.cut()
+
+    new_name = main.content.tab_widget.tabText(tab_idx)
+    assert "+" in new_name, (
+        f"Tab label must contain '+' after cut(); got {new_name!r}"
+    )
+
+
+def test_csvpath_paste_marks_viewer_unsaved(qtbot, main):
+    """
+    paste() on a CsvpathViewer's text editor must set viewer.saved=False.
+
+    paste() modifies the document which fires textChanged → mark_modified().
+    reset_saved() establishes a clean saved=True baseline before pasting so
+    the test is independent of the initial load side-effect.
+    """
+    path = _examples(main, "first steps", "Hello World.csvpath")
+    viewer = _open_and_wait(qtbot, main, path)
+    assert isinstance(viewer, CsvpathViewer)
+
+    viewer.reset_saved()
+    assert viewer.saved is True, "Precondition: viewer must be in the saved state"
+
+    QApplication.clipboard().setText("$[*][ yes() ]")
+    viewer.text_edit.paste()
+
+    assert viewer.saved is False, (
+        "viewer.saved must be False after paste() — textChanged must fire mark_modified()"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Tests — MD editor copy
 # ---------------------------------------------------------------------------

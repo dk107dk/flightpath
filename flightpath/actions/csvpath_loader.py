@@ -398,10 +398,9 @@ class CsvpathLoader:
         self._delete_load_dialog()
 
     def _delete_load_dialog(self):
-        try:
-            self.load_dialog.close()
-            self.load_dialog.deleteLater()
-            self.load_dialog = None
-        except Exception:
-            ...
-
+        # save ref before close() fires finished signal → lambda → self.load_dialog = None
+        dialog = self.load_dialog
+        self.load_dialog = None
+        if dialog is not None:
+            dialog.close()
+            dialog.deleteLater()

@@ -26,7 +26,7 @@ class GeneratorUtility:
         for c in callbacks if callbacks else []:
             generator.add_callback(c)
         generator.csvpath_config = main.csvpath_config
-        generator.csvpath_logger = main.logger
+        generator.csvpath_logger = main.csvpaths.logger
         tools = [] if additional_tools is None else additional_tools
         tools += cls.std_tools()
         generator.tools = tools

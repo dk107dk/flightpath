@@ -58,6 +58,12 @@ def _make_loader(tmp_path, add_named_paths_return=None, file_content=None):
         def yesNo(self, **kwargs):
             pass
 
+        def close(self):
+            pass
+
+        def deleteLater(self):
+            pass
+
     # Stub for paths_manager
     paths_manager = MagicMock()
     paths_manager.has_named_paths.return_value = False
