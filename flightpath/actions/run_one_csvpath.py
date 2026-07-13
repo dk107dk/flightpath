@@ -93,8 +93,8 @@ class RunOneCsvpath:
             # has a search field that will find sandboxed files.
             #
             cwd = os.path.abspath(self.main.state.cwd)
-            if not cwd.endswith("/"):
-                cwd = f"{cwd}/"
+            if not cwd.endswith(os.sep):
+                cwd = f"{cwd}{os.sep}"
             filepath = FileCollector.select_file(
                 parent=self.my_parent,
                 cwd=cwd,
@@ -121,11 +121,11 @@ class RunOneCsvpath:
                 msg=msg,
             )
             return
-        filepath = str(Path(filepath).resolve())
         cwd = str(Path(self.main.state.cwd).resolve())
-        # print(f"oneone: filepath: {filepath}")
-        # print(f"oneone: cwd: {cwd}")
-        if not filepath.startswith(cwd):
+        if not os.path.isabs(filepath):
+            filepath = os.path.join(cwd, filepath)
+        filepath = str(Path(filepath).resolve())
+        if not os.path.normcase(filepath).startswith(os.path.normcase(cwd)):
             meut.warning2(
                 parent=self.main,
                 title="Unavailable",
@@ -136,8 +136,12 @@ class RunOneCsvpath:
         cstr, comment = csut.statement_and_comment(csvpath)
         #
         if "test-data:" not in comment:
+            try:
+                stored_path = os.path.relpath(filepath, cwd)
+            except ValueError:
+                stored_path = filepath
             self.my_parent.text_edit.add_to_external_comment_of_csvpath_at_position(
-                position=position, addto=f"test-data:{filepath}\n"
+                position=position, addto=f"test-data:{stored_path}\n"
             )
         #
         if cstr.find(filepath) == -1:
