@@ -8,6 +8,7 @@ from PySide6.QtCore import Slot
 from csvpath.util.file_writers import DataFileWriter
 from csvpath.util.nos import Nos
 from csvpath.managers.paths.paths_manager import PathsManager
+from csvpath.util.path_util import PathUtility as pathu
 
 
 from flightpath.actions.csvpath_loader import CsvpathLoader
@@ -417,12 +418,16 @@ class CsvPathTextEdit(QPlainTextEdit):
                 raise ValueError("No csvpaths statement file extension")
             if not fiut.is_a(name, exts):
                 name = f"{name}.{exts[0]}"
-            d = os.path.join(
-                self.main.state.cwd,
-                fiut.relative_path_to_parent_dir(
-                    main=self.main, filepath=self.my_parent.path
-                ),
+
+            ppd = fiut.relative_path_to_parent_dir(
+                main=self.main, filepath=self.my_parent.path
             )
+            ppd = ppd.lstrip("\\/")
+            ppd = pathu.resep(ppd)
+            cwd = self.main.state.cwd
+
+            nos = Nos(cwd)
+            d = nos.join(ppd)
             path = fiut.deconflicted_path(d, name)
             with DataFileWriter(path=path) as file:
                 file.write(text)
