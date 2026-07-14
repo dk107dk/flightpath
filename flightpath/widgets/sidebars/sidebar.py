@@ -370,6 +370,11 @@ class Sidebar(QWidget):
         regex = None
         if hasattr(self.stage_dialog, "regex_ctl"):
             regex = self.stage_dialog.regex_ctl.text()
+        #
+        # a "" regex will not match anything, so we'd need a None here
+        #
+        regex = None if str(regex).strip() in ["None", ""] else regex
+
         named_file_name = self.stage_dialog.named_file_name_ctl.text()
         named_file_name = named_file_name.strip() if named_file_name else ""
 
@@ -391,7 +396,9 @@ class Sidebar(QWidget):
                     name=named_file_name, path=name, template=template
                 )
             else:
+                print(f"sidebart: not a filex")
                 if self.stage_dialog.separate_ctl.isChecked():
+                    print(f"sidebart: separates")
                     paths.file_manager.add_named_files_from_dir(
                         name=None,
                         dirname=name,
@@ -400,14 +407,8 @@ class Sidebar(QWidget):
                         regex=regex,
                     )
                 else:
+                    print(f"sidebart: not a separates: {named_file_name}")
                     if not named_file_name or named_file_name.strip() == "":
-                        """
-                        meut.warning2(
-                            parent=self,
-                            title="No name given",
-                            msg="You must provide a named-file name",
-                        )
-                        """
                         self.stage_dialog.warning(
                             title="No name given",
                             msg="You must provide a named-file name",
@@ -418,6 +419,7 @@ class Sidebar(QWidget):
                         dirname=name,
                         template=template,
                         recurse=recurse,
+                        regex=regex
                     )
             if self.stage_dialog.default_ctl.isChecked():
                 paths.file_manager.describer.store_template(

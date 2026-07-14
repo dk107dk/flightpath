@@ -102,7 +102,7 @@ class StageDataDialog(QDialog):  # pylint: disable=R0902
                 on_help=self.on_help_regex,
             )
             box.setFixedHeight(30)
-            form_layout.addRow("Regex:", box)
+            form_layout.addRow("File path regex:", box)
 
         #
         # add a help icon for templates

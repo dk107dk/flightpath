@@ -235,8 +235,15 @@ class Welcome(QWidget):
             else:
                 self.button_run.setEnabled(True)
         except Exception as ex:
+            self.button_run.setEnabled(False)
             msg = f"Error during setup: {ex}"
-            meut.warning2(parent=self, msg=msg, title="Error")
+            #
+            # we can't raise an error dialog here because it gets trapped under the main window.
+            # it isn't clear how we can fix that, given we would be using meut's "2" async methods
+            # already. no doubt there's a way, but being in a hurry, I'm leaning towards the status
+            # bar as an acceptable quick fix communications channel.
+            #
+            self.main.status_bar_message = msg
 
     def _find_data_button(self, *, on_click, on_help) -> QWidget:
         self.button_find_data = QPushButton()
@@ -260,8 +267,15 @@ class Welcome(QWidget):
             else:
                 self.button_find_data.setEnabled(True)
         except Exception as ex:
+            self.button_find_data.setEnabled(False)
             msg = f"Error during setup: {ex}"
-            meut.warning2(parent=self, msg=msg, title="Error")
+            #
+            # we can't raise an error dialog here because it gets trapped under the main window.
+            # it isn't clear how we can fix that, given we would be using meut's "2" async methods
+            # already. no doubt there's a way, but being in a hurry, I'm leaning towards the status
+            # bar as an acceptable quick fix communications channel.
+            #
+            self.main.status_bar_message = msg
 
     def _validate_button(self, *, on_click, on_help) -> QWidget:
         self.button_validate = QPushButton()

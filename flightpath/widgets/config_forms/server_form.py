@@ -484,12 +484,11 @@ class ServerForm(BlankForm):
         meut.yesNo2(
             parent=self,
             msg="Shutdown server?",
-            title="Shutdown server?",
             callback=self._do_shutdown_answer,
         )
 
     def _do_shutdown_answer(self, answer: int) -> None:
-        if answer == QMessageBox.No:
+        if answer != QMessageBox.Yes:
             return False
         result = self.api.shutdown()
         if result.success:

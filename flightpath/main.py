@@ -296,6 +296,12 @@ class MainWindow(QMainWindow):
         return self._csvpaths
 
     def _run_precacher(self) -> None:
+        has_error = self._new_status_or_error()
+        if has_error:
+            msg = "Skipping precaching run because there is an error in the status bar: {self.statusBar().currentMessage()}"
+            self.log(msg)
+            return
+
         try:
             worker = PreCacheWorker(self.state.cwd, main=self)
             if self.threadpool:
@@ -329,8 +335,50 @@ class MainWindow(QMainWindow):
                 self.please_close = True
                 return False
         self.load_state_and_cd()
-        self.statusBar().showMessage(f"  Project changed to: {self.state.cwd}")
+
+
+        has_error = self._new_status_or_error(msg=f"  Project changed to: {self.state.cwd}")
+        if has_error:
+            msg = "Project changed but an error preexisted: {self.statusBar().currentMessage()}"
+            self.log(msg)
+
+
         return True
+
+    #
+    # for callers that want to preserve any existing error messages.
+    #
+    # this is an inflexible way of handling error messages, as well as being not very eyecatching.
+    # mid- to longer-term we need an error list and better logging. then we'd probably keep
+    # this but not have it be the only/main way to promote error messages.
+    #
+    # returns True if it finds that the current message includes "error"
+    #
+    def _new_status_or_error(self, *, msg:str=None, replace_error:str=None, clear:bool=False) -> bool:
+        m = self.status_bar_message
+        ret = m.lower().find("error") > -1
+        if ret and clear is False:
+            if replace_error:
+                self.status_bar_message = replace_error
+            elif clear is True:
+                self.status_bar_message = ""
+        else:
+            if msg:
+                self.status_bar_message = msg
+            elif clear:
+                self.status_bar_message = ""
+        return ret
+
+    @property
+    def status_bar_message(self) -> str:
+        msg = self.statusBar().currentMessage()
+        return "" if msg is None else msg
+
+    @status_bar_message.setter
+    def status_bar_message(self, msg:str) -> None:
+        msg = "" if msg is None else msg
+        self.statusBar().showMessage(msg)
+
 
     @property
     def has_csvpath_config(self) -> CsvPathConfig:
@@ -418,7 +466,17 @@ class MainWindow(QMainWindow):
         # from config or wherever.
         #
         self.last_main = 0
-        self.statusBar().showMessage(f"  Working directory: {self.state.cwd}")
+        #
+        # check for errors in status bar
+        #
+
+        has_error = self._new_status_or_error()
+        if has_error:
+            msg = f"Resetting CWD to {self.state.cwd}. There is an error in the status bar: {self.statusBar().currentMessage()}"
+            self.log(msg)
+            return
+        else:
+            self.statusBar().showMessage(f"  Working directory: {self.state.cwd}")
 
         build_number = fiut.read_string(
             fiut.make_app_path(f"assets{os.sep}build_number.txt")
