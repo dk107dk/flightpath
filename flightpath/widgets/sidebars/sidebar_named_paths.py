@@ -1,3 +1,6 @@
+import os
+import traceback
+
 from PySide6.QtWidgets import QMenu, QVBoxLayout
 
 from PySide6.QtGui import QAction
@@ -54,6 +57,30 @@ class SidebarNamedPaths(SidebarRightBase):
             named_paths_path = self.my_root()
 
             nos = Nos(named_paths_path)
+
+
+            try:
+                if not nos.dir_exists():
+                    nos.makedir()
+            except Exception as ex:
+                print(traceback.format_exc())
+                #
+                # set the named paths to the default
+                #
+                self.main.csvpath_config.set(section="inputs", name="csvpaths", value=f"inputs{os.sep}named_paths")
+                self.main.csvpath_config.save_config()
+                #
+                # warn the user. we don't mention that we reset the config, but that is probably fine.
+                #
+                msg = f"Error during named-paths inputs setup: {ex}. Check config."
+                meut.warning2(parent=self, msg=msg, title="Error")
+                msg = f"Error during setup: {ex}"
+                self.main.status_bar_message = msg
+                return
+
+
+
+
             layout = self.layout()
             if layout is None:
                 layout = QVBoxLayout()
@@ -62,8 +89,8 @@ class SidebarNamedPaths(SidebarRightBase):
             #
             # do we really need to do this dir create here?
             #
-            if not nos.dir_exists():
-                nos.makedir()
+            #if not nos.dir_exists():
+            #    nos.makedir()
             self.view = LazyTreeView(self, main=self.main)
 
             self.view.setSelectionBehavior(

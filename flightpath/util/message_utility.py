@@ -18,6 +18,9 @@ class MessageUtility:
         callback: Callable = None,
         args: dict = None,
     ) -> None:
+        from csvpath.util.log_utility import LogUtility as lout
+        lout.log_brief_trace()
+
         if icon is None:
             icon = QMessageBox.Information
         if title is None:

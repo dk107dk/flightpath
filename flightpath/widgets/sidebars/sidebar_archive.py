@@ -1,5 +1,6 @@
 import os
 import json
+import traceback
 import re
 
 from PySide6.QtWidgets import QMenu, QVBoxLayout, QTabWidget
@@ -256,9 +257,32 @@ class SidebarArchive(SidebarRightBase):
             self.archive_path = self.my_root()
 
             nos = Nos(self.archive_path)
+
+            try:
+                if not nos.dir_exists():
+                    nos.makedir()
+            except Exception as ex:
+                print(traceback.format_exc())
+                #
+                # set the archive to the default
+                #
+                self.main.csvpath_config.set(section="results", name="archive", value=f"archive")
+                self.main.csvpath_config.save_config()
+                #
+                # warn the user. we don't mention that we reset the config, but that is probably fine.
+                #
+                msg = f"Error during archive setup: {ex}. Check config."
+                meut.warning2(parent=self, msg=msg, title="Error")
+                msg = f"Error during setup: {ex}"
+                self.main.status_bar_message = msg
+                return
+
+
+
+            """
             if not nos.dir_exists():
                 nos.makedir()
-
+            """
             self.view = LazyTreeView(self, main=self.main)
             #
             #

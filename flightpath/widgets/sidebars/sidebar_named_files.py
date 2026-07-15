@@ -1,4 +1,5 @@
 import traceback
+import os
 
 from PySide6.QtWidgets import QMenu, QVBoxLayout, QSizePolicy
 
@@ -60,12 +61,21 @@ class SidebarNamedFiles(SidebarRightBase):
             named_files_path = self.my_root()
 
             nos = Nos(named_files_path)
+
             try:
                 if not nos.dir_exists():
                     nos.makedir()
             except Exception as ex:
                 print(traceback.format_exc())
-                msg = f"Error during named-files inputs setup: {ex}"
+                #
+                # set the named files to the default
+                #
+                self.main.csvpath_config.set(section="inputs", name="files", value=f"inputs{os.sep}named_files")
+                self.main.csvpath_config.save_config()
+                #
+                # warn the user. we don't mention that we reset the config, but that is probably fine.
+                #
+                msg = f"Error during named-files inputs setup: {ex}. Check config."
                 meut.warning2(parent=self, msg=msg, title="Error")
                 return
 

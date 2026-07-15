@@ -76,15 +76,19 @@ class TemplateDialog(QDialog):
 
     def _do_set(self, end: str, mgr) -> None:
         t = self.template_ctl.text()
-        try:
-            t, invalid = TemplateDialog.clean_or_reject(t=t, end=end)
-        except ValueError as e:
-            meut.warning2(
-                parent=self,
-                msg=str(e),
-                title="Invalid",
-            )
-            return
+        invalid = None
+        if str(t).strip() == "":
+            invalid = False
+        else:
+            try:
+                t, invalid = TemplateDialog.clean_or_reject(t=t, end=end)
+            except ValueError as e:
+                meut.warning2(
+                    parent=self,
+                    msg=str(e),
+                    title="Invalid",
+                )
+                return
         #
         # we expect value errors, but if we didn't get one of those for some reason
         # let's handle it here too.
