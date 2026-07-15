@@ -343,24 +343,13 @@ class Sidebar(QWidget):
             main=self.main, config=self.main.csvpath_config, role=2
         )
         self.main.rt_col.replaceWidget(1, self.main.sidebar_rt_mid)
-        # self.main.sidebar_rt_mid.view.clicked.connect(self.main.on_named_paths_tree_click)
 
     def do_stage(self) -> None:
-        #
-        # collect the vars needed
-        #
         template = self.stage_dialog.template_ctl.text()
         template = template.strip() if template else None
         if template == "":
             template = None
         if template and not template.endswith(":filename"):
-            """
-            meut.warning2(
-                parent=self,
-                msg="The :filename token must be the last component of the template",
-                title="Incomplete",
-            )
-            """
             self.stage_dialog.warning(
                 msg="The :filename token must be the last component of the template",
                 title="Incomplete",
@@ -396,9 +385,7 @@ class Sidebar(QWidget):
                     name=named_file_name, path=name, template=template
                 )
             else:
-                print(f"sidebart: not a filex")
                 if self.stage_dialog.separate_ctl.isChecked():
-                    print(f"sidebart: separates")
                     paths.file_manager.add_named_files_from_dir(
                         name=None,
                         dirname=name,
@@ -407,7 +394,6 @@ class Sidebar(QWidget):
                         regex=regex,
                     )
                 else:
-                    print(f"sidebart: not a separates: {named_file_name}")
                     if not named_file_name or named_file_name.strip() == "":
                         self.stage_dialog.warning(
                             title="No name given",
@@ -419,7 +405,7 @@ class Sidebar(QWidget):
                         dirname=name,
                         template=template,
                         recurse=recurse,
-                        regex=regex
+                        regex=regex,
                     )
             if self.stage_dialog.default_ctl.isChecked():
                 paths.file_manager.describer.store_template(
@@ -450,7 +436,6 @@ class Sidebar(QWidget):
             main=self.main, config=self.main.csvpath_config, role=1
         )
         self.main.rt_col.replaceWidget(0, self.main.sidebar_rt_top)
-        # self.main.sidebar_rt_top.view.clicked.connect(self.main.on_named_file_tree_click)
         #
         #
         #
@@ -477,8 +462,9 @@ class Sidebar(QWidget):
             self.main.rt_col.replaceWidget(0, self.main.sidebar_rt_top)
             self.main.welcome.update_run_button()
             self.main.welcome.update_find_data_button()
-        except Exception as e:
+        except Exception:
             import traceback
+
             print(traceback.format_exc())
 
     def _valid_new_folder(self, name: str) -> tuple[bool, str]:
